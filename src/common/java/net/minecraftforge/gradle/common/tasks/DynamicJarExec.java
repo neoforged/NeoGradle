@@ -22,11 +22,7 @@ package net.minecraftforge.gradle.common.tasks;
 
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.MapProperty;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.*;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -66,6 +62,7 @@ public abstract class DynamicJarExec extends JarExec {
     protected abstract MapProperty<String, FileWrapper> getDataGradle();
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInput();
 
     @OutputFile
@@ -79,6 +76,7 @@ public abstract class DynamicJarExec extends JarExec {
         }
 
         @InputFile
+        @PathSensitive(PathSensitivity.RELATIVE)
         public File getFile() {
             return this.file;
         }

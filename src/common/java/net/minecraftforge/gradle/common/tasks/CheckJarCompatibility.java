@@ -25,13 +25,11 @@ import net.minecraftforge.gradle.common.util.Utils;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.*;
 
 import java.util.List;
 
+@CacheableTask
 public abstract class CheckJarCompatibility extends JarExec {
     public CheckJarCompatibility() {
         getTool().set(Utils.JARCOMPATIBILITYCHECKER);
@@ -74,17 +72,22 @@ public abstract class CheckJarCompatibility extends JarExec {
     public abstract Property<String> getAnnotationCheckMode();
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getBaseJar();
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInputJar();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getCommonLibraries();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getBaseLibraries();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getConcreteLibraries();
 }

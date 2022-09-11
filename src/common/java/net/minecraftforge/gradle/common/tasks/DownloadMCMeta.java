@@ -27,10 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -39,6 +36,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
+@CacheableTask
 public abstract class DownloadMCMeta extends DefaultTask {
     // TODO: convert this into a property?
     private static final String MANIFEST_URL = MinecraftRepo.MANIFEST_URL;
@@ -65,7 +63,8 @@ public abstract class DownloadMCMeta extends DefaultTask {
     public abstract Property<String> getMCVersion();
 
     // TODO: check for uses, remove if not used
-    @Internal
+    @Input
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public abstract RegularFileProperty getManifest();
 
     @OutputFile

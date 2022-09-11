@@ -23,12 +23,13 @@ package net.minecraftforge.gradle.common.tasks;
 import net.minecraftforge.gradle.common.util.Utils;
 
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.*;
 
 import com.google.common.collect.ImmutableMap;
+
 import java.util.List;
 
+@CacheableTask
 public abstract class ApplyBinPatches extends JarExec {
     public ApplyBinPatches() {
         getTool().set(Utils.BINPATCHER);
@@ -46,9 +47,11 @@ public abstract class ApplyBinPatches extends JarExec {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getClean();
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getPatch();
 
     @OutputFile

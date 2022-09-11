@@ -27,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -34,6 +35,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 import java.io.IOException;
 
+@CacheableTask
 public abstract class DownloadMCPMappings extends DefaultTask {
     public DownloadMCPMappings() {
         getOutput().convention(getProject().getLayout().getBuildDirectory().file("mappings.zip"));

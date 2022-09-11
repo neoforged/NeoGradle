@@ -26,13 +26,12 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.*;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 
+@CacheableTask
 public abstract class ExtractRangeMap extends JarExec {
     private boolean batch = true;
 
@@ -66,9 +65,11 @@ public abstract class ExtractRangeMap extends JarExec {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getSources();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getDependencies();
 
     @OutputFile

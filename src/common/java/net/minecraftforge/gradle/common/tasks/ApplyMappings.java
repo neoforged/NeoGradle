@@ -26,10 +26,7 @@ import net.minecraftforge.gradle.common.util.Utils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+@CacheableTask
 public abstract class ApplyMappings extends DefaultTask {
     private boolean javadocs = false;
     private boolean lambdas = true;
@@ -70,9 +68,11 @@ public abstract class ApplyMappings extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInput();
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getMappings();
 
     @OutputFile

@@ -24,9 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputDirectories;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,6 +33,7 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+@CacheableTask
 public abstract class ExtractExistingFiles extends DefaultTask {
     @TaskAction
     public void run() throws IOException {
@@ -56,6 +55,7 @@ public abstract class ExtractExistingFiles extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getArchive();
 
     @OutputDirectories

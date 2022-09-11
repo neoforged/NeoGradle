@@ -31,14 +31,12 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
 
+@CacheableTask
 public abstract class SetupMCP extends DefaultTask {
     public SetupMCP() {
         getOutput().convention(getProject().getLayout().getBuildDirectory().dir(getName()).map(d -> d.file("output.zip")));
@@ -59,6 +57,7 @@ public abstract class SetupMCP extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getConfig();
 
     @Input
@@ -68,6 +67,8 @@ public abstract class SetupMCP extends DefaultTask {
     public abstract RegularFileProperty getOutput();
 
     @Input
+    @Optional
+    @Nested
     public abstract MapProperty<String, MCPFunction> getPreDecompile();
 
     @TaskAction

@@ -24,15 +24,14 @@ import net.minecraftforge.gradle.common.util.Utils;
 
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.*;
 
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.util.List;
 
+@CacheableTask
 public abstract class ExtractInheritance extends JarExec {
     public ExtractInheritance() {
         getTool().set(Utils.INSTALLERTOOLS);
@@ -55,9 +54,11 @@ public abstract class ExtractInheritance extends JarExec {
 
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInput();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ListProperty<File> getLibraries();
 
     @OutputFile

@@ -25,15 +25,15 @@ import net.minecraftforge.gradle.common.util.Utils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.IOException;
 
+@CacheableTask
 public abstract class ExtractZip extends DefaultTask {
     public ExtractZip() {
-        getOutputs().upToDateWhen(task -> false); //Gradle considers this up to date if the output exists at all...
+        //With proper markings on the input properties this should not matter anymore.
+        //getOutputs().upToDateWhen(task -> false); //Gradle considers this up to date if the output exists at all...
     }
 
     @TaskAction
@@ -42,6 +42,7 @@ public abstract class ExtractZip extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getZip();
 
     @OutputDirectory

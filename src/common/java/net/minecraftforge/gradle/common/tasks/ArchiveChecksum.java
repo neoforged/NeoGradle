@@ -22,9 +22,7 @@ package net.minecraftforge.gradle.common.tasks;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
@@ -40,6 +38,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 // TODO: check for uses
+@CacheableTask
 public abstract class ArchiveChecksum extends DefaultTask {
     //TODO: Filters of some kind?
 
@@ -72,6 +71,7 @@ public abstract class ArchiveChecksum extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInput();
 
     @OutputFile

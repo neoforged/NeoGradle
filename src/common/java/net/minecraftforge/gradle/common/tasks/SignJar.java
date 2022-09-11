@@ -28,12 +28,7 @@ import org.gradle.api.file.FileVisitor;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
 
@@ -54,6 +49,7 @@ import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+@CacheableTask
 @NonNullApi
 public abstract class SignJar extends DefaultTask implements PatternFilterable {
     private final PatternSet patternSet = new PatternSet();
@@ -160,6 +156,7 @@ public abstract class SignJar extends DefaultTask implements PatternFilterable {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInputFile();
 
     @OutputFile

@@ -28,10 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +44,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+@CacheableTask
 public abstract class DownloadAssets extends DefaultTask {
     public DownloadAssets() {
         getAssetRepository().convention("https://resources.download.minecraft.net/");
@@ -119,6 +117,7 @@ public abstract class DownloadAssets extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public abstract RegularFileProperty getMeta();
 
     /**
@@ -126,6 +125,7 @@ public abstract class DownloadAssets extends DefaultTask {
      * A trailing slash is required.
      */
     @Internal
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public abstract Property<String> getAssetRepository();
 
     /**

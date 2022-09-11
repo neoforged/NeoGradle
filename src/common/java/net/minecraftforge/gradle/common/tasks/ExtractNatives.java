@@ -27,13 +27,12 @@ import net.minecraftforge.gradle.common.util.VersionJson.LibraryDownload;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
 
+@CacheableTask
 public abstract class ExtractNatives extends DefaultTask {
     @TaskAction
     public void run() throws IOException {
@@ -51,6 +50,7 @@ public abstract class ExtractNatives extends DefaultTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getMeta();
 
     @OutputDirectory
