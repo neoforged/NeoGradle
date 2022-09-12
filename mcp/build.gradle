@@ -1,0 +1,12 @@
+dependencies {
+    api project(':common')
+}
+
+gradlePlugin {
+    plugins {
+        mcp {
+            id = 'net.minecraftforge.gradle.mcp'
+            implementationClass = 'net.minecraftforge.gradle.mcp.MCPPlugin'
+        }
+    }
+}

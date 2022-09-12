@@ -1,0 +1,12 @@
+dependencies {
+    implementation project(':mcp')
+}
+
+gradlePlugin {
+    plugins {
+        patcher {
+            id = 'net.minecraftforge.gradle.patcher'
+            implementationClass = 'net.minecraftforge.gradle.patcher.PatcherPlugin'
+        }
+    }
+}

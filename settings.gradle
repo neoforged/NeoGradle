@@ -6,3 +6,8 @@ pluginManagement {
 }
 
 rootProject.name = 'ForgeGradle'
+
+include 'common'
+include 'mcp'
+include 'patcher'
+include 'userdev'

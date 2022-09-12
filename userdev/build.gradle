@@ -1,0 +1,15 @@
+dependencies {
+    implementation project(':mcp')
+
+    implementation "net.minecraftforge:JarJarMetadata:${project.jarjar_version}"
+    implementation "net.minecraftforge:JarJarSelector:${project.jarjar_version}"
+}
+
+gradlePlugin {
+    plugins {
+        userdev {
+            id = 'net.minecraftforge.gradle'
+            implementationClass = 'net.minecraftforge.gradle.userdev.UserDevPlugin'
+        }
+    }
+}

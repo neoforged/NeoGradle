@@ -1,146 +1,66 @@
 plugins {
-    id 'java-gradle-plugin'
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
     id 'net.minecraftforge.gradleutils' version '[2.0.10,)'
-    id 'com.github.ben-manes.versions' version '0.39.0'
 }
 
-version = gradleutils.getTagOffsetBranchVersion('FG_5.0')
-logger.lifecycle('Version: ' + version + ' Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+version = "6.0-SNAPSHOT"
 
 changelog {
-    fromTag '3.0'
+    fromTag '5.0'
     disableAutomaticPublicationRegistration()
 }
-sourceSets {
-    common
-    mcp
-    patcher
-    userdev
-}
 
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(8)
-    withSourcesJar()
-}
+subprojects { Project subproject ->
+    subproject.apply plugin: 'net.minecraftforge.gradleutils'
 
-configurations {
-    all {
-        exclude group: 'org.ow2.asm'
+    subproject.apply plugin: 'java-gradle-plugin'
+    subproject.apply plugin: 'maven-publish'
+
+    subproject.apply plugin: 'eclipse'
+    subproject.apply plugin: 'idea'
+
+    subproject.version = subproject.rootProject.version
+    subproject.group = 'net.minecraftforge.gradle'
+    subproject.archivesBaseName = "fg-${subproject.name.toLowerCase()}"
+
+    subproject.java.toolchain.languageVersion = JavaLanguageVersion.of(subproject.java_version)
+    subproject.java.withSourcesJar()
+
+    subproject.configurations.all { Configuration configuration ->
+        configuration.exclude group: 'org.ow2.asm'
     }
-    mcpImplementation.extendsFrom commonImplementation
-    patcherImplementation.extendsFrom commonImplementation
-    userdevImplementation.extendsFrom mcpImplementation
-    implementation.extendsFrom mcpImplementation, patcherImplementation, userdevImplementation
-}
 
-tasks.named('jar', Jar).configure {
-    from sourceSets.common.output
-    from sourceSets.mcp.output
-    from sourceSets.patcher.output
-    from sourceSets.userdev.output
-}
-
-tasks.named('sourcesJar', Jar).configure {
-    from sourceSets.common.allJava
-    from sourceSets.mcp.allJava
-    from sourceSets.patcher.allJava
-    from sourceSets.userdev.allJava
-}
-
-repositories {
-    mavenLocal()
-    maven { url = 'https://maven.minecraftforge.net/' }
-}
-
-license {
-    header = file('HEADER')
-    ext {
-        name = 'ForgeGradle'
-        year = 2018
-        fullname = 'Forge Development LLC'
+    subproject.repositories.mavenLocal()
+    subproject.repositories.maven { MavenArtifactRepository repository ->
+        repository.name 'MinecraftForge'
+        repository.url = 'https://maven.minecraftforge.net/'
     }
-    exclude '**/*.properties'
-    exclude 'net/minecraftforge/gradle/common/diff/'
-    exclude 'net/minecraftforge/gradle/common/util/JavaVersionParser.java'
-}
 
-tasks.named('wrapper', Wrapper).configure {
-    gradleVersion = '7.4.2'
-    distributionType = Wrapper.DistributionType.ALL
-}
+    subproject.gradlePlugin.automatedPublishing = true
 
-dependencies {
-    commonImplementation gradleApi()
-    commonImplementation 'commons-io:commons-io:2.8.0'
-    commonImplementation 'com.google.code.gson:gson:2.8.6'
-    commonImplementation 'com.google.guava:guava:30.1-jre'
-    commonImplementation 'de.siegmar:fastcsv:2.0.0'
-    commonImplementation('net.minecraftforge:artifactural:3.0.8') {
-        transitive = false
-    }
-    commonImplementation('net.minecraftforge:unsafe:0.2.0') {
-        transitive = false
-    }
-    commonImplementation 'org.apache.maven:maven-artifact:3.6.3'
-    commonImplementation 'org.apache.httpcomponents:httpclient:4.5.13'
-    commonImplementation 'net.minecraftforge:srgutils:0.4.13'
-    commonImplementation 'net.minecraftforge:DiffPatch:2.0.7:all'
-
-    mcpImplementation sourceSets.common.output
-    patcherImplementation sourceSets.mcp.output
-    patcherImplementation sourceSets.common.output
-    userdevImplementation sourceSets.mcp.output
-    userdevImplementation sourceSets.common.output
-
-    userdevImplementation 'net.minecraftforge:JarJarMetadata:0.3.17'
-    userdevImplementation 'net.minecraftforge:JarJarSelector:0.3.17'
-}
-
-//Gradle doesn't add it's own source when doing the API. So lets hack it in!
-import org.gradle.plugins.ide.eclipse.model.*
-import org.gradle.plugins.ide.eclipse.model.internal.*
-project.extensions.eclipse.classpath.file.whenMerged { Classpath cp ->
-    def gradleSrc = gradle.gradleHomeDir.absolutePath.replace(File.separator, '/') + '/src/'
-    cp.entries.each { entry ->
-        if ((entry in AbstractLibrary) && entry.library.file.name.startsWith('gradle-')) {
-            def type = (entry.library.file.name =~ "^gradle(-(.*))?-(${gradle.gradleVersion})")[0][2]
-            if (type == 'api') type = 'core-api' //Gradle name is different for cores
-            if (type == '') type = 'core'
-            entry.sourcePath = new FileReferenceFactory().fromPath(gradleSrc + type)
+    subproject.publishing.publications {
+        pluginMaven(MavenPublication) { MavenPublication publication ->
+            project.changelog.publish(publication)
         }
     }
+
+    subproject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
 }
 
-gradlePlugin {
-    plugins {
-        mcp {
-            id = 'net.minecraftforge.gradle.mcp'
-            implementationClass = 'net.minecraftforge.gradle.mcp.MCPPlugin'
-        }
-        patcher {
-            id = 'net.minecraftforge.gradle.patcher'
-            implementationClass = 'net.minecraftforge.gradle.patcher.PatcherPlugin'
-        }
-        userdev {
-            id = 'net.minecraftforge.gradle'
-            implementationClass = 'net.minecraftforge.gradle.userdev.UserDevPlugin'
-        }
-    }
-    automatedPublishing = true
+tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
+    wrapperTask.gradleVersion = project.gradle_version
+    wrapperTask.distributionType = Wrapper.DistributionType.ALL
 }
 
-publishing {
-    publications {
-        pluginMaven(MavenPublication) {
-            // Automated publishing declares the java component for us
-
-            project.changelog.publish(it)
-        }
-    }
-    repositories {
-        maven gradleutils.getPublishingForgeMaven()
+tasks.create('info') {
+    group = 'forgegradle'
+    description = 'Prints out some useful information about the project.'
+    doLast {
+        logger.lifecycle("Version: $version")
+        logger.lifecycle("Java:    ${System.getProperty('java.version')}")
+        logger.lifecycle("JVM:     ${System.getProperty('java.vm.version')} (${System.getProperty('java.vendor')})")
+        logger.lifecycle("Arch:    ${System.getProperty('os.arch')}")
     }
 }
