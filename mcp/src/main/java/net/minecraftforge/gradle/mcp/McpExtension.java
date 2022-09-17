@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.mcp;
 
 import net.minecraftforge.gradle.common.util.Artifact;
 
+import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -38,7 +39,6 @@ public abstract class McpExtension {
     public McpExtension(final Project project) {
         this.project = project;
         this.config = project.getObjects().property(Artifact.class);
-        this.getSide().convention("joined");
     }
 
     public Property<Artifact> getConfig() {
@@ -59,5 +59,8 @@ public abstract class McpExtension {
         setConfig(project.provider(() -> value));
     }
 
-    public abstract Property<String> getSide();
+    public McpRuntimeExtension getRuntime() {
+        return project.getExtensions().getByType(McpRuntimeExtension.class);
+    }
+
 }

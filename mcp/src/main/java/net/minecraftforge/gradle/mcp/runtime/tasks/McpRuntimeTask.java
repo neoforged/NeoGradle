@@ -2,7 +2,6 @@ package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
 import net.minecraftforge.gradle.common.util.FileWrapper;
-import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.gradle.mcp.util.CacheableMinecraftVersion;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
@@ -130,23 +129,5 @@ public abstract class McpRuntimeTask extends JavaRuntimeTask {
         arguments.computeIfAbsent("side", key -> getSide().get());
         arguments.computeIfAbsent("minecraftVersion", key -> getMinecraftVersion().get().toString());
         arguments.computeIfAbsent("javaVersion", key -> getJavaVersion().get().toString());
-    }
-
-    protected Provider<File> ensureFileWorkspaceReady(final RegularFileProperty fileProvider) {
-        return ensureFileWorkspaceReady(fileProvider.getAsFile());
-    }
-
-    protected Provider<File> ensureFileWorkspaceReady(final Provider<File> fileProvider) {
-        return fileProvider.map(TransformerUtils.guard(
-                f -> {
-                    if (f.exists()) {
-                        f.delete();
-                        return f;
-                    }
-
-                    f.getParentFile().mkdirs();
-                    return f;
-                }
-        ));
     }
 }

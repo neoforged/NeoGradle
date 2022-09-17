@@ -26,8 +26,8 @@ import net.minecraftforge.artifactural.api.repository.Repository;
 import net.minecraftforge.artifactural.base.repository.ArtifactProviderBuilder;
 import net.minecraftforge.artifactural.base.repository.SimpleRepository;
 import net.minecraftforge.artifactural.gradle.GradleRepositoryAdapter;
-import net.minecraftforge.gradle.common.config.MCPConfigV1;
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.common.util.VersionJson.Download;
 import net.minecraftforge.gradle.common.util.VersionJson.OS;
@@ -409,10 +409,10 @@ public class MinecraftRepo extends BaseRepo {
 
     private static class MCPWrapperSlim {
         private final File data;
-        private final MCPConfigV1 config;
+        private final McpConfigConfigurationSpecV1 config;
         public MCPWrapperSlim(File data) throws IOException {
             this.data = data;
-            this.config = MCPConfigV2.getFromArchive(data);
+            this.config = McpConfigConfigurationSpecV2.getFromArchive(data);
         }
 
         public void extractData(File target, String... path) throws IOException {

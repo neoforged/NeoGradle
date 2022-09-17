@@ -25,16 +25,15 @@ import net.minecraftforge.artifactural.api.artifact.ArtifactIdentifier;
 import net.minecraftforge.artifactural.api.repository.Repository;
 import net.minecraftforge.artifactural.base.repository.ArtifactProviderBuilder;
 import net.minecraftforge.artifactural.base.repository.SimpleRepository;
-import net.minecraftforge.gradle.common.config.Config;
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
-import net.minecraftforge.gradle.common.config.UserdevConfigV1;
-import net.minecraftforge.gradle.common.config.UserdevConfigV2;
-import net.minecraftforge.gradle.common.config.UserdevConfigV2.DataFunction;
+import net.minecraftforge.gradle.common.config.VersionedConfiguration;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
+import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV1;
+import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2;
+import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
 import net.minecraftforge.gradle.common.extensions.RemappingExtensions;
 import net.minecraftforge.gradle.common.tasks.ApplyBinPatches;
 import net.minecraftforge.gradle.common.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.tasks.DynamicJarExec;
-import net.minecraftforge.gradle.common.tasks.ExtractMCPData;
 import net.minecraftforge.gradle.common.tasks.ExtractNatives;
 import net.minecraftforge.gradle.common.tasks.JarExec;
 import net.minecraftforge.gradle.common.util.Artifact;
@@ -56,7 +55,6 @@ import net.minecraftforge.gradle.userdev.tasks.AccessTransformJar;
 import net.minecraftforge.gradle.userdev.tasks.ApplyMCPFunction;
 import net.minecraftforge.gradle.userdev.tasks.HackyJavaCompile;
 import net.minecraftforge.gradle.userdev.tasks.RenameJar;
-import net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace;
 import net.minecraftforge.srgutils.IMappingFile;
 import net.minecraftforge.srgutils.IMappingFile.IField;
 import net.minecraftforge.srgutils.IMappingFile.IMethod;
@@ -1002,7 +1000,7 @@ public class MinecraftUserRepo extends BaseRepo {
     }
 
     private IMappingFile loadObfToSrg(byte[] data) throws IOException {
-        MCPConfigV2 config = mcp.wrapper.getConfig();
+        McpConfigConfigurationSpecV2 config = mcp.wrapper.getConfig();
         IMappingFile obf_to_srg = IMappingFile.load(new ByteArrayInputStream(data));
         if (config.isOfficial()) {
             final RemappingExtensions remappingExtensions = project.getExtensions().getByType(RemappingExtensions.class);
@@ -1101,7 +1099,7 @@ public class MinecraftUserRepo extends BaseRepo {
                 // Note that pre-1.13 patches use ../{src-base,src-work}/minecraft/ prefixes
                 // instead of the default {a,b}/ prefixes. Also, be sure not to override the
                 // defaults with null values.
-                UserdevConfigV2 cfg = p.getConfigV2();
+                UserdevConfigurationSpecV2 cfg = p.getConfigV2();
                 if (cfg != null) {
                     if (cfg.patchesOriginalPrefix != null) {
                         opBuilder = opBuilder.aPrefix(cfg.patchesOriginalPrefix);
@@ -1384,9 +1382,9 @@ public class MinecraftUserRepo extends BaseRepo {
         @Nullable
         private final File sources;
         private final Artifact artifact;
-        private final UserdevConfigV1 config;
+        private final UserdevConfigurationSpecV1 config;
         @Nullable
-        private final UserdevConfigV2 configv2;
+        private final UserdevConfigurationSpecV2 configv2;
         private Patcher parent;
         private String ATs = null;
         private String SASs = null;
@@ -1398,13 +1396,13 @@ public class MinecraftUserRepo extends BaseRepo {
 
             try {
                 byte[] cfg_data = Utils.getZipData(data, "config.json");
-                int spec = Config.getSpec(cfg_data);
+                int spec = VersionedConfiguration.getSpec(cfg_data);
 
                 if (spec == 1) {
-                    this.config = UserdevConfigV1.get(cfg_data);
+                    this.config = UserdevConfigurationSpecV1.get(cfg_data);
                     this.configv2 = null;
                 } else if (spec == 2) {
-                    this.configv2 = UserdevConfigV2.get(cfg_data);
+                    this.configv2 = UserdevConfigurationSpecV2.get(cfg_data);
                     this.config = this.configv2;
                 } else {
                     throw new IllegalStateException("Could not load Patcher config, Unknown Spec: " + spec + " Dep: " + artifact);
@@ -1433,11 +1431,11 @@ public class MinecraftUserRepo extends BaseRepo {
             }
         }
 
-        public UserdevConfigV1 getConfig() {
+        public UserdevConfigurationSpecV1 getConfig() {
             return config;
         }
         @Nullable
-        public UserdevConfigV2 getConfigV2() {
+        public UserdevConfigurationSpecV2 getConfigV2() {
             return this.configv2;
         }
         public boolean parentIsMcp() {

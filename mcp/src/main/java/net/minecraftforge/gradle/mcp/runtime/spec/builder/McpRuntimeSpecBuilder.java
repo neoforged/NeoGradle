@@ -1,11 +1,12 @@
 package net.minecraftforge.gradle.mcp.runtime.spec.builder;
 
+import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
+import net.minecraftforge.gradle.mcp.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.mcp.runtime.tasks.McpRuntimeTask;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 
 import java.io.File;
-import java.util.Optional;
 import java.util.function.Function;
 
 public final class McpRuntimeSpecBuilder {
@@ -15,7 +16,7 @@ public final class McpRuntimeSpecBuilder {
     private String mcpVersion;
     private String side;
 
-    private Function<Provider<File>, Optional<McpRuntimeTask>> preDecompileTaskTreeModifier = property -> Optional.empty();
+    private TaskTreeAdapter preDecompileTaskTreeModifier = null;
 
     private McpRuntimeSpecBuilder(Project project) {
         this.project = project;
@@ -40,8 +41,13 @@ public final class McpRuntimeSpecBuilder {
         return this;
     }
 
-    public McpRuntimeSpecBuilder withPreDecompileTaskTreeModifier(Function<Provider<File>, Optional<McpRuntimeTask>> preDecompileTaskTreeModifier) {
-        this.preDecompileTaskTreeModifier = preDecompileTaskTreeModifier;
+    public McpRuntimeSpecBuilder withPreDecompileTaskTreeModifier(TaskTreeAdapter preDecompileTaskTreeModifier) {
+        if (this.preDecompileTaskTreeModifier == null) {
+            this.preDecompileTaskTreeModifier = preDecompileTaskTreeModifier;
+            return this;
+        }
+
+        this.preDecompileTaskTreeModifier = this.preDecompileTaskTreeModifier.andThen(preDecompileTaskTreeModifier);
         return this;
     }
 

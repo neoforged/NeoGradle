@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.patcher.tasks;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
 
 import net.minecraftforge.srgutils.IMappingFile;
 import org.apache.commons.io.IOUtils;
@@ -57,7 +57,7 @@ public abstract class CreateExc extends DefaultTask {
 
     @TaskAction
     public void run() throws IOException {
-        MCPConfigV2 cfg = MCPConfigV2.getFromArchive(getConfig().get().getAsFile());
+        McpConfigConfigurationSpecV2 cfg = McpConfigConfigurationSpecV2.getFromArchive(getConfig().get().getAsFile());
         if (cfg != null && cfg.isOfficial()) {
             // Write empty file if MCPConfig is official because it means TSRGv2
             try (FileOutputStream fos = new FileOutputStream(getOutput().get().getAsFile())) {

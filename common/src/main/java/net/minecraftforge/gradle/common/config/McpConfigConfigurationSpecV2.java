@@ -30,34 +30,34 @@ import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 
-public class MCPConfigV2 extends MCPConfigV1 {
+public class McpConfigConfigurationSpecV2 extends McpConfigConfigurationSpecV1 {
 
-    public static MCPConfigV2 get(File file) {
+    public static McpConfigConfigurationSpecV2 get(File file) {
         try (final InputStream stream = new FileInputStream(file)) {
             return get(stream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-    public static MCPConfigV2 get(InputStream stream) {
-        return Utils.fromJson(stream, MCPConfigV2.class);
+    public static McpConfigConfigurationSpecV2 get(InputStream stream) {
+        return Utils.fromJson(stream, McpConfigConfigurationSpecV2.class);
     }
-    public static MCPConfigV2 get(byte[] data) {
+    public static McpConfigConfigurationSpecV2 get(byte[] data) {
         return get(new ByteArrayInputStream(data));
     }
 
-    public static MCPConfigV2 getFromArchive(File path) throws IOException {
+    public static McpConfigConfigurationSpecV2 getFromArchive(File path) throws IOException {
         try (ZipFile zip = new ZipFile(path)) {
             ZipEntry entry = zip.getEntry("config.json");
             if (entry == null)
                 throw new IllegalStateException("Could not find 'config.json' in " + path.getAbsolutePath());
 
             byte[] data = IOUtils.toByteArray(zip.getInputStream(entry));
-            int spec = Config.getSpec(data);
+            int spec = VersionedConfiguration.getSpec(data);
             if (spec == 2 || spec == 3)
-                return MCPConfigV2.get(data);
+                return McpConfigConfigurationSpecV2.get(data);
             if (spec == 1)
-                return new MCPConfigV2(MCPConfigV1.get(data));
+                return new McpConfigConfigurationSpecV2(McpConfigConfigurationSpecV1.get(data));
 
             throw new IllegalStateException("Invalid MCP Config: " + path.getAbsolutePath() + " Unknown spec: " + spec);
         }
@@ -80,7 +80,7 @@ public class MCPConfigV2 extends MCPConfigV1 {
         return this.encoding == null ? "UTF-8" : this.encoding;
     }
 
-    public MCPConfigV2(MCPConfigV1 old) {
+    public McpConfigConfigurationSpecV2(McpConfigConfigurationSpecV1 old) {
         this.version = old.version;
         this.data = old.data;
         this.steps = old.steps;

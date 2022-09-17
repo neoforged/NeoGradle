@@ -20,8 +20,8 @@
 
 package net.minecraftforge.gradle.userdev.tasks;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV1;
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.common.tasks.JarExec;
 import net.minecraftforge.gradle.common.util.Utils;
 
@@ -50,8 +50,8 @@ public abstract class ApplyMCPFunction extends JarExec {
     @TaskAction
     public void apply() throws IOException {
         File mcp = getMCP().get().getAsFile();
-        MCPConfigV1 config = MCPConfigV2.getFromArchive(mcp);
-        MCPConfigV1.Function function = config.getFunction(getFunctionName().get());
+        McpConfigConfigurationSpecV1 config = McpConfigConfigurationSpecV2.getFromArchive(mcp);
+        McpConfigConfigurationSpecV1.Function function = config.getFunction(getFunctionName().get());
 
         getTool().set(function.getVersion());
         getArgs().set(function.getArgs());

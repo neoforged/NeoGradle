@@ -18,10 +18,11 @@
  * USA
  */
 
-package net.minecraftforge.gradle.common.util;
+package net.minecraftforge.gradle.mcp.util;
 
 import net.minecraftforge.gradle.common.tasks.ExtractNatives;
 
+import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -40,7 +41,7 @@ import java.util.Set;
 
 public class EclipseHacks {
 
-    public static void doEclipseFixes(final MinecraftExtension minecraft, final TaskProvider<ExtractNatives> nativesTask, final List<? extends TaskProvider<?>> setupTasks) {
+    public static void doEclipseFixes(final McpMinecraftExtension minecraft, final TaskProvider<ExtractNatives> nativesTask, final List<? extends TaskProvider<?>> setupTasks) {
         final Project project = minecraft.getProject();
         final Provider<File> natives = nativesTask.flatMap(s -> s.getOutput().getAsFile());
 

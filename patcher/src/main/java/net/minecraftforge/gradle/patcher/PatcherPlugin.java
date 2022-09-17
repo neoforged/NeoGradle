@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.patcher;
 
 import codechicken.diffpatch.util.PatchMode;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.common.tasks.*;
 import net.minecraftforge.gradle.common.util.*;
@@ -29,14 +30,15 @@ import net.minecraftforge.gradle.mcp.ChannelProvidersExtension;
 import net.minecraftforge.gradle.mcp.MCPPlugin;
 import net.minecraftforge.gradle.mcp.MCPRepo;
 import net.minecraftforge.gradle.mcp.McpExtension;
-import net.minecraftforge.gradle.mcp.function.MCPFunctionFactory;
+import net.minecraftforge.gradle.mcp.runtime.McpRuntime;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.tasks.AccessTransformerTask;
-import net.minecraftforge.gradle.mcp.runtime.tasks.McpRuntimeTask;
+import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripperTask;
 import net.minecraftforge.gradle.mcp.tasks.DownloadMCPConfig;
 import net.minecraftforge.gradle.mcp.tasks.DownloadMCPMappings;
 import net.minecraftforge.gradle.mcp.tasks.GenerateSRG;
-import net.minecraftforge.gradle.mcp.tasks.RunMcp;
+import net.minecraftforge.gradle.mcp.tasks.WriteEntriesTask;
+import net.minecraftforge.gradle.mcp.util.runs.RunGenerationUtils;
 import net.minecraftforge.gradle.patcher.tasks.*;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectProvider;
@@ -137,7 +139,7 @@ public class PatcherPlugin implements Plugin<Project> {
 
         release.configure(task -> task.dependsOn(sourcesJar, universalJar, userdevJar));
 
-        dlMappingsConfig.configure(task -> task.getMappings().convention(extension.getMappings()));
+        dlMappingsConfig.configure(task -> task.getMappings().convention(extension.getMappings().getMappingArtifact()));
 
         extractNatives.configure(task -> {
             task.getMeta().set(dlMCMetaConfig.flatMap(DownloadMCMeta::getOutput));
@@ -310,6 +312,69 @@ public class PatcherPlugin implements Plugin<Project> {
             //}); //TODO: Asset downloading, needs asset index from json.
             //javaConv.getSourceSets().stream().forEach(s -> extractRangeConfig.get().addSources(s.getJava().getSrcDirs()));
 
+            //Configure the MCP Pipeline needed:
+            final McpRuntimeExtension runtimeExtension = project.getExtensions().getByType(McpRuntimeExtension.class);
+            final McpRuntime mcpRuntime = runtimeExtension.setup(specBuilder -> {
+                specBuilder.withNamePrefix("patcher");
+
+                if (!extension.getAccessTransformers().isEmpty()) {
+                    specBuilder.withPreDecompileTaskTreeModifier((spec, input) -> {
+                        AccessTransformerTask task = runtimeExtension.createAt(
+                                spec,
+                                new ArrayList<>(extension.getAccessTransformers().getFiles().getFiles()),
+                                new ArrayList<>(extension.getAccessTransformers().getEntries().get()));
+
+                        task.getInputFile().fileProvider(input);
+
+                        return task;
+                    });
+
+                    final Set<String> additionalTransformerEntries = Sets.newHashSet(extension.getAccessTransformers().getEntries().getOrElse(Collections.emptyList()));
+                    final Set<File> accessTransformerFiles = extension.getAccessTransformers().getFiles().getFiles();
+                    if (!additionalTransformerEntries.isEmpty()) {
+                        final WriteEntriesTask writeAccessTransformerEntries = project.getTasks().create("patcherWriteAccessTransformers", WriteEntriesTask.class, task -> {
+                            task.getEntries().set(additionalTransformerEntries);
+                            task.getOutputFile().set(project.getLayout().getBuildDirectory().dir("access_transformers").get().file("additional_patcher.cfg"));
+                        });
+
+                        accessTransformerFiles.add(writeAccessTransformerEntries.getOutputFile().get().getAsFile());
+                    }
+
+                    accessTransformerFiles.forEach(f -> {
+                        userdevJar.configure(t -> t.from(f, e -> e.into("ats/")));
+                        userdevConfig.configure(t -> t.getATs().from(f));
+                    });
+                }
+
+                if (!extension.getSideAnnotationStrippers().isEmpty()) {
+                    specBuilder.withPreDecompileTaskTreeModifier((spec, input) -> {
+                        SideAnnotationStripperTask task = runtimeExtension.createSAS(
+                                spec,
+                                new ArrayList<>(extension.getAccessTransformers().getFiles().getFiles()),
+                                new ArrayList<>(extension.getAccessTransformers().getEntries().get()));
+
+                        task.getInputFile().fileProvider(input);
+
+                        return task;
+                    });
+
+                    final Set<String> sideAnnotationStripperEntries = Sets.newHashSet(extension.getSideAnnotationStrippers().getEntries().getOrElse(Collections.emptyList()));
+                    final Set<File> sideAnnotationStripperFiles = extension.getSideAnnotationStrippers().getFiles().getFiles();
+                    if (!sideAnnotationStripperEntries.isEmpty()) {
+                        final WriteEntriesTask writeSideAnnotationStripperEntries = project.getTasks().create("patcherWriteSideAnnotationStrippers", WriteEntriesTask.class, task -> {
+                            task.getEntries().set(sideAnnotationStripperEntries);
+                            task.getOutputFile().set(project.getLayout().getBuildDirectory().dir("side_annotation_strippers").get().file("additional_patcher.sas"));
+                        });
+
+                        sideAnnotationStripperFiles.add(writeSideAnnotationStripperEntries.getOutputFile().get().getAsFile());
+                    }
+
+                    sideAnnotationStripperFiles.forEach(f -> {
+                        userdevJar.configure(t -> t.from(f, e -> e.into("sas/")));
+                        userdevConfig.configure(t -> t.getSASs().from(f));
+                    });
+                }
+            });
 
             // Automatically create the patches folder if it does not exist
             if (extension.getPatches().isPresent()) {
@@ -330,12 +395,10 @@ public class PatcherPlugin implements Plugin<Project> {
                 final PatcherPlugin parentPatcherPlugin = parent.getPlugins().findPlugin(PatcherPlugin.class);
 
                 if (parentMCPPlugin != null) {
-                    final TaskProvider<RunMcp> runMcp = parentTasks.named("runMcp", RunMcp.class);
-
-                    Provider<RegularFile> setupOutput = runMcp.flatMap(RunMcp::getOutputFile);
+                    Provider<? extends RegularFile> setupOutput = mcpRuntime.lastTask().getOutputFile();
                     if (procConfig != null) {
                         procConfig.configure(task -> {
-                            task.getInput().set(runMcp.flatMap(RunMcp::getOutputFile));
+                            task.getInput().set(mcpRuntime.lastTask().getOutputFile());
                             task.getTool().set(extension.getProcessor().getVersion());
                             task.getArgs().set(extension.getProcessor().getArgs());
                             task.getData().set(extension.getProcessorData());
@@ -420,7 +483,7 @@ public class PatcherPlugin implements Plugin<Project> {
                     throw new IllegalStateException("Parent must either be a Patcher or MCP project");
                 }
 
-                dlMappingsConfig.configure(task -> task.getMappings().convention(extension.getMappings()));
+                dlMappingsConfig.configure(task -> task.getMappings().convention(extension.getMappings().getMappingArtifact()));
 
                 for (TaskProvider<GenerateSRG> genSrg : Arrays.asList(createMcp2Srg, createSrg2Mcp, createMcp2Obf)) {
                     genSrg.configure(task -> task.getMappings().convention(dlMappingsConfig.flatMap(DownloadMCPMappings::getMappings)));
@@ -439,37 +502,10 @@ public class PatcherPlugin implements Plugin<Project> {
             project.getDependencies().add(MC_DEP_CONFIG, mcpParentExtension.getConfig()
                     .map(ver -> "net.minecraft:client:" + ver.getVersion() + ":extra"));
             // Add mappings so that it can be used by reflection tools.
-            project.getDependencies().add(MC_DEP_CONFIG, extension.getMappingChannel()
-                    .zip(extension.getMappingVersion(), MCPRepo::getMappingDep));
+            project.getDependencies().add(MC_DEP_CONFIG, extension.getMappings().getMappingChannel()
+                    .zip(extension.getMappings().getMappingVersion(), MCPRepo::getMappingDep));
 
             dlMCMetaConfig.configure(task -> task.getMCVersion().convention(extension.getMcVersion()));
-
-            final McpRuntimeExtension runtimeExtension = project.getExtensions().getByType(McpRuntimeExtension.class);
-            if (!extension.getAccessTransformers().isEmpty()) {
-                RunMcp setupMCP = mcpParent.getTasks().withType(RunMcp.class).getByName("runMcp");
-
-                AccessTransformerTask function = runtimeExtension.createAt(
-                        setupMCP.getRuntime().get(),
-                        new ArrayList<>(extension.getAccessTransformers().getFiles()),
-                        Collections.emptyList());
-
-                setupMCP.configure(task -> task.getPreDecompile().put(project.getName() + "AccessTransformer", function));
-                extension.getAccessTransformers().forEach(f -> {
-                    userdevJar.configure(t -> t.from(f, e -> e.into("ats/")));
-                    userdevConfig.configure(t -> t.getATs().from(f));
-                });
-            }
-
-            if (!extension.getSideAnnotationStrippers().isEmpty()) {
-                TaskProvider<RunMcp> setupMCP = mcpParent.getTasks().named("runMcp", RunMcp.class);
-                @SuppressWarnings("deprecation")
-                MCPFunction function = MCPFunctionFactory.createSAS(mcpParent, new ArrayList<>(extension.getSideAnnotationStrippers().getFiles()), Collections.emptyList());
-                setupMCP.configure(task -> task.getPreDecompile().put(project.getName() + "SideStripper", function));
-                extension.getSideAnnotationStrippers().forEach(f -> {
-                    userdevJar.configure(t -> t.from(f, e -> e.into("sas/")));
-                    userdevConfig.configure(t -> t.getSASs().from(f));
-                });
-            }
 
             TaskProvider<CreateFakeSASPatches> fakePatches = null;
             PatcherExtension ext = extension;
@@ -635,7 +671,7 @@ public class PatcherPlugin implements Plugin<Project> {
             }
 
             extension.getRuns().forEach(runConfig -> runConfig.tokens(tokens));
-            Utils.createRunConfigTasks(extension, extractNatives, downloadAssets, createSrg2Mcp);
+            RunGenerationUtils.createRunConfigTasks(extension, extractNatives, downloadAssets, createSrg2Mcp);
         });
     }
 

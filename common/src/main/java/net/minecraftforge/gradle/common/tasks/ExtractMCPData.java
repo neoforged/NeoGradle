@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.common.extensions.RemappingExtensions;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.apache.commons.io.IOUtils;
@@ -47,7 +47,7 @@ public abstract class ExtractMCPData extends DownloadingTask {
 
     @TaskAction
     public void run() throws IOException {
-        MCPConfigV2 cfg = MCPConfigV2.getFromArchive(getConfig().get().getAsFile());
+        McpConfigConfigurationSpecV2 cfg = McpConfigConfigurationSpecV2.getFromArchive(getConfig().get().getAsFile());
 
         String key = getKey().get();
         File output = getOutput().get().getAsFile();

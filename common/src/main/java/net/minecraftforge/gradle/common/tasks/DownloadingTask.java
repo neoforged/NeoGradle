@@ -7,7 +7,7 @@ import org.gradle.api.tasks.Internal;
 
 import java.io.File;
 
-public abstract class DownloadingTask extends DefaultTask {
+public abstract class DownloadingTask extends ForgeGradleBaseTask {
     @Internal
     public final Provider<ArtifactDownloaderExtension> getDownloader() {
         return getProject().provider(() -> getProject().getExtensions().getByType(ArtifactDownloaderExtension.class));

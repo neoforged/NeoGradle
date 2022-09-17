@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.extensions;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.common.util.MinecraftRepo;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.srgutils.IMappingFile;
@@ -23,7 +23,7 @@ public abstract class RemappingExtensions {
         return project.provider(() -> project.getExtensions().getByType(ArtifactDownloaderExtension.class));
     }
 
-    public Provider<IMappingFile> remapSrgClasses(MCPConfigV2 config, IMappingFile obfToSrg) {
+    public Provider<IMappingFile> remapSrgClasses(McpConfigConfigurationSpecV2 config, IMappingFile obfToSrg) {
         String minecraftVersion = MinecraftRepo.getMCVersion(config.getVersion());
         return getDownloader().flatMap(d -> d.generate("net.minecraft:client:" + minecraftVersion + ":mappings@txt", true))
                 .map(TransformerUtils.guard(

@@ -20,13 +20,13 @@
 
 package net.minecraftforge.gradle.userdev;
 
-import net.minecraftforge.gradle.common.util.MinecraftExtension;
+import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
 
 import org.gradle.api.Project;
 
 import javax.annotation.Nonnull;
 
-public abstract class UserDevExtension extends MinecraftExtension {
+public abstract class UserDevExtension extends McpMinecraftExtension {
     public static final String EXTENSION_NAME = "minecraft";
 
     public UserDevExtension(@Nonnull final Project project) {

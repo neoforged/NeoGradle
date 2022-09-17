@@ -31,7 +31,7 @@ import org.gradle.api.Project;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.common.util.HashFunction;
 import net.minecraftforge.gradle.common.util.Utils;
 
@@ -39,7 +39,7 @@ public class MCPWrapper {
     private final String hash;
     private final File data;
     private final File root;
-    private final MCPConfigV2 config;
+    private final McpConfigConfigurationSpecV2 config;
     protected final Map<String, MCPRuntime> runtimes = Maps.newHashMap();
 
     public MCPWrapper(File data, File root) throws IOException {
@@ -50,7 +50,7 @@ public class MCPWrapper {
         this.hash = hash;
         this.data = data;
         this.root = root;
-        this.config = MCPConfigV2.getFromArchive(data);
+        this.config = McpConfigConfigurationSpecV2.getFromArchive(data);
     }
 
     public MCPRuntime getRuntime(Project project, String side) {
@@ -70,7 +70,7 @@ public class MCPWrapper {
         return this.hash;
     }
 
-    public MCPConfigV2 getConfig() {
+    public McpConfigConfigurationSpecV2 getConfig() {
         return this.config;
     }
 

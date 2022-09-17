@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.common.config;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV1.Function;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1.Function;
 import net.minecraftforge.gradle.common.util.RunConfig;
 import net.minecraftforge.gradle.common.util.Utils;
 
@@ -34,11 +34,11 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class UserdevConfigV1 extends Config {
-    public static UserdevConfigV1 get(InputStream stream) {
-        return Utils.fromJson(stream, UserdevConfigV1.class);
+public class UserdevConfigurationSpecV1 extends VersionedConfiguration {
+    public static UserdevConfigurationSpecV1 get(InputStream stream) {
+        return Utils.fromJson(stream, UserdevConfigurationSpecV1.class);
     }
-    public static UserdevConfigV1 get(byte[] data) {
+    public static UserdevConfigurationSpecV1 get(byte[] data) {
         return get(new ByteArrayInputStream(data));
     }
 
@@ -66,7 +66,7 @@ public class UserdevConfigV1 extends Config {
     @Nullable
     public String inject;
     @Nullable
-    public Map<String, RunConfig> runs;
+    public Map<String, RunConfigurationSpec> runs;
     @Nullable
     public String sourceCompatibility;
     @Nullable
@@ -108,7 +108,7 @@ public class UserdevConfigV1 extends Config {
             this.libraries = new ArrayList<>();
         this.libraries.add(value);
     }
-    public void addRun(String name, RunConfig value) {
+    public void addRun(String name, RunConfigurationSpec value) {
         if (this.runs == null)
             this.runs = new HashMap<>();
         this.runs.put(name, value);

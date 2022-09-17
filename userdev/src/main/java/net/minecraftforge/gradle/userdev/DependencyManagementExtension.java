@@ -24,7 +24,7 @@ import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.util.Node;
 import groovy.util.NodeList;
-import net.minecraftforge.gradle.common.util.MinecraftExtension;
+import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
 import net.minecraftforge.gradle.userdev.util.DeobfuscatingVersionUtils;
 import net.minecraftforge.gradle.userdev.util.DependencyRemapper;
 import net.minecraftforge.gradle.userdev.util.MavenPomUtils;
@@ -96,7 +96,7 @@ public class DependencyManagementExtension extends GroovyObjectSupport {
     }
 
     public void configureMinecraftLibraryConfiguration(Configuration configuration) {
-        MinecraftExtension minecraftExtension = this.project.getExtensions().findByType(MinecraftExtension.class);
+        McpMinecraftExtension minecraftExtension = this.project.getExtensions().findByType(McpMinecraftExtension.class);
         if (minecraftExtension == null)
             return;
 

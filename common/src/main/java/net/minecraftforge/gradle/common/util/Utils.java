@@ -20,53 +20,25 @@
 
 package net.minecraftforge.gradle.common.util;
 
+import com.google.gson.*;
+import groovy.lang.Closure;
 import net.minecraftforge.artifactural.gradle.GradleRepositoryAdapter;
-import net.minecraftforge.gradle.common.config.MCPConfigV1;
-import net.minecraftforge.gradle.common.tasks.ExtractNatives;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.common.util.VersionJson.Download;
-import net.minecraftforge.gradle.common.util.runs.RunConfigGenerator;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.repositories.ArtifactRepository;
-import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.tasks.TaskProvider;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
-import groovy.lang.Closure;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -80,14 +52,11 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 public class Utils {
     private static final boolean ENABLE_FILTER_REPOS = Boolean.parseBoolean(System.getProperty("net.minecraftforge.gradle.filter_repos", "true"));
 
     public static final Gson GSON = new GsonBuilder()
-        .registerTypeAdapter(MCPConfigV1.Step.class, new MCPConfigV1.Step.Deserializer())
+        .registerTypeAdapter(McpConfigConfigurationSpecV1.Step.class, new McpConfigConfigurationSpecV1.Step.Deserializer())
         .registerTypeAdapter(VersionJson.Argument.class, new VersionJson.Argument.Deserializer())
         .setPrettyPrinting().create();
     static final int CACHE_TIMEOUT = 1000 * 60 * 60; //1 hour, Timeout used for version_manifest.json so we dont ping their server every request.
@@ -373,45 +342,6 @@ public class Utils {
         ret.setTime(time);
         TimeZone.setDefault(_default);
         return ret;
-    }
-
-    public static void createRunConfigTasks(final MinecraftExtension extension, final TaskProvider<ExtractNatives> extractNatives, final TaskProvider<?>... setupTasks) {
-        List<TaskProvider<?>> setupTasksLst = new ArrayList<>(Arrays.asList(setupTasks));
-
-        final TaskProvider<Task> prepareRuns = extension.getProject().getTasks().register("prepareRuns", Task.class, task -> {
-            task.setGroup(RunConfig.RUNS_GROUP);
-            task.dependsOn(extractNatives, setupTasksLst);
-        });
-
-        final TaskProvider<Task> makeSrcDirs = extension.getProject().getTasks().register("makeSrcDirs", Task.class, task ->
-                task.doFirst(t -> {
-                    final JavaPluginExtension java = task.getProject().getExtensions().getByType(JavaPluginExtension.class);
-
-                    java.getSourceSets().forEach(s -> s.getAllSource()
-                            .getSrcDirs().stream().filter(f -> !f.exists()).forEach(File::mkdirs));
-                }));
-        setupTasksLst.add(makeSrcDirs);
-
-        extension.getRuns().forEach(RunConfig::mergeParents);
-
-        // Create run configurations _AFTER_ all projects have evaluated so that _ALL_ run configs exist and have been configured
-        extension.getProject().getGradle().projectsEvaluated(gradle -> {
-            VersionJson json = null;
-
-            try {
-                json = Utils.loadJson(extractNatives.get().getMeta().get().getAsFile(), VersionJson.class);
-            } catch (IOException ignored) {
-            }
-
-            List<String> additionalClientArgs = json != null ? json.getPlatformJvmArgs() : Collections.emptyList();
-
-            extension.getRuns().forEach(RunConfig::mergeChildren);
-            extension.getRuns().forEach(run -> RunConfigGenerator.createRunTask(run, extension.getProject(), prepareRuns, additionalClientArgs));
-
-            EclipseHacks.doEclipseFixes(extension, extractNatives, setupTasksLst);
-
-            RunConfigGenerator.createIDEGenRunsTasks(extension, prepareRuns, makeSrcDirs, additionalClientArgs);
-        });
     }
 
     public static void addRepoFilters(Project project) {

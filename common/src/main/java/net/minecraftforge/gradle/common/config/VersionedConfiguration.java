@@ -27,11 +27,11 @@ import java.io.InputStreamReader;
 
 import net.minecraftforge.gradle.common.util.Utils;
 
-public class Config {
+public class VersionedConfiguration {
     public int spec;
 
     public static int getSpec(InputStream stream) throws IOException {
-        return Utils.GSON.fromJson(new InputStreamReader(stream), Config.class).spec;
+        return Utils.GSON.fromJson(new InputStreamReader(stream), VersionedConfiguration.class).spec;
     }
     public static int getSpec(byte[] data) throws IOException {
         return getSpec(new ByteArrayInputStream(data));

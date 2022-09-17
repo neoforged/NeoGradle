@@ -20,10 +20,10 @@
 
 package net.minecraftforge.gradle.patcher.tasks;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV1.Function;
-import net.minecraftforge.gradle.common.config.UserdevConfigV1;
-import net.minecraftforge.gradle.common.config.UserdevConfigV2;
-import net.minecraftforge.gradle.common.config.UserdevConfigV2.DataFunction;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1.Function;
+import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV1;
+import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2;
+import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
 import net.minecraftforge.gradle.common.util.RunConfig;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.McpExtension;
@@ -91,7 +91,7 @@ public abstract class GenerateUserdevConfig extends DefaultTask {
 
     @TaskAction
     public void apply() throws IOException {
-        UserdevConfigV2 json = new UserdevConfigV2(); //TODO: Move this to plugin so we can re-use the names in both tasks?
+        UserdevConfigurationSpecV2 json = new UserdevConfigurationSpecV2(); //TODO: Move this to plugin so we can re-use the names in both tasks?
         json.spec = isV2() ? 2 : 1;
         json.binpatches = "joined.lzma";
         json.sources = getSource().get();
@@ -126,7 +126,7 @@ public abstract class GenerateUserdevConfig extends DefaultTask {
         Files.write(Utils.GSON.toJson(json).getBytes(StandardCharsets.UTF_8), getOutput().get().getAsFile());
     }
 
-    private void addParent(UserdevConfigV1 json, Project project) {
+    private void addParent(UserdevConfigurationSpecV1 json, Project project) {
         PatcherExtension patcher = project.getExtensions().findByType(PatcherExtension.class);
         McpExtension mcp = project.getExtensions().findByType(McpExtension.class);
 

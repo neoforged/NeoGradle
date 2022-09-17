@@ -18,7 +18,7 @@
  * USA
  */
 
-package net.minecraftforge.gradle.common.util.runs;
+package net.minecraftforge.gradle.mcp.util.runs;
 
 import net.minecraftforge.gradle.common.util.RunConfig;
 

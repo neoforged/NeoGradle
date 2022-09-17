@@ -38,11 +38,11 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-public class MCPConfigV1 extends Config {
-    public static MCPConfigV1 get(InputStream stream) {
-        return Utils.fromJson(stream, MCPConfigV1.class);
+public class McpConfigConfigurationSpecV1 extends VersionedConfiguration {
+    public static McpConfigConfigurationSpecV1 get(InputStream stream) {
+        return Utils.fromJson(stream, McpConfigConfigurationSpecV1.class);
     }
-    public static MCPConfigV1 get(byte[] data) {
+    public static McpConfigConfigurationSpecV1 get(byte[] data) {
         return get(new ByteArrayInputStream(data));
     }
 

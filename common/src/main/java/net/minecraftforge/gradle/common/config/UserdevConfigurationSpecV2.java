@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.common.config;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV1.Function;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1.Function;
 import net.minecraftforge.gradle.common.util.Utils;
 
 import java.io.ByteArrayInputStream;
@@ -35,11 +35,11 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class UserdevConfigV2 extends UserdevConfigV1 {
-    public static UserdevConfigV2 get(InputStream stream) {
-        return Utils.fromJson(stream, UserdevConfigV2.class);
+public class UserdevConfigurationSpecV2 extends UserdevConfigurationSpecV1 {
+    public static UserdevConfigurationSpecV2 get(InputStream stream) {
+        return Utils.fromJson(stream, UserdevConfigurationSpecV2.class);
     }
-    public static UserdevConfigV2 get(byte[] data) {
+    public static UserdevConfigurationSpecV2 get(byte[] data) {
         return get(new ByteArrayInputStream(data));
     }
 

@@ -1,22 +1,23 @@
 package net.minecraftforge.gradle.mcp.runtime.extensions;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV1;
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
+import net.minecraftforge.gradle.common.util.Artifact;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.common.util.FileWrapper;
 import net.minecraftforge.gradle.common.util.MinecraftRepo;
+import net.minecraftforge.gradle.mcp.McpExtension;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntime;
-import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpec;
+import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
 import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
 import net.minecraftforge.gradle.mcp.runtime.tasks.*;
-import net.minecraftforge.gradle.mcp.tasks.RunMcp;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
-import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class McpRuntimeExtension {
+public abstract class McpRuntimeExtension {
     private static final Pattern OUTPUT_REPLACE_PATTERN = Pattern.compile("^\\{(\\w+)Output}$");
 
     private final Project project;
@@ -36,6 +37,13 @@ public class McpRuntimeExtension {
     @Inject
     public McpRuntimeExtension(Project project) {
         this.project = project;
+
+        this.getDefaultSide().convention("joined");
+        this.getDefaultVersion().convention(
+                project.provider(() -> project.getExtensions().getByType(McpExtension.class))
+                        .flatMap(McpExtension::getConfig)
+                        .map(Artifact::getVersion)
+        );
     }
 
     public Project getProject() {
@@ -44,6 +52,7 @@ public class McpRuntimeExtension {
 
     public McpRuntime setup(final Action<McpRuntimeSpecBuilder> configurator) {
         final McpRuntimeSpecBuilder builder = McpRuntimeSpecBuilder.from(project);
+        builder.withSide(getDefaultSide().get());
         configurator.execute(builder);
         final McpRuntimeSpec spec = builder.build();
 
@@ -58,32 +67,33 @@ public class McpRuntimeExtension {
         FileUtils.unzip(mcpZipFile, unpackedMcpZipDirectory);
 
         final File mcpConfigFile = new File(unpackedMcpZipDirectory, "config.json");
-        final MCPConfigV2 mcpConfig = MCPConfigV2.get(mcpConfigFile);
+        final McpConfigConfigurationSpecV2 mcpConfig = McpConfigConfigurationSpecV2.get(mcpConfigFile);
 
         final Map<String, FileWrapper> data = buildDataMap(mcpConfig, spec.side(), unpackedMcpZipDirectory);
 
-        final List<MCPConfigV1.Step> steps = mcpConfig.getSteps(spec.side());
+        final List<McpConfigConfigurationSpecV1.Step> steps = mcpConfig.getSteps(spec.side());
         if (steps.isEmpty()) {
             throw new IllegalArgumentException("Unknown side: " + spec.side() + " For Config: " + mcpZipFile);
         }
 
         final LinkedHashMap<String, McpRuntimeTask> tasks = new LinkedHashMap<>();
-        for (MCPConfigV1.Step step : steps) {
+        for (McpConfigConfigurationSpecV1.Step step : steps) {
             Optional<Provider<File>> adaptedInput = Optional.empty();
 
             if (step.getName().equals("decompile")) {
                 final String inputArgumentMarker = step.getValue("input");
                 final Provider<File> inputArtifact = getInputForTaskFrom(inputArgumentMarker, tasks);
 
-                final Optional<McpRuntimeTask> modifiedTree = spec.preDecompileTaskTreeModifier().apply(inputArtifact);
-
-                adaptedInput = modifiedTree.map(McpRuntimeTask::getOutputFile).map(RegularFileProperty::getAsFile);
+                if (spec.preDecompileTaskTreeModifier() != null) {
+                    final McpRuntimeTask modifiedTree = spec.preDecompileTaskTreeModifier().adapt(spec, inputArtifact);
+                    adaptedInput = Optional.of(modifiedTree.getOutputFile().getAsFile());
+                }
             }
 
             McpRuntimeTask task = createBuiltIn(spec, mcpConfig, step, tasks, adaptedInput);
 
             if (task == null) {
-                MCPConfigV1.Function function = mcpConfig.getFunction(step.getType());
+                McpConfigConfigurationSpecV1.Function function = mcpConfig.getFunction(step.getType());
                 if (function == null) {
                     throw new IllegalArgumentException("Invalid MCP Config, Unknown function step type: %s File: %s".formatted(step.getType(), mcpConfig));
                 }
@@ -97,16 +107,34 @@ public class McpRuntimeExtension {
             task.getData().set(data);
         }
 
-        final RunMcp runMcp = project.getTasks().create(buildTaskName(spec, "runMcp"), RunMcp.class);
-        final McpRuntime runtime = new McpRuntime(spec, tasks, runMcp);
-
-        runMcp.getRuntime().set(runtime);
-        return runtime;
+        return new McpRuntime(spec, tasks);
     }
+
+    public AccessTransformerTask createAt(McpRuntimeSpec runtimeSpec, List<File> files, Collection<String> data) {
+        return getProject().getTasks().register(buildTaskName(runtimeSpec, "accessTransformer"), AccessTransformerTask.class, task -> {
+            task.getAdditionalTransformers().addAll(data);
+            task.getTransformers().plus(project.files(files.toArray()));
+        }).get();
+    }
+
+    /**
+     * Internal Use Only
+     * Non-Public API, Can be changed at any time.
+     */
+    public SideAnnotationStripperTask createSAS(McpRuntimeSpec spec, List<File> files, Collection<String> data) {
+        return getProject().getTasks().register(buildTaskName(spec, "sideAnnotationStripper"), SideAnnotationStripperTask.class, task -> {
+            task.getAdditionalDataEntries().addAll(data);
+            task.getDataFiles().plus(project.files(files.toArray()));
+        }).get();
+    }
+
+    public abstract Property<String> getDefaultSide();
+
+    public abstract Property<String> getDefaultVersion();
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @Nullable
-    private McpRuntimeTask createBuiltIn(final McpRuntimeSpec runtimeSpec, MCPConfigV2 mcpConfigV2, MCPConfigV1.Step step, final Map<String, McpRuntimeTask> tasks, final Optional<Provider<File>> adaptedInput) {
+    private McpRuntimeTask createBuiltIn(final McpRuntimeSpec runtimeSpec, McpConfigConfigurationSpecV2 mcpConfigV2, McpConfigConfigurationSpecV1.Step step, final Map<String, McpRuntimeTask> tasks, final Optional<Provider<File>> adaptedInput) {
         switch (step.getType()) {
             case "downloadManifest":
                 return getProject().getTasks().register(buildTaskName(runtimeSpec, step.getName()), DownloadFileTask.class, task -> {
@@ -166,25 +194,7 @@ public class McpRuntimeExtension {
         return null;
     }
 
-    public AccessTransformerTask createAt(McpRuntime runtime, List<File> files, Collection<String> data) {
-        return getProject().getTasks().register(buildTaskName(runtime.spec(), "accessTransformer"), AccessTransformerTask.class, task -> {
-            task.getAdditionalTransformers().addAll(data);
-            task.getTransformers().plus(project.files(files.toArray()));
-        }).get();
-    }
-
-    /**
-     * Internal Use Only
-     * Non-Public API, Can be changed at any time.
-     */
-    @Deprecated
-    public McpRuntimeTask createSAS(Project project, List<File> files, Collection<String> data) {
-        SideAnnotationStripperFunction ret = new SideAnnotationStripperFunction(project, files);
-        data.forEach(ret::addData);
-        return ret;
-    }
-
-    private McpRuntimeTask createExecute(final McpRuntimeSpec runtimeSpec, final MCPConfigV1.Step step, final MCPConfigV1.Function function) {
+    private McpRuntimeTask createExecute(final McpRuntimeSpec runtimeSpec, final McpConfigConfigurationSpecV1.Step step, final McpConfigConfigurationSpecV1.Function function) {
         return getProject().getTasks().register(buildTaskName(runtimeSpec, step.getName()), ExecutingMcpRuntimeTask.class, task -> {
             task.getExecutingArtifact().set(function.getVersion());
             task.getJvmArguments().addAll(function.getJvmArgs());
@@ -193,7 +203,7 @@ public class McpRuntimeExtension {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private Provider<File> getTaskInputFor(final Map<String, McpRuntimeTask> tasks, MCPConfigV1.Step step, final String defaultInputTask, final Optional<Provider<File>> adaptedInput) {
+    private Provider<File> getTaskInputFor(final Map<String, McpRuntimeTask> tasks, McpConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<Provider<File>> adaptedInput) {
         if (adaptedInput.isPresent()) {
             return adaptedInput.get();
         }
@@ -205,7 +215,7 @@ public class McpRuntimeExtension {
         return getInputForTaskFrom(step.getValue("input"), tasks);
     }
 
-    private Provider<File> getTaskInputFor(final Map<String, McpRuntimeTask> tasks, MCPConfigV1.Step step) {
+    private Provider<File> getTaskInputFor(final Map<String, McpRuntimeTask> tasks, McpConfigConfigurationSpecV1.Step step) {
         return getInputForTaskFrom(step.getValue("input"), tasks);
     }
 
@@ -225,7 +235,7 @@ public class McpRuntimeExtension {
         throw new IllegalStateException("The string '" + inputValue + "' did not return a valid substitution match!");
     }
 
-    private Map<String, String> buildArguments(MCPConfigV1.Step step, final Map<String, McpRuntimeTask> tasks) {
+    private Map<String, String> buildArguments(McpConfigConfigurationSpecV1.Step step, final Map<String, McpRuntimeTask> tasks) {
         final Map<String, String> arguments = new HashMap<>();
 
         step.getValues().forEach((key, value) -> {
@@ -248,7 +258,7 @@ public class McpRuntimeExtension {
 
     @SuppressWarnings("unchecked")
     @NotNull
-    private Map<String, FileWrapper> buildDataMap(MCPConfigV2 mcpConfig, final String side, final File unpackedMcpDirectory) {
+    private Map<String, FileWrapper> buildDataMap(McpConfigConfigurationSpecV2 mcpConfig, final String side, final File unpackedMcpDirectory) {
         return mcpConfig.getData().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 e -> new FileWrapper(new File(unpackedMcpDirectory, e.getValue() instanceof Map ? ((Map<String, String>) e.getValue()).get(side) : (String) e.getValue()))
         ));

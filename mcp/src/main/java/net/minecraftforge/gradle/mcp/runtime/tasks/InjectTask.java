@@ -28,7 +28,6 @@ import java.util.zip.ZipOutputStream;
 public abstract class InjectTask extends McpRuntimeTask {
     private static final CacheableMinecraftVersion v1_14_4 = CacheableMinecraftVersion.from("1.14.4");
 
-
     public InjectTask() {
         super();
 

@@ -20,8 +20,8 @@
 
 package net.minecraftforge.gradle.mcp.util;
 
-import net.minecraftforge.gradle.common.config.MCPConfigV1;
-import net.minecraftforge.gradle.common.config.MCPConfigV2;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1;
+import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.mcp.function.MCPFunction;
 import net.minecraftforge.gradle.mcp.function.MCPFunctionFactory;
@@ -54,7 +54,7 @@ public class MCPRuntime {
     final Map<String, Step> steps = new LinkedHashMap<>();
     Step currentStep;
 
-    public MCPRuntime(Project project, File mcp_config, MCPConfigV2 config, String side,
+    public MCPRuntime(Project project, File mcp_config, McpConfigConfigurationSpecV2 config, String side,
                       File mcpDirectory, Map<String, MCPFunction> extraPres) {
         this.project = project;
         this.environment = new MCPEnvironment(this, config.getVersion(), config.getJavaTarget(), side);
@@ -67,11 +67,11 @@ public class MCPRuntime {
                 e -> e.getValue() instanceof Map ? ((Map<String, String>) e.getValue()).get(side) : (String) e.getValue()
         ));
 
-        List<MCPConfigV1.Step> steps = config.getSteps(side);
+        List<McpConfigConfigurationSpecV1.Step> steps = config.getSteps(side);
         if (steps.isEmpty())
             throw new IllegalArgumentException("Unknown side: " + side + " For Config: " + mcp_config);
 
-        for (MCPConfigV1.Step step : steps) {
+        for (McpConfigConfigurationSpecV1.Step step : steps) {
             if (step.getName().equals("decompile")) { //TODO: Clearly define decomp vs bin, needs MCPConfig spec bump.
                 if (!extraPres.isEmpty()) {
                     String input = step.getValues().get("input"); //Decompile's input
@@ -92,7 +92,7 @@ public class MCPRuntime {
             MCPFunction function = MCPFunctionFactory.createBuiltIn(step.getType(), config.spec);
 
             if (function == null) {
-                MCPConfigV1.Function custom = config.getFunction(step.getType());
+                McpConfigConfigurationSpecV1.Function custom = config.getFunction(step.getType());
                 if (custom == null)
                     throw new IllegalArgumentException("Invalid MCP Config, Unknown function step type: " + step.getType() + " File: " + mcp_config);
 

@@ -20,8 +20,8 @@
 
 package net.minecraftforge.gradle.patcher;
 
-import net.minecraftforge.gradle.common.config.UserdevConfigV2.DataFunction;
-import net.minecraftforge.gradle.common.util.MinecraftExtension;
+import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
+import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
 import net.minecraftforge.gradle.common.util.RunConfig;
 
 import org.gradle.api.Project;
@@ -43,7 +43,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public abstract class PatcherExtension extends MinecraftExtension {
+public abstract class PatcherExtension extends McpMinecraftExtension {
     public static final String EXTENSION_NAME = "patcher";
 
     private boolean srgPatches = true;
@@ -77,6 +77,11 @@ public abstract class PatcherExtension extends MinecraftExtension {
     }
 
     public abstract Property<Project> getParent();
+
+    public void setParent(final Project project) {
+        getParent().set(project);
+
+    }
 
     public abstract RegularFileProperty getCleanSrc();
 

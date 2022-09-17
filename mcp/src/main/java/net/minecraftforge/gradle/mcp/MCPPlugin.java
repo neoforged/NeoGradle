@@ -65,9 +65,6 @@ public class MCPPlugin implements Plugin<Project> {
                 });
             });
             project.getRepositories().mavenCentral(); //Needed for MCP Deps
-
-            final String sideToAdd = extension.getSide().get();
-            runtimeExtension.setup(spec -> spec.withMcpVersion(extension.getConfig().get().getVersion()).withSide(sideToAdd));
         });
     }
 }
