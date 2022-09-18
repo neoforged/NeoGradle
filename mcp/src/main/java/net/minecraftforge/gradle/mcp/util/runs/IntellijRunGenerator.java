@@ -172,7 +172,7 @@ public class IntellijRunGenerator extends RunConfigGenerator.XMLConfigurationBui
 
                     final Element envs = javaDocument.createElement("envs");
                     {
-                        runConfig.getEnvironment().forEach((name, value) -> {
+                        runConfig.getEnvironmentVariables().forEach((name, value) -> {
                             final Element envEntry = javaDocument.createElement("env");
                             {
                                 envEntry.setAttribute("name", name);

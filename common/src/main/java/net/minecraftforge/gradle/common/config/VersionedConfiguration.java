@@ -28,7 +28,7 @@ import java.io.InputStreamReader;
 import net.minecraftforge.gradle.common.util.Utils;
 
 public class VersionedConfiguration {
-    public int spec;
+    public int spec = 1;
 
     public static int getSpec(InputStream stream) throws IOException {
         return Utils.GSON.fromJson(new InputStreamReader(stream), VersionedConfiguration.class).spec;

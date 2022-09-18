@@ -204,7 +204,7 @@ public abstract class RunConfigGenerator
                 Suppliers.memoize(() -> classpathFileWriter.apply("minecraftClasspath", minecraftClasspath)));
 
         // *Grumbles about having to keep a workaround for a "dummy" hack that should have never existed*
-        runConfig.getEnvironment().compute("MOD_CLASSES", (key,value) ->
+        runConfig.getEnvironmentVariables().compute("MOD_CLASSES", (key, value) ->
                 Strings.isNullOrEmpty(value) || "dummy".equals(value) ? "{source_roots}" : value);
 
         return tokens;
@@ -271,7 +271,7 @@ public abstract class RunConfigGenerator
             if (runConfig.isClient()) {
                 additionalClientArgs.forEach((arg) -> task.jvmArgs(runConfig.replace(updatedTokens, arg)));
             }
-            runConfig.getEnvironment().forEach((key,value) -> task.environment(key, runConfig.replace(updatedTokens, value)));
+            runConfig.getEnvironmentVariables().forEach((key, value) -> task.environment(key, runConfig.replace(updatedTokens, value)));
             runConfig.getProperties().forEach((key,value) -> task.systemProperty(key, runConfig.replace(updatedTokens, value)));
 
             runConfig.getAllSources().stream().map(SourceSet::getRuntimeClasspath).forEach(task::classpath);

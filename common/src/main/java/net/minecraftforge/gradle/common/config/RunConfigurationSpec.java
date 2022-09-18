@@ -5,7 +5,7 @@ import org.gradle.api.tasks.SourceSet;
 import java.util.List;
 import java.util.Map;
 
-public class RunConfigurationSpec {
+public class RunConfigurationSpec extends VersionedConfiguration {
     private Boolean singleInstance = null;
     private String taskName;
     private String main;

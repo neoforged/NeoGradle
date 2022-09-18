@@ -80,7 +80,7 @@ public class EclipseRunGenerator extends RunConfigGenerator.XMLConfigurationBuil
                 {
                     envs.setAttribute("key", "org.eclipse.debug.core.environmentVariables");
 
-                    runConfig.getEnvironment().forEach((name, value) -> {
+                    runConfig.getEnvironmentVariables().forEach((name, value) -> {
                         final Element envEntry = javaDocument.createElement("mapEntry");
                         {
                             envEntry.setAttribute("key", name);

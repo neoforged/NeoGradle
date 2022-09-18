@@ -48,7 +48,7 @@ public class VSCodeRunGenerator extends RunConfigGenerator.JsonConfigurationBuil
         config.addProperty("vmArgs", getJvmArgs(runConfig, additionalClientArgs, updatedTokens));
         config.addProperty("args", getArgs(runConfig, updatedTokens));
         JsonObject env = new JsonObject();
-        runConfig.getEnvironment().forEach((key,value) -> {
+        runConfig.getEnvironmentVariables().forEach((key, value) -> {
             value = runConfig.replace(updatedTokens, value);
             if (key.equals("nativesDirectory"))
                 value = replaceRootDirBy(project, value, "${workspaceFolder}");
