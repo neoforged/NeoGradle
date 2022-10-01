@@ -33,7 +33,7 @@ public abstract class WriteEntriesTask extends ForgeGradleBaseTask {
 
     @TaskAction
     public void run() throws Exception {
-        final Provider<File> output = ensureFileWorkspaceReady(getOutputFile());
-        Files.write(output.get().toPath(), getEntries().getOrElse(Collections.emptyList()), StandardOpenOption.CREATE_NEW);
+        final File output = ensureFileWorkspaceReady(getOutputFile());
+        Files.write(output.toPath(), getEntries().getOrElse(Collections.emptyList()), StandardOpenOption.CREATE_NEW);
     }
 }

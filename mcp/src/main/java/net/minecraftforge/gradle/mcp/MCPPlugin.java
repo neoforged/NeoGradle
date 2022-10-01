@@ -20,51 +20,17 @@
 
 package net.minecraftforge.gradle.mcp;
 
-import net.minecraftforge.gradle.common.util.Artifact;
-import net.minecraftforge.gradle.common.util.Utils;
-import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
-import net.minecraftforge.gradle.mcp.tasks.DownloadMCPConfig;
-
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository.MetadataSources;
-import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.tasks.TaskProvider;
 
 import javax.annotation.Nonnull;
 
-public class MCPPlugin implements Plugin<Project> {
+public class MCPPlugin implements Plugin<Object> {
 
     @Override
-    public void apply(@Nonnull Project project) {
-        // Needed to gain access to the JavaToolchainService as an extension
-        project.getPluginManager().apply(JavaPlugin.class);
-
-        McpExtension extension = project.getExtensions().create("mcp", McpExtension.class, project);
-        McpRuntimeExtension runtimeExtension = project.getExtensions().create("mcpRuntime", McpRuntimeExtension.class, project);
-
-        TaskProvider<DownloadMCPConfig> downloadConfig = project.getTasks().register("downloadConfig", DownloadMCPConfig.class);
-
-        downloadConfig.configure(task -> {
-            task.getConfig().set(extension.getConfig().map(Artifact::getDescriptor));
-            task.getOutput().set(project.getLayout().getBuildDirectory().file("mcp_config.zip"));
-        });
-
-        project.afterEvaluate(p -> {
-            //Add Known repos
-            project.getRepositories().maven(e -> {
-                e.setUrl(Utils.MOJANG_MAVEN);
-                e.metadataSources(MetadataSources::artifact);
-            });
-            project.getRepositories().maven(e -> {
-                e.setUrl(Utils.FORGE_MAVEN);
-                e.metadataSources(m -> {
-                    m.gradleMetadata();
-                    m.mavenPom();
-                    m.artifact();
-                });
-            });
-            project.getRepositories().mavenCentral(); //Needed for MCP Deps
-        });
+    public void apply(@Nonnull Object object) {
+        if (object instanceof Project project) {
+            project.getPluginManager().apply(McpProjectPlugin.class);
+        }
     }
 }

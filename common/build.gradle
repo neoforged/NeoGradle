@@ -18,11 +18,14 @@ dependencies {
     api "net.minecraftforge:DiffPatch:${project.diffpatch_version}:all"
     api "commons-codec:commons-codec:${project.commons_codec_version}"
     api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
+
+    // IDE support
+    api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
 }
 
 gradlePlugin {
     plugins {
-        mcp {
+        common {
             id = 'net.minecraftforge.gradle.common'
             implementationClass = 'net.minecraftforge.gradle.common.CommonPlugin'
         }

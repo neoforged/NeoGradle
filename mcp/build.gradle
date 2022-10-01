@@ -1,5 +1,17 @@
+plugins {
+    id 'groovy'
+    id 'java-gradle-plugin'
+}
+
 dependencies {
     api project(':common')
+
+    testImplementation gradleTestKit()
+    testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+
+    testImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") {
+        exclude group: 'org.codehaus.groovy'
+    }
 }
 
 gradlePlugin {
@@ -9,4 +21,8 @@ gradlePlugin {
             implementationClass = 'net.minecraftforge.gradle.mcp.MCPPlugin'
         }
     }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }

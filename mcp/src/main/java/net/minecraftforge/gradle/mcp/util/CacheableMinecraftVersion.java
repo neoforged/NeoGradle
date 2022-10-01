@@ -4,13 +4,14 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 /**
  * A reimplementation (basically a carbon copy) of {@link net.minecraftforge.srgutils.MinecraftVersion} that is Gradle compatible.
  * We should consider making that class extendable in the future!
  */
-public class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVersion> {
+public class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVersion>, Serializable {
 
     public static CacheableMinecraftVersion NEGATIVE = from("-1");
 

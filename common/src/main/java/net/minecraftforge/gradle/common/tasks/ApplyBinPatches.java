@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.List;
 
 @CacheableTask
-public abstract class ApplyBinPatches extends JarExec {
+public abstract class ApplyBinPatches extends JarExec implements ITaskWithOutput {
     public ApplyBinPatches() {
         getTool().set(Utils.BINPATCHER);
         getArgs().addAll("--clean", "{clean}", "--output", "{output}", "--apply", "{patch}");

@@ -100,7 +100,7 @@ public class DependencyManagementExtension extends GroovyObjectSupport {
         if (minecraftExtension == null)
             return;
 
-        minecraftExtension.getRuns().configureEach(runConfig -> {
+        minecraftExtension.getRunConfigurations().configureEach(runConfig -> {
             Supplier<String> librariesSupplier = () -> configuration.copyRecursive().resolve().stream()
                     .map(File::getAbsolutePath)
                     .collect(Collectors.joining(File.pathSeparator));

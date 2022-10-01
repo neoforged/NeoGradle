@@ -1,15 +1,16 @@
 package net.minecraftforge.gradle.common;
 
-import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
-import net.minecraftforge.gradle.common.extensions.ArtifactProviderExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.initialization.Settings;
 
-public class CommonPlugin implements Plugin<Project> {
-
+public class CommonPlugin implements Plugin<Object> {
     @Override
-    public void apply(Project project) {
-        project.getExtensions().create("artifactProviders", ArtifactProviderExtension.class);
-        project.getExtensions().create("downloader", ArtifactDownloaderExtension.class);
+    public void apply(Object o) {
+        if (o instanceof Project project) {
+            project.getPluginManager().apply(CommonProjectPlugin.class);
+        } else {
+            throw new IllegalArgumentException("CommonPlugin can only be applied to a project");
+        }
     }
 }

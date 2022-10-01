@@ -12,7 +12,7 @@ public abstract class ArtifactProviderExtension {
     private final Project project;
 
     @Inject
-    public ArtifactProviderExtension(Project project) {
+    public ArtifactProviderExtension(final Project project) {
         this.project = project;
     }
 

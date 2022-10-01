@@ -20,52 +20,46 @@
 
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.util.ManifestJson;
-
-import net.minecraftforge.gradle.common.util.MinecraftRepo;
-import org.apache.commons.io.FileUtils;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.*;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.minecraftforge.gradle.common.util.ManifestJson;
+import net.minecraftforge.gradle.common.util.UrlConstants;
+import org.apache.commons.io.FileUtils;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.TaskAction;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
 @CacheableTask
-public abstract class DownloadMCMeta extends DefaultTask {
+public abstract class DownloadMCMeta extends ForgeGradleBaseTask {
     // TODO: convert this into a property?
-    private static final String MANIFEST_URL = MinecraftRepo.MANIFEST_URL;
     private static final Gson GSON = new GsonBuilder().create();
 
     public DownloadMCMeta() {
-        getManifest().convention(getProject().getLayout().getBuildDirectory().dir(getName()).map(s -> s.file("manifest.json")));
         getOutput().convention(getProject().getLayout().getBuildDirectory().dir(getName()).map(s -> s.file("version.json")));
     }
 
     @TaskAction
     public void downloadMCMeta() throws IOException {
-        try (InputStream manin = new URL(MANIFEST_URL).openStream()) {
-            URL url = GSON.fromJson(new InputStreamReader(manin), ManifestJson.class).getUrl(getMCVersion().get());
+        try (InputStream manifestStream = new URL(UrlConstants.MOJANG_MANIFEST).openStream()) {
+            URL url = GSON.fromJson(new InputStreamReader(manifestStream), ManifestJson.class).getUrl(getMinecraftVersion().get());
             if (url != null) {
                 FileUtils.copyURLToFile(url, getOutput().get().getAsFile());
             } else {
-                throw new RuntimeException("Missing version from manifest: " + getMCVersion().get());
+                throw new RuntimeException("Missing version from manifest: " + getMinecraftVersion().get());
             }
         }
     }
 
     @Input
-    public abstract Property<String> getMCVersion();
-
-    // TODO: check for uses, remove if not used
-    @Input
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    public abstract RegularFileProperty getManifest();
+    public abstract Property<String> getMinecraftVersion();
 
     @OutputFile
     public abstract RegularFileProperty getOutput();

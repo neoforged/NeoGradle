@@ -24,7 +24,7 @@ import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1.Func
 import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV1;
 import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2;
 import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
-import net.minecraftforge.gradle.common.util.RunConfig;
+import net.minecraftforge.gradle.mcp.runs.RunConfiguration;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.McpExtension;
 import net.minecraftforge.gradle.patcher.PatcherExtension;
@@ -63,7 +63,7 @@ import javax.inject.Inject;
 
 public abstract class GenerateUserdevConfig extends DefaultTask {
 
-    private final NamedDomainObjectContainer<RunConfig> runs;
+    private final NamedDomainObjectContainer<RunConfiguration> runs;
 
     @Nullable
     private DataFunction processor;
@@ -74,7 +74,7 @@ public abstract class GenerateUserdevConfig extends DefaultTask {
 
     @Inject
     public GenerateUserdevConfig(@Nonnull final Project project) {
-        this.runs = project.container(RunConfig.class, name -> new RunConfig(project, name));
+        this.runs = project.container(RunConfiguration.class, name -> new RunConfiguration(project, name));
 
         ObjectFactory objects = project.getObjects();
         getPatchesOriginalPrefix().convention("a/");
@@ -196,12 +196,12 @@ public abstract class GenerateUserdevConfig extends DefaultTask {
     @Optional
     public abstract ListProperty<String> getSRGLines();
 
-    public NamedDomainObjectContainer<RunConfig> runs(@SuppressWarnings("rawtypes") Closure closure) {
+    public NamedDomainObjectContainer<RunConfiguration> runs(@SuppressWarnings("rawtypes") Closure closure) {
         return runs.configure(closure);
     }
 
     @Input
-    public NamedDomainObjectContainer<RunConfig> getRuns() {
+    public NamedDomainObjectContainer<RunConfiguration> getRuns() {
         return runs;
     }
 
@@ -212,10 +212,10 @@ public abstract class GenerateUserdevConfig extends DefaultTask {
 
         @SuppressWarnings("rawtypes")
         final Closure closure = (Closure) value;
-        final RunConfig runConfig = getRuns().maybeCreate(name);
+        final RunConfiguration runConfiguration = getRuns().maybeCreate(name);
 
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.setDelegate(runConfig);
+        closure.setDelegate(runConfiguration);
         closure.call();
     }
 

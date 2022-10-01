@@ -20,13 +20,13 @@
 
 package net.minecraftforge.gradle.userdev;
 
-import net.minecraftforge.gradle.common.tasks.ApplyMappings;
+import net.minecraftforge.gradle.common.tasks.ApplyMappingsToSourceJar;
 import net.minecraftforge.gradle.common.tasks.ApplyRangeMap;
 import net.minecraftforge.gradle.common.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.tasks.DownloadMCMeta;
 import net.minecraftforge.gradle.common.tasks.DownloadMavenArtifact;
 import net.minecraftforge.gradle.common.tasks.ExtractExistingFiles;
-import net.minecraftforge.gradle.common.tasks.ExtractMCPData;
+import net.minecraftforge.gradle.common.tasks.ExtractMcpData;
 import net.minecraftforge.gradle.common.tasks.ExtractNatives;
 import net.minecraftforge.gradle.common.tasks.ExtractRangeMap;
 import net.minecraftforge.gradle.common.util.BaseRepo;
@@ -35,7 +35,7 @@ import net.minecraftforge.gradle.common.util.MinecraftRepo;
 import net.minecraftforge.gradle.common.util.MojangLicenseHelper;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.common.util.VersionJson;
-import net.minecraftforge.gradle.mcp.ChannelProvidersExtension;
+import net.minecraftforge.gradle.mcp.extensions.ChannelProvidersExtension;
 import net.minecraftforge.gradle.mcp.MCPRepo;
 import net.minecraftforge.gradle.mcp.tasks.DownloadMCPMappings;
 import net.minecraftforge.gradle.mcp.tasks.GenerateSRG;
@@ -124,7 +124,7 @@ public class UserDevPlugin implements Plugin<Project> {
 
         final TaskContainer tasks = project.getTasks();
         final TaskProvider<DownloadMavenArtifact> downloadMcpConfig = tasks.register("downloadMcpConfig", DownloadMavenArtifact.class);
-        final TaskProvider<ExtractMCPData> extractSrg = tasks.register("extractSrg", ExtractMCPData.class);
+        final TaskProvider<ExtractMcpData> extractSrg = tasks.register("extractSrg", ExtractMcpData.class);
         final TaskProvider<GenerateSRG> createSrgToMcp = tasks.register("createSrgToMcp", GenerateSRG.class);
         final TaskProvider<GenerateSRG> createMcpToSrg = tasks.register("createMcpToSrg", GenerateSRG.class);
         final TaskProvider<DownloadMCMeta> downloadMCMeta = tasks.register("downloadMCMeta", DownloadMCMeta.class);
@@ -143,7 +143,7 @@ public class UserDevPlugin implements Plugin<Project> {
 
         createSrgToMcp.configure(task -> {
             task.setReverse(false);
-            task.getSrg().set(extractSrg.flatMap(ExtractMCPData::getOutput));
+            task.getSrg().set(extractSrg.flatMap(ExtractMcpData::getOutput));
             task.getMappings().set(extension.getMappings());
             task.getFormat().set(IMappingFile.Format.SRG);
             task.getOutput().set(project.getLayout().getBuildDirectory()
@@ -152,7 +152,7 @@ public class UserDevPlugin implements Plugin<Project> {
 
         createMcpToSrg.configure(task -> {
             task.setReverse(true);
-            task.getSrg().set(extractSrg.flatMap(ExtractMCPData::getOutput));
+            task.getSrg().set(extractSrg.flatMap(ExtractMcpData::getOutput));
             task.getMappings().set(extension.getMappings());
         });
 
@@ -186,7 +186,7 @@ public class UserDevPlugin implements Plugin<Project> {
             final TaskProvider<DownloadMCPMappings> dlMappingsNew = tasks.register("downloadMappingsNew", DownloadMCPMappings.class);
             final TaskProvider<ExtractRangeMap> extractRangeConfig = tasks.register("extractRangeMap", ExtractRangeMap.class);
             final TaskProvider<ApplyRangeMap> applyRangeConfig = tasks.register("applyRangeMap", ApplyRangeMap.class);
-            final TaskProvider<ApplyMappings> toMCPNew = tasks.register("srg2mcpNew", ApplyMappings.class);
+            final TaskProvider<ApplyMappingsToSourceJar> toMCPNew = tasks.register("srg2mcpNew", ApplyMappingsToSourceJar.class);
             final TaskProvider<ExtractExistingFiles> extractMappedNew = tasks.register("extractMappedNew", ExtractExistingFiles.class);
             final TaskProvider<DefaultTask> updateMappings = tasks.register("updateMappings", DefaultTask.class);
 
@@ -212,7 +212,7 @@ public class UserDevPlugin implements Plugin<Project> {
             });
 
             extractMappedNew.configure(task -> {
-                task.getArchive().set(toMCPNew.flatMap(ApplyMappings::getOutput));
+                task.getArchive().set(toMCPNew.flatMap(ApplyMappingsToSourceJar::getOutput));
                 task.getTargets().from(mainJavaSources);
             });
 
@@ -296,13 +296,13 @@ public class UserDevPlugin implements Plugin<Project> {
                 e.metadataSources(MetadataSources::artifact);
             });
             project.getRepositories().mavenCentral(); //Needed for MCP Deps
-            mcrepo.validate(minecraft, extension.getRuns().getAsMap(), extractNatives.get(), downloadAssets.get(), createSrgToMcp.get()); //This will set the MC_VERSION property.
+            mcrepo.validate(minecraft, extension.getRunConfigurations().getAsMap(), extractNatives.get(), downloadAssets.get(), createSrgToMcp.get()); //This will set the MC_VERSION property.
 
             String mcVer = (String) project.getExtensions().getExtraProperties().get("MC_VERSION");
             String mcpVer = (String) project.getExtensions().getExtraProperties().get("MCP_VERSION");
             // TODO: convert to constant and use String.format
             downloadMcpConfig.configure(t -> t.setArtifact("de.oceanlabs.mcp:mcp_config:" + mcpVer + "@zip"));
-            downloadMCMeta.configure(t -> t.getMCVersion().convention(mcVer));
+            downloadMCMeta.configure(t -> t.getMinecraftVersion().convention(mcVer));
 
             // Register reobfJar for the 'jar' task
             reobfExtension.create(JavaPlugin.JAR_TASK_NAME);
@@ -328,7 +328,7 @@ public class UserDevPlugin implements Plugin<Project> {
             // Finalize asset index
             final String finalAssetIndex = assetIndex;
 
-            extension.getRuns().forEach(runConfig -> runConfig.token("asset_index", finalAssetIndex));
+            extension.getRunConfigurations().forEach(runConfig -> runConfig.token("asset_index", finalAssetIndex));
             Utils.createRunConfigTasks(extension, extractNatives, downloadAssets, createSrgToMcp);
         });
 

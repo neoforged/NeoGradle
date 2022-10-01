@@ -23,7 +23,6 @@ package net.minecraftforge.gradle.common.util;
 import com.google.gson.*;
 import groovy.lang.Closure;
 import net.minecraftforge.artifactural.gradle.GradleRepositoryAdapter;
-import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.common.util.VersionJson.Download;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -54,11 +53,6 @@ import java.util.zip.ZipOutputStream;
 
 public class Utils {
     private static final boolean ENABLE_FILTER_REPOS = Boolean.parseBoolean(System.getProperty("net.minecraftforge.gradle.filter_repos", "true"));
-
-    public static final Gson GSON = new GsonBuilder()
-        .registerTypeAdapter(McpConfigConfigurationSpecV1.Step.class, new McpConfigConfigurationSpecV1.Step.Deserializer())
-        .registerTypeAdapter(VersionJson.Argument.class, new VersionJson.Argument.Deserializer())
-        .setPrettyPrinting().create();
     static final int CACHE_TIMEOUT = 1000 * 60 * 60; //1 hour, Timeout used for version_manifest.json so we dont ping their server every request.
                                                           //manifest doesn't include sha1's so we use this for the per-version json as well.
     public static final String FORGE_MAVEN = "https://maven.minecraftforge.net/";
@@ -211,15 +205,6 @@ public class Utils {
         return target;
     }
 
-    public static <T> T loadJson(File target, Class<T> clz) throws IOException {
-        try (InputStream in = new FileInputStream(target)) {
-            return GSON.fromJson(new InputStreamReader(in), clz);
-        }
-    }
-    public static <T> T loadJson(InputStream in, Class<T> clz) {
-        return GSON.fromJson(new InputStreamReader(in), clz);
-    }
-
     public static void updateHash(File target) throws IOException {
         updateHash(target, HashFunction.values());
     }
@@ -240,6 +225,15 @@ public class Utils {
             consumer.accept(entries.nextElement());
         }
     }
+
+    public static String replace(Map<String, ?> vars, String value) {
+        if (value.length() <= 2 || value.indexOf('{') == -1) {
+            return value;
+        }
+
+        return replaceTokens(vars, value);
+    }
+
     @FunctionalInterface
     public interface IOConsumer<T> {
         void accept(T value) throws IOException;
@@ -305,14 +299,6 @@ public class Utils {
 
             return IOUtils.toByteArray(zip.getInputStream(entry));
         }
-    }
-
-
-    public static <T> T fromJson(InputStream stream, Class<T> classOfT) throws JsonSyntaxException, JsonIOException {
-        return GSON.fromJson(new InputStreamReader(stream), classOfT);
-    }
-    public static <T> T fromJson(byte[] data, Class<T> classOfT) throws JsonSyntaxException, JsonIOException {
-        return GSON.fromJson(new InputStreamReader(new ByteArrayInputStream(data)), classOfT);
     }
 
     @Nonnull

@@ -23,7 +23,7 @@ package net.minecraftforge.gradle.userdev.util;
 import net.minecraftforge.gradle.common.util.HashFunction;
 import net.minecraftforge.gradle.common.util.HashStore;
 import net.minecraftforge.gradle.common.util.MavenArtifactDownloader;
-import net.minecraftforge.gradle.common.util.McpNames;
+import net.minecraftforge.gradle.mcp.naming.renamer.McpSourceRenamer;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.MCPRepo;
 import net.minecraftforge.gradle.userdev.tasks.RenameJarSrg2Mcp;
@@ -164,7 +164,7 @@ public class Deobfuscator {
                 .add("orig", original);
 
         if (!cache.isSame() || !output.exists()) {
-            McpNames map = McpNames.load(names);
+            McpSourceRenamer map = McpSourceRenamer.from(names);
 
             try (ZipInputStream zin = new ZipInputStream(new FileInputStream(original));
                  ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(output))) {

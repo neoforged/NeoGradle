@@ -16,7 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  * USA
- */
+ *//*
+
 
 package net.minecraftforge.gradle.common.util;
 
@@ -183,10 +184,12 @@ public class MinecraftRepo extends BaseRepo {
         return mappings;
     }
 
-    /**
+    */
+/**
      * This should ONLY ever be passed "mcversion" or "mcversion-mcpconfigversion".
      * Any other input is a MISTAKE and should NOT use this method.
-     */
+     *//*
+
     public static String getMCVersion(String version) {
         int idx = version.lastIndexOf('-');
         if (idx != -1 && MCP_CONFIG_VERSION.matcher(version.substring(idx + 1)).matches()) {
@@ -349,7 +352,9 @@ public class MinecraftRepo extends BaseRepo {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
                 if (name.endsWith(".class")) {
-                    boolean isNotch = whitelist.contains(name.substring(0, name.length() - 6 /*.class*/));
+                    boolean isNotch = whitelist.contains(name.substring(0, name.length() - 6 */
+/*.class*//*
+));
                     if (slim == isNotch) {
                         ZipEntry _new = Utils.getStableEntry(name, stable ? Utils.ZIPTIME : 0);
                         out.putNextEntry(_new);
@@ -426,3 +431,4 @@ public class MinecraftRepo extends BaseRepo {
         }
     }
 }
+*/

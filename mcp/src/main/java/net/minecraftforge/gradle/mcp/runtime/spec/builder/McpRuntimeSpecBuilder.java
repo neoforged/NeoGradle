@@ -1,44 +1,76 @@
 package net.minecraftforge.gradle.mcp.runtime.spec.builder;
 
+import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
 import net.minecraftforge.gradle.mcp.runtime.spec.TaskTreeAdapter;
-import net.minecraftforge.gradle.mcp.runtime.tasks.McpRuntimeTask;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
-
-import java.io.File;
-import java.util.function.Function;
 
 public final class McpRuntimeSpecBuilder {
 
     private final Project project;
+    private Project configureProject;
     private String namePrefix = "";
-    private String mcpVersion;
-    private String side;
+    private Provider<String> mcpVersion;
+    private boolean hasConfiguredMcpVersion = false;
+    private Provider<String> side;
+    private boolean hasConfiguredSide = false;
 
     private TaskTreeAdapter preDecompileTaskTreeModifier = null;
 
     private McpRuntimeSpecBuilder(Project project) {
         this.project = project;
+        this.configureProject = project;
     }
 
     public static McpRuntimeSpecBuilder from(final Project project) {
-        return new McpRuntimeSpecBuilder(project);
+        final McpRuntimeSpecBuilder builder =  new McpRuntimeSpecBuilder(project);
+
+        configureBuilder(builder);
+
+        return builder;
     }
 
-    public McpRuntimeSpecBuilder withNamePrefix(final String namePrefix) {
+    private static void configureBuilder(McpRuntimeSpecBuilder builder) {
+        final McpRuntimeExtension runtimeExtension = builder.configureProject.getExtensions().getByType(McpRuntimeExtension.class);
+
+        if (!builder.hasConfiguredSide) {
+            builder.side = runtimeExtension.getDefaultSide();
+        }
+        if (!builder.hasConfiguredMcpVersion) {
+            builder.mcpVersion = runtimeExtension.getDefaultVersion();
+        }
+    }
+
+    public McpRuntimeSpecBuilder withName(final String namePrefix) {
         this.namePrefix = namePrefix;
         return this;
     }
 
-    public McpRuntimeSpecBuilder withMcpVersion(String mcpVersion) {
+    public McpRuntimeSpecBuilder withMcpVersion(final Provider<String> mcpVersion) {
         this.mcpVersion = mcpVersion;
+        this.hasConfiguredMcpVersion = true;
         return this;
     }
 
-    public McpRuntimeSpecBuilder withSide(String side) {
+    public McpRuntimeSpecBuilder withMcpVersion(final String mcpVersion) {
+        if (mcpVersion == null) // Additional null check for convenient loading of versions from dependencies.
+            return this;
+
+        return withMcpVersion(project.provider(() -> mcpVersion));
+    }
+
+    public McpRuntimeSpecBuilder withSide(final Provider<String> side) {
         this.side = side;
+        this.hasConfiguredSide = true;
         return this;
+    }
+
+    public McpRuntimeSpecBuilder withSide(final String side) {
+        if (side == null) // Additional null check for convenient loading of sides from dependencies.
+            return this;
+
+        return withSide(project.provider(() -> side));
     }
 
     public McpRuntimeSpecBuilder withPreDecompileTaskTreeModifier(TaskTreeAdapter preDecompileTaskTreeModifier) {
@@ -51,7 +83,15 @@ public final class McpRuntimeSpecBuilder {
         return this;
     }
 
+    public McpRuntimeSpecBuilder configureFromProject(Project configureProject) {
+        this.configureProject = configureProject;
+
+        configureBuilder(this);
+
+        return this;
+    }
+
     public McpRuntimeSpec build() {
-        return new McpRuntimeSpec(project, namePrefix, mcpVersion, side, preDecompileTaskTreeModifier);
+        return new McpRuntimeSpec(project, configureProject, namePrefix, mcpVersion.get(), side.get(), preDecompileTaskTreeModifier);
     }
 }

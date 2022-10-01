@@ -20,11 +20,8 @@
 
 package net.minecraftforge.gradle.common.util;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
+
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.Collections;
@@ -39,6 +36,11 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class VersionJson {
+
+    protected static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(VersionJson.Argument.class, new VersionJson.Argument.Deserializer())
+            .setPrettyPrinting().create();
+
     @Nullable
     public Arguments arguments;
     public AssetIndex assetIndex;
@@ -148,9 +150,9 @@ public class VersionJson {
                     throw new JsonParseException("Error parsing arguments in version json. File is corrupt or its format has changed.");
 
                 JsonElement val = obj.get("value");
-                Rule[] rules = Utils.GSON.fromJson(obj.get("rules"), Rule[].class);
+                Rule[] rules = GSON.fromJson(obj.get("rules"), Rule[].class);
                 @SuppressWarnings("unchecked")
-                List<String> value = val.isJsonPrimitive() ? Collections.singletonList(val.getAsString()) : Utils.GSON.fromJson(val, List.class);
+                List<String> value = val.isJsonPrimitive() ? Collections.singletonList(val.getAsString()) : GSON.fromJson(val, List.class);
 
                 return new Argument(rules, value);
             }

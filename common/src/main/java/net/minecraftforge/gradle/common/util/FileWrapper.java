@@ -5,8 +5,9 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 import java.io.File;
+import java.io.Serializable;
 
-public record FileWrapper(File file) {
+public record FileWrapper(File file) implements Serializable {
 
     @Override
     @InputFile

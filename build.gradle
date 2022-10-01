@@ -38,6 +38,12 @@ subprojects { Project subproject ->
         repository.url = 'https://maven.minecraftforge.net/'
     }
 
+    //TODO: Rehost the idea repositories on FORGEMAVEN!
+    subproject.repositories.maven { MavenArtifactRepository repository ->
+        repository.name 'Sponge'
+        repository.url = 'https://repo.spongepowered.org/repository/maven-public/'
+    }
+
     subproject.gradlePlugin.automatedPublishing = true
 
     subproject.publishing.publications {

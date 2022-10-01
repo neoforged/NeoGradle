@@ -20,30 +20,20 @@
 
 package net.minecraftforge.gradle.mcp.extensions;
 
-import net.minecraftforge.gradle.common.util.RunConfig;
+import net.minecraftforge.gradle.common.util.IConfigurableObject;
+import net.minecraftforge.gradle.mcp.naming.NamingChannelProvider;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
-
-import groovy.lang.Closure;
-import groovy.lang.GroovyObjectSupport;
-import groovy.lang.MissingPropertyException;
-import org.gradle.util.Configurable;
-
-import java.util.Map;
 
 import javax.inject.Inject;
 
-public abstract class McpMinecraftExtension implements Configurable<McpMinecraftExtension> {
+public abstract class McpMinecraftExtension implements IConfigurableObject<McpMinecraftExtension> {
 
     private final Project project;
     private final FilesWithEntriesExtension accessTransformers;
     private final FilesWithEntriesExtension sideAnnotationStrippers;
     private final MappingsExtension mappings;
-    private final NamedDomainObjectContainer<RunConfig> runs;
+    private final NamedDomainObjectContainer<NamingChannelProvider> namingChannelProviders;
 
     @Inject
     public McpMinecraftExtension(final Project project) {
@@ -51,15 +41,15 @@ public abstract class McpMinecraftExtension implements Configurable<McpMinecraft
         this.accessTransformers = project.getObjects().newInstance(FilesWithEntriesExtension.class, project);
         this.sideAnnotationStrippers = project.getObjects().newInstance(FilesWithEntriesExtension.class, project);
         this.mappings = project.getObjects().newInstance(MappingsExtension.class, project);
-        this.runs = project.getObjects().domainObjectContainer(RunConfig.class, name -> new RunConfig(project, name));
+        this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannelProvider.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
     }
 
     public Project getProject() {
         return project;
     }
 
-    public NamedDomainObjectContainer<RunConfig> getRuns() {
-        return runs;
+    public NamedDomainObjectContainer<NamingChannelProvider> getNamingChannelProviders() {
+        return namingChannelProviders;
     }
 
     public MappingsExtension getMappings() {

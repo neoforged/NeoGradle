@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableMultimap;
 import java.util.List;
 
 @CacheableTask
-public abstract class ApplyRangeMap extends JarExec {
+public abstract class ApplyRangeMap extends JarExec implements ITaskWithOutput {
     public boolean annotate = false;
     public boolean keepImports = true;
 

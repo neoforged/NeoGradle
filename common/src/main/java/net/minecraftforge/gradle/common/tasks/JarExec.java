@@ -244,7 +244,6 @@ public abstract class JarExec extends DownloadingTask {
     @Classpath
     public abstract ConfigurableFileCollection getClasspath();
 
-    @Input
     @Nested
     @Optional
     public abstract Property<JavaLauncher> getJavaLauncher();

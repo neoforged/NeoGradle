@@ -22,7 +22,7 @@ package net.minecraftforge.gradle.patcher;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
-import net.minecraftforge.gradle.common.util.RunConfig;
+import net.minecraftforge.gradle.mcp.runs.RunConfiguration;
 import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -54,7 +54,7 @@ public abstract class PatcherExtension extends McpMinecraftExtension {
                 .put(project.getName() + "_client", "mcp.client.Start")
                 .put(project.getName() + "_server", "net.minecraft.server.MinecraftServer")
                 .build().forEach((name, main) -> {
-            RunConfig run = new RunConfig(project, name);
+            RunConfiguration run = new RunConfiguration(project, name);
 
             run.setTaskName(name);
             run.setMain(main);
@@ -65,7 +65,7 @@ public abstract class PatcherExtension extends McpMinecraftExtension {
                 e.printStackTrace();
             }
 
-            getRuns().add(run);
+            getRunConfigurations().add(run);
         });
     }
 

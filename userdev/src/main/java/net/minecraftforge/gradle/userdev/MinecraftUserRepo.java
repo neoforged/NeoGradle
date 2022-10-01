@@ -41,9 +41,9 @@ import net.minecraftforge.gradle.common.util.BaseRepo;
 import net.minecraftforge.gradle.common.util.HashFunction;
 import net.minecraftforge.gradle.common.util.HashStore;
 import net.minecraftforge.gradle.common.util.MavenArtifactDownloader;
-import net.minecraftforge.gradle.common.util.McpNames;
+import net.minecraftforge.gradle.mcp.naming.renamer.McpSourceRenamer;
 import net.minecraftforge.gradle.common.util.POMBuilder;
-import net.minecraftforge.gradle.common.util.RunConfig;
+import net.minecraftforge.gradle.mcp.runs.RunConfiguration;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.MCPRepo;
 import net.minecraftforge.gradle.mcp.function.MCPFunction;
@@ -131,7 +131,7 @@ public class MinecraftUserRepo extends BaseRepo {
     private final String AT_HASH;
     private final String MAPPING;
     private final boolean isPatcher;
-    private final Map<String, McpNames> mapCache = new HashMap<>();
+    private final Map<String, McpSourceRenamer> mapCache = new HashMap<>();
     private boolean loadedParents = false;
     private Patcher parent;
     @Nullable
@@ -190,7 +190,7 @@ public class MinecraftUserRepo extends BaseRepo {
         return project.file("build/fg_cache/");
     }
 
-    public void validate(Configuration cfg, Map<String, RunConfig> runs, ExtractNatives extractNatives, DownloadAssets downloadAssets, GenerateSRG createSrgToMcp) {
+    public void validate(Configuration cfg, Map<String, RunConfiguration> runs, ExtractNatives extractNatives, DownloadAssets downloadAssets, GenerateSRG createSrgToMcp) {
         getParents();
         if (mcp == null)
             throw new IllegalStateException("Invalid minecraft dependency: " + GROUP + ":" + NAME + ":" + VERSION);
@@ -251,7 +251,7 @@ public class MinecraftUserRepo extends BaseRepo {
 
         if (parent != null && parent.getConfig().runs != null) {
             parent.getConfig().runs.forEach((name, dev) -> {
-                final RunConfig run = runs.get(name);
+                final RunConfiguration run = runs.get(name);
                 if (run != null)
                     run.parent(0, dev);
             });
@@ -927,11 +927,11 @@ public class MinecraftUserRepo extends BaseRepo {
         }
     }
 
-    private McpNames loadMCPNames(String name, File data) throws IOException {
-        McpNames map = mapCache.get(name);
+    private McpSourceRenamer loadMCPNames(String name, File data) throws IOException {
+        McpSourceRenamer map = mapCache.get(name);
         String hash = HashFunction.SHA1.hash(data);
         if (map == null || !hash.equals(map.hash)) {
-            map = McpNames.load(data);
+            map = McpSourceRenamer.from(data);
             mapCache.put(name, map);
         }
         return map;
@@ -973,7 +973,7 @@ public class MinecraftUserRepo extends BaseRepo {
         if (!cache.isSame() || !srg.exists()) {
             info("Creating SRG -> MCP TSRG");
             byte[] data = mcp.getData("mappings");
-            McpNames mcp_names = loadMCPNames(mapping, names);
+            McpSourceRenamer mcp_names = loadMCPNames(mapping, names);
             IMappingFile obf_to_srg = loadObfToSrg(data);
             IMappingFile srg_to_named = obf_to_srg.reverse().chain(obf_to_srg).rename(new IRenamer() {
                 @Override
@@ -1182,7 +1182,7 @@ public class MinecraftUserRepo extends BaseRepo {
             IMappingFile obf_to_srg = IMappingFile.load(obf2srg);
             Set<String> vanilla = obf_to_srg.getClasses().stream().map(IMappingFile.INode::getMapped).collect(Collectors.toSet());
 
-            McpNames map = McpNames.load(names);
+            McpSourceRenamer map = McpSourceRenamer.from(names);
 
             if (!sources.getParentFile().exists())
                 sources.getParentFile().mkdirs();

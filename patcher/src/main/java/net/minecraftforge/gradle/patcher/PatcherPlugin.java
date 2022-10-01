@@ -26,19 +26,19 @@ import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.common.tasks.*;
 import net.minecraftforge.gradle.common.util.*;
-import net.minecraftforge.gradle.mcp.ChannelProvidersExtension;
+import net.minecraftforge.gradle.mcp.extensions.ChannelProvidersExtension;
 import net.minecraftforge.gradle.mcp.MCPPlugin;
 import net.minecraftforge.gradle.mcp.MCPRepo;
 import net.minecraftforge.gradle.mcp.McpExtension;
-import net.minecraftforge.gradle.mcp.runtime.McpRuntime;
+import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
-import net.minecraftforge.gradle.mcp.runtime.tasks.AccessTransformerTask;
-import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripperTask;
+import net.minecraftforge.gradle.mcp.runtime.tasks.AccessTransformer;
+import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;
 import net.minecraftforge.gradle.mcp.tasks.DownloadMCPConfig;
 import net.minecraftforge.gradle.mcp.tasks.DownloadMCPMappings;
 import net.minecraftforge.gradle.mcp.tasks.GenerateSRG;
 import net.minecraftforge.gradle.mcp.tasks.WriteEntriesTask;
-import net.minecraftforge.gradle.mcp.util.runs.RunGenerationUtils;
+import net.minecraftforge.gradle.mcp.runs.RunGenerationUtils;
 import net.minecraftforge.gradle.patcher.tasks.*;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectProvider;
@@ -91,7 +91,7 @@ public class PatcherPlugin implements Plugin<Project> {
         final TaskProvider<DownloadMCMeta> dlMCMetaConfig = tasks.register("downloadMCMeta", DownloadMCMeta.class);
         final TaskProvider<ExtractNatives> extractNatives = tasks.register("extractNatives", ExtractNatives.class);
         final TaskProvider<ApplyPatches> applyPatches = tasks.register("applyPatches", ApplyPatches.class);
-        final TaskProvider<ApplyMappings> toMCPConfig = tasks.register("srg2mcp", ApplyMappings.class);
+        final TaskProvider<ApplyMappingsToSourceJar> toMCPConfig = tasks.register("srg2mcp", ApplyMappingsToSourceJar.class);
         final TaskProvider<ExtractZip> extractMapped = tasks.register("extractMapped", ExtractZip.class);
         final TaskProvider<GenerateSRG> createMcp2Srg = tasks.register("createMcp2Srg", GenerateSRG.class);
         final TaskProvider<GenerateSRG> createMcp2Obf = tasks.register("createMcp2Obf", GenerateSRG.class);
@@ -168,7 +168,7 @@ public class PatcherPlugin implements Plugin<Project> {
         });
 
         extractMapped.configure(task -> {
-            task.getZip().set(toMCPConfig.flatMap(ApplyMappings::getOutput));
+            task.getZip().set(toMCPConfig.flatMap(ApplyMappingsToSourceJar::getOutput));
             task.getOutput().set(extension.getPatchedSrc());
         });
 
@@ -287,7 +287,7 @@ public class PatcherPlugin implements Plugin<Project> {
             TaskProvider<DownloadMCPMappings> dlMappingsNew = tasks.register("downloadMappingsNew", DownloadMCPMappings.class);
             dlMappingsNew.get().getMappings().set(updateChannel + '_' + updateVersion);
 
-            TaskProvider<ApplyMappings> toMCPNew = tasks.register("srg2mcpNew", ApplyMappings.class);
+            TaskProvider<ApplyMappingsToSourceJar> toMCPNew = tasks.register("srg2mcpNew", ApplyMappingsToSourceJar.class);
             toMCPNew.configure(task -> {
                 task.getInput().set(applyRangeConfig.flatMap(ApplyRangeMap::getOutput));
                 task.getMappings().set(dlMappingsConfig.flatMap(DownloadMCPMappings::getOutput));
@@ -296,7 +296,7 @@ public class PatcherPlugin implements Plugin<Project> {
 
             TaskProvider<ExtractExistingFiles> extractMappedNew = tasks.register("extractMappedNew", ExtractExistingFiles.class);
             extractMappedNew.configure(task -> {
-                task.getArchive().set(toMCPNew.flatMap(ApplyMappings::getOutput));
+                task.getArchive().set(toMCPNew.flatMap(ApplyMappingsToSourceJar::getOutput));
                 task.getTargets().from(mainSource.map(s -> s.getJava().getSourceDirectories().minus(project.files(extension.getPatchedSrc()))));
             });
 
@@ -314,12 +314,12 @@ public class PatcherPlugin implements Plugin<Project> {
 
             //Configure the MCP Pipeline needed:
             final McpRuntimeExtension runtimeExtension = project.getExtensions().getByType(McpRuntimeExtension.class);
-            final McpRuntime mcpRuntime = runtimeExtension.setup(specBuilder -> {
-                specBuilder.withNamePrefix("patcher");
+            final McpRuntimeDefinition mcpRuntimeDefinition = runtimeExtension.register(specBuilder -> {
+                specBuilder.withName("patcher");
 
                 if (!extension.getAccessTransformers().isEmpty()) {
                     specBuilder.withPreDecompileTaskTreeModifier((spec, input) -> {
-                        AccessTransformerTask task = runtimeExtension.createAt(
+                        AccessTransformer task = runtimeExtension.createAt(
                                 spec,
                                 new ArrayList<>(extension.getAccessTransformers().getFiles().getFiles()),
                                 new ArrayList<>(extension.getAccessTransformers().getEntries().get()));
@@ -348,7 +348,7 @@ public class PatcherPlugin implements Plugin<Project> {
 
                 if (!extension.getSideAnnotationStrippers().isEmpty()) {
                     specBuilder.withPreDecompileTaskTreeModifier((spec, input) -> {
-                        SideAnnotationStripperTask task = runtimeExtension.createSAS(
+                        SideAnnotationStripper task = runtimeExtension.createSAS(
                                 spec,
                                 new ArrayList<>(extension.getAccessTransformers().getFiles().getFiles()),
                                 new ArrayList<>(extension.getAccessTransformers().getEntries().get()));
@@ -395,10 +395,10 @@ public class PatcherPlugin implements Plugin<Project> {
                 final PatcherPlugin parentPatcherPlugin = parent.getPlugins().findPlugin(PatcherPlugin.class);
 
                 if (parentMCPPlugin != null) {
-                    Provider<? extends RegularFile> setupOutput = mcpRuntime.lastTask().getOutputFile();
+                    Provider<? extends RegularFile> setupOutput = mcpRuntimeDefinition.lastTask().flatMap(t -> t.getOutput());
                     if (procConfig != null) {
                         procConfig.configure(task -> {
-                            task.getInput().set(mcpRuntime.lastTask().getOutputFile());
+                            task.getInput().set(mcpRuntimeDefinition.lastTask().flatMap(t -> t.getOutput()));
                             task.getTool().set(extension.getProcessor().getVersion());
                             task.getArgs().set(extension.getProcessor().getArgs());
                             task.getData().set(extension.getProcessorData());
@@ -412,11 +412,11 @@ public class PatcherPlugin implements Plugin<Project> {
 
                     final TaskProvider<DownloadMCPConfig> downloadConfig = parentTasks.named("downloadConfig", DownloadMCPConfig.class);
 
-                    final TaskProvider<ExtractMCPData> extractSrg = tasks.register("extractSrg", ExtractMCPData.class);
+                    final TaskProvider<ExtractMcpData> extractSrg = tasks.register("extractSrg", ExtractMcpData.class);
                     extractSrg.configure(task -> task.getConfig().set(downloadConfig.flatMap(DownloadMCPConfig::getOutput)));
-                    createMcp2Srg.configure(task -> task.getSrg().convention(extractSrg.flatMap(ExtractMCPData::getOutput)));
+                    createMcp2Srg.configure(task -> task.getSrg().convention(extractSrg.flatMap(ExtractMcpData::getOutput)));
 
-                    final TaskProvider<ExtractMCPData> extractStatic = tasks.register("extractStatic", ExtractMCPData.class);
+                    final TaskProvider<ExtractMcpData> extractStatic = tasks.register("extractStatic", ExtractMcpData.class);
                     extractStatic.configure(task -> {
                         task.getConfig().set(downloadConfig.flatMap(DownloadMCPConfig::getOutput));
                         task.getKey().set("statics");
@@ -425,7 +425,7 @@ public class PatcherPlugin implements Plugin<Project> {
                                 .dir(task.getName()).map(d -> d.file("output.txt")));
                     });
 
-                    final TaskProvider<ExtractMCPData> extractConstructors = tasks.register("extractConstructors", ExtractMCPData.class);
+                    final TaskProvider<ExtractMcpData> extractConstructors = tasks.register("extractConstructors", ExtractMcpData.class);
                     extractConstructors.configure(task -> {
                         task.getConfig().set(downloadConfig.flatMap(DownloadMCPConfig::getOutput));
                         task.getKey().set("constructors");
@@ -437,8 +437,8 @@ public class PatcherPlugin implements Plugin<Project> {
                     createExc.configure(task -> {
                         task.getConfig().convention(downloadConfig.flatMap(DownloadMCPConfig::getOutput));
                         task.getSrg().convention(createMcp2Srg.flatMap(GenerateSRG::getOutput));
-                        task.getStatics().convention(extractStatic.flatMap(ExtractMCPData::getOutput));
-                        task.getConstructors().convention(extractConstructors.flatMap(ExtractMCPData::getOutput));
+                        task.getStatics().convention(extractStatic.flatMap(ExtractMcpData::getOutput));
+                        task.getConstructors().convention(extractConstructors.flatMap(ExtractMcpData::getOutput));
                     });
 
                 } else if (parentPatcherPlugin != null) {
@@ -505,7 +505,7 @@ public class PatcherPlugin implements Plugin<Project> {
             project.getDependencies().add(MC_DEP_CONFIG, extension.getMappings().getMappingChannel()
                     .zip(extension.getMappings().getMappingVersion(), MCPRepo::getMappingDep));
 
-            dlMCMetaConfig.configure(task -> task.getMCVersion().convention(extension.getMcVersion()));
+            dlMCMetaConfig.configure(task -> task.getMinecraftVersion().convention(extension.getMcVersion()));
 
             TaskProvider<CreateFakeSASPatches> fakePatches = null;
             PatcherExtension ext = extension;
@@ -576,7 +576,7 @@ public class PatcherPlugin implements Plugin<Project> {
                 genPatches.configure(task -> task.getModified().value(applyRangeBaseConfig.flatMap(ApplyRangeMap::getOutput)));
             } else {
                 // Remap the 'clean' with out mappings.
-                TaskProvider<ApplyMappings> toMCPClean = tasks.register("srg2mcpClean", ApplyMappings.class);
+                TaskProvider<ApplyMappingsToSourceJar> toMCPClean = tasks.register("srg2mcpClean", ApplyMappingsToSourceJar.class);
                 toMCPClean.configure(task -> {
                     task.dependsOn(applyPatches.map(DefaultTask::getDependsOn));
                     task.getInput().fileProvider(applyPatches.flatMap(ApplyPatches::getBase));
@@ -595,7 +595,7 @@ public class PatcherPlugin implements Plugin<Project> {
                 // Fixup the inputs.
                 applyPatches.configure(task -> task.getBase().set(toMCPClean.flatMap(s -> s.getOutput().getAsFile())));
                 genPatches.configure(task -> {
-                    task.getBase().set(toMCPClean.flatMap(ApplyMappings::getOutput));
+                    task.getBase().set(toMCPClean.flatMap(ApplyMappingsToSourceJar::getOutput));
                     task.getModified().set(dirtyZip.flatMap(AbstractArchiveTask::getArchiveFile));
                 });
             }
@@ -670,7 +670,7 @@ public class PatcherPlugin implements Plugin<Project> {
                 tokens.put("asset_index", extension.getMcVersion().get());
             }
 
-            extension.getRuns().forEach(runConfig -> runConfig.tokens(tokens));
+            extension.getRunConfigurations().forEach(runConfig -> runConfig.tokens(tokens));
             RunGenerationUtils.createRunConfigTasks(extension, extractNatives, downloadAssets, createSrg2Mcp);
         });
     }

@@ -55,7 +55,7 @@ public abstract class ArtifactDownloaderExtension {
     private int counter = 0;
 
     @Inject
-    protected ArtifactDownloaderExtension(Project project) {
+    public ArtifactDownloaderExtension(final Project project) {
         this.project = project;
 
         this.artifactProvider = this.project.getExtensions().getByType(ArtifactProviderExtension.class);
