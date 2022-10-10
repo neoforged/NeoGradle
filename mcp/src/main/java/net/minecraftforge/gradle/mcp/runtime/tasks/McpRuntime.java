@@ -1,15 +1,9 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.common.tasks.ITaskWithJavaVersion;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
 import net.minecraftforge.gradle.common.util.FileWrapper;
-import net.minecraftforge.gradle.mcp.util.CacheableMinecraftVersion;
 import org.gradle.api.file.Directory;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.MapProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 
@@ -18,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @CacheableTask
-public abstract class McpRuntime extends JavaRuntimeTask implements ITaskWithOutput {
+public abstract class McpRuntime extends JavaRuntimeTask implements IMcpRuntimeTask {
 
     public McpRuntime() {
         super();
@@ -44,50 +38,11 @@ public abstract class McpRuntime extends JavaRuntimeTask implements ITaskWithOut
         }));
         getRuntimeData().convention(getData().map(data -> {
             final Directory unpackedMcpDirectory = getUnpackedMcpZipDirectory().get();
-            final Map<String, FileWrapper> result = new HashMap<>();
-            data.forEach((key, value) -> result.put(key, new FileWrapper(unpackedMcpDirectory.file(value.file().getPath()).getAsFile())));
+            final Map<String, File> result = new HashMap<>();
+            data.forEach((key, value) -> result.put(key, unpackedMcpDirectory.file(value.getPath()).getAsFile()));
             return result;
         }));
     }
-
-    @Internal
-    public abstract DirectoryProperty getMcpDirectory();
-
-    @Internal
-    public abstract DirectoryProperty getUnpackedMcpZipDirectory();
-
-    @Internal
-    public abstract DirectoryProperty getStepsDirectory();
-
-    @Input
-    public abstract Property<String> getStepName();
-
-    @Input
-    public abstract Property<String> getSide();
-
-    @Nested
-    public abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
-
-    @Input
-    public abstract MapProperty<String, FileWrapper> getData();
-
-    @Input
-    public abstract MapProperty<String, FileWrapper> getRuntimeData();
-
-    @Input
-    public abstract MapProperty<String, Object> getArguments();
-
-    @Input
-    public abstract MapProperty<String, Object> getRuntimeArguments();
-
-    @Input
-    public abstract Property<String> getOutputFileName();
-
-    @Internal
-    public abstract DirectoryProperty getOutputDirectory();
-
-    @OutputFile
-    public abstract RegularFileProperty getOutput();
 
     @Internal
     protected Provider<File> getFileInOutputDirectory(final String fileName) {
@@ -99,6 +54,12 @@ public abstract class McpRuntime extends JavaRuntimeTask implements ITaskWithOut
         return getOutputDirectory().flatMap(directory -> fileName.map(f -> directory.file(f).getAsFile()));
     }
 
+    @Internal
+    public abstract MapProperty<String, File> getRuntimeData();
+
+    @Internal
+    public abstract MapProperty<String, Object> getRuntimeArguments();
+
     protected void buildRuntimeArguments(final Map<String, Object> arguments) {
         arguments.computeIfAbsent("output", key -> getOutput().get().getAsFile().getAbsolutePath());
         arguments.computeIfAbsent("outputDir", key -> getOutputDirectory().get().getAsFile().getAbsolutePath());
@@ -108,7 +69,7 @@ public abstract class McpRuntime extends JavaRuntimeTask implements ITaskWithOut
         arguments.computeIfAbsent("unpackedMcpZip", key -> getUnpackedMcpZipDirectory().get().getAsFile().getAbsolutePath());
         arguments.computeIfAbsent("stepsDir", key -> getStepsDirectory().get().getAsFile().getAbsolutePath());
         arguments.computeIfAbsent("stepName", key -> getStepName().get());
-        arguments.computeIfAbsent("side", key -> getSide().get());
+        arguments.computeIfAbsent("side", key -> getDistribution().get());
         arguments.computeIfAbsent("minecraftVersion", key -> getMinecraftVersion().get().toString());
         arguments.computeIfAbsent("javaVersion", key -> getJavaVersion().get().toString());
     }

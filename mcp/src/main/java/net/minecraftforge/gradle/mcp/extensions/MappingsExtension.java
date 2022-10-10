@@ -1,22 +1,14 @@
 package net.minecraftforge.gradle.mcp.extensions;
 
-import groovy.cli.Option;
-import groovy.lang.Closure;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.mcp.naming.NamingChannelProvider;
-import net.minecraftforge.gradle.mcp.runtime.tasks.McpRuntime;
-import net.minecraftforge.gradle.mcp.util.MappingUtils;
 import org.gradle.api.Project;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.util.Configurable;
-import org.gradle.util.ConfigureUtil;
 
 import javax.inject.Inject;
-import java.util.Map;
 
 /**
  * Defines a holder for mapping artifact specification.
@@ -24,10 +16,12 @@ import java.util.Map;
 public abstract class MappingsExtension implements IConfigurableObject<MappingsExtension> {
 
     private final Project project;
+    private final McpMinecraftExtension mcpMinecraftExtension;
 
     @Inject
-    public MappingsExtension(Project project) {
+    public MappingsExtension(Project project, McpMinecraftExtension mcpMinecraftExtension) {
         this.project = project;
+        this.mcpMinecraftExtension = mcpMinecraftExtension;
     }
 
     /**
@@ -35,6 +29,15 @@ public abstract class MappingsExtension implements IConfigurableObject<MappingsE
      */
     public Project getProject() {
         return project;
+    }
+
+    /**
+     * The mcp minecraft extension this mappings extension belongs to.
+     *
+     * @return The mcp minecraft extension this mappings extension belongs to.
+     */
+    public McpMinecraftExtension getMcpMinecraftExtension() {
+        return mcpMinecraftExtension;
     }
 
     /**
@@ -54,4 +57,8 @@ public abstract class MappingsExtension implements IConfigurableObject<MappingsE
     @Input
     @Optional
     public abstract MapProperty<String, String> getMappingVersion();
+
+    public void official() {
+        getMappingChannel().set(getMcpMinecraftExtension().getNamingChannelProviders().named("official"));
+    }
 }

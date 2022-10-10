@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.mcp.runtime.tasks;
+package net.minecraftforge.gradle.common.tasks;
 
 import com.google.common.io.Files;
 import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;

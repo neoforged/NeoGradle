@@ -193,14 +193,14 @@ public class Utils {
     }
 
     public static File updateDownload(Project project, File target, Download dl) throws IOException {
-        if (!target.exists() || !HashFunction.SHA1.hash(target).equals(dl.sha1)) {
-            project.getLogger().lifecycle("Downloading: " + dl.url);
+        if (!target.exists() || !HashFunction.SHA1.hash(target).equals(dl.getSha1())) {
+            project.getLogger().lifecycle("Downloading: " + dl.getUrl());
 
             if (!target.getParentFile().exists()) {
                 target.getParentFile().mkdirs();
             }
 
-            FileUtils.copyURLToFile(dl.url, target);
+            FileUtils.copyURLToFile(dl.getUrl(), target);
         }
         return target;
     }

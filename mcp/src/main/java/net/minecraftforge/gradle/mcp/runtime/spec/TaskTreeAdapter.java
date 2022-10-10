@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.spec;
 
+import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
 import net.minecraftforge.gradle.mcp.runtime.tasks.McpRuntime;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,7 @@ public interface TaskTreeAdapter {
      * @return The task to run.
      */
     @NotNull
-    McpRuntime adapt(final McpRuntimeSpec spec, final Provider<File> previousTasksOutput);
+    IMcpRuntimeTask adapt(final McpRuntimeSpec spec, final Provider<File> previousTasksOutput);
 
     /**
      * Runs the given task adapter after the current one.

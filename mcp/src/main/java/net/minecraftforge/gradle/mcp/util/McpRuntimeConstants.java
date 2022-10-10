@@ -10,6 +10,7 @@ public final class McpRuntimeConstants {
         public static final class Version {
             public static final String VERSION = "version";
             public static final String MCP_RUNTIME = "mcpRuntime";
+            public static final String MINECRAFT_VERSION = "minecraft";
         }
     }
 }

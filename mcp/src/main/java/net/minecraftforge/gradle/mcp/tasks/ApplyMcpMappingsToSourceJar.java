@@ -1,6 +1,5 @@
 package net.minecraftforge.gradle.mcp.tasks;
 
-import net.minecraftforge.gradle.common.tasks.ApplyMappingsToSourceJarTask;
 import net.minecraftforge.gradle.mcp.naming.renamer.McpSourceRenamer;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.gradle.api.file.RegularFileProperty;
@@ -9,7 +8,8 @@ import org.gradle.api.tasks.*;
 
 import java.io.IOException;
 
-public abstract class ApplyMcpMappingsToSourceJar extends ApplyMappingsToSourceJarTask {
+@CacheableTask
+public abstract class ApplyMcpMappingsToSourceJar extends ApplyMappingsToSourceJarTask<McpSourceRenamer> {
 
     public ApplyMcpMappingsToSourceJar() {
         getMcpNames().convention(getMappings().map(TransformerUtils.guard(m -> McpSourceRenamer.from(m.getAsFile()))));
@@ -17,8 +17,8 @@ public abstract class ApplyMcpMappingsToSourceJar extends ApplyMappingsToSourceJ
     }
 
     @Override
-    protected byte[] createRemappedOutputOfSourceFile(byte[] inputStream, boolean shouldRemapJavadocs) throws IOException {
-        return getMcpNames().get().rename(inputStream, shouldRemapJavadocs, getRemapLambdas().getOrElse(true));
+    protected byte[] createRemappedOutputOfSourceFile(final McpSourceRenamer sourceRenamer, byte[] inputStream, boolean shouldRemapJavadocs) throws IOException {
+        return sourceRenamer.rename(inputStream, shouldRemapJavadocs, getRemapLambdas().getOrElse(true));
     }
 
     @Input
@@ -28,6 +28,6 @@ public abstract class ApplyMcpMappingsToSourceJar extends ApplyMappingsToSourceJ
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getMappings();
 
-    @Nested
+    @Internal
     public abstract Property<McpSourceRenamer> getMcpNames();
 }

@@ -40,7 +40,7 @@ public abstract class McpMinecraftExtension implements IConfigurableObject<McpMi
         this.project = project;
         this.accessTransformers = project.getObjects().newInstance(FilesWithEntriesExtension.class, project);
         this.sideAnnotationStrippers = project.getObjects().newInstance(FilesWithEntriesExtension.class, project);
-        this.mappings = project.getObjects().newInstance(MappingsExtension.class, project);
+        this.mappings = project.getObjects().newInstance(MappingsExtension.class, project, this);
         this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannelProvider.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
     }
 

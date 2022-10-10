@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OfficialSourceRenamer extends RegexBasedSourceRenamer {
 
@@ -42,31 +43,22 @@ public class OfficialSourceRenamer extends RegexBasedSourceRenamer {
     }
 
     public static OfficialSourceRenamer from(File clientFile, final File serverFile, final File tsrgFile) throws IOException {
-        Map<String, String> names = new HashMap<>();
+        Map<String, String> names = new ConcurrentHashMap<>();
 
         IMappingFile pg_client = IMappingFile.load(clientFile);
         IMappingFile pg_server = IMappingFile.load(serverFile);
         IMappingFile srg = IMappingFile.load(tsrgFile);
 
-        Map<String, String> cfields = new TreeMap<>();
-        Map<String, String> sfields = new TreeMap<>();
-        Map<String, String> cmethods = new TreeMap<>();
-        Map<String, String> smethods = new TreeMap<>();
+        Map<String, String> cfields = new ConcurrentHashMap<>();
+        Map<String, String> sfields = new ConcurrentHashMap<>();
+        Map<String, String> cmethods = new ConcurrentHashMap<>();
+        Map<String, String> smethods = new ConcurrentHashMap<>();
 
-        for (IMappingFile.IClass cls : pg_client.getClasses()) {
-            processClass(srg, cfields, cmethods, cls);
-        }
-        for (IMappingFile.IClass cls : pg_server.getClasses()) {
-            processClass(srg, sfields, smethods, cls);
-        }
+        pg_client.getClasses().parallelStream().forEach(cls -> processClass(srg, cfields, cmethods, cls));
+        pg_server.getClasses().parallelStream().forEach(cls -> processClass(srg, sfields, smethods, cls));
 
-        for (String name : cfields.keySet()) {
-            processName(names, cfields, sfields, name);
-        }
-
-        for (String name : cmethods.keySet()) {
-            processName(names, cmethods, smethods, name);
-        }
+        cfields.keySet().parallelStream().forEach(name -> processName(names, cfields, sfields, name));
+        cmethods.keySet().parallelStream().forEach(name -> processName(names, cmethods, smethods, name));
 
         return new OfficialSourceRenamer(names, Collections.emptyMap());
     }

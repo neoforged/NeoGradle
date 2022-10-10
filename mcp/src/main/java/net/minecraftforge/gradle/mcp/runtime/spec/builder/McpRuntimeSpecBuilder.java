@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.spec.builder;
 
+import net.minecraftforge.gradle.common.util.ArtifactSide;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
 import net.minecraftforge.gradle.mcp.runtime.spec.TaskTreeAdapter;
@@ -13,7 +14,7 @@ public final class McpRuntimeSpecBuilder {
     private String namePrefix = "";
     private Provider<String> mcpVersion;
     private boolean hasConfiguredMcpVersion = false;
-    private Provider<String> side;
+    private Provider<ArtifactSide> side;
     private boolean hasConfiguredSide = false;
 
     private TaskTreeAdapter preDecompileTaskTreeModifier = null;
@@ -60,13 +61,13 @@ public final class McpRuntimeSpecBuilder {
         return withMcpVersion(project.provider(() -> mcpVersion));
     }
 
-    public McpRuntimeSpecBuilder withSide(final Provider<String> side) {
+    public McpRuntimeSpecBuilder withSide(final Provider<ArtifactSide> side) {
         this.side = side;
         this.hasConfiguredSide = true;
         return this;
     }
 
-    public McpRuntimeSpecBuilder withSide(final String side) {
+    public McpRuntimeSpecBuilder withSide(final ArtifactSide side) {
         if (side == null) // Additional null check for convenient loading of sides from dependencies.
             return this;
 

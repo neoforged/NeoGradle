@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.mcp.extensions;
 
 import groovy.lang.Closure;
+import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.ListProperty;
@@ -13,7 +14,7 @@ import java.util.Collections;
 /**
  * Represents part of an extension which combines a set of files with entries as well as raw addable entries.
  */
-public abstract class FilesWithEntriesExtension implements Configurable<FilesWithEntriesExtension> {
+public abstract class FilesWithEntriesExtension implements IConfigurableObject<FilesWithEntriesExtension> {
 
     private final Project project;
 
@@ -38,17 +39,6 @@ public abstract class FilesWithEntriesExtension implements Configurable<FilesWit
      * @return The raw additional entries relevant to this extension.
      */
     public abstract ListProperty<String> getEntries();
-
-    /**
-     * Configures this extension via the given closure.
-     * @param closure The closure to configure this object with.
-     * @return This object.
-     */
-    @SuppressWarnings("deprecation") //For now this is usable, if it ever gets removed, which is doubtfully, switch to gradle's own internal configure util.
-    @Override
-    public FilesWithEntriesExtension configure(Closure closure) {
-        return ConfigureUtil.configureSelf(closure, this);
-    }
 
     /**
      * Indicates if either at least one file is specified or at least one additional raw entry is specified.

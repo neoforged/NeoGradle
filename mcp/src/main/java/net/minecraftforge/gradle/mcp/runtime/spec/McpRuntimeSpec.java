@@ -1,6 +1,9 @@
 package net.minecraftforge.gradle.mcp.runtime.spec;
 
+import net.minecraftforge.gradle.common.util.ArtifactSide;
 import org.gradle.api.Project;
+
+import java.io.Serializable;
 
 /**
  * Defines a specification for a MCP runtime.
@@ -12,7 +15,7 @@ import org.gradle.api.Project;
  * @param side The side to use.
  * @param preDecompileTaskTreeModifier A task tree modifier to apply to the task tree before decompilation.
  */
-public record McpRuntimeSpec(Project project, Project configureProject, String name, String mcpVersion, String side, TaskTreeAdapter preDecompileTaskTreeModifier) {
+public record McpRuntimeSpec(Project project, Project configureProject, String name, String mcpVersion, ArtifactSide side, TaskTreeAdapter preDecompileTaskTreeModifier) implements Serializable {
     /**
      * Extracts the minecraft version from the specified mcp version.
      *

@@ -9,42 +9,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
-public abstract class ForgeGradleBaseTask extends DefaultTask {
+public abstract class ForgeGradleBaseTask extends DefaultTask implements ITaskWithWorkspace {
 
     public ForgeGradleBaseTask() {
         setGroup("Forge Gradle");
     }
 
-    protected File ensureFileWorkspaceReady(final RegularFileProperty fileProvider) {
-        return ensureFileWorkspaceReady(fileProvider.getAsFile());
-    }
 
-    protected Provider<File> transformEnsureFileWorkspaceReady(final RegularFileProperty fileProvider) {
-        return fileProvider.map(this::ensureFileWorkspaceReady);
-    }
-
-    protected File ensureFileWorkspaceReady(final RegularFile fileProvider) {
-        return ensureFileWorkspaceReady(fileProvider.getAsFile());
-    }
-
-    protected File ensureFileWorkspaceReady(final Provider<File> fileProvider) {
-        return ensureFileWorkspaceReady(fileProvider.get());
-    }
-
-    protected Provider<File> transformEnsureFileWorkspaceReady(final Provider<File> fileProvider) {
-        return fileProvider.map(this::ensureFileWorkspaceReady);
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    protected File ensureFileWorkspaceReady(final File file) {
-        if (file.exists()) {
-            file.delete();
-            return file;
-        }
-
-        file.getParentFile().mkdirs();
-        return file;
-    }
 
 
 }

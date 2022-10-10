@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import net.minecraftforge.gradle.common.util.FileDownloadingUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
@@ -32,7 +33,7 @@ public abstract class DownloadCore extends DownloadFile {
             String url = artifactInfo.get("url").getAsString();
             String hash = artifactInfo.get("sha1").getAsString();
             String version = json.getAsJsonObject().get("id").getAsString();
-            final DownloadInfo info = new DownloadInfo(url, hash, getExtension().get(), version, getArtifact().get());
+            final FileDownloadingUtils.DownloadInfo info = new FileDownloadingUtils.DownloadInfo(url, hash, getExtension().get(), version, getArtifact().get());
 
             doDownloadFrom(info);
         } else {

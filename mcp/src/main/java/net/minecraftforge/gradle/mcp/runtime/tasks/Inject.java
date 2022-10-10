@@ -1,6 +1,5 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import groovy.cli.Option;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.util.CacheableMinecraftVersion;
@@ -32,7 +31,7 @@ public abstract class Inject extends McpRuntime {
     public Inject() {
         super();
 
-        getInjectionDirectory().convention(getRuntimeData().map(data -> data.get("inject").file().toString()));
+        getInjectionDirectory().convention(getRuntimeData().map(data -> data.get("inject").toString()));
         getInjectionFiles().convention(
                 getInjectionDirectory().flatMap(injectionDirectory -> getUnpackedMcpZipDirectory().map(unpackedMcpZip -> {
                     final Path injectionDirectoryPath = Path.of(injectionDirectory);
@@ -87,7 +86,7 @@ public abstract class Inject extends McpRuntime {
             }
 
             for (Map.Entry<String, byte[]> add : getInjectionFiles().get().entrySet()) {
-                boolean filter = "server".equals(getSide().get()) ? add.getKey().contains("/client/") : add.getKey().contains("/server/");
+                boolean filter = "server".equals(getDistribution().get()) ? add.getKey().contains("/client/") : add.getKey().contains("/server/");
                 if (filter)
                     continue;
                 ZipEntry info = new ZipEntry(add.getKey());

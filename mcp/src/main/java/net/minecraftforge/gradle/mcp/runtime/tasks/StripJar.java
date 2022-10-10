@@ -23,7 +23,7 @@ public abstract class StripJar extends McpRuntime {
     public StripJar() {
         super();
 
-        getMappingsFile().fileProvider(getRuntimeData().map(data -> data.get("mappings").file()));
+        getMappingsFile().fileProvider(getRuntimeData().map(data -> data.get("mappings")));
         getIsWhitelistMode().convention(true);
         getFilters().convention(
                 getMappingsFile().map(

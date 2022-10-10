@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 
 public final class IvyModuleWriter implements AutoCloseable {
 
@@ -62,16 +63,6 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.output = Files.newBufferedWriter(target);
         this.writer = new IndentingXmlStreamWriter(IvyModuleWriter.OUTPUT_FACTORY.createXMLStreamWriter(this.output), INDENT);
     }
-/*
-    public IvyModuleWriter dependencies(final GroupArtifactVersion... dependencies) {
-        Collections.addAll(this.dependencies, dependencies);
-        return this;
-    }
-
-    public IvyModuleWriter dependencies(final Collection<GroupArtifactVersion> dependencies) {
-        this.dependencies.addAll(dependencies);
-        return this;
-    }*/
 
     public void write(final IvyDummyRepositoryEntry descriptor) throws XMLStreamException {
         this.writer.writeStartDocument("UTF-8", "1.0");
@@ -82,7 +73,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer.writeAttribute("version", "2.0");
 
         this.writeInfo(descriptor);
-        //this.writeDependencies(this.dependencies);
+        this.writeDependencies(descriptor.dependencies());
 
         this.writer.writeEndElement();
         this.writer.writeEndDocument();
@@ -104,19 +95,19 @@ public final class IvyModuleWriter implements AutoCloseable {
         // End
         this.writer.writeEndElement();
     }
-/*
 
-    private void writeDependencies(final Set<GroupArtifactVersion> dependencies) throws XMLStreamException {
+
+    private void writeDependencies(final Collection<IvyDummyRepositoryEntryDependency> dependencies) throws XMLStreamException {
         this.writer.writeStartElement("dependencies");
 
-        for (final GroupArtifactVersion extra : dependencies) {
+        for (final IvyDummyRepositoryEntryDependency extra : dependencies) {
             this.writeDependency(extra);
         }
 
         this.writer.writeEndElement();
     }
 
-    private void writeDependency(final GroupArtifactVersion dep) throws XMLStreamException {
+    private void writeDependency(final IvyDummyRepositoryEntryDependency dep) throws XMLStreamException {
         boolean hasClassifier = dep.classifier() != null;
 
         if (hasClassifier) {
@@ -126,19 +117,18 @@ public final class IvyModuleWriter implements AutoCloseable {
         }
 
         this.writer.writeAttribute("org", dep.group());
-        this.writer.writeAttribute("name", dep.artifact());
+        this.writer.writeAttribute("name", dep.name());
         this.writer.writeAttribute("rev", dep.version());
         this.writer.writeAttribute("transitive", "false");
 
         if (hasClassifier) {
             this.writer.writeEmptyElement("artifact");
-            this.writer.writeAttribute("name", dep.artifact());
+            this.writer.writeAttribute("name", dep.name());
             this.writer.writeAttribute("classifier", dep.classifier());
             this.writer.writeAttribute("ext", "jar");
             this.writer.writeEndElement();
         }
     }
-*/
 
     @Override
     public void close() throws IOException, XMLStreamException {

@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.mcp.runtime.tasks;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraftforge.gradle.common.util.FileDownloadingUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
@@ -29,7 +30,7 @@ public abstract class DownloadVersionJson extends DownloadFile {
             for (JsonElement e : json.getAsJsonArray("versions")) {
                 String v = e.getAsJsonObject().get("id").getAsString();
                 if (v.equals(getMinecraftVersion().get().toString())) {
-                    final DownloadInfo info = new DownloadInfo(e.getAsJsonObject().get("url").getAsString(), null, "json", v, null);
+                    final FileDownloadingUtils.DownloadInfo info = new FileDownloadingUtils.DownloadInfo(e.getAsJsonObject().get("url").getAsString(), null, "json", v, null);
                     doDownloadFrom(info);
                     return;
                 }

@@ -18,7 +18,7 @@ public abstract class Patch extends McpRuntime {
     public Patch() {
         super();
 
-        getPatchDirectory().fileProvider(getRuntimeData().map(data -> data.get("patches").file()));
+        getPatchDirectory().fileProvider(getRuntimeData().map(data -> data.get("patches")));
         getRejectsFile().fileProvider(getFileInOutputDirectory("rejects.zip"));
     }
 

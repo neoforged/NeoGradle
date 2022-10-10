@@ -1,9 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.common.tasks.ITaskWithJavaVersion;
-import net.minecraftforge.gradle.common.util.FileWrapper;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -88,7 +85,7 @@ public abstract class Execute extends McpRuntime {
 
     private String applyVariableSubstitutions(String value) {
         final Map<String, Object> runtimeArguments = getRuntimeArguments().get();
-        final Map<String, FileWrapper> data = getRuntimeData().get();
+        final Map<String, File> data = getRuntimeData().get();
 
         Matcher matcher = REPLACE_PATTERN.matcher(value);
         if (!matcher.find()) return value; // Not a replaceable string
@@ -102,9 +99,9 @@ public abstract class Execute extends McpRuntime {
                 return (String)argument;
             }
 
-            FileWrapper dataElement = data.get(argName);
+            File dataElement = data.get(argName);
             if (dataElement != null) {
-                return dataElement.file().getAbsolutePath();
+                return dataElement.getAbsolutePath();
             }
         }
 
@@ -140,7 +137,7 @@ public abstract class Execute extends McpRuntime {
     public abstract RegularFileProperty getLogFile();
 
     @Override
-    protected void buildRuntimeArguments(Map<String, Object> arguments) {
+    public void buildRuntimeArguments(Map<String, Object> arguments) {
         super.buildRuntimeArguments(arguments);
         arguments.computeIfAbsent("log", k -> getLogFile().get().getAsFile().getAbsolutePath());
         arguments.computeIfAbsent("console.log", k -> getConsoleLogFile().get().getAsFile().getAbsolutePath());

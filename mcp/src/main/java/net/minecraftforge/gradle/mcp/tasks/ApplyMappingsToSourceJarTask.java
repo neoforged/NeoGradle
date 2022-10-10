@@ -18,31 +18,46 @@
  * USA
  */
 
-package net.minecraftforge.gradle.common.tasks;
+package net.minecraftforge.gradle.mcp.tasks;
 
+import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
 import net.minecraftforge.gradle.common.util.Utils;
 
+import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
 import org.apache.commons.io.IOUtils;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import java.io.*;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
-public abstract class ApplyMappingsToSourceJarTask extends ForgeGradleBaseTask implements ITaskWithOutput {
+public abstract class ApplyMappingsToSourceJarTask<TArgs> extends ForgeGradleBaseTask implements IMcpRuntimeTask {
 
     public ApplyMappingsToSourceJarTask() {
         getOutput().convention(getProject().getLayout().getBuildDirectory().dir(getName()).map(s -> s.file("output.zip")));
         getRemapJavadocs().convention(false);
+
+        getMcpDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
+        getUnpackedMcpZipDirectory().convention(getMcpDirectory().dir("unpacked"));
+        getStepsDirectory().convention(getMcpDirectory().dir("steps"));
+
+        //And configure output default locations.
+        getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
+        getOutputFileName().convention(getArguments().map(arguments -> "output.%s".formatted(arguments.getOrDefault("outputExtension", "jar"))));
+        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().map(d::file)));
     }
 
     @TaskAction
     public void apply() throws IOException {
+        final TArgs args = getRemappingArguments();
         try (ZipFile zin = new ZipFile(getInput().get().getAsFile())) {
             try (FileOutputStream fos = new FileOutputStream(getOutput().get().getAsFile());
                  ZipOutputStream out = new ZipOutputStream(fos)) {
@@ -57,7 +72,10 @@ public abstract class ApplyMappingsToSourceJarTask extends ForgeGradleBaseTask i
                         final InputStream inputStream = zin.getInputStream(entry);
                         final byte[] toRemap = inputStream.readAllBytes();
                         inputStream.close();
-                        out.write(createRemappedOutputOfSourceFile(toRemap, getRemapJavadocs().getOrElse(false)));
+
+                        getLogger().info("Remapping: " + entry.getName());
+
+                        out.write(createRemappedOutputOfSourceFile(args, toRemap, getRemapJavadocs().getOrElse(false)));
                     }
                     out.closeEntry();
                 }
@@ -65,7 +83,10 @@ public abstract class ApplyMappingsToSourceJarTask extends ForgeGradleBaseTask i
         }
     }
 
-    protected abstract byte[] createRemappedOutputOfSourceFile(final byte[] inputStream, final boolean shouldRemapJavadocs) throws IOException;
+    @Internal
+    protected abstract TArgs getRemappingArguments();
+
+    protected abstract byte[] createRemappedOutputOfSourceFile(final TArgs args, final byte[] inputStream, final boolean shouldRemapJavadocs) throws IOException;
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)

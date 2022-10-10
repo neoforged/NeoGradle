@@ -5,6 +5,7 @@ import net.minecraftforge.gradle.common.tasks.DownloadMavenArtifact;
 import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
+import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
 import net.minecraftforge.gradle.mcp.tasks.ApplyMcpMappingsToSourceJar;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +30,7 @@ public final class MCPNamingChannelConfigurator {
     public void configure(final Project project) {
         final McpMinecraftExtension mcpMinecraftExtension = project.getExtensions().getByType(McpMinecraftExtension.class);
         SUPPORTED_CHANNELS.forEach(channelName -> mcpMinecraftExtension.getNamingChannelProviders().register(channelName, namingChannelProvider ->
-                namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::buildMcpMappingsSourceJarRemappingTask)));
+                namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::build)));
     }
 
     public TaskProvider<DownloadMavenArtifact> buildMcpMappingsDownloadTask(@NotNull final Project project, @NotNull final NamingChannelProvider namingChannelProvider, @NotNull final String mappingsVersion) {
@@ -46,19 +47,21 @@ public final class MCPNamingChannelConfigurator {
         });
     }
 
-    public <I extends ForgeGradleBaseTask & ITaskWithOutput> @NotNull TaskProvider<?> buildMcpMappingsSourceJarRemappingTask(@NotNull final Project project, @NotNull final NamingChannelProvider namingChannelProvider, @NotNull final Map<String, String> mappingVersionData, @NotNull final TaskProvider<I> taskOutputToModify) {
-        final String mappingVersion = mappingVersionData.computeIfAbsent(McpRuntimeConstants.Naming.Version.VERSION, versionKey -> {
-            throw new IllegalStateException("Missing version from mapping version data");
-        });
-        final TaskProvider<DownloadMavenArtifact> downloadMavenArtifact = buildMcpMappingsDownloadTask(project, namingChannelProvider, mappingVersion);
-        final String applyTaskName = "apply%s%sMappingsTo%s".formatted(StringUtils.capitalize(namingChannelProvider.getName()), mappingVersion, taskOutputToModify.getName());
+    private @NotNull TaskProvider<? extends IMcpRuntimeTask> build(RenamingTaskBuildingContext context) {
+        final String mappingVersion = context.mappingVersionData().get(McpRuntimeConstants.Naming.Version.VERSION);
+        if (mappingVersion == null) {
+            throw new IllegalStateException("Missing mapping version");
+        }
+        final TaskProvider<DownloadMavenArtifact> downloadMavenArtifact = buildMcpMappingsDownloadTask(context.spec().project(), context.namingChannelProvider(), mappingVersion);
+        final String applyTaskName = "apply%s%sMappingsTo%s".formatted(StringUtils.capitalize(context.namingChannelProvider().getName()), mappingVersion, context.taskOutputToModify().getName());
 
-        return project.getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
+        return context.spec().project().getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
             applyMcpMappingsToSourceJarTask.setGroup("ForgeGradle");
-            applyMcpMappingsToSourceJarTask.setDescription("Applies the MCP mappings for version %s to the %s task".formatted(mappingVersion, taskOutputToModify.getName()));
+            applyMcpMappingsToSourceJarTask.setDescription("Applies the MCP mappings for version %s to the %s task".formatted(mappingVersion, context.taskOutputToModify().getName()));
 
             applyMcpMappingsToSourceJarTask.getMappings().set(downloadMavenArtifact.flatMap(DownloadMavenArtifact::getOutput));
-            applyMcpMappingsToSourceJarTask.getInput().set(taskOutputToModify.flatMap(ITaskWithOutput::getOutput));
+            applyMcpMappingsToSourceJarTask.getInput().set(context.taskOutputToModify().flatMap(ITaskWithOutput::getOutput));
+            applyMcpMappingsToSourceJarTask.getStepName().set("applyMcpMappings");
         });
     }
 }

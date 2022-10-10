@@ -3,6 +3,15 @@ plugins {
     id 'java-gradle-plugin'
 }
 
+sourceSets {
+    functionalTest {
+
+    }
+}
+
+gradlePlugin.testSourceSets(sourceSets.functionalTest)
+configurations.functionalTestImplementation.extendsFrom(configurations.testImplementation)
+
 dependencies {
     api project(':common')
 
@@ -12,6 +21,8 @@ dependencies {
     testImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") {
         exclude group: 'org.codehaus.groovy'
     }
+
+    functionalTestImplementation sourceSets.test.output
 }
 
 gradlePlugin {
@@ -23,6 +34,26 @@ gradlePlugin {
     }
 }
 
+// Add a task to run the functional tests
+tasks.register('functionalTest', Test) {
+    group 'verification'
+
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+}
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+}
+
+tasks.named('check') {
+    // Run the functional tests as part of `check`
+    dependsOn tasks.functionalTest
+}
+
+idea {
+    module {
+        testSourceDirs += project.sourceSets.functionalTest.java.srcDirs
+        testSourceDirs += project.sourceSets.functionalTest.resources.srcDirs
+    }
 }

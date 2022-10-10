@@ -20,15 +20,14 @@
 
 package net.minecraftforge.gradle.common.util;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.*;
 
+import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,6 +40,21 @@ public class VersionJson {
             .registerTypeAdapter(VersionJson.Argument.class, new VersionJson.Argument.Deserializer())
             .setPrettyPrinting().create();
 
+    public static VersionJson get(Path path) throws FileNotFoundException {
+        return get(path.toFile());
+    }
+
+    public static VersionJson get(@Nullable File file) throws FileNotFoundException {
+        if (file == null) {
+            throw new IllegalArgumentException("VersionJson File can not be null!");
+        }
+        return get(new FileInputStream(file));
+    }
+
+    public static VersionJson get(InputStream stream) {
+        return GSON.fromJson(new InputStreamReader(stream), VersionJson.class);
+    }
+
     @Nullable
     public Arguments arguments;
     public AssetIndex assetIndex;
@@ -50,62 +64,29 @@ public class VersionJson {
     public Library[] libraries;
 
     private List<LibraryDownload> _natives = null;
+    private List<Library> _libraries = null;
 
     public List<LibraryDownload> getNatives() {
+        record Entry(int priority, LibraryDownload download) {}
+
         if (_natives == null) {
-            class Entry {
-                int priority;
-                LibraryDownload dl;
-                Entry(int priority, LibraryDownload dl) {
-                    this.priority = priority;
-                    this.dl = dl;
-                }
-            }
             Map<String, Entry> natives = new HashMap<>();
 
             OS os = OS.getCurrent();
-            String arch = System.getProperty("os.arch");
             for (Library lib : libraries) {
                 if (!lib.isAllowed())
                     continue;
                 String key = lib.getArtifact().getGroup() + ':' + lib.getArtifact().getName() + ':' + lib.getArtifact().getVersion();
 
-                if (lib.natives != null && lib.downloads.classifiers != null && lib.natives.containsKey(os.getName())) {
-                    LibraryDownload l = lib.downloads.classifiers.get(lib.natives.get(os.getName()));
+                if (lib.getNatives() != null && lib.getDownloads().getClassifiers() != null && lib.getNatives().containsKey(os.getName())) {
+                    LibraryDownload l = lib.getDownloads().getClassifiers().get(lib.getNatives().get(os.getName()));
                     if (l != null) {
                         natives.put(key, new Entry(2, l));
                     }
-                // 1.19-pre1 removed the classifiers/natives marker in the json, so take a guess based on the classifier in the name
-                // I am assuming that the format is 'natives-{OS}[-{ARCH}]'
-                // Deduplicated based on artifact identifier without classifier. And prioritizing the ones that match the architecture.
-                }/* else if (lib.getArtifact().getClassifier() != null && lib.getArtifact().getClassifier().startsWith("natives-")) {
-                    if (lib.downloads.artifact == null)
-                        throw new IllegalArgumentException("Invalid artifact, no download entry: " + lib.name);
-
-                    String[] pts = lib.getArtifact().getClassifier().substring(8).split("-");
-                    if (pts.length == 0)
-                        throw new IllegalArgumentException("Invalid natives classifier found: " + lib.name);
-
-                    if (!os.getName().equals(pts[0]))
-                        continue;
-
-                    if (pts.length >= 2) {
-                        if (arch.equals(pts[1])) {
-                            Entry e = natives.get(key);
-                            if (e == null || e.priority < 1) {
-                                natives.put(key, new Entry(1, lib.downloads.artifact));
-                            }
-                        }
-                    } else {
-                        Entry e = natives.get(key);
-                        if (e == null || e.priority < 0) {
-                            natives.put(key, new Entry(0, lib.downloads.artifact));
-                        }
-                    }
-                }*/
+                }
             }
 
-            _natives = natives.values().stream().map(e -> e.dl).collect(Collectors.toList());
+            _natives = natives.values().stream().map(Entry::download).collect(Collectors.toList());
         }
         return _natives;
     }
@@ -114,7 +95,7 @@ public class VersionJson {
         if (arguments == null || arguments.jvm == null)
             return Collections.emptyList();
 
-        return Stream.of(arguments.jvm).filter(arg -> arg.rules != null && arg.isAllowed()).
+        return Stream.of(arguments.jvm).filter(arg -> arg.getRules() != null && arg.isAllowed()).
                 flatMap(arg -> arg.value.stream()).
                 map(s -> {
                     if (s.indexOf(' ') != -1)
@@ -122,6 +103,37 @@ public class VersionJson {
                     else
                         return s;
                 }).collect(Collectors.toList());
+    }
+
+    @Nullable
+    public Arguments getArguments() {
+        return arguments;
+    }
+
+    public AssetIndex getAssetIndex() {
+        return assetIndex;
+    }
+
+    public String getAssets() {
+        return assets;
+    }
+
+    @Nullable
+    public Map<String, Download> getDownloads() {
+        return downloads;
+    }
+
+    public Library[] getLibraries() {
+        if (this._libraries == null) {
+            this._libraries = new ArrayList<>();
+            for (Library lib : libraries) {
+                if (lib.isAllowed())
+                    this._libraries.add(lib);
+            }
+            this._libraries = ImmutableList.copyOf(this._libraries);
+        }
+
+        return _libraries.toArray(Library[]::new);
     }
 
     public static class Arguments {
@@ -161,11 +173,11 @@ public class VersionJson {
 
     public static class RuledObject {
         @Nullable
-        public Rule[] rules;
+        protected Rule[] rules;
 
         public boolean isAllowed() {
-            if (rules != null) {
-                for (Rule rule : rules) {
+            if (getRules() != null) {
+                for (Rule rule : getRules()) {
                     if (!rule.allowsAction()) {
                         return false;
                     }
@@ -173,76 +185,152 @@ public class VersionJson {
             }
             return true;
         }
+
+        @Nullable
+        public Rule[] getRules() {
+            return rules;
+        }
     }
 
     public static class Rule {
-        public String action;
-        public OsCondition os;
+        private String action;
+        @org.jetbrains.annotations.Nullable
+        private OsCondition os;
 
         public boolean allowsAction() {
-            return (os == null || os.platformMatches()) == action.equals("allow");
+            return (getOs() == null || getOs().platformMatches()) == getAction().equals("allow");
+        }
+
+        public String getAction() {
+            return action;
+        }
+
+        @org.jetbrains.annotations.Nullable
+        public OsCondition getOs() {
+            return os;
         }
     }
 
     public static class OsCondition {
         @Nullable
-        public String name;
+        private String name;
         @Nullable
-        public String version;
+        private String version;
         @Nullable
-        public String arch;
+        private String arch;
 
         public boolean nameMatches() {
-            return name == null || OS.getCurrent().getName().equals(name);
+            return getName() == null || OS.getCurrent().getName().equals(getName());
         }
 
         public boolean versionMatches() {
-            return version == null || Pattern.compile(version).matcher(System.getProperty("os.version")).find();
+            return getVersion() == null || Pattern.compile(getVersion()).matcher(System.getProperty("os.version")).find();
         }
 
         public boolean archMatches() {
-            return arch == null || Pattern.compile(arch).matcher(System.getProperty("os.arch")).find();
+            return getArch() == null || Pattern.compile(getArch()).matcher(System.getProperty("os.arch")).find();
         }
 
         public boolean platformMatches() {
             return nameMatches() && versionMatches() && archMatches();
         }
+
+        @Nullable
+        public String getName() {
+            return name;
+        }
+
+        @Nullable
+        public String getVersion() {
+            return version;
+        }
+
+        @Nullable
+        public String getArch() {
+            return arch;
+        }
     }
 
     public static class AssetIndex extends Download {
-        public String id;
-        public int totalSize;
+        private String id;
+        private int totalSize;
+
+        public String getId() {
+            return id;
+        }
+
+        public int getTotalSize() {
+            return totalSize;
+        }
     }
 
     public static class Download {
-        public String sha1;
-        public int size;
-        public URL url;
+        private String sha1;
+        private int size;
+        private URL url;
+
+        public String getSha1() {
+            return sha1;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public URL getUrl() {
+            return url;
+        }
     }
 
     public static class LibraryDownload extends Download {
-        public String path;
+        private String path;
+
+        public String getPath() {
+            return path;
+        }
     }
 
     public static class Downloads {
         @Nullable
-        public Map<String, LibraryDownload> classifiers;
+        private Map<String, LibraryDownload> classifiers;
         @Nullable
-        public LibraryDownload artifact;
+        private LibraryDownload artifact;
+
+        @Nullable
+        public Map<String, LibraryDownload> getClassifiers() {
+            return classifiers;
+        }
+
+        @Nullable
+        public LibraryDownload getArtifact() {
+            return artifact;
+        }
     }
 
     public static class Library extends RuledObject {
         //Extract? rules?
-        public String name;
-        public Map<String, String> natives;
-        public Downloads downloads;
+        private String name;
+        private Map<String, String> natives;
+        private Downloads downloads;
         private Artifact _artifact;
 
         public Artifact getArtifact() {
             if (_artifact == null) {
-                _artifact = Artifact.from(name);
+                _artifact = Artifact.from(getName());
             }
             return _artifact;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Map<String, String> getNatives() {
+            return natives;
+        }
+
+        public Downloads getDownloads() {
+            return downloads;
         }
     }
 

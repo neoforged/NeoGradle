@@ -1,14 +1,15 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
+import net.minecraftforge.gradle.common.util.ICacheFileSelector;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@CacheableTask
 public abstract class FileCacheProviding extends McpRuntime {
 
     @TaskAction
@@ -28,19 +29,5 @@ public abstract class FileCacheProviding extends McpRuntime {
     public abstract DirectoryProperty getFileCache();
 
     @Nested
-    public abstract Property<ISelector> getSelector();
-
-    public interface ISelector extends Serializable {
-
-        static ISelector launcher() {
-            return () -> "launcher_metadata.json";
-        }
-
-        static ISelector forVersion(final String version) {
-            return () -> "versions/%s.json".formatted(version);
-        }
-
-        @Input
-        String getCacheFileName();
-    }
+    public abstract Property<ICacheFileSelector> getSelector();
 }

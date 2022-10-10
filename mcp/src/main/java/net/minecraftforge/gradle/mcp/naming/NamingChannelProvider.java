@@ -20,17 +20,12 @@
 
 package net.minecraftforge.gradle.mcp.naming;
 
-import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeConstants;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import java.util.Map;
 
 /**
  * A channel provider for a mappings channel.
@@ -84,33 +79,4 @@ public abstract class NamingChannelProvider implements IConfigurableObject<Namin
      */
     public abstract Property<ApplyMappingsToSourceJarTaskBuilder> getApplySourceMappingsTaskBuilder();
 
-    @FunctionalInterface
-    public interface MinecraftVersionFromVersionDataProducer {
-        /**
-         * Gets the minecraft version from the version data.
-         *
-         * @param versionData The version data.
-         * @return The minecraft version.
-         */
-        @NotNull
-        String produce(Map<String, String> versionData);
-    }
-
-    /**
-     * Factory interface which can construct a new task provider for a source jar mapping.
-     */
-    @FunctionalInterface
-    public interface ApplyMappingsToSourceJarTaskBuilder {
-
-        /**
-         * Invoked to construct a new task provider for a source jar mapping.
-         *
-         * @param project The project.
-         * @param namingChannelProvider The naming channel provider.
-         * @param mappingVersionData The version data of the mappings to use. This is the key value map the user used to configure the mappings channel.
-         * @param taskOutputToModify The tasks who's output needs to be remapped.
-         * @return The task provider.
-         */
-        <I extends ForgeGradleBaseTask & ITaskWithOutput> @NotNull TaskProvider<?> build(@NotNull final Project project, @NotNull final NamingChannelProvider namingChannelProvider, @NotNull final Map<String, String> mappingVersionData, @NotNull final TaskProvider<I> taskOutputToModify);
-    }
 }

@@ -9,10 +9,9 @@ import java.io.Serializable;
 
 public record FileWrapper(File file) implements Serializable {
 
-    @Override
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public File file() {
+    public File getFile() {
         return this.file;
     }
 }

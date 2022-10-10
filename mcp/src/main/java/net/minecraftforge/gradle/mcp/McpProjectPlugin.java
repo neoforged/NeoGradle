@@ -23,6 +23,9 @@ package net.minecraftforge.gradle.mcp;
 import net.minecraftforge.gradle.common.CommonPlugin;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.dependency.McpRuntimeBasedMinecraftDependencyManager;
+import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
+import net.minecraftforge.gradle.mcp.naming.MCPNamingChannelConfigurator;
+import net.minecraftforge.gradle.mcp.naming.OfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -38,7 +41,11 @@ public class McpProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(CommonPlugin.class);
 
         McpExtension extension = project.getExtensions().create("mcp", McpExtension.class, project);
+        McpMinecraftExtension minecraftExtension = project.getExtensions().create("minecraft", McpMinecraftExtension.class, project);
         McpRuntimeExtension runtimeExtension = project.getExtensions().create("mcpRuntime", McpRuntimeExtension.class, project);
+
+        MCPNamingChannelConfigurator.getInstance().configure(project);
+        OfficialNamingChannelConfigurator.getInstance().configure(project);
 
         //Setup handling of the dependencies
         McpRuntimeBasedMinecraftDependencyManager.getInstance().apply(project);

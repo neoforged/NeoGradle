@@ -24,7 +24,6 @@ import com.google.gson.*;
 import net.minecraftforge.gradle.common.config.VersionedConfiguration;
 import net.minecraftforge.gradle.common.util.Utils;
 
-import net.minecraftforge.gradle.common.util.VersionJson;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;

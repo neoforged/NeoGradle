@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.repository;
 
+import com.google.common.collect.Sets;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ExternalModuleDependency;
@@ -9,6 +10,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * An entry which can potentially be requested by IDEs which interface with gradle.
@@ -18,10 +21,15 @@ import java.nio.file.Path;
  * @param version The version of the dependency.
  * @param classifier The classifier of the dependency.
  * @param extension The extension of the dependency.
+ * @param dependencies The dependencies for this entry.
  */
-public record IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension) implements Serializable {
+public record IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension, Collection<IvyDummyRepositoryEntryDependency> dependencies) implements Serializable {
 
     private static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
+
+    public IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension) {
+        this(group, name, version, classifier, extension, Collections.emptyList());
+    }
 
     public String fullGroup() {
         if (group() == null) {
@@ -89,6 +97,7 @@ public record IvyDummyRepositoryEntry(String group, String name, String version,
         private String version;
         private String classifier = "";
         private String extension = "jar";
+        private Set<IvyDummyRepositoryEntryDependency> dependencies = Sets.newHashSet();
 
         private Builder() {
         }
@@ -103,7 +112,8 @@ public record IvyDummyRepositoryEntry(String group, String name, String version,
                     .withName(entry.name())
                     .withVersion(entry.version())
                     .withClassifier(entry.classifier())
-                    .withExtension(entry.extension());
+                    .withExtension(entry.extension())
+                    .withDependencies(entry.dependencies());
         }
 
         public Builder withGroup(String group) {
@@ -131,19 +141,36 @@ public record IvyDummyRepositoryEntry(String group, String name, String version,
             return this;
         }
 
-        public Builder with(final ExternalModuleDependency dependency) {
+        public Builder from(final ExternalModuleDependency dependency) {
             this.group = dependency.getGroup();
             this.name = dependency.getName();
             this.version = dependency.getVersion();
             return this;
         }
 
+        public Builder withDependencies(final Collection<IvyDummyRepositoryEntryDependency> dependencies) {
+            this.dependencies.addAll(dependencies);
+            return this;
+        }
+
+        public Builder withDependencies(final IvyDummyRepositoryEntryDependency... dependencies) {
+            this.dependencies.addAll(Arrays.asList(dependencies));
+            return this;
+        }
+
+        public Builder withDependency(final Consumer<IvyDummyRepositoryEntryDependency.Builder> consumer) {
+            final IvyDummyRepositoryEntryDependency.Builder builder = IvyDummyRepositoryEntryDependency.Builder.create();
+            consumer.accept(builder);
+            this.dependencies.add(builder.build());
+            return this;
+        }
+
         public Builder but() {
-            return create().withGroup(group).withName(name).withVersion(version).withClassifier(classifier).withExtension(extension);
+            return create().withGroup(group).withName(name).withVersion(version).withClassifier(classifier).withExtension(extension).withDependencies(dependencies);
         }
 
         public IvyDummyRepositoryEntry build() {
-            return new IvyDummyRepositoryEntry(group, name, version, classifier, extension);
+            return new IvyDummyRepositoryEntry(group, name, version, classifier, extension, dependencies);
         }
     }
 }
