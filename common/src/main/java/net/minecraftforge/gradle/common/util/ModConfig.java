@@ -20,18 +20,13 @@
 
 package net.minecraftforge.gradle.common.util;
 
+import com.google.common.collect.Lists;
+import groovy.lang.GroovyObjectSupport;
 import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
-
-import groovy.lang.GroovyObjectSupport;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public abstract class ModConfig extends GroovyObjectSupport implements IConfigurableObject<ModConfig> {
     private final Provider<String> name;
@@ -41,7 +36,7 @@ public abstract class ModConfig extends GroovyObjectSupport implements IConfigur
 
         getSourceSets().convention(project.provider(() -> project.getExtensions().getByType(JavaPluginExtension.class))
                 .map(javaPluginExtension -> javaPluginExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME))
-                .map(List::of));
+                .map(Lists::newArrayList));
     }
 
     public final Provider<String> getName() {

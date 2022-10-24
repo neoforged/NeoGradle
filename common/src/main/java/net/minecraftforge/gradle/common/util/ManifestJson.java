@@ -20,6 +20,8 @@
 
 package net.minecraftforge.gradle.common.util;
 
+import net.minecraftforge.artifactural.gradle.ReflectionUtils;
+
 import java.net.URL;
 
 import javax.annotation.Nullable;
@@ -43,4 +45,6 @@ public class ManifestJson {
         }
         return null;
     }
+
+    ReflectionUtils
 }

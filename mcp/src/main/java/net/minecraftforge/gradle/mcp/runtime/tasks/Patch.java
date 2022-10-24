@@ -7,6 +7,7 @@ import codechicken.diffpatch.util.PatchMode;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
@@ -20,6 +21,7 @@ public abstract class Patch extends McpRuntime {
 
         getPatchDirectory().fileProvider(getRuntimeData().map(data -> data.get("patches")));
         getRejectsFile().fileProvider(getFileInOutputDirectory("rejects.zip"));
+        getIsVerbose().convention(false);
     }
 
     @TaskAction
@@ -28,17 +30,25 @@ public abstract class Patch extends McpRuntime {
         final File output = ensureFileWorkspaceReady(getOutput());
         final File rejects = getRejectsFile().get().getAsFile();
 
-        CliOperation.Result<PatchOperation.PatchesSummary> result = PatchOperation.builder()
+        PatchOperation.Builder builder = PatchOperation.builder()
                 .logTo(new LoggingOutputStream(getProject().getLogger(), LogLevel.LIFECYCLE))
                 .basePath(input.toPath())
                 .patchesPath(getUnpackedMcpZipDirectory().get().getAsFile().toPath())
                 .patchesPrefix(getUnpackedMcpZipDirectory().get().getAsFile().toPath().relativize(getPatchDirectory().get().getAsFile().toPath()).toString())
                 .outputPath(output.toPath())
-                .verbose(false)
+                .verbose(getIsVerbose().get())
                 .mode(PatchMode.OFFSET)
-                .rejectsPath(rejects.toPath())
-                .build()
-                .operate();
+                .rejectsPath(rejects.toPath());
+
+        if (getPatchesModifiedPrefix().isPresent()) {
+            builder = builder.bPrefix(getPatchesModifiedPrefix().get());
+        }
+
+        if (getPatchesOriginalPrefix().isPresent()) {
+            builder = builder.aPrefix(getPatchesOriginalPrefix().get());
+        }
+
+        CliOperation.Result<PatchOperation.PatchesSummary> result = builder.build().operate();
 
         boolean success = result.exit == 0;
         if (!success) {
@@ -57,4 +67,15 @@ public abstract class Patch extends McpRuntime {
 
     @OutputFile
     public abstract RegularFileProperty getRejectsFile();
+
+    @Input
+    public abstract Property<Boolean> getIsVerbose();
+
+    @Input
+    @Optional
+    public abstract Property<String> getPatchesOriginalPrefix();
+
+    @Input
+    @Optional
+    public abstract Property<String> getPatchesModifiedPrefix();
 }

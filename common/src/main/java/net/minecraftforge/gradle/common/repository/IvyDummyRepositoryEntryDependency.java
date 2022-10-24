@@ -4,8 +4,71 @@ import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
 
 import java.io.Serializable;
+import java.util.Objects;
 
-public record IvyDummyRepositoryEntryDependency(String group, String name, String version, String classifier, String extension) implements Serializable {
+public final class IvyDummyRepositoryEntryDependency implements Serializable {
+    private static final long serialVersionUID = 8472300128115908221L;
+    private final String group;
+    private final String name;
+    private final String version;
+    private final String classifier;
+    private final String extension;
+
+    public IvyDummyRepositoryEntryDependency(String group, String name, String version, String classifier, String extension) {
+        this.group = group;
+        this.name = name;
+        this.version = version;
+        this.classifier = classifier;
+        this.extension = extension;
+    }
+
+    public String group() {
+        return group;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public String version() {
+        return version;
+    }
+
+    public String classifier() {
+        return classifier;
+    }
+
+    public String extension() {
+        return extension;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        final IvyDummyRepositoryEntryDependency that = (IvyDummyRepositoryEntryDependency) obj;
+        return Objects.equals(this.group, that.group) &&
+                Objects.equals(this.name, that.name) &&
+                Objects.equals(this.version, that.version) &&
+                Objects.equals(this.classifier, that.classifier) &&
+                Objects.equals(this.extension, that.extension);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(group, name, version, classifier, extension);
+    }
+
+    @Override
+    public String toString() {
+        return "IvyDummyRepositoryEntryDependency[" +
+                "group=" + group + ", " +
+                "name=" + name + ", " +
+                "version=" + version + ", " +
+                "classifier=" + classifier + ", " +
+                "extension=" + extension + ']';
+    }
+
     public static final class Builder {
         private String group;
         private String name;

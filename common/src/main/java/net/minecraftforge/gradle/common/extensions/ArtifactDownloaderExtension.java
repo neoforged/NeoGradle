@@ -320,7 +320,8 @@ public abstract class ArtifactDownloaderExtension {
         if (auth != null && !auth.getAuthentication().isEmpty() && auth.getAuthentication().stream().anyMatch(a -> a instanceof BasicAuthentication)) {
             // We use this to prevent an IllegalStateException with getCredentials() if non-password credentials are used.
             Credentials credentials = auth.getCredentials(Credentials.class);
-            if (credentials instanceof PasswordCredentials passwordCredentials) {
+            if (credentials instanceof PasswordCredentials) {
+                final PasswordCredentials passwordCredentials = (PasswordCredentials) credentials;
                 headers = ImmutableMap.of(
                         "Authorization", "Basic " + Base64.getEncoder().encodeToString((passwordCredentials.getUsername() + ":" + passwordCredentials.getPassword()).getBytes(StandardCharsets.UTF_8))
                 );
@@ -335,7 +336,71 @@ public abstract class ArtifactDownloaderExtension {
      * Key used to track active downloads and avoid downloading the same file in two threads concurrently,
      * leading to corrupted files on disk.
      */
-    private record DownloadKey(String artifactNotation, boolean changing, boolean generated, boolean gradle,
-                               boolean manual) {
+    private static final class DownloadKey {
+        private final String artifactNotation;
+        private final boolean changing;
+        private final boolean generated;
+        private final boolean gradle;
+        private final boolean manual;
+
+        /**
+         *
+         */
+        private DownloadKey(String artifactNotation, boolean changing, boolean generated, boolean gradle,
+                            boolean manual) {
+            this.artifactNotation = artifactNotation;
+            this.changing = changing;
+            this.generated = generated;
+            this.gradle = gradle;
+            this.manual = manual;
+        }
+
+        public String artifactNotation() {
+            return artifactNotation;
+        }
+
+        public boolean changing() {
+            return changing;
+        }
+
+        public boolean generated() {
+            return generated;
+        }
+
+        public boolean gradle() {
+            return gradle;
+        }
+
+        public boolean manual() {
+            return manual;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            final DownloadKey that = (DownloadKey) obj;
+            return Objects.equals(this.artifactNotation, that.artifactNotation) &&
+                    this.changing == that.changing &&
+                    this.generated == that.generated &&
+                    this.gradle == that.gradle &&
+                    this.manual == that.manual;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(artifactNotation, changing, generated, gradle, manual);
+        }
+
+        @Override
+        public String toString() {
+            return "DownloadKey[" +
+                    "artifactNotation=" + artifactNotation + ", " +
+                    "changing=" + changing + ", " +
+                    "generated=" + generated + ", " +
+                    "gradle=" + gradle + ", " +
+                    "manual=" + manual + ']';
+        }
+
     }
 }

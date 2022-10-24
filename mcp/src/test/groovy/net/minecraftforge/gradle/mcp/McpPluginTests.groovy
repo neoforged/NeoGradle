@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.mcp
 
 import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
 import net.minecraftforge.gradle.common.util.Utils
+import org.gradle.testkit.runner.TaskOutcome
 
 class McpPluginTests extends ForgeGradleTestSpecification {
 
@@ -97,5 +98,21 @@ class McpPluginTests extends ForgeGradleTestSpecification {
         then:
         result.output.contains(Utils.MOJANG_MAVEN)
         result.output.contains(Utils.FORGE_MAVEN)
+    }
+
+    def "applying mcp plugin registers display mappings task"() {
+        given:
+        settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
+        buildFile << """
+            plugins {
+                id 'net.minecraftforge.gradle.mcp'
+            }
+        """
+
+        when:
+        def result = gradleRunner().withArguments('handleNamingLicense').build()
+
+        then:
+        result.task(':handleNamingLicense').outcome == TaskOutcome.SUCCESS
     }
 }

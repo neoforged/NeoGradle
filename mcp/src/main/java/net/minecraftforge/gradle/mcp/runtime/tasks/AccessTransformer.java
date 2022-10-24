@@ -25,42 +25,42 @@ public abstract class AccessTransformer extends Execute {
 
         getData().set(Collections.emptyMap());
         getExecutingArtifact().convention(Utils.ACCESSTRANSFORMER);
-        getProgramArguments().convention(
-                getInputFile().flatMap(inputFile ->
-                        getOutput().map(outputFile -> {
-                                    final List<String> args = Lists.newArrayList();
-                                    args.add("--inJar");
-                                    args.add(inputFile.getAsFile().getAbsolutePath());
-                                    args.add("--outJar");
-                                    args.add(outputFile.getAsFile().getAbsolutePath());
-                                    getTransformers().forEach(f -> {
-                                        args.add("--atFile");
-                                        args.add(f.getAbsolutePath());
-                                    });
+        getRuntimeProgramArguments().convention(
+                getInputFile().map(inputFile -> {
+                            final List<String> args = Lists.newArrayList();
+                            final File outputFile = ensureFileWorkspaceReady(getOutput());
 
-                                    final Provider<File> additionalTransformersFileProvider = getAdditionalTransformers()
-                                            .flatMap(additionalTransformers -> transformEnsureFileWorkspaceReady(getFileInOutputDirectory(getProjectFileName("transformers.cfg")))
-                                                    .map(TransformerUtils.guard(
-                                                            TransformerUtils.peakWithThrow(additionalTransformersFile ->
-                                                                    Files.write(additionalTransformersFile.toPath(), additionalTransformers, StandardOpenOption.CREATE_NEW))
-                                                    )));
+                            args.add("--inJar");
+                            args.add(inputFile.getAsFile().getAbsolutePath());
+                            args.add("--outJar");
+                            args.add(outputFile.getAbsolutePath());
+                            getTransformers().forEach(f -> {
+                                args.add("--atFile");
+                                args.add(f.getAbsolutePath());
+                            });
 
-                                    if (additionalTransformersFileProvider.isPresent()) {
-                                        args.add("--atFile");
-                                        args.add(additionalTransformersFileProvider.get().getAbsolutePath());
-                                    }
+                            final Provider<File> additionalTransformersFileProvider = getAdditionalTransformers()
+                                    .flatMap(additionalTransformers -> transformEnsureFileWorkspaceReady(getFileInOutputDirectory(getProjectFileName("transformers.cfg")))
+                                            .map(TransformerUtils.guard(
+                                                    TransformerUtils.peakWithThrow(additionalTransformersFile ->
+                                                            Files.write(additionalTransformersFile.toPath(), additionalTransformers, StandardOpenOption.CREATE_NEW))
+                                            )));
 
-                                    return args;
-                                }
+                            if (additionalTransformersFileProvider.isPresent()) {
+                                args.add("--atFile");
+                                args.add(additionalTransformersFileProvider.get().getAbsolutePath());
+                            }
 
-                        )
-                ));
+                            return args;
+                        }
+                )
+        );
 
         getAdditionalTransformers().finalizeValueOnRead();
         getTransformers().finalizeValueOnRead();
     }
 
-    @Input
+    @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInputFile();
 
@@ -69,5 +69,6 @@ public abstract class AccessTransformer extends Execute {
     public abstract ListProperty<String> getAdditionalTransformers();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getTransformers();
 }

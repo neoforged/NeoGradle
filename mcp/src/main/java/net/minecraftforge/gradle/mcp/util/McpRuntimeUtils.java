@@ -1,24 +1,21 @@
 package net.minecraftforge.gradle.mcp.util;
 
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
-import net.minecraftforge.gradle.common.util.ICacheFileSelector;
+import net.minecraftforge.gradle.mcp.runtime.tasks.AccessTransformer;
+import net.minecraftforge.gradle.mcp.runtime.tasks.FileCacheProviding;
+import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
+import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
-import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
-import net.minecraftforge.gradle.mcp.runtime.tasks.*;
+import net.minecraftforge.gradle.common.util.ICacheFileSelector;
+import net.minecraftforge.gradle.common.util.Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,28 +30,37 @@ public final class McpRuntimeUtils {
         if (runtimeSpec.name().isEmpty())
             return defaultName;
 
-        return runtimeSpec.name() + runtimeSpec.mcpVersion() + StringUtils.capitalize(defaultName);
+        return runtimeSpec.name() + StringUtils.capitalize(defaultName);
     }
 
     public static String buildTaskName(final McpRuntimeDefinition runtimeSpec, final String defaultName) {
         return buildTaskName(runtimeSpec.spec(), defaultName);
     }
 
+    public static String buildStepName(McpRuntimeSpec spec, String name) {
+        return StringUtils.uncapitalize(name.replace(spec.name(), ""));
+    }
+
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static Provider<File> getTaskInputFor(final McpRuntimeSpec spec, final Map<String, TaskProvider<? extends IMcpRuntimeTask>> tasks, McpConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<Provider<File>> adaptedInput) {
+    public static Provider<File> getTaskInputFor(final McpRuntimeSpec spec, final Map<String, TaskProvider<? extends IMcpRuntimeTask>> tasks, McpConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends IMcpRuntimeTask>> adaptedInput) {
         if (adaptedInput.isPresent()) {
-            return adaptedInput.get();
+            return adaptedInput.get().flatMap(task -> task.getOutput().getAsFile());
         }
 
-        if (step.getValue("input") == null) {
+        final String inputValue = step.getValue("input");
+        if (inputValue == null) {
             return getInputForTaskFrom(spec, "{" + defaultInputTask + "Output}", tasks);
         }
 
-        return getInputForTaskFrom(spec, step.getValue("input"), tasks);
+        return getInputForTaskFrom(spec, inputValue, tasks);
     }
 
     public static Provider<File> getTaskInputFor(final McpRuntimeSpec spec, final Map<String, TaskProvider<? extends IMcpRuntimeTask>> tasks, McpConfigConfigurationSpecV1.Step step) {
-        return getInputForTaskFrom(spec, step.getValue("input"), tasks);
+        final String inputValue = step.getValue("input");
+        if (inputValue == null) {
+            throw new IllegalStateException("Can not transformer or get an input of a task without an input");
+        }
+        return getInputForTaskFrom(spec, inputValue, tasks);
     }
 
     public static Provider<File> getInputForTaskFrom(final McpRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends IMcpRuntimeTask>> tasks) {
@@ -87,10 +93,10 @@ public final class McpRuntimeUtils {
         return Optional.empty();
     }
 
-    public static TaskProvider<? extends AccessTransformer> createAt(McpRuntimeSpec runtimeSpec, List<File> files, Collection<String> data) {
-        return runtimeSpec.project().getTasks().register(buildTaskName(runtimeSpec, "accessTransformer"), AccessTransformer.class, task -> {
+    public static TaskProvider<? extends AccessTransformer> createAccessTransformer(McpRuntimeSpec runtimeSpec, String namePreFix, List<File> files, Collection<String> data) {
+        return runtimeSpec.project().getTasks().register(buildTaskName(runtimeSpec, String.format("apply%sAccessTransformer", Utils.capitalize(namePreFix))), AccessTransformer.class, task -> {
             task.getAdditionalTransformers().addAll(data);
-            task.getTransformers().plus(runtimeSpec.configureProject().files(files.toArray()));
+            task.getTransformers().setFrom(runtimeSpec.configureProject().files(files.toArray()));
         });
     }
 
@@ -98,10 +104,10 @@ public final class McpRuntimeUtils {
      * Internal Use Only
      * Non-Public API, Can be changed at any time.
      */
-    public static TaskProvider<? extends SideAnnotationStripper> createSAS(McpRuntimeSpec spec, List<File> files, Collection<String> data) {
-        return spec.project().getTasks().register(buildTaskName(spec, "sideAnnotationStripper"), SideAnnotationStripper.class, task -> {
+    public static TaskProvider<? extends SideAnnotationStripper> createSideAnnotationStripper(McpRuntimeSpec spec, String namePreFix, List<File> files, Collection<String> data) {
+        return spec.project().getTasks().register(buildTaskName(spec, String.format("apply%sSideAnnotationStripper", Utils.capitalize(namePreFix))), SideAnnotationStripper.class, task -> {
             task.getAdditionalDataEntries().addAll(data);
-            task.getDataFiles().plus(spec.configureProject().files(files.toArray()));
+            task.getDataFiles().setFrom(spec.configureProject().files(files.toArray()));
         });
     }
 

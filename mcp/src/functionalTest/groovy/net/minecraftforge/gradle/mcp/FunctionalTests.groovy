@@ -1,12 +1,9 @@
 package net.minecraftforge.gradle.mcp
 
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.Lists
 import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
 class FunctionalTests extends ForgeGradleTestSpecification {
-
 
     protected File codeFile
 
@@ -41,7 +38,7 @@ class FunctionalTests extends ForgeGradleTestSpecification {
 
         when:
         def result = gradleRunner()
-                .withArguments('--stacktrace', 'dependencyClientPatch')
+                .withArguments('--stacktrace', ':dependencyMcpClient1.19-20220627.091056Patch')
                 .build()
 
         then:
@@ -124,16 +121,16 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         """
 
         when:
-        def result = runTask('--build-cache', 'build')
+        def result = runTask('--build-cache', ':dependencyMcpClient1.19-20220627.091056SelectRawArtifact')
 
         then:
-        result.task(":dependencyClient1.19-20220627.091056Recompile").outcome == TaskOutcome.SUCCESS
+        result.task(":dependencyMcpClient1.19-20220627.091056Recompile").outcome == TaskOutcome.SUCCESS
 
         when:
         new File(testProjectDir, 'build').deleteDir()
-        result = runTask('--build-cache', 'build')
+        result = runTask('--build-cache', ':dependencyMcpClient1.19-20220627.091056SelectRawArtifact')
 
         then:
-        result.task(":dependencyClient1.19-20220627.091056Recompile").outcome == TaskOutcome.FROM_CACHE
+        result.task(":dependencyMcpClient1.19-20220627.091056Recompile").outcome == TaskOutcome.FROM_CACHE
     }
 }

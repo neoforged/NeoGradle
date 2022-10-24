@@ -21,14 +21,15 @@ public abstract class SideAnnotationStripper extends Execute {
         super();
 
         getExecutingArtifact().convention(Utils.SIDESTRIPPER);
-        getProgramArguments().convention(
-                getInputFile().flatMap(inputFile -> getOutput().map(outputFile -> {
+        getRuntimeProgramArguments().convention(
+                getInputFile().map(inputFile -> {
                     final List<String> args = Lists.newArrayList();
+                    final File outputFile = ensureFileWorkspaceReady(getOutput());
                     args.add("--strip");
                     args.add("--input");
                     args.add(inputFile.getAsFile().getAbsolutePath());
                     args.add("--output");
-                    args.add(outputFile.getAsFile().getAbsolutePath());
+                    args.add(outputFile.getAbsolutePath());
                     getDataFiles().forEach(f -> {
                         args.add("--data");
                         args.add(f.getAbsolutePath());
@@ -48,13 +49,10 @@ public abstract class SideAnnotationStripper extends Execute {
 
 
                     return args;
-                })));
-
-        getDataFiles().finalizeValueOnRead();
-        getAdditionalDataEntries().finalizeValueOnRead();
+                }));
     }
 
-    @Input
+    @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInputFile();
 

@@ -23,7 +23,6 @@ package net.minecraftforge.gradle.runs;
 import groovy.lang.GroovyObjectSupport;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import net.minecraftforge.gradle.common.util.*;
-import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
 import net.minecraftforge.gradle.runs.config.RunConfigurationSpec;
 import net.minecraftforge.gradle.runs.util.RunsConstants;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -39,6 +38,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class RunConfiguration extends GroovyObjectSupport implements IConfigurableObject<RunConfiguration> {
 
@@ -65,7 +65,7 @@ public abstract class RunConfiguration extends GroovyObjectSupport implements IC
             return "run" + Utils.capitalize(conventionTaskName);
         }));
         getUniqueFileName().convention(getTaskName().map(taskName -> FileUtils.buildFileNameForTask(getProject(), taskName)));
-        getIdeaModuleName().convention(project.provider(() -> "%s.main".formatted(getProject().getName().replace(' ', '_'))));
+        getIdeaModuleName().convention(project.provider(() -> String.format("%s.main", getProject().getName().replace(' ', '_'))));
         getWorkingDirectory().convention(project.getLayout().getProjectDirectory().dir("run"));
     }
 
@@ -95,11 +95,11 @@ public abstract class RunConfiguration extends GroovyObjectSupport implements IC
         return minecraftClasspath;
     }
     public final Provider<List<TaskProvider<Task>>> getDependentTasks() {
-        return getAllSourceSets().map(sourceSets -> sourceSets.stream().map(sourceSet -> project.getTasks().named(sourceSet.getClassesTaskName())).toList());
+        return getAllSourceSets().map(sourceSets -> sourceSets.stream().map(sourceSet -> project.getTasks().named(sourceSet.getClassesTaskName())).collect(Collectors.toList()));
     }
     public final Provider<List<SourceSet>> getAllSourceSets() {
         return ProviderUtils.getNamedCollectionEntriesAsProvider(project, getMods())
-                .map(modConfigs -> modConfigs.stream().map(ModConfig::getSourceSets).flatMap(provider -> provider.get().stream()).toList());
+                .map(modConfigs -> modConfigs.stream().map(ModConfig::getSourceSets).flatMap(provider -> provider.get().stream()).collect(Collectors.toList()));
     }
     @SuppressWarnings("unchecked")
     public final NamedDomainObjectContainer<RunConfigurationSpec> getSpecifications() {

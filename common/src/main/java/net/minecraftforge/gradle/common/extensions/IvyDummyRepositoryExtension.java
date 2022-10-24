@@ -90,7 +90,7 @@ public abstract class IvyDummyRepositoryExtension {
     ) throws IOException, XMLStreamException {
         final Path jarFile = entry.artifactPath(createRepoBaseDir().get().getAsFile().toPath());
         final Path baseDir = jarFile.getParent();
-        final Path metaFile = baseDir.resolve("ivy-%s-fg%d.xml".formatted(entry.version(), METADATA_VERSION));
+        final Path metaFile = baseDir.resolve(String.format("ivy-%s-fg%d.xml", entry.version(), METADATA_VERSION));
 
         if (Files.exists(metaFile))
             return;

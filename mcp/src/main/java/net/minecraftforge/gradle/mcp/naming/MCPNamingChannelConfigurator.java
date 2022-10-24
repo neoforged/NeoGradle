@@ -1,19 +1,19 @@
 package net.minecraftforge.gradle.mcp.naming;
 
 import com.google.common.collect.ImmutableSet;
+import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
+import net.minecraftforge.gradle.common.runtime.naming.RenamingTaskBuildingContext;
 import net.minecraftforge.gradle.common.tasks.DownloadMavenArtifact;
-import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
-import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
+import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
+import net.minecraftforge.gradle.mcp.naming.tasks.ApplyMcpMappingsToSourceJar;
 import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
-import net.minecraftforge.gradle.mcp.tasks.ApplyMcpMappingsToSourceJar;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
 import java.util.Set;
 
 public final class MCPNamingChannelConfigurator {
@@ -28,13 +28,16 @@ public final class MCPNamingChannelConfigurator {
     }
 
     public void configure(final Project project) {
-        final McpMinecraftExtension mcpMinecraftExtension = project.getExtensions().getByType(McpMinecraftExtension.class);
-        SUPPORTED_CHANNELS.forEach(channelName -> mcpMinecraftExtension.getNamingChannelProviders().register(channelName, namingChannelProvider ->
-                namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::build)));
+        final MinecraftExtension minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
+        SUPPORTED_CHANNELS.forEach(channelName -> minecraftExtension.getNamingChannelProviders().register(channelName, namingChannelProvider -> {
+            namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::build);
+            namingChannelProvider.getHasAcceptedLicense().set(true);
+            namingChannelProvider.getLicenseText().set("MCP is licensed under the terms of the MCP license.");
+        }));
     }
 
     public TaskProvider<DownloadMavenArtifact> buildMcpMappingsDownloadTask(@NotNull final Project project, @NotNull final NamingChannelProvider namingChannelProvider, @NotNull final String mappingsVersion) {
-        final String mcpDownloadTaskName = "downloadMcpMappings%s%s".formatted(namingChannelProvider.getName(), mappingsVersion);
+        final String mcpDownloadTaskName = String.format("downloadMcpMappings%s%s", namingChannelProvider.getName(), mappingsVersion);
 
         if (project.getTasks().findByName(mcpDownloadTaskName) != null) {
             return project.getTasks().named(mcpDownloadTaskName, DownloadMavenArtifact.class);
@@ -42,8 +45,8 @@ public final class MCPNamingChannelConfigurator {
 
         return project.getTasks().register(mcpDownloadTaskName, DownloadMavenArtifact.class, downloadMavenArtifactTask -> {
             downloadMavenArtifactTask.setGroup("ForgeGradle");
-            downloadMavenArtifactTask.setDescription("Downloads the MCP mappings for version %s".formatted(mappingsVersion));
-            downloadMavenArtifactTask.setArtifact("de.oceanlabs.mcp:mcp_%s:%s@zip".formatted(namingChannelProvider.getName(), mappingsVersion));
+            downloadMavenArtifactTask.setDescription(String.format("Downloads the MCP mappings for version %s", mappingsVersion));
+            downloadMavenArtifactTask.setArtifact(String.format("de.oceanlabs.mcp:mcp_%s:%s@zip", namingChannelProvider.getName(), mappingsVersion));
         });
     }
 
@@ -53,11 +56,11 @@ public final class MCPNamingChannelConfigurator {
             throw new IllegalStateException("Missing mapping version");
         }
         final TaskProvider<DownloadMavenArtifact> downloadMavenArtifact = buildMcpMappingsDownloadTask(context.spec().project(), context.namingChannelProvider(), mappingVersion);
-        final String applyTaskName = "apply%s%sMappingsTo%s".formatted(StringUtils.capitalize(context.namingChannelProvider().getName()), mappingVersion, context.taskOutputToModify().getName());
+        final String applyTaskName = String.format("apply%s%sMappingsTo%s", StringUtils.capitalize(context.namingChannelProvider().getName()), mappingVersion, context.taskOutputToModify().getName());
 
         return context.spec().project().getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
             applyMcpMappingsToSourceJarTask.setGroup("ForgeGradle");
-            applyMcpMappingsToSourceJarTask.setDescription("Applies the MCP mappings for version %s to the %s task".formatted(mappingVersion, context.taskOutputToModify().getName()));
+            applyMcpMappingsToSourceJarTask.setDescription(String.format("Applies the MCP mappings for version %s to the %s task", mappingVersion, context.taskOutputToModify().getName()));
 
             applyMcpMappingsToSourceJarTask.getMappings().set(downloadMavenArtifact.flatMap(DownloadMavenArtifact::getOutput));
             applyMcpMappingsToSourceJarTask.getInput().set(context.taskOutputToModify().flatMap(ITaskWithOutput::getOutput));

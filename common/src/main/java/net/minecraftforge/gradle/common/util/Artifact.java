@@ -23,7 +23,10 @@ package net.minecraftforge.gradle.common.util;
 import net.minecraftforge.artifactural.api.artifact.ArtifactIdentifier;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.DependencyArtifact;
+import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.specs.Spec;
 
@@ -93,6 +96,24 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
 
     public static Artifact from(String group, String name, String version, @Nullable String classifier, @Nullable String ext) {
         return new Artifact(group, name, version, classifier, ext);
+    }
+
+    public static Artifact from(final Dependency dependency) {
+        if (dependency instanceof ExternalModuleDependency) {
+            final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
+            return from(externalModuleDependency);
+        }
+
+        throw new IllegalArgumentException(String.format("Dependency: %s is not an external Artifact that can be referenced.", dependency));
+    }
+
+    public static Artifact from(ExternalModuleDependency dependency) {
+        if (dependency.getArtifacts().isEmpty()) {
+            return new Artifact(dependency.getGroup() == null ? "" : dependency.getGroup(), dependency.getName(), dependency.getVersion() == null ? "" : dependency.getVersion(), null, null);
+        }
+
+        DependencyArtifact artifact = dependency.getArtifacts().iterator().next();
+        return new Artifact(dependency.getGroup() == null ? "" : dependency.getGroup(), dependency.getName(), dependency.getVersion() == null ? "" : dependency.getVersion(), artifact.getClassifier(), artifact.getExtension());
     }
 
     Artifact(String group, String name, String version, @Nullable String classifier, @Nullable String ext) {
@@ -235,5 +256,9 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
                 .compare(classifier, o.classifier, Comparator.nullsFirst(Comparator.naturalOrder()))
                 .compare(ext, o.ext, Comparator.nullsFirst(Comparator.naturalOrder()))
                 .result();
+    }
+
+    public Dependency toDependency(Project project) {
+        return project.getDependencies().create(getDescriptor());
     }
 }

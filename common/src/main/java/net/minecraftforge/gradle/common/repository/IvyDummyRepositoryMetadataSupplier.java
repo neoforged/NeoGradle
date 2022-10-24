@@ -1,14 +1,12 @@
 package net.minecraftforge.gradle.common.repository;
 
-import net.minecraftforge.gradle.common.extensions.IvyDummyRepositoryExtension;
-import org.gradle.api.Project;
+import com.google.common.collect.Lists;
 import org.gradle.api.artifacts.ComponentMetadataBuilder;
 import org.gradle.api.artifacts.ComponentMetadataSupplier;
 import org.gradle.api.artifacts.ComponentMetadataSupplierDetails;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetadataSupplier {
@@ -45,7 +41,7 @@ public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetada
                         .filter(entry -> entry.matches(id))
                         .findFirst();
 
-        if (entryCandidate.isEmpty()) {
+        if (!entryCandidate.isPresent()) {
             return;
         }
 
@@ -57,6 +53,6 @@ public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetada
         }
 
         result.setStatus("Found");
-        result.setStatusScheme(List.of("Found", "Not Found"));
+        result.setStatusScheme(Lists.newArrayList("Found", "Not Found"));
     }
 }

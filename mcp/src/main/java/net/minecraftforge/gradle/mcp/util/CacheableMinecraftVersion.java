@@ -141,14 +141,26 @@ public class CacheableMinecraftVersion implements Comparable<CacheableMinecraftV
         else if ("c0.0.13a_03".equals(lower))          // Rather than screw with the logic of the alpha/beta parser, special case this weird one
             return new CacheableMinecraftVersion(Type.ALPHA, version, -1, -1, 0, preA, splitDots("0.0.13"));
         else if (lower.startsWith("rd-")) {
-            String rev = switch (lower) {
-                case "rd-132211" -> "a";
-                case "rd-132328" -> "b";
-                case "rd-20090515" -> "c";
-                case "rd-160052" -> "d";
-                case "rd-161348" -> "e";
-                default -> throw new IllegalArgumentException("Unknown 'rd' version: " + version);
-            };
+            String rev;
+            switch (lower) {
+                case "rd-132211":
+                    rev = "a";
+                    break;
+                case "rd-132328":
+                    rev = "b";
+                    break;
+                case "rd-20090515":
+                    rev = "c";
+                    break;
+                case "rd-160052":
+                    rev = "d";
+                    break;
+                case "rd-161348":
+                    rev = "e";
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown 'rd' version: " + version);
+            }
 
             return new CacheableMinecraftVersion(Type.ALPHA, version, 20, 9, 0, rev, splitDots("0.0.1"));
         } else if (first == 'a' || first == 'b' || first == 'c') {

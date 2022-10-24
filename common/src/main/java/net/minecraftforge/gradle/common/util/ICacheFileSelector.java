@@ -4,117 +4,64 @@ import org.gradle.api.tasks.Input;
 
 import java.io.Serializable;
 
-public interface ICacheFileSelector extends Serializable {
+public abstract class ICacheFileSelector implements Serializable {
 
-    static ICacheFileSelector launcherMetadata() {
+    public static ICacheFileSelector launcherMetadata() {
         return new ICacheFileSelector() {
             @Override
             public String getCacheFileName() {
                 return "launcher_metadata.json";
             }
+        };
+    }
 
+    public static ICacheFileSelector forVersionJson(final String version) {
+        return new ICacheFileSelector() {
             @Override
-            public int hashCode() {
-                return this.getCacheFileName().hashCode();
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == this) {
-                    return true;
-                }
-
-                if (!(obj instanceof ICacheFileSelector cacheFileSelector)) {
-                    return false;
-                }
-
-                return cacheFileSelector.getCacheFileName().equals(this.getCacheFileName());
+            public String getCacheFileName() {
+                return String.format("versions/%s/metadata.json", version);
             }
         };
     }
 
-    static ICacheFileSelector forVersionJson(final String version) {
+    public static ICacheFileSelector forVersionJar(final String version, final String side) {
         return new ICacheFileSelector() {
             @Override
             public String getCacheFileName() {
-                return "versions/%s/metadata.json".formatted(version);
-            }
-
-            @Override
-            public int hashCode() {
-                return this.getCacheFileName().hashCode();
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == this) {
-                    return true;
-                }
-
-                if (!(obj instanceof ICacheFileSelector cacheFileSelector)) {
-                    return false;
-                }
-
-                return cacheFileSelector.getCacheFileName().equals(this.getCacheFileName());
+                return String.format("versions/%s/%s.jar", version, side);
             }
         };
     }
 
-    static ICacheFileSelector forVersionJar(final String version, final String side) {
+    public static ICacheFileSelector forVersionMappings(final String version, final String side) {
         return new ICacheFileSelector() {
             @Override
             public String getCacheFileName() {
-                return "versions/%s/%s.jar".formatted(version, side);
-            }
-
-            @Override
-            public int hashCode() {
-                return this.getCacheFileName().hashCode();
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == this) {
-                    return true;
-                }
-
-                if (!(obj instanceof ICacheFileSelector cacheFileSelector)) {
-                    return false;
-                }
-
-                return cacheFileSelector.getCacheFileName().equals(this.getCacheFileName());
-            }
-
-        };
-    }
-
-    static ICacheFileSelector forVersionMappings(final String version, final String side) {
-        return new ICacheFileSelector() {
-            @Override
-            public String getCacheFileName() {
-                return "versions/%s/%s.txt".formatted(version, side);
-            }
-
-            @Override
-            public int hashCode() {
-                return this.getCacheFileName().hashCode();
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == this) {
-                    return true;
-                }
-
-                if (!(obj instanceof ICacheFileSelector cacheFileSelector)) {
-                    return false;
-                }
-
-                return cacheFileSelector.getCacheFileName().equals(this.getCacheFileName());
+                return String.format("versions/%s/%s.txt", version, side);
             }
         };
     }
 
     @Input
-    String getCacheFileName();
+    public abstract String getCacheFileName();
+
+    @Override
+    public int hashCode() {
+        return this.getCacheFileName().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof ICacheFileSelector)) {
+            return false;
+        }
+
+        final ICacheFileSelector cacheFileSelector = (ICacheFileSelector) obj;
+
+        return cacheFileSelector.getCacheFileName().equals(this.getCacheFileName());
+    }
 }

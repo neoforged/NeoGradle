@@ -20,16 +20,12 @@
 
 package net.minecraftforge.gradle.common.util;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -39,7 +35,7 @@ class BundlerUtils {
 
     static Path extractMainJar(Path raw, Path target) throws IOException {
 
-        try (FileSystem fs = FileSystems.newFileSystem(raw, (Map<String, ?>) null)) {
+        try (FileSystem fs = FileSystems.newFileSystem(raw, BundlerUtils.class.getClassLoader())) {
             String format = getBundlerVersion(fs.getPath("META-INF", "MANIFEST.MF"));
             if (format == null) {
                 Files.copy(raw, target);
@@ -66,6 +62,7 @@ class BundlerUtils {
         return target;
     }
 
+    @Nullable
     private static String getBundlerVersion(Path manifest) throws IOException {
         if (!Files.exists(manifest))
             return null;

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.util.*;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
@@ -17,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static net.minecraftforge.gradle.common.util.FileDownloadingUtils.downloadThrowing;
 
-public abstract class MinecraftArtifactCacheExtension implements IConfigurableObject<MinecraftArtifactCacheExtension> {
+public abstract class MinecraftArtifactCacheExtension extends GroovyObjectSupport implements IConfigurableObject<MinecraftArtifactCacheExtension> {
 
     private final Project project;
     private final Map<ICacheFileSelector, File> cacheFiles;
@@ -110,16 +111,16 @@ public abstract class MinecraftArtifactCacheExtension implements IConfigurableOb
                 minecraftVersion,
                 side.getName(),
                 ICacheFileSelector.forVersionJar(minecraftVersion, side.getName()),
-                "Failed to download game artifact %s for %s".formatted(side.getName(), minecraftVersion));
+                String.format("Failed to download game artifact %s for %s", side.getName(), minecraftVersion));
     }
 
     private File downloadVersionMappingsToCache(final Project project, final File cacheDirectory, final String minecraftVersion, final ArtifactSide side) {
         return doDownloadVersionDownloadToCache(project,
                 cacheDirectory,
                 minecraftVersion,
-                "%s_mappings".formatted(side.getName()),
+                String.format("%s_mappings", side.getName()),
                 ICacheFileSelector.forVersionMappings(minecraftVersion, side.getName()),
-                "Failed to download game mappings of %s for %s".formatted(side.getName(), minecraftVersion));
+                String.format("Failed to download game mappings of %s for %s", side.getName(), minecraftVersion));
     }
 
     private File doDownloadVersionDownloadToCache(Project project, File cacheDirectory, String minecraftVersion, final String artifact, final ICacheFileSelector cacheFileSelector, final String potentialError) {

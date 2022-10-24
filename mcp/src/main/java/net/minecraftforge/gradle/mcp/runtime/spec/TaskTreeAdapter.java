@@ -1,12 +1,11 @@
 package net.minecraftforge.gradle.mcp.runtime.spec;
 
 import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
-import net.minecraftforge.gradle.mcp.runtime.tasks.McpRuntime;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Defines a callback which is invoked to handle modifications to an MCP task tree.
@@ -15,7 +14,7 @@ import java.util.Objects;
 public interface TaskTreeAdapter {
 
     /**
-     * Invoked to get a task which is run after the tasks of which the output is given.
+     * Invoked to get a task which is run after the taskOutputs of which the output is given.
      * The invoker is responsible for registering the task to the project, which is retrievable via {@link  McpRuntimeSpec#project()}.
      *
      * @param spec The runtime spec to build a task for.
@@ -23,11 +22,12 @@ public interface TaskTreeAdapter {
      * @return The task to run.
      */
     @NotNull
-    IMcpRuntimeTask adapt(final McpRuntimeSpec spec, final Provider<File> previousTasksOutput);
+    TaskProvider<? extends IMcpRuntimeTask> adapt(final McpRuntimeSpec spec, final TaskProvider<? extends IMcpRuntimeTask> previousTasksOutput, final Consumer<TaskProvider<? extends IMcpRuntimeTask>> dependentTaskConfigurationHandler);
 
     /**
      * Runs the given task adapter after the current one.
      * Implicitly chaining the build output of this adapters task as the input for the given adapters task.
+     * Automatically configures the task tree dependencies.
      *
      * @param after The task tree adapter to run afterwards.
      * @return The combined task tree adapter.
@@ -35,7 +35,15 @@ public interface TaskTreeAdapter {
     @NotNull
     default TaskTreeAdapter andThen(final TaskTreeAdapter after) {
         Objects.requireNonNull(after);
-        return (McpRuntimeSpec spec, Provider<File> previousTaskOutput) -> after.adapt(spec, adapt(spec, previousTaskOutput).getOutput().getAsFile());
+        return (spec, previousTaskOutput, dependentTaskConfigurationHandler) -> {
+            final TaskProvider<? extends IMcpRuntimeTask> currentAdapted = TaskTreeAdapter.this.adapt(spec, previousTaskOutput, dependentTaskConfigurationHandler);
+            dependentTaskConfigurationHandler.accept(currentAdapted);
+
+            final TaskProvider<? extends IMcpRuntimeTask> afterAdapted = after.adapt(spec, currentAdapted, dependentTaskConfigurationHandler);
+            afterAdapted.configure(task -> task.dependsOn(currentAdapted));
+
+            return afterAdapted;
+        };
     }
 
 }

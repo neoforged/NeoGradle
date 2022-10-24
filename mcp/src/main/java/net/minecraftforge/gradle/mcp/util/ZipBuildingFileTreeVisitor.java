@@ -5,9 +5,10 @@ import org.gradle.api.file.FileVisitor;
 
 import java.io.IOException;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
 
-public final class ZipBuildingFileTreeVisitor implements FileVisitor {
+public class ZipBuildingFileTreeVisitor implements FileVisitor {
 
     private final ZipOutputStream outputZipStream;
 
@@ -21,6 +22,10 @@ public final class ZipBuildingFileTreeVisitor implements FileVisitor {
             final ZipEntry directoryEntry = new ZipEntry(fileVisitDetails.getRelativePath().getPathString() + "/");
             outputZipStream.putNextEntry(directoryEntry);
             outputZipStream.closeEntry();
+        } catch (ZipException zip) {
+            if (!zip.getMessage().equals("duplicate entry: " + fileVisitDetails.getRelativePath().getPathString() + "/")) {
+                throw new RuntimeException("Could not create zip directory: " + fileVisitDetails.getRelativePath().getPathString(), zip);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Could not create zip directory: " + fileVisitDetails.getRelativePath().getPathString(), e);
         }

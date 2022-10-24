@@ -1,17 +1,17 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
+import net.minecraftforge.gradle.common.tasks.ITaskWithJavaVersion;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.tasks.ITaskWithWorkspace;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
-import net.minecraftforge.gradle.common.util.FileWrapper;
 import net.minecraftforge.gradle.mcp.util.CacheableMinecraftVersion;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 import java.io.File;
 
@@ -19,7 +19,7 @@ import java.io.File;
  * Defines the structure of a task which is run as part of an mcp runtime execution.
  * By default, it has an output.
  */
-public interface IMcpRuntimeTask extends ITaskWithOutput, ITaskWithWorkspace {
+public interface IMcpRuntimeTask extends ITaskWithOutput, ITaskWithWorkspace, ITaskWithJavaVersion {
 
     /**
      * The mcp directory, it is the location of the mcp working directory.
@@ -80,7 +80,7 @@ public interface IMcpRuntimeTask extends ITaskWithOutput, ITaskWithWorkspace {
      * @return The arguments for this step.
      */
     @Input
-    MapProperty<String, Object> getArguments();
+    MapProperty<String, Provider<String>> getArguments();
 
     /**
      * The name of the output file name for this step.
@@ -97,12 +97,4 @@ public interface IMcpRuntimeTask extends ITaskWithOutput, ITaskWithWorkspace {
      */
     @Internal
     DirectoryProperty getOutputDirectory();
-
-    /**
-     * The java version which should be used for this step.
-     *
-     * @return The java version
-     */
-    @Nested
-    Property<JavaLanguageVersion> getJavaRuntimeVersion();
 }

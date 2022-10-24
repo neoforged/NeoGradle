@@ -1,9 +1,6 @@
 package net.minecraftforge.gradle.common;
 
-import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
-import net.minecraftforge.gradle.common.extensions.ArtifactProviderExtension;
-import net.minecraftforge.gradle.common.extensions.IvyDummyRepositoryExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
+import net.minecraftforge.gradle.common.extensions.*;
 import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -27,5 +24,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create("ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
         project.getExtensions().create("minecraftCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create("dependencyReplacements", DependencyReplacementExtension.class, project);
+
+        project.getExtensions().create("minecraft", MinecraftExtension.class, project);
     }
 }

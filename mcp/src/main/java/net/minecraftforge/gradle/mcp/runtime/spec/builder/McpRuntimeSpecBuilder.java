@@ -1,10 +1,13 @@
 package net.minecraftforge.gradle.mcp.runtime.spec.builder;
 
-import net.minecraftforge.gradle.common.util.ArtifactSide;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
+import net.minecraftforge.gradle.common.util.ArtifactSide;
 import net.minecraftforge.gradle.mcp.runtime.spec.TaskTreeAdapter;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 
 public final class McpRuntimeSpecBuilder {
@@ -17,11 +20,14 @@ public final class McpRuntimeSpecBuilder {
     private Provider<ArtifactSide> side;
     private boolean hasConfiguredSide = false;
 
-    private TaskTreeAdapter preDecompileTaskTreeModifier = null;
+    private final Multimap<String, TaskTreeAdapter> preTaskAdapters = LinkedListMultimap.create();
+    private final Multimap<String, TaskTreeAdapter> postTaskAdapters = LinkedListMultimap.create();
+    private FileCollection additionalDependencies;
 
     private McpRuntimeSpecBuilder(Project project) {
         this.project = project;
         this.configureProject = project;
+        this.additionalDependencies = project.getObjects().fileCollection();
     }
 
     public static McpRuntimeSpecBuilder from(final Project project) {
@@ -74,13 +80,13 @@ public final class McpRuntimeSpecBuilder {
         return withSide(project.provider(() -> side));
     }
 
-    public McpRuntimeSpecBuilder withPreDecompileTaskTreeModifier(TaskTreeAdapter preDecompileTaskTreeModifier) {
-        if (this.preDecompileTaskTreeModifier == null) {
-            this.preDecompileTaskTreeModifier = preDecompileTaskTreeModifier;
-            return this;
-        }
+    public McpRuntimeSpecBuilder withPreTaskAdapter(final String taskTypeName, final TaskTreeAdapter adapter) {
+        this.preTaskAdapters.put(taskTypeName, adapter);
+        return this;
+    }
 
-        this.preDecompileTaskTreeModifier = this.preDecompileTaskTreeModifier.andThen(preDecompileTaskTreeModifier);
+    public McpRuntimeSpecBuilder withPostTaskAdapter(final String taskTypeName, final TaskTreeAdapter adapter) {
+        this.postTaskAdapters.put(taskTypeName, adapter);
         return this;
     }
 
@@ -92,7 +98,12 @@ public final class McpRuntimeSpecBuilder {
         return this;
     }
 
+    public McpRuntimeSpecBuilder withAdditionalDependencies(final FileCollection files) {
+        this.additionalDependencies = this.additionalDependencies.plus(files);
+        return this;
+    }
+
     public McpRuntimeSpec build() {
-        return new McpRuntimeSpec(project, configureProject, namePrefix, mcpVersion.get(), side.get(), preDecompileTaskTreeModifier);
+        return new McpRuntimeSpec(project, configureProject, namePrefix, mcpVersion.get(), side.get(), preTaskAdapters, postTaskAdapters, additionalDependencies);
     }
 }

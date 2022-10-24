@@ -1,6 +1,8 @@
 package net.minecraftforge.gradle.common.ide;
 
+import net.minecraftforge.gradle.common.ide.task.IdePostSyncExecutionTask;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
@@ -50,22 +52,33 @@ public final class IdeManager {
     }
 
     public void registerTaskToRun(Project project, TaskProvider<?> taskToRun) {
-        apply(project, new IdeImportAction() {
-            @Override
-            public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
-                // Navigate via the extension properties...
-                // https://github.com/JetBrains/gradle-idea-ext-plugin/wiki
-                final TaskTriggersConfig taskTriggers = ((ExtensionAware) ideaExtension).getExtensions().getByType(TaskTriggersConfig.class);
 
-                // Automatically prepare a workspace after importing
-                taskTriggers.afterSync(taskToRun);
-            }
+        final TaskProvider<? extends Task> idePostSyncTask;
+        if (project.getTasks().findByName("idePostSync") == null) {
+            idePostSyncTask = project.getTasks().register("idePostSync", IdePostSyncExecutionTask.class);
 
-            @Override
-            public void eclipse(Project project, EclipseModel eclipse) {
-                eclipse.synchronizationTasks(taskToRun);
-            }
-        });
+            apply(project, new IdeImportAction() {
+                @Override
+                public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
+                    // Navigate via the extension properties...
+                    // https://github.com/JetBrains/gradle-idea-ext-plugin/wiki
+                    final TaskTriggersConfig taskTriggers = ((ExtensionAware) ideaExtension).getExtensions().getByType(TaskTriggersConfig.class);
+
+                    // Automatically prepare a workspace after importing
+                    taskTriggers.afterSync(idePostSyncTask);
+                }
+
+                @Override
+                public void eclipse(Project project, EclipseModel eclipse) {
+                    eclipse.synchronizationTasks(idePostSyncTask);
+                }
+            });
+        }
+        else {
+            idePostSyncTask = project.getTasks().named("idePostSync");
+        }
+
+        idePostSyncTask.configure(task -> task.dependsOn(taskToRun));
     }
 
     /**

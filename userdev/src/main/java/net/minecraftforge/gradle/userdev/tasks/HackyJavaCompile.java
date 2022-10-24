@@ -45,7 +45,7 @@ public class HackyJavaCompile extends JavaCompile {
         // What follows is a horrible hack to allow us to call JavaCompile
         // from our dependency resolver.
         // As described in https://github.com/MinecraftForge/ForgeGradle/issues/550,
-        // invoking Gradle tasks in the normal way can lead to deadlocks
+        // invoking Gradle taskOutputs in the normal way can lead to deadlocks
         // when done from a dependency resolver.
 
         setCompiler();

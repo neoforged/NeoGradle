@@ -23,7 +23,7 @@ public final class FileDownloadingUtils {
         try {
             downloadTo(project, info, file);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to download the file from: %s to: %s".formatted(info, file), e);
+            throw new RuntimeException(String.format("Failed to download the file from: %s to: %s", info, file), e);
         }
     }
 

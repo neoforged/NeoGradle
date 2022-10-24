@@ -21,12 +21,13 @@
 package net.minecraftforge.gradle.mcp;
 
 import net.minecraftforge.gradle.common.CommonPlugin;
+import net.minecraftforge.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.common.util.Utils;
-import net.minecraftforge.gradle.mcp.dependency.McpRuntimeBasedMinecraftDependencyManager;
-import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
-import net.minecraftforge.gradle.mcp.naming.MCPNamingChannelConfigurator;
-import net.minecraftforge.gradle.mcp.naming.OfficialNamingChannelConfigurator;
+import net.minecraftforge.gradle.mcp.dependency.McpDependencyManager;
+import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
+import net.minecraftforge.gradle.common.runtime.naming.MCPNamingChannelConfigurator;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
+import net.minecraftforge.gradle.mcp.tasks.DisplayMappingsLicenseTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository.MetadataSources;
@@ -41,14 +42,17 @@ public class McpProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(CommonPlugin.class);
 
         McpExtension extension = project.getExtensions().create("mcp", McpExtension.class, project);
-        McpMinecraftExtension minecraftExtension = project.getExtensions().create("minecraft", McpMinecraftExtension.class, project);
+        MinecraftExtension minecraftExtension = project.getExtensions().create("minecraft", MinecraftExtension.class, project);
         McpRuntimeExtension runtimeExtension = project.getExtensions().create("mcpRuntime", McpRuntimeExtension.class, project);
 
         MCPNamingChannelConfigurator.getInstance().configure(project);
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 
         //Setup handling of the dependencies
-        McpRuntimeBasedMinecraftDependencyManager.getInstance().apply(project);
+        McpDependencyManager.getInstance().apply(project);
+
+        //Forcefully create the task -> Not lazily, since the constructor makes sure this task runs first ALWAYS.
+        project.getTasks().create("handleNamingLicense", DisplayMappingsLicenseTask.class);
 
         //Add Known repos
         project.getRepositories().maven(e -> {

@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.common.extensions.dependenvy.replacement;
 
 import com.google.common.collect.Sets;
+import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.extensions.IvyDummyRepositoryExtension;
 import net.minecraftforge.gradle.common.ide.IdeManager;
 import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntry;
@@ -21,10 +22,11 @@ import org.gradle.api.tasks.TaskProvider;
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
+import java.security.cert.Extension;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class DependencyReplacementExtension implements IConfigurableObject<DependencyReplacementExtension> {
+public abstract class DependencyReplacementExtension extends GroovyObjectSupport implements IConfigurableObject<DependencyReplacementExtension> {
 
     private final Project project;
 
@@ -63,12 +65,11 @@ public abstract class DependencyReplacementExtension implements IConfigurableObj
         final String artifactSelectionTaskName = result.taskNameBuilder().apply("selectRawArtifact");
         final TaskProvider<? extends ArtifactFromOutput> rawArtifactSelectionTask = project.getTasks().register(artifactSelectionTaskName, ArtifactFromOutput.class, artifactFromOutput -> {
             artifactFromOutput.setGroup("mcp");
-            artifactFromOutput.setDescription("Selects the raw artifact from the %s dependency".formatted(dependency.toString()));
+            artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency", dependency.toString()));
 
             artifactFromOutput.getInput().set(result.rawJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
             artifactFromOutput.dependsOn(result.rawJarTaskProvider());
         });
-
 
         result.additionalDependenciesConfiguration().getDependencies().forEach(dependentDependency -> {
             configuration.getDependencies().add(dependentDependency);
@@ -77,9 +78,11 @@ public abstract class DependencyReplacementExtension implements IConfigurableObj
     }
 
     private void handleDependencyReplacementForIde(Configuration configuration, Dependency dependency, DependencyReplacementResult result) {
-        if (!(dependency instanceof ExternalModuleDependency externalModuleDependency)) {
+        if (!(dependency instanceof ExternalModuleDependency)) {
             return;
         }
+
+        final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
 
         final IvyDummyRepositoryExtension extension = project.getExtensions().getByType(IvyDummyRepositoryExtension.class);
         final Provider<Directory> repoBaseDir = extension.createRepoBaseDir();
@@ -96,13 +99,13 @@ public abstract class DependencyReplacementExtension implements IConfigurableObj
                         .forEach(additionalDependency -> builder.withDependency(depBuilder -> depBuilder.from(additionalDependency)));
             });
         } catch (XMLStreamException | IOException e) {
-            throw new RuntimeException("Failed to create the dummy dependency for: %s".formatted(dependency.toString()), e);
+            throw new RuntimeException(String.format("Failed to create the dummy dependency for: %s", dependency.toString()), e);
         }
 
         final String dependencyExporterTaskName = result.taskNameBuilder().apply("combined");
         final TaskProvider<? extends RawAndSourceCombiner> rawAndSourceCombinerTask = project.getTasks().register(dependencyExporterTaskName, RawAndSourceCombiner.class, rawAndSourceCombiner -> {
             rawAndSourceCombiner.setGroup("mcp");
-            rawAndSourceCombiner.setDescription("Combines the raw and sources jars into a single task execution tree for: %s".formatted(dependency.toString()));
+            rawAndSourceCombiner.setDescription(String.format("Combines the raw and sources jars into a single task execution tree for: %s", dependency.toString()));
 
             rawAndSourceCombiner.getRawJarInput().set(result.rawJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
             rawAndSourceCombiner.getSourceJarInput().set(result.sourcesJarTaskProvider().flatMap(ITaskWithOutput::getOutput));

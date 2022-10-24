@@ -1,12 +1,13 @@
 package net.minecraftforge.gradle.common.tasks;
 
+import org.gradle.api.Task;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 
 import java.io.File;
 
-public interface ITaskWithWorkspace {
+public interface ITaskWithWorkspace extends Task {
     default File ensureFileWorkspaceReady(final RegularFileProperty fileProvider) {
         return ensureFileWorkspaceReady(fileProvider.getAsFile());
     }
@@ -36,5 +37,9 @@ public interface ITaskWithWorkspace {
 
         file.getParentFile().mkdirs();
         return file;
+    }
+
+    default <T> Provider<T> newProvider(final T value) {
+        return getProject().provider(() -> value);
     }
 }

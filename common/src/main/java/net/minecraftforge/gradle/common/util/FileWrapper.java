@@ -6,12 +6,43 @@ import org.gradle.api.tasks.PathSensitivity;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Objects;
 
-public record FileWrapper(File file) implements Serializable {
+public final class FileWrapper implements Serializable {
+    private static final long serialVersionUID = 5391682724482743076L;
+    private final File file;
+
+    public FileWrapper(File file) {
+        this.file = file;
+    }
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public File getFile() {
         return this.file;
     }
+
+    public File file() {
+        return file;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        final FileWrapper that = (FileWrapper) obj;
+        return Objects.equals(this.file, that.file);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(file);
+    }
+
+    @Override
+    public String toString() {
+        return "FileWrapper[" +
+                "file=" + file + ']';
+    }
+
 }

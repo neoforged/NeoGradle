@@ -28,10 +28,10 @@ public abstract class Execute extends McpRuntime {
     public Execute() {
         super();
 
-        getLogFileName().convention(getArguments().map(arguments -> (String) arguments.getOrDefault("log", "log.log")));
+        getLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("log", getProject().provider(() -> "log.log"))));
         getLogFile().convention(getOutputDirectory().flatMap(d -> getLogFileName().map(d::file)));
 
-        getConsoleLogFileName().convention(getArguments().map(arguments -> (String) arguments.getOrDefault("console.log", "console.log")));
+        getConsoleLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("console.log", getProject().provider(() -> "console.log"))));
         getConsoleLogFile().convention(getOutputDirectory().flatMap(d -> getConsoleLogFileName().map(d::file)));
 
         getMainClass().convention(getExecutingJar().map(TransformerUtils.guardWithResource(
@@ -40,12 +40,14 @@ public abstract class Execute extends McpRuntime {
         )));
 
         getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.gradle(artifact, false))));
+
+        getRuntimeProgramArguments().convention(getProgramArguments());
     }
 
     @TaskAction
     public void execute() throws Throwable {
         final Provider<List<String>> jvmArgs = applyVariableSubstitutions(getJvmArguments());
-        final Provider<List<String>> programArgs = applyVariableSubstitutions(getProgramArguments());
+        final Provider<List<String>> programArgs = applyVariableSubstitutions(getRuntimeProgramArguments());
 
         final File outputFile = ensureFileWorkspaceReady(getOutput());
         final File logFile = ensureFileWorkspaceReady(getLogFile());
@@ -84,7 +86,7 @@ public abstract class Execute extends McpRuntime {
     }
 
     private String applyVariableSubstitutions(String value) {
-        final Map<String, Object> runtimeArguments = getRuntimeArguments().get();
+        final Map<String, Provider<String>> runtimeArguments = getRuntimeArguments().get();
         final Map<String, File> data = getRuntimeData().get();
 
         Matcher matcher = REPLACE_PATTERN.matcher(value);
@@ -92,11 +94,13 @@ public abstract class Execute extends McpRuntime {
 
         String argName = matcher.group(1);
         if (argName != null) {
-            Object argument = runtimeArguments.get(argName);
-            if (argument instanceof File) {
-                return ((File)argument).getAbsolutePath();
-            } else if (argument instanceof String) {
-                return (String)argument;
+            Provider<String> argument = runtimeArguments.get(argName);
+            if (argument != null) {
+                try {
+                    return argument.get();
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to get runtime argument " + argName, e);
+                }
             }
 
             File dataElement = data.get(argName);
@@ -136,10 +140,13 @@ public abstract class Execute extends McpRuntime {
     @OutputFile
     public abstract RegularFileProperty getLogFile();
 
+    @Internal
+    public abstract ListProperty<String> getRuntimeProgramArguments();
+
     @Override
-    public void buildRuntimeArguments(Map<String, Object> arguments) {
+    public void buildRuntimeArguments(Map<String, Provider<String>> arguments) {
         super.buildRuntimeArguments(arguments);
-        arguments.computeIfAbsent("log", k -> getLogFile().get().getAsFile().getAbsolutePath());
-        arguments.computeIfAbsent("console.log", k -> getConsoleLogFile().get().getAsFile().getAbsolutePath());
+        arguments.computeIfAbsent("log", k -> newProvider(getLogFile().get().getAsFile().getAbsolutePath()));
+        arguments.computeIfAbsent("console.log", k -> newProvider(getConsoleLogFile().get().getAsFile().getAbsolutePath()));
     }
 }

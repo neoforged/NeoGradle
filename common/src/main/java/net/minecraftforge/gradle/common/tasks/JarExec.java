@@ -248,24 +248,20 @@ public abstract class JarExec extends DownloadingTask {
     @Optional
     public abstract Property<JavaLauncher> getJavaLauncher();
 
-    @Internal
     public void setMinimumRuntimeJavaVersion(int version) {
         if (!getJavaLauncher().isPresent() || !getJavaLauncher().get().getMetadata().getLanguageVersion().canCompileOrRun(version)) {
             setRuntimeJavaVersion(version);
         }
     }
 
-    @Internal
     public void setRuntimeJavaVersion(int version) {
         setRuntimeJavaToolchain(tc -> tc.getLanguageVersion().set(JavaLanguageVersion.of(version)));
     }
 
-    @Internal
     public void setRuntimeJavaToolchain(JavaToolchainSpec toolchain) {
         getJavaLauncher().set(getJavaToolchainService().launcherFor(toolchain));
     }
 
-    @Internal
     public void setRuntimeJavaToolchain(Action<? super JavaToolchainSpec> action) {
         getJavaLauncher().set(getJavaToolchainService().launcherFor(action));
     }

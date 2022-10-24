@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
 
@@ -23,19 +22,23 @@ import java.util.jar.Manifest;
 public abstract class ListLibraries extends McpRuntime {
     private static final Attributes.Name FORMAT = new Attributes.Name("Bundler-Format");
 
+    @SuppressWarnings("ConstantConditions")
     public ListLibraries() {
         super();
 
-        getServerBundleFile().fileProvider(getRuntimeArguments().map(arguments -> (File) arguments.get("bundle")));
+        getServerBundleFile().fileProvider(getRuntimeArguments().map(arguments -> {
+            if (!arguments.containsKey("bundle"))
+                return null;
 
-        getServerBundleFile().finalizeValueOnRead();
-        getDownloadedVersionJsonFile().finalizeValueOnRead();
+            return new File(arguments.get("bundle").get());
+        }));
+        getOutputFileName().set("libraries.txt");
     }
 
     @TaskAction
     public void run() throws Exception {
         final File output = ensureFileWorkspaceReady(getOutput());
-        try (FileSystem bundleFs = !getServerBundleFile().isPresent() ? null : FileSystems.newFileSystem(getServerBundleFile().get().getAsFile().toPath(), (Map<String, ?>) null)) {
+        try (FileSystem bundleFs = !getServerBundleFile().isPresent() ? null : FileSystems.newFileSystem(getServerBundleFile().get().getAsFile().toPath(), this.getClass().getClassLoader())) {
             Set<String> artifacts;
             if (bundleFs == null) {
                 artifacts = listDownloadJsonLibraries();
@@ -143,7 +146,52 @@ public abstract class ListLibraries extends McpRuntime {
             return new FileList(ret);
         }
 
-        private record Entry(String hash, String id, String path) {
-        }
+        private static final class Entry {
+            private final String hash;
+            private final String id;
+            private final String path;
+
+            private Entry(String hash, String id, String path) {
+                this.hash = hash;
+                this.id = id;
+                this.path = path;
+            }
+
+            public String hash() {
+                return hash;
+            }
+
+            public String id() {
+                return id;
+            }
+
+            public String path() {
+                return path;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == this) return true;
+                if (obj == null || obj.getClass() != this.getClass()) return false;
+                final Entry that = (Entry) obj;
+                return Objects.equals(this.hash, that.hash) &&
+                        Objects.equals(this.id, that.id) &&
+                        Objects.equals(this.path, that.path);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(hash, id, path);
+            }
+
+            @Override
+            public String toString() {
+                return "Entry[" +
+                        "hash=" + hash + ", " +
+                        "id=" + id + ", " +
+                        "path=" + path + ']';
+            }
+
+                }
     }
 }

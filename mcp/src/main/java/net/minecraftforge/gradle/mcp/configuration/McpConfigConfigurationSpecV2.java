@@ -21,7 +21,6 @@
 package net.minecraftforge.gradle.mcp.configuration;
 
 import net.minecraftforge.gradle.common.config.VersionedConfiguration;
-import net.minecraftforge.gradle.common.util.Utils;
 
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.tasks.Input;

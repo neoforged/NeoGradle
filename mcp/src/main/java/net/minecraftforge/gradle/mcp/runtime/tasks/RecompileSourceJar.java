@@ -5,10 +5,13 @@ import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.logging.LogLevel;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaToolchainService;
+import org.gradle.jvm.toolchain.internal.CurrentJvmToolchainSpec;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,8 +30,19 @@ public abstract class RecompileSourceJar extends JavaCompile implements IMcpRunt
 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-        getOutputFileName().convention(getArguments().map(arguments -> "output.%s".formatted(arguments.getOrDefault("outputExtension", "jar"))));
+        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProject().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))));
         getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().map(d::file)));
+
+        getRuntimeJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
+        getRuntimeJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
+            if (!getRuntimeJavaVersion().isPresent()) {
+                return toolChain.launcherFor(new CurrentJvmToolchainSpec(getProject().getObjects()));
+            }
+
+            return toolChain.launcherFor(spec -> spec.getLanguageVersion().set(getRuntimeJavaVersion()));
+        }));
+        getLogging().captureStandardOutput(LogLevel.DEBUG);
+        getLogging().captureStandardError(LogLevel.ERROR);
 
         setDescription("Recompiles an already existing decompiled java jar.");
         setSource(getProject().zipTree(getInputJar()).matching(filter -> filter.include("**/*.java")));
@@ -43,7 +57,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements IMcpRunt
         final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
 
         getModularity().getInferModulePath().convention(javaPluginExtension.getModularity().getInferModulePath());
-        getJavaCompiler().convention(getJavaRuntimeVersion().flatMap(javaVersion -> service.compilerFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(javaVersion))));
+        getJavaCompiler().convention(getRuntimeJavaVersion().flatMap(javaVersion -> service.compilerFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(javaVersion))));
 
         getDestinationDirectory().set(getOutputDirectory().map(directory -> directory.dir("classes")));
 
@@ -54,7 +68,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements IMcpRunt
 
         //Leave this as an anon class, so that gradle is aware of this. Lambdas can not be used during task tree analysis.
         //noinspection Convert2Lambda
-        doLast(new Action<>() {
+        doLast(new Action<Task>() {
             @Override
             public void execute(Task doLast) {
                 try {
@@ -73,6 +87,11 @@ public abstract class RecompileSourceJar extends JavaCompile implements IMcpRunt
                 }
             }
         });
+    }
+
+    @Internal
+    public final Provider<JavaToolchainService> getJavaToolChain() {
+        return getProject().provider(() -> getProject().getExtensions().getByType(JavaToolchainService.class));
     }
 
     @InputFile

@@ -67,7 +67,7 @@ public class VersionJson {
     private List<Library> _libraries = null;
 
     public List<LibraryDownload> getNatives() {
-        record Entry(int priority, LibraryDownload download) {}
+
 
         if (_natives == null) {
             Map<String, Entry> natives = new HashMap<>();
@@ -133,7 +133,7 @@ public class VersionJson {
             this._libraries = ImmutableList.copyOf(this._libraries);
         }
 
-        return _libraries.toArray(Library[]::new);
+        return _libraries.toArray(new Library[0]);
     }
 
     public static class Arguments {
@@ -362,6 +362,45 @@ public class VersionJson {
                 }
             }
             return UNKNOWN;
+        }
+    }
+
+    private static final class Entry {
+        private final int priority;
+        private final LibraryDownload download;
+
+        Entry(int priority, LibraryDownload download) {
+            this.priority = priority;
+            this.download = download;
+        }
+
+        public int priority() {
+            return priority;
+        }
+
+        public LibraryDownload download() {
+            return download;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            final Entry that = (Entry) obj;
+            return this.priority == that.priority &&
+                    Objects.equals(this.download, that.download);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(priority, download);
+        }
+
+        @Override
+        public String toString() {
+            return "Entry[" +
+                    "priority=" + priority + ", " +
+                    "download=" + download + ']';
         }
     }
 }

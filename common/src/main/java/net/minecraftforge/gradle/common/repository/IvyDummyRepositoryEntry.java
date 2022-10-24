@@ -15,17 +15,34 @@ import java.util.function.Consumer;
 
 /**
  * An entry which can potentially be requested by IDEs which interface with gradle.
- *
- * @param group The group of the dependency.
- * @param name The name of the dependency.
- * @param version The version of the dependency.
- * @param classifier The classifier of the dependency.
- * @param extension The extension of the dependency.
- * @param dependencies The dependencies for this entry.
  */
-public record IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension, Collection<IvyDummyRepositoryEntryDependency> dependencies) implements Serializable {
+public final class IvyDummyRepositoryEntry implements Serializable {
 
     private static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
+    private static final long serialVersionUID = 4025734172533096653L;
+    private final String group;
+    private final String name;
+    private final String version;
+    private final String classifier;
+    private final String extension;
+    private final Collection<IvyDummyRepositoryEntryDependency> dependencies;
+
+    /**
+     * @param group        The group of the dependency.
+     * @param name         The name of the dependency.
+     * @param version      The version of the dependency.
+     * @param classifier   The classifier of the dependency.
+     * @param extension    The extension of the dependency.
+     * @param dependencies The dependencies for this entry.
+     */
+    public IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension, Collection<IvyDummyRepositoryEntryDependency> dependencies) {
+        this.group = group;
+        this.name = name;
+        this.version = version;
+        this.classifier = classifier;
+        this.extension = extension;
+        this.dependencies = dependencies;
+    }
 
     public IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension) {
         this(group, name, version, classifier, extension, Collections.emptyList());
@@ -36,7 +53,7 @@ public record IvyDummyRepositoryEntry(String group, String name, String version,
             return FG_DUMMY_FG_MARKER;
         }
 
-        return "%s.%s".formatted(FG_DUMMY_FG_MARKER, group());
+        return String.format("%s.%s", FG_DUMMY_FG_MARKER, group());
     }
 
     public boolean matches(ModuleComponentIdentifier id) {
@@ -57,16 +74,16 @@ public record IvyDummyRepositoryEntry(String group, String name, String version,
 
     public String artifactPath() {
         final String fileName = classifier() == null || classifier().equals("") ?
-                "%s-%s.%s".formatted(name(), version(), extension()) :
-                "%s-%s-%s.%s".formatted(name(), version(), classifier(), extension());
+                String.format("%s-%s.%s", name(), version(), extension()) :
+                String.format("%s-%s-%s.%s", name(), version(), classifier(), extension());
 
         final String groupPath = fullGroup().replace('.', '/') + '/';
 
-        return "%s%s/%s/%s".formatted(groupPath, name(), version(), fileName);
+        return String.format("%s%s/%s/%s", groupPath, name(), version(), fileName);
     }
 
     public IvyDummyRepositoryEntry asSources() {
-        return IvyDummyRepositoryEntry.Builder.create(this).withClassifier("sources").build();
+        return Builder.create(this).withClassifier("sources").build();
     }
 
     @Override
@@ -90,6 +107,49 @@ public record IvyDummyRepositoryEntry(String group, String name, String version,
 
         return builder.toString();
     }
+
+    public String group() {
+        return group;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public String version() {
+        return version;
+    }
+
+    public String classifier() {
+        return classifier;
+    }
+
+    public String extension() {
+        return extension;
+    }
+
+    public Collection<IvyDummyRepositoryEntryDependency> dependencies() {
+        return dependencies;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        final IvyDummyRepositoryEntry that = (IvyDummyRepositoryEntry) obj;
+        return Objects.equals(this.group, that.group) &&
+                Objects.equals(this.name, that.name) &&
+                Objects.equals(this.version, that.version) &&
+                Objects.equals(this.classifier, that.classifier) &&
+                Objects.equals(this.extension, that.extension) &&
+                Objects.equals(this.dependencies, that.dependencies);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(group, name, version, classifier, extension, dependencies);
+    }
+
 
     public static final class Builder {
         private String group;

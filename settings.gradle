@@ -7,9 +7,12 @@ pluginManagement {
 
 rootProject.name = 'ForgeGradle'
 
+include 'base-testing'
 include 'common'
+include 'vanilla'
 include 'mcp'
-//include 'runs'
+include 'runs-configurations'
+include 'runs'
 //include 'patcher'
-//include 'userdev-configurations'
-//include 'userdev'
+include 'userdev-configurations'
+include 'userdev'

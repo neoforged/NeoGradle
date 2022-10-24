@@ -21,7 +21,7 @@
 package net.minecraftforge.gradle.mcp.naming.renamer;
 
 import de.siegmar.fastcsv.reader.NamedCsvReader;
-import org.gradle.api.tasks.Input;
+import net.minecraftforge.gradle.common.runtime.naming.renamer.RegexBasedSourceRenamer;
 import org.gradle.api.tasks.Nested;
 
 import java.io.File;
