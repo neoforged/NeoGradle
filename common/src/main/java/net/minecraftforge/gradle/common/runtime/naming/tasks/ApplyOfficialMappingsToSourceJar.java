@@ -1,37 +1,28 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
-import net.minecraftforge.gradle.common.runtime.naming.renamer.OfficialSourceRenamer;
+import net.minecraftforge.gradle.common.runtime.naming.renamer.ISourceRenamer;
+import net.minecraftforge.gradle.common.runtime.naming.renamer.IntermediaryMappingsFilteredOfficialSourceRenamer;
+import net.minecraftforge.gradle.common.runtime.naming.renamer.UnfilteredOfficialSourceRenamer;
+import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
-import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
-import java.io.IOException;
-
 @CacheableTask
-public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSourceJar<OfficialSourceRenamer> implements IMcpRuntimeTask {
+public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSourceJar implements IRuntimeTask {
 
     public ApplyOfficialMappingsToSourceJar() {
-        getOfficialNames().set(
+        getSourceRenamer().set(
                 getClientMappings().flatMap(clientMappings ->
-                        getServerMappings().flatMap(serverMappings ->
-                                getTsrgMappings().map(TransformerUtils.guard(tsrgMappings ->
-                                        OfficialSourceRenamer.from(clientMappings.getAsFile(), serverMappings.getAsFile(), tsrgMappings.getAsFile())))))
+                        getServerMappings().flatMap(TransformerUtils.guard(serverMappings ->
+                                getTsrgMappings().map(TransformerUtils.<ISourceRenamer, RegularFile>guard(tsrgMappings ->
+                                                IntermediaryMappingsFilteredOfficialSourceRenamer.from(clientMappings.getAsFile(), serverMappings.getAsFile(), tsrgMappings.getAsFile())))
+                                        .orElse(UnfilteredOfficialSourceRenamer.from(clientMappings.getAsFile(), serverMappings.getAsFile())))))
         );
         getRemapLambdas().convention(true);
-
-        getOfficialNames().finalizeValueOnRead();
-    }
-
-    @Override
-    protected OfficialSourceRenamer getRemappingArguments() {
-        return getOfficialNames().get();
-    }
-
-    @Override
-    protected byte[] createRemappedOutputOfSourceFile(final OfficialSourceRenamer sourceRenamer, byte[] inputStream, boolean shouldRemapJavadocs) throws IOException {
-        return sourceRenamer.rename(inputStream, shouldRemapJavadocs, getRemapLambdas().getOrElse(true));
+        getSourceRenamer().finalizeValueOnRead();
     }
 
     @Input
@@ -47,8 +38,7 @@ public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSo
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
     public abstract RegularFileProperty getTsrgMappings();
 
-    @Internal
-    public abstract Property<OfficialSourceRenamer> getOfficialNames();
 }

@@ -1,9 +1,10 @@
-package net.minecraftforge.gradle.mcp.runtime.tasks;
+package net.minecraftforge.gradle.common.runtime.tasks;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
+import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
@@ -19,7 +20,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 @CacheableTask
-public abstract class ListLibraries extends McpRuntime {
+public abstract class ListLibraries extends Runtime {
     private static final Attributes.Name FORMAT = new Attributes.Name("Bundler-Format");
 
     @SuppressWarnings("ConstantConditions")

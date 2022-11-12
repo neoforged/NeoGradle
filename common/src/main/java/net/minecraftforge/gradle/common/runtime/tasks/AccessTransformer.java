@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.mcp.runtime.tasks;
+package net.minecraftforge.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Lists;
 import net.minecraftforge.gradle.common.util.TransformerUtils;

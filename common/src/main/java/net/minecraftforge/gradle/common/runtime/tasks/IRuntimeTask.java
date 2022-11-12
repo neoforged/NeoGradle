@@ -1,10 +1,10 @@
-package net.minecraftforge.gradle.mcp.runtime.tasks;
+package net.minecraftforge.gradle.common.runtime.tasks;
 
 import net.minecraftforge.gradle.common.tasks.ITaskWithJavaVersion;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.tasks.ITaskWithWorkspace;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
-import net.minecraftforge.gradle.mcp.util.CacheableMinecraftVersion;
+import net.minecraftforge.gradle.common.util.CacheableMinecraftVersion;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -19,14 +19,14 @@ import java.io.File;
  * Defines the structure of a task which is run as part of an mcp runtime execution.
  * By default, it has an output.
  */
-public interface IMcpRuntimeTask extends ITaskWithOutput, ITaskWithWorkspace, ITaskWithJavaVersion {
+public interface IRuntimeTask extends ITaskWithOutput, ITaskWithWorkspace, ITaskWithJavaVersion {
 
     /**
-     * The mcp directory, it is the location of the mcp working directory.
+     * The runtime directory, it is the location of the runtime working directory.
      * @return The mcp working directory.
      */
     @Internal
-    DirectoryProperty getMcpDirectory();
+    DirectoryProperty getRuntimeDirectory();
 
     /**
      * The unpacked mcp directory in the global cache.

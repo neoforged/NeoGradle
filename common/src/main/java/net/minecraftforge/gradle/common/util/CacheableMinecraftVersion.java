@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.mcp.util;
+package net.minecraftforge.gradle.common.util;
 
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;

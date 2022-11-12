@@ -1,8 +1,9 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
+import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.common.util.Utils;
-import net.minecraftforge.gradle.mcp.util.CacheableMinecraftVersion;
+import net.minecraftforge.gradle.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.mcp.util.ZipBuildingFileTreeVisitor;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.*;
@@ -22,7 +23,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
-public abstract class Inject extends McpRuntime {
+public abstract class Inject extends Runtime {
     private static final CacheableMinecraftVersion v1_14_4 = CacheableMinecraftVersion.from("1.14.4");
 
     public Inject() {

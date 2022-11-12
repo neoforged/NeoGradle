@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.naming;
 
-import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
+import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,5 +16,5 @@ public interface ApplyMappingsToSourceJarTaskBuilder {
      * @param context The context.
      * @return The task provider.
      */
-    @NotNull TaskProvider<? extends IMcpRuntimeTask> build(RenamingTaskBuildingContext context);
+    @NotNull TaskProvider<? extends IRuntimeTask> build(RenamingTaskBuildingContext context);
 }

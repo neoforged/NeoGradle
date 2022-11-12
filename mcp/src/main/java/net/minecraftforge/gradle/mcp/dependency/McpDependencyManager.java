@@ -3,16 +3,20 @@ package net.minecraftforge.gradle.mcp.dependency;
 import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementExtension;
 import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
+import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 public final class McpDependencyManager {
@@ -42,7 +46,7 @@ public final class McpDependencyManager {
             return Optional.of(
                     new DependencyReplacementResult(
                             project,
-                            name -> McpRuntimeUtils.buildTaskName(runtimeDefinition, name),
+                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
                             runtimeDefinition.sourceJarTask(),
                             runtimeDefinition.rawJarTask(),
                             runtimeDefinition.minecraftDependenciesConfiguration(),
@@ -81,13 +85,13 @@ public final class McpDependencyManager {
         }
 
         final DependencyArtifact artifact = externalModuleDependency.getArtifacts().iterator().next();
-        return artifact.getClassifier().equals("sources") && artifact.getExtension().equals("jar");
+        return Objects.equals(artifact.getClassifier(), "sources") && Objects.equals(artifact.getExtension(), "jar");
     }
 
 
     private static McpRuntimeDefinition buildMcpRuntimeFromDependency(Project project, Project configureProject, ExternalModuleDependency dependency) {
         final McpRuntimeExtension runtimeExtension = project.getExtensions().getByType(McpRuntimeExtension.class);
-        return runtimeExtension.registerOrGet(builder -> {
+        return runtimeExtension.maybeCreate((Action<McpRuntimeSpecBuilder>) builder -> {
             builder.configureFromProject(configureProject);
             builder.withSide(ArtifactSide.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
             builder.withMcpVersion(dependency.getVersion());

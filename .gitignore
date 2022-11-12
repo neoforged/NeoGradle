@@ -15,3 +15,5 @@ out
 *.idea
 *.iml
 
+snapshots
+repo

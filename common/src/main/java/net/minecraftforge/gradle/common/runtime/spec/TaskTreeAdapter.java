@@ -1,6 +1,7 @@
-package net.minecraftforge.gradle.mcp.runtime.spec;
+package net.minecraftforge.gradle.common.runtime.spec;
 
-import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
+import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,14 +16,14 @@ public interface TaskTreeAdapter {
 
     /**
      * Invoked to get a task which is run after the taskOutputs of which the output is given.
-     * The invoker is responsible for registering the task to the project, which is retrievable via {@link  McpRuntimeSpec#project()}.
+     * The invoker is responsible for registering the task to the project, which is retrievable via {@link  CommonRuntimeSpec#project()}.
      *
      * @param spec The runtime spec to build a task for.
      * @param previousTasksOutput The previous task build output.
      * @return The task to run.
      */
     @NotNull
-    TaskProvider<? extends IMcpRuntimeTask> adapt(final McpRuntimeSpec spec, final TaskProvider<? extends IMcpRuntimeTask> previousTasksOutput, final Consumer<TaskProvider<? extends IMcpRuntimeTask>> dependentTaskConfigurationHandler);
+    TaskProvider<? extends IRuntimeTask> adapt(final CommonRuntimeSpec spec, final Provider<? extends IRuntimeTask> previousTasksOutput, final Consumer<TaskProvider<? extends IRuntimeTask>> dependentTaskConfigurationHandler);
 
     /**
      * Runs the given task adapter after the current one.
@@ -36,10 +37,10 @@ public interface TaskTreeAdapter {
     default TaskTreeAdapter andThen(final TaskTreeAdapter after) {
         Objects.requireNonNull(after);
         return (spec, previousTaskOutput, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends IMcpRuntimeTask> currentAdapted = TaskTreeAdapter.this.adapt(spec, previousTaskOutput, dependentTaskConfigurationHandler);
+            final TaskProvider<? extends IRuntimeTask> currentAdapted = TaskTreeAdapter.this.adapt(spec, previousTaskOutput, dependentTaskConfigurationHandler);
             dependentTaskConfigurationHandler.accept(currentAdapted);
 
-            final TaskProvider<? extends IMcpRuntimeTask> afterAdapted = after.adapt(spec, currentAdapted, dependentTaskConfigurationHandler);
+            final TaskProvider<? extends IRuntimeTask> afterAdapted = after.adapt(spec, currentAdapted, dependentTaskConfigurationHandler);
             afterAdapted.configure(task -> task.dependsOn(currentAdapted));
 
             return afterAdapted;

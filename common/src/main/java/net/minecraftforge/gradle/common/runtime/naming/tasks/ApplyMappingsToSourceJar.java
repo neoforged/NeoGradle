@@ -20,9 +20,10 @@
 
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
+import net.minecraftforge.gradle.common.runtime.naming.renamer.ISourceRenamer;
+import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
+import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.Utils;
-import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
-import net.minecraftforge.gradle.mcp.runtime.tasks.McpRuntime;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -38,7 +39,7 @@ import java.util.zip.ZipOutputStream;
 
 
 @CacheableTask
-public abstract class ApplyMappingsToSourceJar<TArgs> extends McpRuntime implements IMcpRuntimeTask {
+public abstract class ApplyMappingsToSourceJar extends Runtime implements IRuntimeTask {
 
     public ApplyMappingsToSourceJar() {
         getRemapJavadocs().convention(false);
@@ -46,7 +47,7 @@ public abstract class ApplyMappingsToSourceJar<TArgs> extends McpRuntime impleme
 
     @TaskAction
     public void apply() throws Exception {
-        final TArgs args = getRemappingArguments();
+        final ISourceRenamer renamer = getSourceRenamer().get();
         try (ZipFile zin = new ZipFile(getInput().get().getAsFile())) {
             try (FileOutputStream fos = new FileOutputStream(getOutput().get().getAsFile());
                  ZipOutputStream out = new ZipOutputStream(fos)) {
@@ -61,7 +62,7 @@ public abstract class ApplyMappingsToSourceJar<TArgs> extends McpRuntime impleme
                         final InputStream inputStream = zin.getInputStream(entry);
                         final byte[] toRemap = IOUtils.toByteArray(inputStream);
                         inputStream.close();
-                        out.write(createRemappedOutputOfSourceFile(args, toRemap, getRemapJavadocs().getOrElse(false)));
+                        out.write(renamer.rename(toRemap, getRemapJavadocs().getOrElse(false), getRemapLambdas().getOrElse(true)));
                     }
                     out.closeEntry();
                 }
@@ -71,11 +72,6 @@ public abstract class ApplyMappingsToSourceJar<TArgs> extends McpRuntime impleme
         getLogger().debug("Applying mappings to source jar complete");
     }
 
-    @Internal
-    protected abstract TArgs getRemappingArguments();
-
-    protected abstract byte[] createRemappedOutputOfSourceFile(final TArgs args, final byte[] inputStream, final boolean shouldRemapJavadocs) throws IOException;
-
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInput();
@@ -83,6 +79,12 @@ public abstract class ApplyMappingsToSourceJar<TArgs> extends McpRuntime impleme
     @Input
     public abstract Property<Boolean> getRemapJavadocs();
 
+    @Input
+    public abstract Property<Boolean> getRemapLambdas();
+
     @OutputFile
     public abstract RegularFileProperty getOutput();
+
+    @Internal
+    public abstract Property<ISourceRenamer> getSourceRenamer();
 }

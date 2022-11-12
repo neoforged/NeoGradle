@@ -2,15 +2,14 @@ package net.minecraftforge.gradle.userdev.runtime.extension;
 
 import com.google.common.collect.Maps;
 import groovy.lang.GroovyObjectSupport;
+import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
+import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
-import net.minecraftforge.gradle.common.util.Artifact;
-import net.minecraftforge.gradle.common.util.ArtifactSide;
-import net.minecraftforge.gradle.common.util.FileUtils;
-import net.minecraftforge.gradle.common.util.IConfigurableObject;
+import net.minecraftforge.gradle.common.util.*;
 import net.minecraftforge.gradle.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
-import net.minecraftforge.gradle.mcp.runtime.spec.TaskTreeAdapter;
+import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
 import net.minecraftforge.gradle.mcp.runtime.tasks.*;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.userdev.extension.ForgeUserDevExtension;
@@ -104,7 +103,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
 
         final String mcpVersion = Artifact.from(userDevConfigurationSpec.getMcpVersion().get()).getVersion();
 
-        final McpRuntimeDefinition mcpRuntimeDefinition = mcpRuntimeExtension.registerOrGet(builder -> {
+        final McpRuntimeDefinition mcpRuntimeDefinition = mcpRuntimeExtension.maybeCreate((Action<McpRuntimeSpecBuilder>) builder -> {
             builder.withMcpVersion(mcpVersion)
                     .withSide(ArtifactSide.JOINED)
                     .withName(runtimeSpec.name())
@@ -142,7 +141,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
     }
 
     private Optional<TaskTreeAdapter> createInjectionAdapter(final Optional<String> injectionDirectory, final File unpackedForgeUserDevDirectory) {
-        return injectionDirectory.map(s -> (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> spec.project().getTasks().register(McpRuntimeUtils.buildTaskName(spec, "injectUserDev"), Inject.class, task -> {
+        return injectionDirectory.map(s -> (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "injectUserDev"), Inject.class, task -> {
             task.getInjectionSource().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput));
             task.getInjectionDirectory().fileValue(new File(unpackedForgeUserDevDirectory, s));
         }));
@@ -150,7 +149,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
     }
 
     private TaskTreeAdapter createPatchAdapter(final String patchDirectory, final File unpackForgeUserDevDirectory) {
-        return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> spec.project().getTasks().register(McpRuntimeUtils.buildTaskName(spec, "patchUserDev"), Patch.class, task -> {
+        return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "patchUserDev"), Patch.class, task -> {
             task.getInput().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput));
             task.getPatchDirectory().fileProvider(spec.project().provider(() -> new File(unpackForgeUserDevDirectory, patchDirectory)));
         });
@@ -158,20 +157,20 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
 
     private TaskTreeAdapter createInjectForgeSourcesAdapter(final String forgeSourcesCoordinate) {
         return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends DownloadArtifact> downloadForgeSources = spec.project().getTasks().register(McpRuntimeUtils.buildTaskName(spec, "downloadForgesSources"), DownloadArtifact.class, task -> {
+            final TaskProvider<? extends DownloadArtifact> downloadForgeSources = spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "downloadForgesSources"), DownloadArtifact.class, task -> {
                 task.getArtifactCoordinate().set(forgeSourcesCoordinate);
             });
 
             dependentTaskConfigurationHandler.accept(downloadForgeSources);
 
-            final TaskProvider<? extends UnpackZip> unzipForgeSources = spec.project().getTasks().register(McpRuntimeUtils.buildTaskName(spec, "unzipForgesSources"), UnpackZip.class, task -> {
+            final TaskProvider<? extends UnpackZip> unzipForgeSources = spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "unzipForgesSources"), UnpackZip.class, task -> {
                 task.getInputZip().set(downloadForgeSources.flatMap(DownloadArtifact::getOutput));
                 task.dependsOn(downloadForgeSources);
             });
 
             dependentTaskConfigurationHandler.accept(unzipForgeSources);
 
-            return spec.project().getTasks().register(McpRuntimeUtils.buildTaskName(spec, "injectForgesSources"), Inject.class, task -> {
+            return spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "injectForgesSources"), Inject.class, task -> {
                 task.getInjectionSource().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput));
                 task.getInjectionDirectory().set(unzipForgeSources.flatMap(UnpackZip::getUnpackingTarget));
                 task.getInclusionFilter().set("net/**");

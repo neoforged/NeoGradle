@@ -45,6 +45,4 @@ public class ManifestJson {
         }
         return null;
     }
-
-    ReflectionUtils
 }

@@ -1,5 +1,6 @@
-package net.minecraftforge.gradle.mcp.runtime.tasks;
+package net.minecraftforge.gradle.common.runtime.tasks;
 
+import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @CacheableTask
-public abstract class Execute extends McpRuntime {
+public abstract class Execute extends Runtime {
 
     private static final Pattern REPLACE_PATTERN = Pattern.compile("^\\{(\\w+)}$");
 

@@ -1,6 +1,8 @@
 package net.minecraftforge.gradle.mcp.runtime.spec;
 
 import com.google.common.collect.Multimap;
+import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
+import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -11,15 +13,9 @@ import java.util.Objects;
 /**
  * Defines a specification for a MCP runtime.
  */
-public final class McpRuntimeSpec implements Serializable {
+public class McpRuntimeSpec extends CommonRuntimeSpec {
     private static final long serialVersionUID = -3537760562547500214L;
-    private final Project project;
-    private final Project configureProject;
-    private final String name;
     private final String mcpVersion;
-    private final ArtifactSide side;
-    private final Multimap<String, TaskTreeAdapter> preTaskTypeAdapters;
-    private final Multimap<String, TaskTreeAdapter> postTypeAdapters;
     private final FileCollection additionalRecompileDependencies;
 
     /**
@@ -30,13 +26,8 @@ public final class McpRuntimeSpec implements Serializable {
      * @param side             The side to use.
      */
     public McpRuntimeSpec(Project project, Project configureProject, String name, String mcpVersion, ArtifactSide side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, FileCollection additionalRecompileDependencies) {
-        this.project = project;
-        this.configureProject = configureProject;
-        this.name = name;
+        super(project, configureProject, name, side, preTaskTypeAdapters, postTypeAdapters);
         this.mcpVersion = mcpVersion;
-        this.side = side;
-        this.preTaskTypeAdapters = preTaskTypeAdapters;
-        this.postTypeAdapters = postTypeAdapters;
         this.additionalRecompileDependencies = additionalRecompileDependencies;
     }
 
@@ -49,32 +40,8 @@ public final class McpRuntimeSpec implements Serializable {
         return mcpVersion().split("-")[0];
     }
 
-    public Project project() {
-        return project;
-    }
-
-    public Project configureProject() {
-        return configureProject;
-    }
-
-    public String name() {
-        return name;
-    }
-
     public String mcpVersion() {
         return mcpVersion;
-    }
-
-    public ArtifactSide side() {
-        return side;
-    }
-
-    public Multimap<String, TaskTreeAdapter> preTaskTypeAdapters() {
-        return preTaskTypeAdapters;
-    }
-
-    public Multimap<String, TaskTreeAdapter> postTypeAdapters() {
-        return postTypeAdapters;
     }
 
     public FileCollection additionalRecompileDependencies() {
@@ -82,36 +49,22 @@ public final class McpRuntimeSpec implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        final McpRuntimeSpec that = (McpRuntimeSpec) obj;
-        return Objects.equals(this.project, that.project) &&
-                Objects.equals(this.configureProject, that.configureProject) &&
-                Objects.equals(this.name, that.name) &&
-                Objects.equals(this.mcpVersion, that.mcpVersion) &&
-                Objects.equals(this.side, that.side) &&
-                Objects.equals(this.preTaskTypeAdapters, that.preTaskTypeAdapters) &&
-                Objects.equals(this.postTypeAdapters, that.postTypeAdapters) &&
-                Objects.equals(this.additionalRecompileDependencies, that.additionalRecompileDependencies);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof McpRuntimeSpec)) return false;
+        if (!super.equals(o)) return false;
+
+        McpRuntimeSpec spec = (McpRuntimeSpec) o;
+
+        if (!mcpVersion.equals(spec.mcpVersion)) return false;
+        return additionalRecompileDependencies.equals(spec.additionalRecompileDependencies);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(project, configureProject, name, mcpVersion, side, preTaskTypeAdapters, postTypeAdapters, additionalRecompileDependencies);
+        int result = super.hashCode();
+        result = 31 * result + mcpVersion.hashCode();
+        result = 31 * result + additionalRecompileDependencies.hashCode();
+        return result;
     }
-
-    @Override
-    public String toString() {
-        return "McpRuntimeSpec[" +
-                "project=" + project + ", " +
-                "configureProject=" + configureProject + ", " +
-                "name=" + name + ", " +
-                "mcpVersion=" + mcpVersion + ", " +
-                "side=" + side + ", " +
-                "preTaskTypeAdapters=" + preTaskTypeAdapters + ", " +
-                "postTypeAdapters=" + postTypeAdapters + ", " +
-                "additionalRecompileDependencies=" + additionalRecompileDependencies + ']';
-    }
-
 }

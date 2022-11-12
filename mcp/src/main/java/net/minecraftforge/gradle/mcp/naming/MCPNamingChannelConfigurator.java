@@ -7,7 +7,7 @@ import net.minecraftforge.gradle.common.tasks.DownloadMavenArtifact;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.mcp.naming.tasks.ApplyMcpMappingsToSourceJar;
-import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
+import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
@@ -15,6 +15,8 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
+
+import static net.minecraftforge.gradle.common.util.NamingConstants.Version.VERSION;
 
 public final class MCPNamingChannelConfigurator {
     private static final MCPNamingChannelConfigurator INSTANCE = new MCPNamingChannelConfigurator();
@@ -50,17 +52,17 @@ public final class MCPNamingChannelConfigurator {
         });
     }
 
-    private @NotNull TaskProvider<? extends IMcpRuntimeTask> build(RenamingTaskBuildingContext context) {
-        final String mappingVersion = context.mappingVersionData().get(McpRuntimeConstants.Naming.Version.VERSION);
+    private @NotNull TaskProvider<? extends IRuntimeTask> build(RenamingTaskBuildingContext context) {
+        final String mappingVersion = context.mappingVersionData().get(VERSION);
         if (mappingVersion == null) {
             throw new IllegalStateException("Missing mapping version");
         }
         final TaskProvider<DownloadMavenArtifact> downloadMavenArtifact = buildMcpMappingsDownloadTask(context.spec().project(), context.namingChannelProvider(), mappingVersion);
-        final String applyTaskName = String.format("apply%s%sMappingsTo%s", StringUtils.capitalize(context.namingChannelProvider().getName()), mappingVersion, context.taskOutputToModify().getName());
+        final String applyTaskName = String.format("apply%s%sMappingsTo%s", StringUtils.capitalize(context.namingChannelProvider().getName()), mappingVersion, StringUtils.capitalize(context.spec().name()));
 
         return context.spec().project().getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
             applyMcpMappingsToSourceJarTask.setGroup("ForgeGradle");
-            applyMcpMappingsToSourceJarTask.setDescription(String.format("Applies the MCP mappings for version %s to the %s task", mappingVersion, context.taskOutputToModify().getName()));
+            applyMcpMappingsToSourceJarTask.setDescription(String.format("Applies the MCP mappings for version %s to %s pipeline", mappingVersion, context.spec().name()));
 
             applyMcpMappingsToSourceJarTask.getMappings().set(downloadMavenArtifact.flatMap(DownloadMavenArtifact::getOutput));
             applyMcpMappingsToSourceJarTask.getInput().set(context.taskOutputToModify().flatMap(ITaskWithOutput::getOutput));

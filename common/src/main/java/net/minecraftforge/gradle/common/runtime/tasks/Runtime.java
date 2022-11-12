@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.mcp.runtime.tasks;
+package net.minecraftforge.gradle.common.runtime.tasks;
 
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
@@ -12,18 +12,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 @CacheableTask
-public abstract class McpRuntime extends JavaRuntimeTask implements IMcpRuntimeTask {
+public abstract class Runtime extends JavaRuntimeTask implements IRuntimeTask {
 
-    public McpRuntime() {
+    public Runtime() {
         super();
 
         //All of these taskOutputs belong to the MCP group
         setGroup("mcp");
 
         //Sets up the base configuration for directories and outputs.
-        getMcpDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
-        getUnpackedMcpZipDirectory().convention(getMcpDirectory().dir("unpacked"));
-        getStepsDirectory().convention(getMcpDirectory().dir("steps"));
+        getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
+        getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
+        getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
@@ -63,7 +63,7 @@ public abstract class McpRuntime extends JavaRuntimeTask implements IMcpRuntimeT
         arguments.computeIfAbsent("outputDir", key -> newProvider(getOutputDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("outputExtension", key -> newProvider(getOutputFileName().get().substring(getOutputFileName().get().lastIndexOf('.') + 1)));
         arguments.computeIfAbsent("outputFileName", key -> newProvider(getOutputFileName().get()));
-        arguments.computeIfAbsent("mcpDir", key -> newProvider(getMcpDirectory().get().getAsFile().getAbsolutePath()));
+        arguments.computeIfAbsent("mcpDir", key -> newProvider(getRuntimeDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("unpackedMcpZip", key -> newProvider(getUnpackedMcpZipDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("stepsDir", key -> newProvider(getStepsDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("stepName", key -> getStepName());

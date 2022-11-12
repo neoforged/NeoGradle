@@ -29,35 +29,34 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class OfficialSourceRenamer extends RegexBasedSourceRenamer {
+public class UnfilteredOfficialSourceRenamer extends RegexBasedSourceRenamer {
 
     private final Map<String, String> names;
     private final Map<String, String> docs;
 
-    private OfficialSourceRenamer(Map<String, String> names, Map<String, String> docs) {
+    private UnfilteredOfficialSourceRenamer(Map<String, String> names, Map<String, String> docs) {
         this.names = names;
         this.docs = docs;
     }
 
-    public static OfficialSourceRenamer from(File clientFile, final File serverFile, final File tsrgFile) throws IOException {
+    public static UnfilteredOfficialSourceRenamer from(File clientFile, final File serverFile) throws IOException {
         Map<String, String> names = new ConcurrentHashMap<>();
 
         IMappingFile pg_client = IMappingFile.load(clientFile);
         IMappingFile pg_server = IMappingFile.load(serverFile);
-        IMappingFile srg = IMappingFile.load(tsrgFile);
 
         Map<String, String> cfields = new ConcurrentHashMap<>();
         Map<String, String> sfields = new ConcurrentHashMap<>();
         Map<String, String> cmethods = new ConcurrentHashMap<>();
         Map<String, String> smethods = new ConcurrentHashMap<>();
 
-        pg_client.getClasses().parallelStream().forEach(cls -> processClass(srg, cfields, cmethods, cls));
-        pg_server.getClasses().parallelStream().forEach(cls -> processClass(srg, sfields, smethods, cls));
+        pg_client.getClasses().parallelStream().forEach(cls -> processClass(cfields, cmethods, cls));
+        pg_server.getClasses().parallelStream().forEach(cls -> processClass(sfields, smethods, cls));
 
         cfields.keySet().parallelStream().forEach(name -> processName(names, cfields, sfields, name));
         cmethods.keySet().parallelStream().forEach(name -> processName(names, cmethods, smethods, name));
 
-        return new OfficialSourceRenamer(names, Collections.emptyMap());
+        return new UnfilteredOfficialSourceRenamer(names, Collections.emptyMap());
     }
 
     private static void processName(Map<String, String> names, Map<String, String> clientData, Map<String, String> serverData, String name) {
@@ -69,19 +68,12 @@ public class OfficialSourceRenamer extends RegexBasedSourceRenamer {
         }
     }
 
-    private static void processClass(IMappingFile tsrgMappingData, Map<String, String> fields, Map<String, String> methods, IMappingFile.IClass classData) {
-        IMappingFile.IClass obf = tsrgMappingData.getClass(classData.getMapped());
-        if (obf == null) // Class exists in official source, but doesn't make it past obfusication so it's not in our mappings.
-            return;
+    private static void processClass(Map<String, String> fields, Map<String, String> methods, IMappingFile.IClass classData) {
         for (IMappingFile.IField fld : classData.getFields()) {
-            String name = obf.remapField(fld.getMapped());
-            if (name.startsWith("field_") || name.startsWith("f_"))
-                fields.put(name, fld.getOriginal());
+            fields.put(fld.getMapped(), fld.getOriginal());
         }
         for (IMappingFile.IMethod mtd : classData.getMethods()) {
-            String name = obf.remapMethod(mtd.getMapped(), mtd.getMappedDescriptor());
-            if (name.startsWith("func_") || name.startsWith("m_"))
-                methods.put(name, mtd.getOriginal());
+            methods.put(mtd.getMapped(), mtd.getOriginal());
         }
     }
 

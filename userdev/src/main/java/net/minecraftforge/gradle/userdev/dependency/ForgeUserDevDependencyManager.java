@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.userdev.dependency;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementExtension;
 import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.userdev.runtime.ForgeUserDevRuntimeDefinition;
 import net.minecraftforge.gradle.userdev.runtime.extension.ForgeUserDevRuntimeExtension;
@@ -48,7 +49,7 @@ public final class ForgeUserDevDependencyManager {
             return Optional.of(
                     new DependencyReplacementResult(
                             project,
-                            name -> McpRuntimeUtils.buildTaskName(runtimeDefinition.mcpRuntimeDefinition(), name),
+                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition.mcpRuntimeDefinition(), name),
                             runtimeDefinition.mcpRuntimeDefinition().sourceJarTask(),
                             runtimeDefinition.mcpRuntimeDefinition().rawJarTask(),
                             additionalDependenciesConfiguration,

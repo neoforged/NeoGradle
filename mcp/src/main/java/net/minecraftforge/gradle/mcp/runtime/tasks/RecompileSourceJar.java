@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
+import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import net.minecraftforge.gradle.mcp.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
@@ -19,14 +20,14 @@ import java.io.IOException;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
-public abstract class RecompileSourceJar extends JavaCompile implements IMcpRuntimeTask {
+public abstract class RecompileSourceJar extends JavaCompile implements IRuntimeTask {
 
     public RecompileSourceJar() {
         super();
 
-        getMcpDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
-        getUnpackedMcpZipDirectory().convention(getMcpDirectory().dir("unpacked"));
-        getStepsDirectory().convention(getMcpDirectory().dir("steps"));
+        getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
+        getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
+        getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
@@ -87,6 +88,8 @@ public abstract class RecompileSourceJar extends JavaCompile implements IMcpRunt
                 }
             }
         });
+
+        getInputJar().finalizeValueOnRead();
     }
 
     @Internal

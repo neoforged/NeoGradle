@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.mcp.runtime.tasks;
+package net.minecraftforge.gradle.common.runtime.tasks;
 
 import net.minecraftforge.gradle.common.util.ICacheFileSelector;
 import org.gradle.api.file.DirectoryProperty;
@@ -10,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CacheableTask
-public abstract class FileCacheProviding extends McpRuntime {
+public abstract class FileCacheProviding extends Runtime {
 
     @TaskAction
     public void provide() throws IOException {

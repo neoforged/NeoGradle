@@ -22,7 +22,7 @@ package net.minecraftforge.gradle.common.runtime.naming;
 
 import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
-import net.minecraftforge.gradle.mcp.util.McpRuntimeConstants;
+import net.minecraftforge.gradle.common.util.NamingConstants;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 
@@ -43,7 +43,7 @@ public abstract class NamingChannelProvider extends GroovyObjectSupport implemen
         this.project = project;
         this.name = name;
 
-        getMinecraftVersionExtractor().convention(project.getProviders().provider(() -> data -> data.get(McpRuntimeConstants.Naming.Version.VERSION)));
+        getMinecraftVersionExtractor().convention(project.getProviders().provider(() -> data -> data.get(NamingConstants.Version.VERSION)));
     }
 
     /**

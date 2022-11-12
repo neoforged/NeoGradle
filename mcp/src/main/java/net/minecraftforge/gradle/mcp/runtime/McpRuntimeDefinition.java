@@ -1,94 +1,40 @@
 package net.minecraftforge.gradle.mcp.runtime;
 
-import com.google.common.collect.Iterators;
-import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV2;
-import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
+import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
+import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
+import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.GameArtifact;
-import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
-import net.minecraftforge.gradle.mcp.runtime.tasks.IMcpRuntimeTask;
+import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV2;
+import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Represents a configured and registered runtime for Mcp.
  */
-public final class McpRuntimeDefinition {
-    private final McpRuntimeSpec spec;
-    private final LinkedHashMap<String, TaskProvider<? extends IMcpRuntimeTask>> taskOutputs;
+public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec> {
     private final File unpackedMcpZipDirectory;
     private final McpConfigConfigurationSpecV2 mcpConfig;
-    private final TaskProvider<? extends ITaskWithOutput> sourceJarTask;
-    private final TaskProvider<? extends ITaskWithOutput> rawJarTask;
-    private final Map<GameArtifact, TaskProvider<? extends IMcpRuntimeTask>> gameArtifactProvidingTasks;
-    private final Configuration minecraftDependenciesConfiguration;
 
-    /**
-     * @param spec                               The spec that build the runtime.
-     * @param taskOutputs                        The taskOutputs that were build from the spec.
-     * @param unpackedMcpZipDirectory            The unpacked mcp zip location.
-     * @param mcpConfig                          The mcp config.
-     * @param minecraftDependenciesConfiguration
-     */
     public McpRuntimeDefinition(
             McpRuntimeSpec spec,
-            LinkedHashMap<String, TaskProvider<? extends IMcpRuntimeTask>> taskOutputs,
+            LinkedHashMap<String, TaskProvider<? extends IRuntimeTask>> taskOutputs,
             File unpackedMcpZipDirectory,
             McpConfigConfigurationSpecV2 mcpConfig,
-            TaskProvider<? extends ITaskWithOutput> sourceJarTask,
-            TaskProvider<? extends ITaskWithOutput> rawJarTask,
-
-            Map<GameArtifact, TaskProvider<? extends IMcpRuntimeTask>> gameArtifactProvidingTasks,
+            TaskProvider<? extends ArtifactProvider> sourceJarTask,
+            TaskProvider<? extends ArtifactProvider> rawJarTask,
+            Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactProvidingTasks,
+            Map<GameArtifact, File> gameArtifacts,
             Configuration minecraftDependenciesConfiguration) {
-        this.spec = spec;
-        this.taskOutputs = taskOutputs;
+        super(spec, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, gameArtifacts, minecraftDependenciesConfiguration);
         this.unpackedMcpZipDirectory = unpackedMcpZipDirectory;
         this.mcpConfig = mcpConfig;
-        this.sourceJarTask = sourceJarTask;
-        this.rawJarTask = rawJarTask;
-        this.gameArtifactProvidingTasks = gameArtifactProvidingTasks;
-        this.minecraftDependenciesConfiguration = minecraftDependenciesConfiguration;
-    }
-
-    /**
-     * Returns the runtimes task with the given name.
-     * The given name is prefixed with the name of the runtime, if needed.
-     * Invoking this method with the name of a task that is not part of the runtime will result in an {@link IllegalArgumentException exception}.
-     *
-     * @param name The name of the task to get.
-     * @return The named task.
-     */
-    @NotNull
-    public TaskProvider<? extends ITaskWithOutput> task(String name) {
-        final String taskName = McpRuntimeUtils.buildTaskName(this, name);
-        if (!taskOutputs.containsKey(taskName)) {
-            throw new IllegalArgumentException("No task with name " + name + " found in runtime " + spec.name());
-        }
-
-        return taskOutputs.get(taskName);
-    }
-
-    /**
-     * Returns the task which produces the raw jar used for compiling against.
-     *
-     * @return The raw jar producing taskOutputs.
-     */
-    public TaskProvider<? extends ITaskWithOutput> rawJarTask() {
-        return Iterators.getLast(taskOutputs.values().iterator());
-    }
-
-    public McpRuntimeSpec spec() {
-        return spec;
-    }
-
-    public LinkedHashMap<String, TaskProvider<? extends IMcpRuntimeTask>> taskOutputs() {
-        return taskOutputs;
     }
 
     public File unpackedMcpZipDirectory() {
@@ -99,49 +45,23 @@ public final class McpRuntimeDefinition {
         return mcpConfig;
     }
 
-    public TaskProvider<? extends ITaskWithOutput> sourceJarTask() {
-        return sourceJarTask;
-    }
-
-    public Map<GameArtifact, TaskProvider<? extends IMcpRuntimeTask>> gameArtifactProvidingTasks() {
-        return gameArtifactProvidingTasks;
-    }
-
-    public Configuration minecraftDependenciesConfiguration() {
-        return minecraftDependenciesConfiguration;
-    }
-
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        final McpRuntimeDefinition that = (McpRuntimeDefinition) obj;
-        return Objects.equals(this.spec, that.spec) &&
-                Objects.equals(this.taskOutputs, that.taskOutputs) &&
-                Objects.equals(this.unpackedMcpZipDirectory, that.unpackedMcpZipDirectory) &&
-                Objects.equals(this.mcpConfig, that.mcpConfig) &&
-                Objects.equals(this.sourceJarTask, that.sourceJarTask) &&
-                Objects.equals(this.rawJarTask, that.rawJarTask) &&
-                Objects.equals(this.gameArtifactProvidingTasks, that.gameArtifactProvidingTasks) &&
-                Objects.equals(this.minecraftDependenciesConfiguration, that.minecraftDependenciesConfiguration);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof McpRuntimeDefinition)) return false;
+        if (!super.equals(o)) return false;
+
+        McpRuntimeDefinition that = (McpRuntimeDefinition) o;
+
+        if (!unpackedMcpZipDirectory.equals(that.unpackedMcpZipDirectory)) return false;
+        return mcpConfig.equals(that.mcpConfig);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(spec, taskOutputs, unpackedMcpZipDirectory, mcpConfig, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration);
+        int result = super.hashCode();
+        result = 31 * result + unpackedMcpZipDirectory.hashCode();
+        result = 31 * result + mcpConfig.hashCode();
+        return result;
     }
-
-    @Override
-    public String toString() {
-        return "McpRuntimeDefinition[" +
-                "spec=" + spec + ", " +
-                "taskOutputs=" + taskOutputs + ", " +
-                "unpackedMcpZipDirectory=" + unpackedMcpZipDirectory + ", " +
-                "mcpConfig=" + mcpConfig + ", " +
-                "sourceJarTask=" + sourceJarTask + ", " +
-                "rawJarTask=" + rawJarTask + ", " +
-                "gameArtifactProvidingTasks=" + gameArtifactProvidingTasks + ", " +
-                "minecraftDependenciesConfiguration=" + minecraftDependenciesConfiguration + ']';
-    }
-
 }

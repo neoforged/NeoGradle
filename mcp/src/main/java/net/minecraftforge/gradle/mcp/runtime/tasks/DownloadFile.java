@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
+import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.FileDownloadingUtils;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
@@ -8,7 +9,7 @@ import java.io.File;
 import java.io.IOException;
 
 @CacheableTask
-public abstract class DownloadFile extends McpRuntime {
+public abstract class DownloadFile extends Runtime {
 
     public DownloadFile() {
         getDownloadInfo().finalizeValueOnRead();

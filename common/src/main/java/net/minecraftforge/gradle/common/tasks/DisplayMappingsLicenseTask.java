@@ -1,9 +1,8 @@
-package net.minecraftforge.gradle.mcp.tasks;
+package net.minecraftforge.gradle.common.tasks;
 
 import net.minecraftforge.gradle.common.extensions.MappingsExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
-import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -56,7 +55,7 @@ public abstract class DisplayMappingsLicenseTask extends ForgeGradleBaseTask {
         return "WARNING: This project is configured to use obfuscation mappings with a custom license attached.\n" +
                "WARNING: These mapping fall under their associated license, you should be fully aware of this license.\n" +
                "WARNING: For the latest license text, refer below.\n" +
-               "WARNING: You can hide this warning by running the accepting its license.\n" +
+               "WARNING: You can hide this warning by accepting its license.\n" +
                "WARNING: See the naming channels documentation for more information on how to do that.";
     }
 
