@@ -3,9 +3,11 @@ package net.minecraftforge.gradle.common.extensions;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.runtime.naming.UnapplyMappingsTaskBuildingContext;
+import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
@@ -78,6 +80,25 @@ public abstract class ObfuscationExtension extends GroovyObjectSupport implement
                 mappingsExtension.getMappingVersion().get()
         );
 
-        return mappingsExtension.getMappingChannel().get().getUnapplyCompiledMappingsTaskBuilder().get().apply(context);
+        final TaskProvider<? extends ITaskWithOutput> obfuscator = mappingsExtension.getMappingChannel().get().getUnapplyCompiledMappingsTaskBuilder().get().apply(context);
+
+        final TaskProvider<? extends ITaskWithOutput> devArtifactProvider = project.getTasks().register("provideDevelop" + StringUtils.capitalize(jarTask.getName()), ArtifactFromOutput.class, task -> {
+            task.dependsOn(jarTask);
+
+            task.getInput().set(jarTask.flatMap(Jar::getArchiveFile));
+            task.getOutput().set(project.getLayout().getBuildDirectory().dir("libs").flatMap(directory -> directory.file(jarTask.flatMap(jar -> jar.getArchiveFileName().map(fileName -> fileName.substring(0, fileName.length() - 4) + "-dev.jar")))));
+        });
+
+        jarTask.configure(task -> task.finalizedBy(devArtifactProvider));
+
+        final TaskProvider<? extends ITaskWithOutput> obfuscatedFileProvider = project.getTasks().register("provideObfuscated" + StringUtils.capitalize(jarTask.getName()), ArtifactFromOutput.class, task -> {
+            task.dependsOn(obfuscator);
+            task.dependsOn(devArtifactProvider);
+            task.getInput().set(obfuscator.flatMap(ITaskWithOutput::getOutput));
+            task.getOutput().set(project.getLayout().getBuildDirectory().dir("libs").flatMap(directory -> directory.file(jarTask.flatMap(Jar::getArchiveFileName))));
+        });
+
+        jarTask.configure(task -> task.finalizedBy(obfuscatedFileProvider));
+        return obfuscator;
     }
 }

@@ -24,7 +24,7 @@ abstract class ForgeGradleTestSpecification extends Specification {
         this.state = state
     }
 
-    //@TempDir
+    @TempDir
     protected File testProjectDir
     protected File propertiesFile
     protected File settingsFile
@@ -32,7 +32,6 @@ abstract class ForgeGradleTestSpecification extends Specification {
     protected File localBuildCacheDirectory
 
     def setup() {
-        testProjectDir = Files.createTempDirectory("fg_test_").toFile()
         localBuildCacheDirectory = new File(testProjectDir, 'local-cache')
         propertiesFile = new File(testProjectDir, 'gradle.properties')
         settingsFile = new File(testProjectDir, 'settings.gradle')

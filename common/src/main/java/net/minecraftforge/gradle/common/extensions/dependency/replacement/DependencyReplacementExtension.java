@@ -67,6 +67,7 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
             artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency", dependency.toString()));
 
             artifactFromOutput.getInput().set(result.rawJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
+            artifactFromOutput.getOutput().set(project.getLayout().getBuildDirectory().dir("forgegradle/replaced-dependencies/" + configuration.getName()).flatMap(directory -> result.rawJarTaskProvider().flatMap(task -> directory.file(task.getOutputFileName()))));
             artifactFromOutput.dependsOn(result.rawJarTaskProvider());
         });
 

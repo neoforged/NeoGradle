@@ -7,13 +7,12 @@ import net.minecraftforge.gradle.common.tasks.JavaToolExecutingTask;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.common.util.Utils;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
-import org.gradle.model.Path;
 
 import java.io.File;
+import java.nio.file.Files;
 
 @CacheableTask
 public abstract class UnapplyOfficialMappingsToCompiledJar extends JavaToolExecutingTask implements ITaskWithOutput {
