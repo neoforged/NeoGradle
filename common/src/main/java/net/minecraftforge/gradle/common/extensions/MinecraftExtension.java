@@ -33,14 +33,12 @@ public abstract class MinecraftExtension extends GroovyObjectSupport implements 
 
     private final Project project;
     private final FilesWithEntriesExtension accessTransformers;
-    private final MappingsExtension mappings;
     private final NamedDomainObjectContainer<NamingChannelProvider> namingChannelProviders;
 
     @Inject
     public MinecraftExtension(final Project project) {
         this.project = project;
         this.accessTransformers = project.getObjects().newInstance(FilesWithEntriesExtension.class, project);
-        this.mappings = project.getObjects().newInstance(MappingsExtension.class, project, this);
         this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannelProvider.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
     }
 
@@ -53,11 +51,7 @@ public abstract class MinecraftExtension extends GroovyObjectSupport implements 
     }
 
     public MappingsExtension getMappings() {
-        return mappings;
-    }
-
-    public void mappings(Closure<?> closure) {
-        mappings.configure(closure);
+        return project.getExtensions().getByType(MappingsExtension.class);
     }
 
     public FilesWithEntriesExtension getAccessTransformers() {

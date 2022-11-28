@@ -2,6 +2,8 @@ package net.minecraftforge.gradle.common.tasks;
 
 import org.gradle.api.Task;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 
 /**
@@ -16,4 +18,12 @@ public interface ITaskWithOutput extends Task {
      */
     @OutputFile
     RegularFileProperty getOutput();
+
+    /**
+     * The name of the output file name for this step.
+     *
+     * @return The name of the output file.
+     */
+    @Input
+    Property<String> getOutputFileName();
 }

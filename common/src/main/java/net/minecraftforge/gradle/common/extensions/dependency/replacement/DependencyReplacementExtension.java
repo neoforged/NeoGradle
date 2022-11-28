@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.extensions.dependenvy.replacement;
+package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.Sets;
 import groovy.lang.GroovyObjectSupport;
@@ -22,7 +22,6 @@ import org.gradle.api.tasks.TaskProvider;
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
-import java.security.cert.Extension;
 import java.util.Optional;
 import java.util.Set;
 

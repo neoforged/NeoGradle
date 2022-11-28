@@ -63,6 +63,12 @@ class FunctionalTests extends ForgeGradleTestSpecification {
                 mcpConfigVersion = '1.19-20220627.091056'
             }
             
+            minecraft {
+                getAccessTransformers().configure {
+                    entries.add("public net.minecraft.client.Minecraft f_90982_ # searchRegistry")
+                }
+            }
+            
             dependencies {
                 implementation 'net.minecraft:mcp_client'
             }
@@ -74,7 +80,7 @@ class FunctionalTests extends ForgeGradleTestSpecification {
             
             public class FunctionalTests {
                 public static void main(String[] args) {
-                    System.out.println(Minecraft.getInstance().getClass().toString());
+                    System.out.println(Minecraft.LOGGER.getClass().toString());
                 }
             }
         """

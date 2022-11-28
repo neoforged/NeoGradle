@@ -18,7 +18,7 @@ public abstract class Runtime extends JavaRuntimeTask implements IRuntimeTask {
         super();
 
         //All of these taskOutputs belong to the MCP group
-        setGroup("mcp");
+        setGroup("forgegradle/runtimes");
 
         //Sets up the base configuration for directories and outputs.
         getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));

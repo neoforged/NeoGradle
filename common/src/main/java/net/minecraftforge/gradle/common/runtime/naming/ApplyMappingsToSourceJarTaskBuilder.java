@@ -16,5 +16,5 @@ public interface ApplyMappingsToSourceJarTaskBuilder {
      * @param context The context.
      * @return The task provider.
      */
-    @NotNull TaskProvider<? extends IRuntimeTask> build(RenamingTaskBuildingContext context);
+    @NotNull TaskProvider<? extends IRuntimeTask> build(ApplyMappingsTaskBuildingContext context);
 }

@@ -92,8 +92,22 @@ class FunctionalTests extends ForgeGradleTestSpecification {
                 }
             }
             
+            sourceSet {
+                otherSet {
+                    java {
+                        srcDir 'src/other/java'
+                    }
+                }
+            }
+            
             dependencies {
                 implementation 'net.minecraftforge:forge:1.19.2-43.1.34'
+                
+                otherSetImplementation 'net.minecraftforge:forge:1.18.2-39.1.34'
+            }
+            
+            tasks.register('otherJar') {
+                from sourceSets.otherSet.output
             }
         """
         codeFile << """

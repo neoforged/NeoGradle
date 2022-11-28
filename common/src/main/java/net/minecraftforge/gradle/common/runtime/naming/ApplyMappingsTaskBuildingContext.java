@@ -18,7 +18,7 @@ import java.util.Set;
  * are requested to build a new task that remaps the source jar that is provided via {@link #taskOutputToModify()}
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class RenamingTaskBuildingContext {
+public final class ApplyMappingsTaskBuildingContext {
     private final @NotNull CommonRuntimeSpec spec;
     private final @NotNull File minecraftCache;
     private final @NotNull Map<String, TaskProvider<? extends IRuntimeTask>> pipelineTasks;
@@ -33,7 +33,7 @@ public class RenamingTaskBuildingContext {
     /**
      *
      */
-    public RenamingTaskBuildingContext(
+    public ApplyMappingsTaskBuildingContext(
             @NotNull CommonRuntimeSpec spec,
             @NotNull File minecraftCache,
             @NotNull Map<String, TaskProvider<? extends IRuntimeTask>> pipelineTasks,
@@ -56,15 +56,15 @@ public class RenamingTaskBuildingContext {
         this.intermediaryMappingFile = intermediaryMappingFile;
     }
 
-    public RenamingTaskBuildingContext(@NotNull CommonRuntimeSpec spec,
-                                       @NotNull File minecraftCache,
-                                       @NotNull Map<String, TaskProvider<? extends IRuntimeTask>> pipelineTasks,
-                                       @NotNull NamingChannelProvider namingChannelProvider,
-                                       @NotNull Map<String, String> mappingVersionData,
-                                       @NotNull TaskProvider<? extends IRuntimeTask> taskOutputToModify,
-                                       @NotNull Map<GameArtifact, File> gameArtifacts,
-                                       @NotNull Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactTasks,
-                                       @NotNull Optional<File> intermediaryMappingFile) {
+    public ApplyMappingsTaskBuildingContext(@NotNull CommonRuntimeSpec spec,
+                                            @NotNull File minecraftCache,
+                                            @NotNull Map<String, TaskProvider<? extends IRuntimeTask>> pipelineTasks,
+                                            @NotNull NamingChannelProvider namingChannelProvider,
+                                            @NotNull Map<String, String> mappingVersionData,
+                                            @NotNull TaskProvider<? extends IRuntimeTask> taskOutputToModify,
+                                            @NotNull Map<GameArtifact, File> gameArtifacts,
+                                            @NotNull Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactTasks,
+                                            @NotNull Optional<File> intermediaryMappingFile) {
         this(spec, minecraftCache, pipelineTasks, namingChannelProvider, mappingVersionData, taskOutputToModify, gameArtifacts, gameArtifactTasks, new HashSet<>(), intermediaryMappingFile);
     }
 
@@ -121,9 +121,9 @@ public class RenamingTaskBuildingContext {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RenamingTaskBuildingContext)) return false;
+        if (!(o instanceof ApplyMappingsTaskBuildingContext)) return false;
 
-        RenamingTaskBuildingContext that = (RenamingTaskBuildingContext) o;
+        ApplyMappingsTaskBuildingContext that = (ApplyMappingsTaskBuildingContext) o;
 
         if (!spec.equals(that.spec)) return false;
         if (!minecraftCache.equals(that.minecraftCache)) return false;

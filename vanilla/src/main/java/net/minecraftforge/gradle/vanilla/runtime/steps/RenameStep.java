@@ -3,12 +3,10 @@ package net.minecraftforge.gradle.vanilla.runtime.steps;
 import net.minecraftforge.gradle.common.extensions.MappingsExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
-import net.minecraftforge.gradle.common.runtime.naming.RenamingTaskBuildingContext;
+import net.minecraftforge.gradle.common.runtime.naming.ApplyMappingsTaskBuildingContext;
 import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.GameArtifact;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpec;
-import org.gradle.api.Transformer;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,7 +25,7 @@ public class RenameStep implements IStep {
         final NamingChannelProvider namingChannelProvider = mappingsExtension.getMappingChannel().get();
         final Map<String, String> mappingVersionData = mappingsExtension.getMappingVersion().get();
 
-        final RenamingTaskBuildingContext context = new RenamingTaskBuildingContext(
+        final ApplyMappingsTaskBuildingContext context = new ApplyMappingsTaskBuildingContext(
                 spec, minecraftCache, pipelineTasks, namingChannelProvider, mappingVersionData, inputProvidingTask, gameArtifacts, gameArtifactTasks, Optional.empty()
         );
 

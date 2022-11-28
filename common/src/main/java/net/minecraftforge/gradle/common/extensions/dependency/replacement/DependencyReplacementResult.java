@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.extensions.dependenvy.replacement;
+package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntry;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;

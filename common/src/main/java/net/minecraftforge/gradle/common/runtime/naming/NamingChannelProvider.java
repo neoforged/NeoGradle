@@ -81,6 +81,15 @@ public abstract class NamingChannelProvider extends GroovyObjectSupport implemen
     public abstract Property<ApplyMappingsToSourceJarTaskBuilder> getApplySourceMappingsTaskBuilder();
 
     /**
+     * The builder which can construct a new task provider for a compiled jar unmapping.
+     * Every time this is invoked the builder needs to produce a new task.
+     * However, the builder is allowed to reuse an old task if the inputs match.
+     *
+     * @return The builder property.
+     */
+    public abstract Property<UnapplyMappingsToCompiledJarTaskBuilder> getUnapplyCompiledMappingsTaskBuilder();
+
+    /**
      * {@return Indicates if the user has accepted this mappings license.}
      */
     public abstract Property<Boolean> getHasAcceptedLicense();

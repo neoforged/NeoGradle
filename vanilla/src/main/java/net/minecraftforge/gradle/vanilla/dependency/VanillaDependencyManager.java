@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
-import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementExtension;
-import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementExtension;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;

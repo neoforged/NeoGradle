@@ -21,16 +21,13 @@
 package net.minecraftforge.gradle.mcp;
 
 import net.minecraftforge.gradle.common.CommonPlugin;
-import net.minecraftforge.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.dependency.McpDependencyManager;
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
+import net.minecraftforge.gradle.mcp.extensions.McpExtension;
 import net.minecraftforge.gradle.mcp.naming.MCPNamingChannelConfigurator;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
-import net.minecraftforge.gradle.common.tasks.DisplayMappingsLicenseTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository.MetadataSources;
 
 import javax.annotation.Nonnull;
 

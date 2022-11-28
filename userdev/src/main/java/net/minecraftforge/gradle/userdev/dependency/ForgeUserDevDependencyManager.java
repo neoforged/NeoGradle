@@ -1,10 +1,9 @@
 package net.minecraftforge.gradle.userdev.dependency;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementExtension;
-import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementExtension;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.userdev.runtime.ForgeUserDevRuntimeDefinition;
 import net.minecraftforge.gradle.userdev.runtime.extension.ForgeUserDevRuntimeExtension;
 import org.gradle.api.Project;

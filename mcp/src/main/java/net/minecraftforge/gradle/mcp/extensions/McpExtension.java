@@ -18,7 +18,7 @@
  * USA
  */
 
-package net.minecraftforge.gradle.mcp;
+package net.minecraftforge.gradle.mcp.extensions;
 
 import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.util.Artifact;

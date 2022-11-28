@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.extensions.dependenvy.replacement;
+package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;

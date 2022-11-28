@@ -7,7 +7,7 @@ import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtensi
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
-import net.minecraftforge.gradle.common.runtime.naming.RenamingTaskBuildingContext;
+import net.minecraftforge.gradle.common.runtime.naming.ApplyMappingsTaskBuildingContext;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
@@ -15,7 +15,7 @@ import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import net.minecraftforge.gradle.common.runtime.tasks.ListLibraries;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.*;
-import net.minecraftforge.gradle.mcp.McpExtension;
+import net.minecraftforge.gradle.mcp.extensions.McpExtension;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
@@ -307,7 +307,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         final Map<String, String> versionData = Maps.newHashMap(mappingsExtension.getMappingVersion().get());
         versionData.put(NamingConstants.Version.MINECRAFT_VERSION, spec.minecraftVersion());
         versionData.put(McpRuntimeConstants.Naming.Version.MCP_RUNTIME, spec.name());
-        final RenamingTaskBuildingContext context = new RenamingTaskBuildingContext(
+        final ApplyMappingsTaskBuildingContext context = new ApplyMappingsTaskBuildingContext(
                 spec, minecraftCache, taskOutputs, mappingsExtension.getMappingChannel().get(), versionData, lastTask, definition.gameArtifacts(), definition.gameArtifactProvidingTasks(), Optional.of(new File(unpackedMcpZipDirectory, Objects.requireNonNull(mcpConfig.getData(McpConfigConstants.Data.MAPPINGS))))
         );
 

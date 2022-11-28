@@ -24,6 +24,11 @@ public final class CommonRuntimeUtils {
         throw new IllegalStateException("Can not instantiate an instance of: McpRuntimeUtils. This is a utility class");
     }
 
+    public static String buildTaskName(final TaskProvider<?> modifiedTask, final String defaultName) {
+        return String.format("%s%s", defaultName, StringUtils.capitalize(modifiedTask.getName()));
+    }
+
+
     public static String buildTaskName(final CommonRuntimeSpec runtimeSpec, final String defaultName) {
         if (runtimeSpec.name().isEmpty())
             return defaultName;

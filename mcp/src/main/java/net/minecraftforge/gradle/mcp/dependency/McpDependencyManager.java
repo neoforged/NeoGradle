@@ -1,23 +1,29 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
-import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementExtension;
-import net.minecraftforge.gradle.common.extensions.dependenvy.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.common.extensions.FilesWithEntriesExtension;
+import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementExtension;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
+import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
+import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
-import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
+import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.tasks.TaskProvider;
 
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
+import java.io.File;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public final class McpDependencyManager {
     private static final McpDependencyManager INSTANCE = new McpDependencyManager();
@@ -98,7 +104,21 @@ public final class McpDependencyManager {
 
             final String version = dependency.getVersion() == null ? runtimeExtension.getDefaultVersion().get() : dependency.getVersion();
             builder.withName(String.format("dependencyMcp%s%s", Utils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
+
+            builder.withPreTaskAdapter("decompile", createAccessTransformerAdapter(project));
         });
+    }
+
+    private static TaskTreeAdapter createAccessTransformerAdapter(final Project project) {
+        final MinecraftExtension minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
+        final FilesWithEntriesExtension accessTransformerFiles = minecraftExtension.getAccessTransformers();
+
+        return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
+            final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "User", new ArrayList<>(accessTransformerFiles.getFiles().getFiles()), accessTransformerFiles.getEntries().get());
+            accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput)));
+            accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
+            return accessTransformerTask;
+        };
     }
 
 

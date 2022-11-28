@@ -46,7 +46,7 @@ public abstract class JavaRuntimeTask extends DownloadingTask implements ITaskWi
     public abstract Property<JavaLauncher> getRuntimeJavaLauncher();
 
     @Internal
-    protected Provider<String> getExecutablePath() {
+    public Provider<String> getExecutablePath() {
         return getRuntimeJavaLauncher().map(JavaLauncher::getExecutablePath).map(RegularFile::getAsFile).map(File::getAbsolutePath);
     }
 }

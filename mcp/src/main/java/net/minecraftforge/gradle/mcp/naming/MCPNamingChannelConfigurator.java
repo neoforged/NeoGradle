@@ -2,13 +2,12 @@ package net.minecraftforge.gradle.mcp.naming;
 
 import com.google.common.collect.ImmutableSet;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
-import net.minecraftforge.gradle.common.runtime.naming.RenamingTaskBuildingContext;
+import net.minecraftforge.gradle.common.runtime.naming.ApplyMappingsTaskBuildingContext;
 import net.minecraftforge.gradle.common.tasks.DownloadMavenArtifact;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.mcp.naming.tasks.ApplyMcpMappingsToSourceJar;
 import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.mcp.util.McpRuntimeConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
@@ -52,7 +51,7 @@ public final class MCPNamingChannelConfigurator {
         });
     }
 
-    private @NotNull TaskProvider<? extends IRuntimeTask> build(RenamingTaskBuildingContext context) {
+    private @NotNull TaskProvider<? extends IRuntimeTask> build(ApplyMappingsTaskBuildingContext context) {
         final String mappingVersion = context.mappingVersionData().get(VERSION);
         if (mappingVersion == null) {
             throw new IllegalStateException("Missing mapping version");
