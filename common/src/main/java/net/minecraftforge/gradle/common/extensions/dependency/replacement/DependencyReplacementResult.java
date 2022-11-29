@@ -22,7 +22,6 @@ public final class DependencyReplacementResult {
         public DependencyReplacementResult(
                 Project project,
                 Function<String, String> taskNameBuilder,
-
                 Provider<? extends ITaskWithOutput> sourcesJarTaskProvider,
                 Provider<? extends ITaskWithOutput> rawJarTaskProvider,
                 Configuration additionalDependenciesConfiguration,

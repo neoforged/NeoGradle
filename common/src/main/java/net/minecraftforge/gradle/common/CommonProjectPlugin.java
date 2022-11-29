@@ -1,7 +1,9 @@
 package net.minecraftforge.gradle.common;
 
+import net.minecraftforge.gradle.common.deobfuscation.DependencyDeobfuscator;
 import net.minecraftforge.gradle.common.extensions.*;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementExtension;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.common.tasks.DisplayMappingsLicenseTask;
@@ -45,6 +47,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
             e.setUrl(Utils.MOJANG_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::artifact);
         });
+
+        DependencyDeobfuscator.getInstance().apply(project);
 
         project.afterEvaluate(this::applyAfterEvaluate);
     }

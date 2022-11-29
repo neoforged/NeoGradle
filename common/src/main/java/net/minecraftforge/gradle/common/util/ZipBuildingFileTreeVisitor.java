@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.mcp.util;
+package net.minecraftforge.gradle.common.util;
 
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.FileVisitor;
@@ -10,7 +10,7 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipBuildingFileTreeVisitor implements FileVisitor {
 
-    private final ZipOutputStream outputZipStream;
+    protected final ZipOutputStream outputZipStream;
 
     public ZipBuildingFileTreeVisitor(ZipOutputStream outputZipStream) {
         this.outputZipStream = outputZipStream;

@@ -4,7 +4,7 @@ import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.common.util.CacheableMinecraftVersion;
-import net.minecraftforge.gradle.mcp.util.ZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.common.util.ZipBuildingFileTreeVisitor;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.*;
 import org.gradle.api.provider.Property;

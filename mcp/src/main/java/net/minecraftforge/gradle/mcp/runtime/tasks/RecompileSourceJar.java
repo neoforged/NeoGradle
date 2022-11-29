@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.mcp.util.ZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.common.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
