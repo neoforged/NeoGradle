@@ -6,11 +6,13 @@ import net.minecraftforge.gradle.common.extensions.IvyDummyRepositoryExtension;
 import net.minecraftforge.gradle.common.ide.IdeManager;
 import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntry;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
+import net.minecraftforge.gradle.common.tasks.DependencyGenerationTask;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.tasks.RawAndSourceCombiner;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ExternalModuleDependency;
@@ -28,11 +30,16 @@ import java.util.Set;
 public abstract class DependencyReplacementExtension extends GroovyObjectSupport implements IConfigurableObject<DependencyReplacementExtension> {
 
     private final Project project;
+    private final TaskProvider<? extends DependencyGenerationTask> dependencyGenerator;
+    private final Set<Configuration> configuredConfigurations = Sets.newHashSet();
+    private boolean registeredTaskToIde;
 
     @Inject
     public DependencyReplacementExtension(Project project) {
         this.project = project;
         this.project.getConfigurations().configureEach(configuration -> configuration.getDependencies().whenObjectAdded(dependency -> handleDependency(configuration, dependency)));
+
+        this.dependencyGenerator = this.project.getTasks().register("generateDependencies", DependencyGenerationTask.class);
     }
 
     public abstract SetProperty<DependencyReplacementHandler> getReplacementHandlers();
@@ -53,6 +60,8 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
     private void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result) {
         configuration.getDependencies().remove(dependency);
 
+        registerDependencyProviderTaskIfNecessaryTo(configuration);
+
         if (IdeManager.getInstance().isIdeImportInProgress()) {
             handleDependencyReplacementForIde(configuration, dependency, result);
         }
@@ -60,24 +69,49 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
         handleDependencyReplacementForGradle(configuration, dependency, result);
     }
 
-    private void handleDependencyReplacementForGradle(Configuration configuration, Dependency dependency, DependencyReplacementResult result) {
-        final String artifactSelectionTaskName = result.taskNameBuilder().apply("selectRawArtifact");
-        final TaskProvider<? extends ArtifactFromOutput> rawArtifactSelectionTask = project.getTasks().register(artifactSelectionTaskName, ArtifactFromOutput.class, artifactFromOutput -> {
-            artifactFromOutput.setGroup("mcp");
-            artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency", dependency.toString()));
+    private void registerDependencyProviderTaskIfNecessaryTo(Configuration configuration) {
+        if (!this.configuredConfigurations.contains(configuration)) {
+            this.configuredConfigurations.add(configuration);
+            configuration.getDependencies().add(this.project.getDependencies().create(this.dependencyGenerator));
+        }
 
-            artifactFromOutput.getInput().set(result.rawJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
-            artifactFromOutput.getOutput().set(project.getLayout().getBuildDirectory().dir("forgegradle/replaced-dependencies/" + configuration.getName()).flatMap(directory -> result.rawJarTaskProvider().flatMap(task -> directory.file(task.getOutputFileName()))));
-            artifactFromOutput.dependsOn(result.rawJarTaskProvider());
-        });
-
-        result.additionalDependenciesConfiguration().getDependencies().forEach(dependentDependency -> {
-            configuration.getDependencies().add(dependentDependency);
-        });
-        configuration.getDependencies().add(project.getDependencies().create(project.files(rawArtifactSelectionTask)));
+        if (!registeredTaskToIde) {
+            IdeManager.getInstance().registerTaskToRun(project, dependencyGenerator);
+            registeredTaskToIde = true;
+        }
     }
 
-    private void handleDependencyReplacementForIde(Configuration configuration, Dependency dependency, DependencyReplacementResult result) {
+    private void handleDependencyReplacementForGradle(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result) {
+        createDependencyReplacementResult(configuration, dependency, result, (repoBaseDir, entry) -> {
+            final String artifactSelectionTaskName = result.taskNameBuilder().apply("selectRawArtifact");
+            return project.getTasks().register(artifactSelectionTaskName, ArtifactFromOutput.class, artifactFromOutput -> {
+                artifactFromOutput.setGroup("forgegradle/dependencies");
+                artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
+
+                artifactFromOutput.getInput().set(result.rawJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
+                artifactFromOutput.getOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.artifactPath(dir.getAsFile().toPath()).toFile())));
+                artifactFromOutput.dependsOn(result.rawJarTaskProvider());
+            });
+        });
+    }
+
+    private void handleDependencyReplacementForIde(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result) {
+        createDependencyReplacementResult(configuration, dependency, result, ((repoBaseDir, entry) -> {
+            final String dependencyExporterTaskName = result.taskNameBuilder().apply("combined");
+            return project.getTasks().register(dependencyExporterTaskName, RawAndSourceCombiner.class, rawAndSourceCombiner -> {
+                rawAndSourceCombiner.setGroup("forgegradle/dependencies");
+                rawAndSourceCombiner.setDescription(String.format("Combines the raw and sources jars into a single task execution tree for: %s", dependency.toString()));
+
+                rawAndSourceCombiner.getRawJarInput().set(result.rawJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
+                rawAndSourceCombiner.getSourceJarInput().set(result.sourcesJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
+
+                rawAndSourceCombiner.getRawJarOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.artifactPath(dir.getAsFile().toPath()).toFile())));
+                rawAndSourceCombiner.getSourceJarOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.asSources().artifactPath(dir.getAsFile().toPath()).toFile())));
+            });
+        }));
+    }
+
+    private void createDependencyReplacementResult(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result, final TaskProviderGenerator generator) {
         if (!(dependency instanceof ExternalModuleDependency)) {
             return;
         }
@@ -99,24 +133,20 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
                         .forEach(additionalDependency -> builder.withDependency(depBuilder -> depBuilder.from(additionalDependency)));
             });
         } catch (XMLStreamException | IOException e) {
-            throw new RuntimeException(String.format("Failed to create the dummy dependency for: %s", dependency.toString()), e);
+            throw new RuntimeException(String.format("Failed to create the dummy dependency for: %s", dependency), e);
         }
 
-        final String dependencyExporterTaskName = result.taskNameBuilder().apply("combined");
-        final TaskProvider<? extends RawAndSourceCombiner> rawAndSourceCombinerTask = project.getTasks().register(dependencyExporterTaskName, RawAndSourceCombiner.class, rawAndSourceCombiner -> {
-            rawAndSourceCombiner.setGroup("mcp");
-            rawAndSourceCombiner.setDescription(String.format("Combines the raw and sources jars into a single task execution tree for: %s", dependency.toString()));
-
-            rawAndSourceCombiner.getRawJarInput().set(result.rawJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
-            rawAndSourceCombiner.getSourceJarInput().set(result.sourcesJarTaskProvider().flatMap(ITaskWithOutput::getOutput));
-
-            rawAndSourceCombiner.getRawJarOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.artifactPath(dir.getAsFile().toPath()).toFile())));
-            rawAndSourceCombiner.getSourceJarOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.asSources().artifactPath(dir.getAsFile().toPath()).toFile())));
-        });
-
-        IdeManager.getInstance().registerTaskToRun(project, rawAndSourceCombinerTask);
+        final TaskProvider<? extends Task> rawAndSourceCombinerTask = generator.generate(repoBaseDir, entry);
 
         configuration.getDependencies().add(entry.asDependency(project));
+
+        this.dependencyGenerator.configure(task -> task.dependsOn(rawAndSourceCombinerTask));
+    }
+
+    @FunctionalInterface
+    private interface TaskProviderGenerator {
+
+        TaskProvider<? extends Task> generate(final Provider<Directory> repoBaseDir, final IvyDummyRepositoryEntry entry);
     }
 
 }

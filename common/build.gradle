@@ -4,6 +4,9 @@ plugins {
     id 'java-gradle-plugin'
 }
 
+
+gradlePlugin.testSourceSets(sourceSets.test)
+
 dependencies {
     api gradleApi()
 
@@ -26,6 +29,15 @@ dependencies {
 
     // IDE support
     api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
+
+    testImplementation gradleTestKit()
+    testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+
+    testImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") {
+        exclude group: 'org.codehaus.groovy'
+    }
+
+    testImplementation project(':base-testing')
 }
 
 gradlePlugin {
@@ -48,4 +60,8 @@ project.extensions.eclipse.classpath.file.whenMerged { Classpath cp ->
             entry.sourcePath = new FileReferenceFactory().fromPath(gradleSrc + type)
         }
     }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }

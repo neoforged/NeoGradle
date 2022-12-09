@@ -7,6 +7,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -18,6 +20,7 @@ public final class DependencyReplacementResult {
         private final Provider<? extends ITaskWithOutput> rawJarTaskProvider;
         private final Configuration additionalDependenciesConfiguration;
         private final Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator;
+        private final Collection<DependencyReplacementResult> additionalReplacements;
 
         public DependencyReplacementResult(
                 Project project,
@@ -33,10 +36,17 @@ public final class DependencyReplacementResult {
                 this.rawJarTaskProvider = rawJarTaskProvider;
                 this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
                 this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
+                this.additionalReplacements = Collections.emptyList();
         }
 
-        public DependencyReplacementResult(Project project, Function<String, String> taskNameBuilder, TaskProvider<? extends ITaskWithOutput> sourcesJarTaskProvider, TaskProvider<? extends ITaskWithOutput> rawJarTaskProvider, Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator) {
-                this(project, taskNameBuilder, sourcesJarTaskProvider, rawJarTaskProvider, project.getConfigurations().detachedConfiguration(), dependencyMetadataConfigurator);
+        public DependencyReplacementResult(Project project, Function<String, String> taskNameBuilder, Provider<? extends ITaskWithOutput> sourcesJarTaskProvider, Provider<? extends ITaskWithOutput> rawJarTaskProvider, Configuration additionalDependenciesConfiguration, Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator, Collection<DependencyReplacementResult> additionalReplacements) {
+                this.project = project;
+                this.taskNameBuilder = taskNameBuilder;
+                this.sourcesJarTaskProvider = sourcesJarTaskProvider;
+                this.rawJarTaskProvider = rawJarTaskProvider;
+                this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
+                this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
+                this.additionalReplacements = additionalReplacements;
         }
 
         public Project project() {
@@ -63,33 +73,33 @@ public final class DependencyReplacementResult {
                 return dependencyMetadataConfigurator;
         }
 
+        public Collection<DependencyReplacementResult> additionalReplacements() {
+                return additionalReplacements;
+        }
+
         @Override
-        public boolean equals(Object obj) {
-                if (obj == this) return true;
-                if (obj == null || obj.getClass() != this.getClass()) return false;
-                final DependencyReplacementResult that = (DependencyReplacementResult) obj;
-                return Objects.equals(this.project, that.project) &&
-                        Objects.equals(this.taskNameBuilder, that.taskNameBuilder) &&
-                        Objects.equals(this.sourcesJarTaskProvider, that.sourcesJarTaskProvider) &&
-                        Objects.equals(this.rawJarTaskProvider, that.rawJarTaskProvider) &&
-                        Objects.equals(this.additionalDependenciesConfiguration, that.additionalDependenciesConfiguration) &&
-                        Objects.equals(this.dependencyMetadataConfigurator, that.dependencyMetadataConfigurator);
+        public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                DependencyReplacementResult that = (DependencyReplacementResult) o;
+                return Objects.equals(project, that.project) && Objects.equals(taskNameBuilder, that.taskNameBuilder) && Objects.equals(sourcesJarTaskProvider, that.sourcesJarTaskProvider) && Objects.equals(rawJarTaskProvider, that.rawJarTaskProvider) && Objects.equals(additionalDependenciesConfiguration, that.additionalDependenciesConfiguration) && Objects.equals(dependencyMetadataConfigurator, that.dependencyMetadataConfigurator) && Objects.equals(additionalReplacements, that.additionalReplacements);
         }
 
         @Override
         public int hashCode() {
-                return Objects.hash(project, taskNameBuilder, sourcesJarTaskProvider, rawJarTaskProvider, additionalDependenciesConfiguration, dependencyMetadataConfigurator);
+                return Objects.hash(project, taskNameBuilder, sourcesJarTaskProvider, rawJarTaskProvider, additionalDependenciesConfiguration, dependencyMetadataConfigurator, additionalReplacements);
         }
 
         @Override
         public String toString() {
-                return "DependencyReplacementResult[" +
-                        "project=" + project + ", " +
-                        "taskNameBuilder=" + taskNameBuilder + ", " +
-                        "sourcesJarTaskProvider=" + sourcesJarTaskProvider + ", " +
-                        "rawJarTaskProvider=" + rawJarTaskProvider + ", " +
-                        "additionalDependenciesConfiguration=" + additionalDependenciesConfiguration + ", " +
-                        "dependencyMetadataConfigurator=" + dependencyMetadataConfigurator + ']';
+                return "DependencyReplacementResult{" +
+                        "project=" + project +
+                        ", taskNameBuilder=" + taskNameBuilder +
+                        ", sourcesJarTaskProvider=" + sourcesJarTaskProvider +
+                        ", rawJarTaskProvider=" + rawJarTaskProvider +
+                        ", additionalDependenciesConfiguration=" + additionalDependenciesConfiguration +
+                        ", dependencyMetadataConfigurator=" + dependencyMetadataConfigurator +
+                        ", additionalReplacements=" + additionalReplacements +
+                        '}';
         }
-
 }
