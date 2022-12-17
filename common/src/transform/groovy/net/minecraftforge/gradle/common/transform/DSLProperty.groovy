@@ -12,4 +12,6 @@ import java.lang.annotation.Target
 @GroovyASTTransformationClass('net.minecraftforge.gradle.common.transform.DSLPropertyTransformer')
 @interface DSLProperty {
     String propertyName() default ''
+
+    Class<Closure<?>> factory() default Closure.class
 }
