@@ -62,46 +62,52 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
     }
 
     private List<MethodNode> generateListProperty(ClassNode type, PropertyQuery query, MethodNode methodNode, AnnotationNode annotation, String propertyName) {
+        final List<MethodNode> methods = []
+        final singularName = propertyName.substring(0, propertyName.size() - 1) // TODO - capitalisation
+
         final factoryMethod = factory(type, annotation, propertyName)
-        if (factoryMethod === null) {
-            addError('List property must define factory method!', methodNode); return []
+        if (factoryMethod !== null) {
+            methods.add(factoryMethod)
+
+            final actionClazzType = GenericsUtils.makeClassSafeWithGenerics(Action, type)
+            methods.add(createMethod(
+                    methodName: singularName,
+                    modifiers: ACC_PUBLIC,
+                    parameters: [new Parameter(type, 'val'), new Parameter(actionClazzType, 'action')],
+                    codeExpr: {
+                        final valVar = GeneralUtils.localVarX('val', type)
+                        [
+                                GeneralUtils.callX(
+                                        GeneralUtils.varX('action', actionClazzType),
+                                        'execute',
+                                        valVar
+                                ),
+                                GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'add', valVar)
+                        ]
+                    }()
+            ))
+            methods.add(delegateToOverload(0, GeneralUtils.callThisX(factoryMethod.name), methods[1]))
+
+            methods.add(createMethod(
+                    methodName: singularName,
+                    modifiers: ACC_PUBLIC,
+                    parameters: [new Parameter(type, 'val'), closureParam(type)],
+                    codeExpr: {
+                        final valVar = GeneralUtils.localVarX('val', type)
+                        delegateAndCall(GeneralUtils.localVarX('closure', RAW_GENERIC_CLOSURE), valVar).tap {
+                            it.add(GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'add', valVar))
+                        }
+                    }()
+            ))
+            methods.add(delegateToOverload(0, GeneralUtils.callThisX(factoryMethod.name), methods[3]))
         }
 
-        final singularName = propertyName.substring(0, propertyName.size() - 1) // TODO - capitalisation
-        final listPropertyType = GenericsUtils.makeClassSafeWithGenerics(ListProperty, type)
-        final List<MethodNode> methods = [factoryMethod]
-
-        final actionClazzType = GenericsUtils.makeClassSafeWithGenerics(Action, type)
         methods.add(createMethod(
                 methodName: singularName,
                 modifiers: ACC_PUBLIC,
-                parameters: [new Parameter(type, 'val'), new Parameter(actionClazzType, 'action')],
-                codeExpr: {
-                    final valVar = GeneralUtils.localVarX('val', type)
-                    [
-                            GeneralUtils.callX(
-                                    GeneralUtils.varX('action', actionClazzType),
-                                    'execute',
-                                    valVar
-                            ),
-                            GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'add', valVar)
-                    ]
-                }()
+                parameters: [new Parameter(type, 'val')],
+                codeExpr: [GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'add', GeneralUtils.localVarX('val', type))]
         ))
-        methods.add(delegateToOverload(0, GeneralUtils.callThisX(factoryMethod.name), methods[1]))
-
-        methods.add(createMethod(
-                methodName: singularName,
-                modifiers: ACC_PUBLIC,
-                parameters: [new Parameter(type, 'val'), closureParam(type)],
-                codeExpr: {
-                    final valVar = GeneralUtils.localVarX('val', type)
-                    delegateAndCall(GeneralUtils.localVarX('closure', RAW_GENERIC_CLOSURE), valVar).tap {
-                        it.add(GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'add', valVar))
-                    }
-                }()
-        ))
-        methods.add(delegateToOverload(0, GeneralUtils.callThisX(factoryMethod.name), methods[3]))
 
         return methods
     }
@@ -188,7 +194,7 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
     private static MethodNode factory(ClassNode expectedType, AnnotationNode annotation, String propertyName) {
         final fac = annotation.members.get('factory')
         if (fac !== null) return createMethod(
-                methodName: "default${propertyName.capitalize()}",
+                methodName: "_default${propertyName.capitalize()}",
                 modifiers: ACC_PUBLIC,
                 code: GeneralUtils.returnS(GeneralUtils.callX(annotation.members.get('factory'), 'call')),
                 returnType: expectedType
