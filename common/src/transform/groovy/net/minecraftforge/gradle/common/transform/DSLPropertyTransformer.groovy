@@ -6,7 +6,6 @@ import groovy.transform.Generated
 import groovy.transform.NamedParam
 import groovy.transform.NamedVariant
 import org.codehaus.groovy.ast.*
-import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.VariableExpression
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -19,6 +18,7 @@ import org.codehaus.groovy.transform.AbstractASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.gradle.api.Action
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 
 import javax.annotation.Nullable
@@ -30,6 +30,7 @@ import java.util.stream.Stream
 class DSLPropertyTransformer extends AbstractASTTransformation {
     private static final ClassNode PROPERTY_TYPE = ClassHelper.make(Property)
     private static final ClassNode LIST_PROPERTY_TYPE = ClassHelper.make(ListProperty)
+    private static final ClassNode MAP_PROPERTY_TYPE = ClassHelper.make(MapProperty)
     private static final ClassNode DELEGATES_TO_TYPE = ClassHelper.make(DelegatesTo)
 
     private static final ClassNode RAW_GENERIC_CLOSURE = GenericsUtils.makeClassSafe(Closure)
@@ -52,8 +53,10 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
     }
 
     private List<MethodNode> generateDSLMethods(MethodNode methodNode, AnnotationNode annotation, String propertyName) {
-        if ((GeneralUtils.isOrImplements(methodNode.returnType, LIST_PROPERTY_TYPE))) {
-            return generateListProperty(methodNode.returnType.genericsTypes[0].type, PropertyQuery.PROPERTY, methodNode, annotation, propertyName)
+        if (GeneralUtils.isOrImplements(methodNode.returnType, MAP_PROPERTY_TYPE)) {
+            return generateMapProperty(methodNode.returnType.genericsTypes[0].type, methodNode.returnType.genericsTypes[1].type, methodNode, annotation, propertyName)
+        } else if (GeneralUtils.isOrImplements(methodNode.returnType, LIST_PROPERTY_TYPE)) {
+            return generateListProperty(methodNode.returnType.genericsTypes[0].type, methodNode, annotation, propertyName)
         } else if (GeneralUtils.isOrImplements(methodNode.returnType, PROPERTY_TYPE)) { // TODO handle maps and stuff properly
             return generateDirectProperty(methodNode.returnType.genericsTypes[0].type, PropertyQuery.PROPERTY, methodNode, annotation, propertyName)
         } else {
@@ -61,11 +64,62 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
         }
     }
 
-    private List<MethodNode> generateListProperty(ClassNode type, PropertyQuery query, MethodNode methodNode, AnnotationNode annotation, String propertyName) {
+    private List<MethodNode> generateMapProperty(ClassNode keyType, ClassNode valueType, MethodNode methodNode, AnnotationNode annotation, String propertyName) {
         final List<MethodNode> methods = []
-        final singularName = propertyName.substring(0, propertyName.size() - 1) // TODO - capitalisation
+        final singularName = propertyName.endsWith('s') ? propertyName.substring(0, propertyName.size() - 1) : propertyName
 
-        final factoryMethod = factory(type, annotation, propertyName)
+        final factoryMethod = factory(valueType, annotation, singularName)
+        if (factoryMethod !== null) {
+            methods.add(factoryMethod)
+
+            final actionClazzType = GenericsUtils.makeClassSafeWithGenerics(Action, valueType)
+            methods.add(createMethod(
+                    methodName: singularName,
+                    modifiers: ACC_PUBLIC,
+                    parameters: [new Parameter(keyType, 'key'), new Parameter(valueType, 'val'), new Parameter(actionClazzType, 'action')],
+                    codeExpr: {
+                        final valVar = GeneralUtils.localVarX('val', valueType)
+                        [
+                                GeneralUtils.callX(
+                                        GeneralUtils.varX('action', actionClazzType),
+                                        'execute',
+                                        valVar
+                                ),
+                                GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'put', GeneralUtils.args(GeneralUtils.localVarX('key', keyType), valVar))
+                        ]
+                    }()
+            ))
+            methods.add(delegateToOverload(1, GeneralUtils.callThisX(factoryMethod.name), methods[1]))
+
+            methods.add(createMethod(
+                    methodName: singularName,
+                    modifiers: ACC_PUBLIC,
+                    parameters: [new Parameter(keyType, 'key'), new Parameter(valueType, 'val'), closureParam(valueType)],
+                    codeExpr: {
+                        final valVar = GeneralUtils.localVarX('val', valueType)
+                        delegateAndCall(GeneralUtils.localVarX('closure', RAW_GENERIC_CLOSURE), valVar).tap {
+                            it.add(GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'put', GeneralUtils.args(GeneralUtils.localVarX('key', keyType), valVar)))
+                        }
+                    }()
+            ))
+            methods.add(delegateToOverload(1, GeneralUtils.callThisX(factoryMethod.name), methods[3]))
+        }
+
+        methods.add(createMethod(
+                methodName: singularName,
+                modifiers: ACC_PUBLIC,
+                parameters: [new Parameter(keyType, 'key'), new Parameter(valueType, 'val')],
+                codeExpr: [GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'put', GeneralUtils.args(GeneralUtils.localVarX('key', keyType), GeneralUtils.localVarX('val', valueType)))]
+        ))
+
+        return methods
+    }
+
+    private List<MethodNode> generateListProperty(ClassNode type, MethodNode methodNode, AnnotationNode annotation, String propertyName) {
+        final List<MethodNode> methods = []
+        final singularName = propertyName.endsWith('s') ? propertyName.substring(0, propertyName.size() - 1) : propertyName
+
+        final factoryMethod = factory(type, annotation, singularName)
         if (factoryMethod !== null) {
             methods.add(factoryMethod)
 

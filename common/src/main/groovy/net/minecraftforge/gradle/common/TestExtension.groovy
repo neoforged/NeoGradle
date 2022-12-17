@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.common.transform.DSLProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 
 import javax.inject.Inject
@@ -42,4 +43,13 @@ interface DSLYes {
 @CompileStatic
 abstract class DSLYesImpl implements DSLYes {
 
+}
+
+@CompileStatic
+interface MapPropertyTest {
+    @DSLProperty(factory = { factory.newInstance(DSLYesImpl) })
+    abstract MapProperty<String, DSLYes> getThings()
+
+    @Inject
+    abstract ObjectFactory getFactory()
 }
