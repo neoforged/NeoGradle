@@ -12,11 +12,16 @@ import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.GameArtifact;
+import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.common.util.VersionJson;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpec;
 import net.minecraftforge.gradle.vanilla.runtime.spec.builder.VanillaRuntimeSpecBuilder;
-import net.minecraftforge.gradle.vanilla.runtime.steps.*;
+import net.minecraftforge.gradle.vanilla.runtime.steps.ApplyAccessTransformerStep;
+import net.minecraftforge.gradle.vanilla.runtime.steps.CollectLibraryInformationStep;
+import net.minecraftforge.gradle.vanilla.runtime.steps.DecompileStep;
+import net.minecraftforge.gradle.vanilla.runtime.steps.IStep;
+import net.minecraftforge.gradle.vanilla.runtime.steps.RenameStep;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Property;
@@ -38,6 +43,10 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     @javax.inject.Inject
     public VanillaRuntimeExtension(Project project) {
         super(project);
+
+        getForgeFlowerVersion().convention(Utils.FORGEFLOWER_VERSION);
+        getFartVersion().convention(Utils.FART_VERSION);
+        getAccessTransformerApplierVersion().convention(Utils.ACCESSTRANSFORMER_VERSION);
     }
 
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
@@ -76,9 +85,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         stepsMcpDirectory.mkdirs();
 
-        //TODO Figure out if we need to alter this!
         final Map<String, File> data = Collections.emptyMap();
-        final Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec, minecraftCache, vanillaDirectory, spec.side());
+        final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec, vanillaDirectory);
 
         final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.project().getTasks().register("supplySourcesFor" + spec.name(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(runtimeWorkingDirectory, "sources.jar"));
@@ -113,7 +121,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final StepData stepData = buildSteps();
         final List<IStep> steps = stepData.getSteps();
 
-        TaskProvider<? extends IRuntimeTask> currentInput = definition.gameArtifactProvidingTasks().get(spec.side().gameArtifact());
+        TaskProvider<? extends ITaskWithOutput> currentInput = definition.gameArtifactProvidingTasks().get(spec.side().gameArtifact());
         for (IStep step : steps) {
             if (spec.preTaskTypeAdapters().containsKey(step.getName())) {
                 if (!spec.preTaskTypeAdapters().get(step.getName()).isEmpty()) {
@@ -130,7 +138,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             }
 
             AtomicInteger additionalTaskIndex = new AtomicInteger(0);
-            TaskProvider<? extends IRuntimeTask> task = step.buildTask(spec, currentInput, minecraftCache, definition.taskOutputs(), definition.gameArtifacts(), definition.gameArtifactProvidingTasks(), taskProvider -> taskProvider.configure(additionalTask -> configureCommonMcpRuntimeTaskParameters(additionalTask, Collections.emptyMap(), step.getName() + "Additional" + additionalTaskIndex.getAndIncrement(), spec, runtimeWorkingDirectory)));
+            TaskProvider<? extends IRuntimeTask> task = step.buildTask(definition, currentInput, minecraftCache, definition.taskOutputs(), definition.gameArtifacts(), definition.gameArtifactProvidingTasks(), taskProvider -> taskProvider.configure(additionalTask -> configureCommonMcpRuntimeTaskParameters(additionalTask, Collections.emptyMap(), step.getName() + "Additional" + additionalTaskIndex.getAndIncrement(), spec, runtimeWorkingDirectory)));
 
             task.configure((IRuntimeTask mcpRuntimeTask) -> configureCommonMcpRuntimeTaskParameters(mcpRuntimeTask, Collections.emptyMap(), step.getName(), spec, runtimeWorkingDirectory));
 
@@ -150,8 +158,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             }
         }
 
-        final TaskProvider<? extends IRuntimeTask> sourcesTask = Iterators.getLast( definition.taskOutputs().values().iterator());
-        final TaskProvider<? extends IRuntimeTask> rawTask =  definition.taskOutputs().get(stepData.getRawJarStep().getName());
+        final TaskProvider<? extends ITaskWithOutput> sourcesTask = Iterators.getLast( definition.taskOutputs().values().iterator());
+        final TaskProvider<? extends ITaskWithOutput> rawTask =  definition.taskOutputs().get(stepData.getRawJarStep().getName());
 
         definition.sourceJarTask().configure(task -> {
             task.getInput().set(sourcesTask.flatMap(ITaskWithOutput::getOutput));
@@ -181,11 +189,11 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
     public abstract Property<String> getVersion();
 
-    public abstract Provider<String> getFartVersion();
+    public abstract Property<String> getFartVersion();
 
-    public abstract Provider<String> getForgeFlowerVersion();
+    public abstract Property<String> getForgeFlowerVersion();
 
-    public abstract Provider<String> getAccessTransformerApplierVersion();
+    public abstract Property<String> getAccessTransformerApplierVersion();
 
     private static final class StepData {
         private final List<IStep> steps;

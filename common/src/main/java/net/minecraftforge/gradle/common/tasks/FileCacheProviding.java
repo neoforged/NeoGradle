@@ -1,5 +1,8 @@
-package net.minecraftforge.gradle.common.runtime.tasks;
+package net.minecraftforge.gradle.common.tasks;
 
+import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
+import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
+import net.minecraftforge.gradle.common.tasks.ITaskWithWorkspace;
 import net.minecraftforge.gradle.common.util.ICacheFileSelector;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
@@ -10,7 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CacheableTask
-public abstract class FileCacheProviding extends Runtime {
+public abstract class FileCacheProviding extends ForgeGradleBaseTask implements ITaskWithOutput, ITaskWithWorkspace {
+
+    public FileCacheProviding() {
+    }
 
     @TaskAction
     public void provide() throws IOException {

@@ -24,6 +24,7 @@ import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
+import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 

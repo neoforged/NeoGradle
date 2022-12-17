@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.userdev;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.initialization.Settings;
 
 public class UserDevPlugin implements Plugin<Object> {
 

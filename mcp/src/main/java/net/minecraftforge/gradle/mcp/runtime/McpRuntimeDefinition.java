@@ -24,12 +24,12 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
 
     public McpRuntimeDefinition(
             McpRuntimeSpec spec,
-            LinkedHashMap<String, TaskProvider<? extends IRuntimeTask>> taskOutputs,
+            LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs,
             File unpackedMcpZipDirectory,
             McpConfigConfigurationSpecV2 mcpConfig,
             TaskProvider<? extends ArtifactProvider> sourceJarTask,
             TaskProvider<? extends ArtifactProvider> rawJarTask,
-            Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactProvidingTasks,
+            Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks,
             Map<GameArtifact, File> gameArtifacts,
             Configuration minecraftDependenciesConfiguration) {
         super(spec, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, gameArtifacts, minecraftDependenciesConfiguration);

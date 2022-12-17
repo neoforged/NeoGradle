@@ -16,6 +16,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
@@ -37,7 +38,12 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
     @Inject
     public DependencyReplacementExtension(Project project) {
         this.project = project;
-        this.project.getConfigurations().configureEach(configuration -> configuration.getDependencies().whenObjectAdded(dependency -> handleDependency(configuration, dependency)));
+        this.project.getConfigurations().configureEach(configuration -> configuration.getDependencies().whenObjectAdded(dependency -> {
+            if (dependency instanceof ModuleDependency) {
+                final ModuleDependency moduleDependency = (ModuleDependency) dependency;
+                handleDependency(configuration, moduleDependency);
+            }
+        }));
 
         this.dependencyGenerator = this.project.getTasks().register("generateDependencies", DependencyGenerationTask.class);
     }
@@ -45,7 +51,7 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
     public abstract SetProperty<DependencyReplacementHandler> getReplacementHandlers();
 
     @SuppressWarnings("OptionalGetWithoutIsPresent") //Two lines above the get....
-    private void handleDependency(final Configuration configuration, final Dependency dependency) {
+    private void handleDependency(final Configuration configuration, final ModuleDependency dependency) {
         Set<DependencyReplacementHandler> replacementHandlers = Sets.newHashSet(getReplacementHandlers().get());
         replacementHandlers.stream()
                 .map(handler -> handler.get(new DependencyReplacementContext(project, configuration, dependency)))
@@ -120,9 +126,8 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
 
         final IvyDummyRepositoryExtension extension = project.getExtensions().getByType(IvyDummyRepositoryExtension.class);
         final Provider<Directory> repoBaseDir = extension.createRepoBaseDir();
-        final IvyDummyRepositoryEntry entry;
         try {
-            entry = extension.withDependency(builder -> {
+            extension.withDependency(builder -> {
                 builder.from(externalModuleDependency);
                 result.dependencyMetadataConfigurator().accept(builder);
 
@@ -131,16 +136,18 @@ public abstract class DependencyReplacementExtension extends GroovyObjectSupport
                         .filter(ExternalModuleDependency.class::isInstance)
                         .map(ExternalModuleDependency.class::cast)
                         .forEach(additionalDependency -> builder.withDependency(depBuilder -> depBuilder.from(additionalDependency)));
+            }, entry -> {
+                final TaskProvider<? extends Task> rawAndSourceCombinerTask = generator.generate(repoBaseDir, entry);
+
+                final Dependency replacedDependency = entry.asDependency(project);
+                configuration.getDependencies().add(replacedDependency);
+                result.onCreateReplacedDependencyCallback().accept(replacedDependency);
+
+                this.dependencyGenerator.configure(task -> task.dependsOn(rawAndSourceCombinerTask));
             });
         } catch (XMLStreamException | IOException e) {
             throw new RuntimeException(String.format("Failed to create the dummy dependency for: %s", dependency), e);
         }
-
-        final TaskProvider<? extends Task> rawAndSourceCombinerTask = generator.generate(repoBaseDir, entry);
-
-        configuration.getDependencies().add(entry.asDependency(project));
-
-        this.dependencyGenerator.configure(task -> task.dependsOn(rawAndSourceCombinerTask));
     }
 
     @FunctionalInterface

@@ -48,8 +48,8 @@ public final class VanillaDependencyManager {
                             runtimeDefinition.sourceJarTask(),
                             runtimeDefinition.rawJarTask(),
                             runtimeDefinition.minecraftDependenciesConfiguration(),
-                            builder -> builder.withVersion(runtimeDefinition.spec().minecraftVersion())
-                    )
+                            builder -> builder.withVersion(runtimeDefinition.spec().minecraftVersion()),
+                            runtimeDefinition::replacedDependency)
             );
         });
     }

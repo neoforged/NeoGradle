@@ -15,7 +15,6 @@ abstract class ForgeGradleTestSpecification extends Specification {
     private static boolean DEBUG = true
     private static boolean LOG_LEVEL_INFO = false;
     private static boolean STACKTRACE = true
-    private static boolean EMIT_LOGS = false
 
     public TestInfo state
 
@@ -48,8 +47,7 @@ abstract class ForgeGradleTestSpecification extends Specification {
         propertiesFile << """
                         org.gradle.console=rich
                         org.gradle.native=false
-                        org.gradle.java.installations.auto-detect=false
-                        org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005
+                        org.gradle.java.installations.auto-detect=true
                         """
     }
 
@@ -74,14 +72,6 @@ abstract class ForgeGradleTestSpecification extends Specification {
             arguments.add('--stacktrace')
         }
 
-        def buildResult = runner.withArguments(arguments).build()
-
-        if (EMIT_LOGS) {
-            final File testLogFile = new File('testlogs', state.getDisplayName() + ".log")
-            testLogFile.getParentFile().mkdirs()
-            testLogFile.text = buildResult.output
-        }
-
-        return buildResult
+        return runner.withArguments(arguments).build()
     }
 }

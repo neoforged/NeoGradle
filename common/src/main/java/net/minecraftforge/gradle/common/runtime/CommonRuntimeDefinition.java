@@ -1,15 +1,19 @@
 package net.minecraftforge.gradle.common.runtime;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.GameArtifact;
+import org.apache.commons.lang3.NotImplementedException;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.internal.impldep.org.eclipse.jgit.errors.NotSupportedException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -21,19 +25,21 @@ import java.util.Map;
  */
 public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
     private final S spec;
-    private final LinkedHashMap<String, TaskProvider<? extends IRuntimeTask>> taskOutputs;
+    private final LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs;
     private final TaskProvider<? extends ArtifactProvider> sourceJarTask;
     private final TaskProvider<? extends ArtifactProvider> rawJarTask;
-    private final Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactProvidingTasks;
+    private final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks;
     private final Map<GameArtifact, File> gameArtifacts;
     private final Configuration minecraftDependenciesConfiguration;
+    private final Map<String, String> configuredMappingVersionData = Maps.newHashMap();
+    private Dependency replacedDependency = null;
 
     protected CommonRuntimeDefinition(
             S spec,
-            LinkedHashMap<String, TaskProvider<? extends IRuntimeTask>> taskOutputs,
+            LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs,
             TaskProvider<? extends ArtifactProvider> sourceJarTask,
             TaskProvider<? extends ArtifactProvider> rawJarTask,
-            Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactProvidingTasks,
+            Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks,
             Map<GameArtifact, File> gameArtifacts,
             Configuration minecraftDependenciesConfiguration) {
         this.spec = spec;
@@ -76,7 +82,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
         return spec;
     }
 
-    public final LinkedHashMap<String, TaskProvider<? extends IRuntimeTask>> taskOutputs() {
+    public final LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs() {
         return taskOutputs;
     }
 
@@ -84,7 +90,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
         return sourceJarTask;
     }
 
-    public final Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactProvidingTasks() {
+    public final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks() {
         return gameArtifactProvidingTasks;
     }
 
@@ -94,6 +100,26 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
 
     public final Configuration minecraftDependenciesConfiguration() {
         return minecraftDependenciesConfiguration;
+    }
+
+    public Dependency replacedDependency() {
+        if (this.replacedDependency == null)
+            throw new IllegalStateException("No dependency has been replaced yet.");
+
+        return this.replacedDependency;
+    }
+
+    public void replacedDependency(Dependency dependency) {
+        this.replacedDependency = dependency;
+    }
+
+    public Map<String, String> configuredMappingVersionData() {
+        return configuredMappingVersionData;
+    }
+
+    public void configureMappingVersionData(Map<String, String> data) {
+        configuredMappingVersionData.clear();
+        configuredMappingVersionData.putAll(data);
     }
 
     @Override

@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<VanillaRuntimeSpec> {
 
-    public VanillaRuntimeDefinition(VanillaRuntimeSpec spec, LinkedHashMap<String, TaskProvider<? extends IRuntimeTask>> taskOutputs, TaskProvider<? extends ArtifactProvider> sourceJarTask, TaskProvider<? extends ArtifactProvider> rawJarTask, final Map<GameArtifact, File> gameArtifacts, final Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> gameArtifactProvidingTasks, Configuration minecraftDependenciesConfiguration) {
+    public VanillaRuntimeDefinition(VanillaRuntimeSpec spec, LinkedHashMap<String, TaskProvider<? extends IRuntimeTask>> taskOutputs, TaskProvider<? extends ArtifactProvider> sourceJarTask, TaskProvider<? extends ArtifactProvider> rawJarTask, final Map<GameArtifact, File> gameArtifacts, final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks, Configuration minecraftDependenciesConfiguration) {
         super(spec, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, gameArtifacts, minecraftDependenciesConfiguration);
     }
 }

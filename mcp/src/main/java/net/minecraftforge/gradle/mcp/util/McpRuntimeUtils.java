@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.mcp.util;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
+import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
@@ -30,7 +31,7 @@ public final class McpRuntimeUtils {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static Provider<File> getTaskInputFor(final McpRuntimeSpec spec, final Map<String, TaskProvider<? extends IRuntimeTask>> tasks, McpConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends IRuntimeTask>> adaptedInput) {
+    public static Provider<File> getTaskInputFor(final McpRuntimeSpec spec, final Map<String, TaskProvider<? extends ITaskWithOutput>> tasks, McpConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends ITaskWithOutput>> adaptedInput) {
         if (adaptedInput.isPresent()) {
             return adaptedInput.get().flatMap(task -> task.getOutput().getAsFile());
         }
@@ -43,7 +44,7 @@ public final class McpRuntimeUtils {
         return getInputForTaskFrom(spec, inputValue, tasks);
     }
 
-    public static Provider<File> getTaskInputFor(final McpRuntimeSpec spec, final Map<String, TaskProvider<? extends IRuntimeTask>> tasks, McpConfigConfigurationSpecV1.Step step) {
+    public static Provider<File> getTaskInputFor(final McpRuntimeSpec spec, final Map<String, TaskProvider<? extends ITaskWithOutput>> tasks, McpConfigConfigurationSpecV1.Step step) {
         final String inputValue = step.getValue("input");
         if (inputValue == null) {
             throw new IllegalStateException("Can not transformer or get an input of a task without an input");
@@ -51,7 +52,7 @@ public final class McpRuntimeUtils {
         return getInputForTaskFrom(spec, inputValue, tasks);
     }
 
-    public static Provider<File> getInputForTaskFrom(final McpRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends IRuntimeTask>> tasks) {
+    public static Provider<File> getInputForTaskFrom(final McpRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends ITaskWithOutput>> tasks) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {
             return spec.project().provider(() -> new File(inputValue));
@@ -67,7 +68,7 @@ public final class McpRuntimeUtils {
         throw new IllegalStateException("The string '" + inputValue + "' did not return a valid substitution match!");
     }
 
-    public static Optional<TaskProvider<? extends IRuntimeTask>> getInputTaskForTaskFrom(final McpRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends IRuntimeTask>> tasks) {
+    public static Optional<TaskProvider<? extends ITaskWithOutput>> getInputTaskForTaskFrom(final McpRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends ITaskWithOutput>> tasks) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {
             return Optional.empty();

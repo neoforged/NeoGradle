@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public abstract class IvyDummyRepositoryExtension {
     /**
@@ -72,17 +73,25 @@ public abstract class IvyDummyRepositoryExtension {
             ivy.setMetadataSupplier(IvyDummyRepositoryMetadataSupplier.class, params -> params.params(project.provider(this::getEntries), root));
             ivy.setAllowInsecureProtocol(true);
             ivy.getResolve().setDynamicMode(false);
-            ivy.metadataSources(IvyArtifactRepository.MetadataSources::ivyDescriptor); //TODO HANDLE THIS
+            ivy.metadataSources(IvyArtifactRepository.MetadataSources::ivyDescriptor);
         };
     }
 
-    public IvyDummyRepositoryEntry withDependency(final Action<IvyDummyRepositoryEntry.Builder> configurator) throws XMLStreamException, IOException {
-        final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create();
-        configurator.execute(builder);
-        final IvyDummyRepositoryEntry entry = builder.build();
-        entries.add(builder.build());
-        writeDummyDataIfNeeded(entry);
-        return entry;
+    public void withDependency(final Action<IvyDummyRepositoryEntry.Builder> configurator, final Consumer<IvyDummyRepositoryEntry> configuredEntryConsumer) throws XMLStreamException, IOException {
+        project.afterEvaluate(evaluatedProject -> {
+            final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create();
+            configurator.execute(builder);
+            final IvyDummyRepositoryEntry entry = builder.build();
+
+            entries.add(builder.build());
+
+            try {
+                writeDummyDataIfNeeded(entry);
+                configuredEntryConsumer.accept(entry);
+            } catch (IOException | XMLStreamException e) {
+                throw new RuntimeException("Failed to write dummy data for dependency: " + entry, e);
+            }
+        });
     }
 
     private void writeDummyDataIfNeeded(

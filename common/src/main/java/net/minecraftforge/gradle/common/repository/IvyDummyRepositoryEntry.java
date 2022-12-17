@@ -3,7 +3,11 @@ package net.minecraftforge.gradle.common.repository;
 import com.google.common.collect.Sets;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 
 import java.io.IOException;
@@ -86,28 +90,6 @@ public final class IvyDummyRepositoryEntry implements Serializable {
         return Builder.create(this).withClassifier("sources").build();
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append(fullGroup());
-        builder.append(':');
-        builder.append(name());
-        builder.append(":");
-        builder.append(version());
-
-        if (classifier() != null && !classifier().equals("")) {
-            builder.append("-");
-            builder.append(classifier());
-        }
-
-        if (extension() != null && !extension().equalsIgnoreCase("jar")) {
-            builder.append("@");
-            builder.append(extension());
-        }
-
-        return builder.toString();
-    }
-
     public String group() {
         return group;
     }
@@ -150,6 +132,16 @@ public final class IvyDummyRepositoryEntry implements Serializable {
         return Objects.hash(group, name, version, classifier, extension, dependencies);
     }
 
+    @Override
+    public String toString() {
+        return "IvyDummyRepositoryEntry{" +
+                "group='" + group + '\'' +
+                ", name='" + name + '\'' +
+                ", version='" + version + '\'' +
+                ", classifier='" + classifier + '\'' +
+                ", extension='" + extension + '\'' +
+                '}';
+    }
 
     public static final class Builder {
         private String group;
@@ -201,11 +193,29 @@ public final class IvyDummyRepositoryEntry implements Serializable {
             return this;
         }
 
-        public Builder from(final ExternalModuleDependency dependency) {
-            this.group = dependency.getGroup();
-            this.name = dependency.getName();
-            this.version = dependency.getVersion();
+        public Builder from(final ModuleDependency dependency) {
+            withGroup(dependency.getGroup());
+            withName(dependency.getName());
+            withVersion(dependency.getVersion());
+
+            if (!dependency.getArtifacts().isEmpty()) {
+                final DependencyArtifact artifact = dependency.getArtifacts().iterator().next();
+                withClassifier(artifact.getClassifier());
+                withExtension(artifact.getExtension());
+            }
             return this;
+        }
+
+        public void from(ResolvedDependency resolvedDependency) {
+            withGroup(resolvedDependency.getModuleGroup());
+            withName(resolvedDependency.getModuleName());
+            withVersion(resolvedDependency.getModuleVersion());
+
+            if (resolvedDependency.getModuleArtifacts().size() > 0) {
+                final ResolvedArtifact artifact = resolvedDependency.getModuleArtifacts().iterator().next();
+                withClassifier(artifact.getClassifier());
+                withExtension(artifact.getExtension());
+            }
         }
 
         public Builder withDependencies(final Collection<IvyDummyRepositoryEntryDependency> dependencies) {

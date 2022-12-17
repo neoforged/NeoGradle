@@ -52,8 +52,8 @@ public final class ForgeUserDevDependencyManager {
                             runtimeDefinition.mcpRuntimeDefinition().sourceJarTask(),
                             runtimeDefinition.mcpRuntimeDefinition().rawJarTask(),
                             additionalDependenciesConfiguration,
-                            builder -> builder.withVersion(runtimeDefinition.spec().forgeVersion())
-                    )
+                            builder -> builder.withVersion(runtimeDefinition.spec().forgeVersion()),
+                            runtimeDefinition::)
             );
         });
     }

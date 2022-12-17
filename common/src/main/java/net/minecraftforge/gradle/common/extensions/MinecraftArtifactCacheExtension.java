@@ -5,9 +5,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import groovy.lang.GroovyObjectSupport;
+import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
+import net.minecraftforge.gradle.common.tasks.FileCacheProviding;
+import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.*;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.*;
@@ -49,6 +54,31 @@ public abstract class MinecraftArtifactCacheExtension extends GroovyObjectSuppor
         GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(gameVersion, ArtifactSide.SERVER)));
 
         return result;
+    }
+
+    @NotNull
+    public final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> cacheGameVersionTasks(final Project project, final File outputDirectory, final String gameVersion, ArtifactSide side) {
+        final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> results = new EnumMap<>(GameArtifact.class);
+
+        GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, this.createFileCacheEntryProvidingTask(project, "cacheLauncherMetadata", outputDirectory, ICacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
+        GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> results.put(GameArtifact.VERSION_MANIFEST, this.createFileCacheEntryProvidingTask(project, "cacheVersionManifest", outputDirectory, ICacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, this.createFileCacheEntryProvidingTask(project, "cacheVersionArtifactClient", outputDirectory, ICacheFileSelector.forVersionJar(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.CLIENT))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, this.createFileCacheEntryProvidingTask(project, "cacheVersionArtifactServer", outputDirectory, ICacheFileSelector.forVersionJar(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.SERVER))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, this.createFileCacheEntryProvidingTask(project, "cacheVersionMappingsClient", outputDirectory, ICacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.CLIENT))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, this.createFileCacheEntryProvidingTask(project, "cacheVersionMappingsServer", outputDirectory, ICacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.SERVER))));
+
+        return results;
+    }
+
+    @NotNull
+    private TaskProvider<FileCacheProviding> createFileCacheEntryProvidingTask(final Project project, final String name, final File outputDirectory, final ICacheFileSelector selector, final Runnable action) {
+        return project.getTasks().register(name, FileCacheProviding.class, task -> {
+            task.doFirst(t -> action.run());
+            task.getOutput().fileValue(new File(outputDirectory, selector.getCacheFileName()));
+            task.getFileCache().set(getCacheDirectory());
+            task.getSelector().set(selector);
+            task.setDescription("Retrieves: " + selector.getCacheFileName() + " from the central cache.");
+        });
     }
 
     public final File cacheLauncherMetadata() {

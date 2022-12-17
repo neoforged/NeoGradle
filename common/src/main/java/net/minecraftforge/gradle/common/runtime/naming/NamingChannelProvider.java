@@ -25,8 +25,11 @@ import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.common.util.NamingConstants;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * A channel provider for a mappings channel.
@@ -81,6 +84,15 @@ public abstract class NamingChannelProvider extends GroovyObjectSupport implemen
     public abstract Property<ApplyMappingsToSourceJarTaskBuilder> getApplySourceMappingsTaskBuilder();
 
     /**
+     * The builder which can construct a new task provider for a compiled jar mapping.
+     * Every time this is invoked the builder needs to produce a new task.
+     * However, the builder is allowed to reuse an old task if the inputs match.
+     *
+     * @return The builder property.
+     */
+    public abstract Property<ApplyMappingsToCompiledJarTaskBuilder> getApplyCompiledMappingsTaskBuilder();
+
+    /**
      * The builder which can construct a new task provider for a compiled jar unmapping.
      * Every time this is invoked the builder needs to produce a new task.
      * However, the builder is allowed to reuse an old task if the inputs match.
@@ -88,6 +100,13 @@ public abstract class NamingChannelProvider extends GroovyObjectSupport implemen
      * @return The builder property.
      */
     public abstract Property<UnapplyMappingsToCompiledJarTaskBuilder> getUnapplyCompiledMappingsTaskBuilder();
+
+    /**
+     * Returns the group prefix for the current channel that is prefixed to the deobfuscated dependency groups.
+     *
+     * @return The group prefix.
+     */
+    public abstract Property<Supplier<String>> getDeobfuscationGroupSupplier();
 
     /**
      * {@return Indicates if the user has accepted this mappings license.}
@@ -98,4 +117,5 @@ public abstract class NamingChannelProvider extends GroovyObjectSupport implemen
      * {@return The license text of this mappings channel.}
      */
     public abstract Property<String> getLicenseText();
+
 }

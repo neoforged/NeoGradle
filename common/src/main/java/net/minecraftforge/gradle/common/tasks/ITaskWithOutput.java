@@ -4,6 +4,7 @@ import org.gradle.api.Task;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 
 /**
@@ -25,5 +26,6 @@ public interface ITaskWithOutput extends Task {
      * @return The name of the output file.
      */
     @Input
+    @Optional
     Property<String> getOutputFileName();
 }

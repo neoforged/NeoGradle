@@ -24,7 +24,7 @@ public abstract class DisplayMappingsLicenseTask extends ForgeGradleBaseTask {
         });
 
         this.setOnlyIf(task -> {
-            final MappingsExtension mappingsExtension = getProject().getExtensions().getByType(MinecraftExtension.class).getMappings();
+            final MappingsExtension mappingsExtension = getProject().getExtensions().getByType(MappingsExtension.class);
             return mappingsExtension.getMappingChannel().isPresent() && !mappingsExtension.getMappingChannel().get().getHasAcceptedLicense().getOrElse(false);
         });
     }

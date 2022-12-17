@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.common.repository;
 
 import com.google.common.collect.Lists;
+import net.minecraftforge.gradle.common.extensions.IvyDummyRepositoryExtension;
 import org.gradle.api.artifacts.ComponentMetadataBuilder;
 import org.gradle.api.artifacts.ComponentMetadataSupplier;
 import org.gradle.api.artifacts.ComponentMetadataSupplierDetails;
@@ -14,20 +15,19 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 
 public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetadataSupplier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IvyDummyRepositoryMetadataSupplier.class);
 
-    private final Provider<Collection<IvyDummyRepositoryEntry>> entries;
-    private final Provider<Directory> root;
+    private final Provider<IvyDummyRepositoryExtension> extensionProvider;
+    private final Provider<Directory> rootDirectoryProvider;
 
     @Inject
-    public IvyDummyRepositoryMetadataSupplier(Provider<Collection<IvyDummyRepositoryEntry>> entries, Provider<Directory> root) {
-        this.entries = entries;
-        this.root = root;
+    public IvyDummyRepositoryMetadataSupplier(Provider<IvyDummyRepositoryExtension> extensionProvider, Provider<Directory> rootDirectoryProvider) {
+        this.extensionProvider = extensionProvider;
+        this.rootDirectoryProvider = rootDirectoryProvider;
     }
 
     @Override
@@ -37,7 +37,7 @@ public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetada
         LOGGER.info("Preparing metadata for {}", id.getVersion());
 
         final Optional<IvyDummyRepositoryEntry> entryCandidate =
-                entries.get().stream()
+                extensionProvider.get().getEntries().stream()
                         .filter(entry -> entry.matches(id))
                         .findFirst();
 
@@ -46,7 +46,7 @@ public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetada
         }
 
         try {
-            final Path artifactPath = entryCandidate.get().artifactPath(this.root.get().getAsFile().toPath());
+            final Path artifactPath = entryCandidate.get().artifactPath(this.rootDirectoryProvider.get().getAsFile().toPath());
             Files.createFile(artifactPath);
         } catch (IOException e) {
             throw new RuntimeException("Failed to create dummy artifact!", e);

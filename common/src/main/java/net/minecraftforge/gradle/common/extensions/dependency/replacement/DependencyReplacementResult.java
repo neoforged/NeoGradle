@@ -1,9 +1,11 @@
 package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntry;
+import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntryDependency;
 import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -16,30 +18,36 @@ import java.util.function.Function;
 public final class DependencyReplacementResult {
         private final Project project;
         private final Function<String, String> taskNameBuilder;
-        private final Provider<? extends ITaskWithOutput> sourcesJarTaskProvider;
-        private final Provider<? extends ITaskWithOutput> rawJarTaskProvider;
+        private final TaskProvider<? extends ITaskWithOutput> sourcesJarTaskProvider;
+        private final TaskProvider<? extends ITaskWithOutput> rawJarTaskProvider;
         private final Configuration additionalDependenciesConfiguration;
         private final Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator;
         private final Collection<DependencyReplacementResult> additionalReplacements;
+        private final Consumer<IvyDummyRepositoryEntryDependency.Builder> asDependencyBuilderConfigurator;
+        private final Consumer<Dependency> onCreateReplacedDependencyCallback;
 
         public DependencyReplacementResult(
                 Project project,
                 Function<String, String> taskNameBuilder,
-                Provider<? extends ITaskWithOutput> sourcesJarTaskProvider,
-                Provider<? extends ITaskWithOutput> rawJarTaskProvider,
+                TaskProvider<? extends ITaskWithOutput> sourcesJarTaskProvider,
+                TaskProvider<? extends ITaskWithOutput> rawJarTaskProvider,
                 Configuration additionalDependenciesConfiguration,
-                Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator
-        ) {
+                Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator,
+                Consumer<Dependency> onCreateReplacedDependencyCallback) {
                 this.project = project;
                 this.taskNameBuilder = taskNameBuilder;
                 this.sourcesJarTaskProvider = sourcesJarTaskProvider;
                 this.rawJarTaskProvider = rawJarTaskProvider;
                 this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
                 this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
+                this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
                 this.additionalReplacements = Collections.emptyList();
+
+                //TODO: Handle this:
+                this.asDependencyBuilderConfigurator = builder -> {};
         }
 
-        public DependencyReplacementResult(Project project, Function<String, String> taskNameBuilder, Provider<? extends ITaskWithOutput> sourcesJarTaskProvider, Provider<? extends ITaskWithOutput> rawJarTaskProvider, Configuration additionalDependenciesConfiguration, Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator, Collection<DependencyReplacementResult> additionalReplacements) {
+        public DependencyReplacementResult(Project project, Function<String, String> taskNameBuilder, TaskProvider<? extends ITaskWithOutput> sourcesJarTaskProvider, TaskProvider<? extends ITaskWithOutput> rawJarTaskProvider, Configuration additionalDependenciesConfiguration, Consumer<IvyDummyRepositoryEntry.Builder> dependencyMetadataConfigurator, Collection<DependencyReplacementResult> additionalReplacements, Consumer<IvyDummyRepositoryEntryDependency.Builder> asDependencyBuilderConfigurator) {
                 this.project = project;
                 this.taskNameBuilder = taskNameBuilder;
                 this.sourcesJarTaskProvider = sourcesJarTaskProvider;
@@ -47,6 +55,8 @@ public final class DependencyReplacementResult {
                 this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
                 this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
                 this.additionalReplacements = additionalReplacements;
+                this.asDependencyBuilderConfigurator = asDependencyBuilderConfigurator;
+                this.onCreateReplacedDependencyCallback = dep -> {};
         }
 
         public Project project() {
@@ -57,11 +67,11 @@ public final class DependencyReplacementResult {
                 return taskNameBuilder;
         }
 
-        public Provider<? extends ITaskWithOutput> sourcesJarTaskProvider() {
+        public TaskProvider<? extends ITaskWithOutput> sourcesJarTaskProvider() {
                 return sourcesJarTaskProvider;
         }
 
-        public Provider<? extends ITaskWithOutput> rawJarTaskProvider() {
+        public TaskProvider<? extends ITaskWithOutput> rawJarTaskProvider() {
                 return rawJarTaskProvider;
         }
 
@@ -75,6 +85,14 @@ public final class DependencyReplacementResult {
 
         public Collection<DependencyReplacementResult> additionalReplacements() {
                 return additionalReplacements;
+        }
+
+        public Consumer<IvyDummyRepositoryEntryDependency.Builder> asDependencyBuilderConfigurator() {
+                return asDependencyBuilderConfigurator;
+        }
+
+        public Consumer<Dependency> onCreateReplacedDependencyCallback() {
+                return onCreateReplacedDependencyCallback;
         }
 
         @Override

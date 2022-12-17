@@ -5,6 +5,7 @@ import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtensi
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
@@ -53,6 +54,7 @@ public final class OfficialNamingChannelConfigurator {
 
         minecraftExtension.getNamingChannelProviders().register("official", namingChannelProvider -> {
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::buildApplySourceMappingTask);
+            namingChannelProvider.getApplyCompiledMappingsTaskBuilder().set(this::buildApplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> (Boolean) mappingsExtension.getExtensions().getByName("acceptMojangEula")));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
@@ -63,14 +65,13 @@ public final class OfficialNamingChannelConfigurator {
     private @NotNull TaskProvider<? extends IRuntimeTask> buildApplySourceMappingTask(@NotNull final ApplyMappingsTaskBuildingContext context) {
         final String mappingVersion = MappingUtils.getVersionOrMinecraftVersion(context.mappingVersionData());
 
-        final String applyTaskName = CommonRuntimeUtils.buildTaskName(context.spec(), "applyOfficialMappings");
-        return context.spec().project().getTasks().register(applyTaskName, ApplyOfficialMappingsToSourceJar.class, applyOfficialMappingsToSourceJar -> {
+        final String applyTaskName = CommonRuntimeUtils.buildTaskName(context.environmentName(), "applyOfficialMappings");
+        return context.project().getTasks().register(applyTaskName, ApplyOfficialMappingsToSourceJar.class, applyOfficialMappingsToSourceJar -> {
             applyOfficialMappingsToSourceJar.setGroup("mappings/official");
             applyOfficialMappingsToSourceJar.setDescription(String.format("Applies the Official mappings for version %s.", mappingVersion));
 
             applyOfficialMappingsToSourceJar.getClientMappings().set(context.gameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(ITaskWithOutput::getOutput));
             applyOfficialMappingsToSourceJar.getServerMappings().set(context.gameArtifactTask(GameArtifact.SERVER_MAPPINGS).flatMap(ITaskWithOutput::getOutput));
-            applyOfficialMappingsToSourceJar.getTsrgMappings().set(context.intermediaryMappingFile().orElse(null));
 
             applyOfficialMappingsToSourceJar.getInput().set(context.taskOutputToModify().flatMap(ITaskWithOutput::getOutput));
 
@@ -120,6 +121,48 @@ public final class OfficialNamingChannelConfigurator {
         context.taskOutputToModify().configure(task -> task.finalizedBy(unapplyTask));
 
         return unapplyTask;
+    }
+
+    private @NotNull TaskProvider<? extends ITaskWithOutput> buildApplyCompiledMappingsTask(@NotNull final ApplyMappingsTaskBuildingContext context) {
+        final String ApplyTaskName = CommonRuntimeUtils.buildTaskName(context.taskOutputToModify(), "deobfuscate");
+
+        final TaskProvider<ApplyOfficialMappingsToCompiledJar> ApplyTask = context.project().getTasks().register(ApplyTaskName, ApplyOfficialMappingsToCompiledJar.class, task -> {
+            task.setGroup("mappings/official");
+            task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
+
+            task.getMinecraftVersion().convention(context.project().provider(() -> {
+                if (context.mappingVersionData().containsKey(NamingConstants.Version.VERSION) || context.mappingVersionData().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
+                    return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.mappingVersionData()));
+                } else {
+
+                    //This means we need to walk the tree -> this is a bad idea, but it's the only way to do it.
+                    return context.taskOutputToModify().get().getTaskDependencies().getDependencies(task).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
+                            .findFirst()
+                            .map(JavaCompile::getClasspath)
+                            .map(classpath -> classpath.getBuildDependencies().getDependencies(null))
+                            .flatMap(depedendencies -> depedendencies.stream().filter(ArtifactFromOutput.class::isInstance).map(ArtifactFromOutput.class::cast).findFirst())
+                            .flatMap(artifactTask -> artifactTask.getTaskDependencies().getDependencies(artifactTask).stream().filter(ArtifactProvider.class::isInstance).map(ArtifactProvider.class::cast).findFirst())
+                            .map(artifactProvider -> {
+                                final CommonRuntimeExtension<?,?,? extends CommonRuntimeDefinition<?>> runtimeExtension = context.project().getExtensions().getByType(CommonRuntimeExtension.class);
+                                return runtimeExtension.getRuntimes().get()
+                                        .values()
+                                        .stream()
+                                        .filter(runtime -> runtime.rawJarTask().get().equals(artifactProvider))
+                                        .map(runtime -> runtime.spec().minecraftVersion())
+                                        .map(CacheableMinecraftVersion::from)
+                                        .findFirst()
+                                        .orElseThrow(() -> new IllegalStateException("Could not find minecraft version for task " + context.taskOutputToModify().getName()));
+                            })
+                            .orElseThrow(() -> new IllegalStateException("Could not find minecraft version for task " + context.taskOutputToModify().getName()));
+                }
+            }));
+            task.getInput().set(context.taskOutputToModify().flatMap(ITaskWithOutput::getOutput));
+            task.getOutput().set(context.project().getLayout().getBuildDirectory().dir("obfuscation/" + context.taskOutputToModify().getName()).flatMap(directory -> directory.file(context.taskOutputToModify().flatMap(ITaskWithOutput::getOutputFileName))));
+        });
+
+        context.taskOutputToModify().configure(task -> task.finalizedBy(ApplyTask));
+
+        return ApplyTask;
     }
 
     private @NotNull Provider<String> getLicenseText(Project project) {

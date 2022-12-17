@@ -21,9 +21,7 @@ import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.tasks.TaskProvider;
 
-import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public final class McpDependencyManager {
     private static final McpDependencyManager INSTANCE = new McpDependencyManager();
@@ -56,8 +54,8 @@ public final class McpDependencyManager {
                             runtimeDefinition.sourceJarTask(),
                             runtimeDefinition.rawJarTask(),
                             runtimeDefinition.minecraftDependenciesConfiguration(),
-                            builder -> builder.withVersion(runtimeDefinition.spec().mcpVersion())
-                    )
+                            builder -> builder.withVersion(runtimeDefinition.spec().mcpVersion()),
+                            runtimeDefinition::replacedDependency)
             );
         });
     }
@@ -100,9 +98,9 @@ public final class McpDependencyManager {
         return runtimeExtension.maybeCreate((Action<McpRuntimeSpecBuilder>) builder -> {
             builder.configureFromProject(configureProject);
             builder.withSide(ArtifactSide.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
-            builder.withMcpVersion(dependency.getVersion());
-
             final String version = dependency.getVersion() == null ? runtimeExtension.getDefaultVersion().get() : dependency.getVersion();
+
+            builder.withMcpVersion(version);
             builder.withName(String.format("dependencyMcp%s%s", Utils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
 
             builder.withPreTaskAdapter("decompile", createAccessTransformerAdapter(project));

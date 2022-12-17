@@ -1,26 +1,34 @@
 package net.minecraftforge.gradle.common.runtime.extensions;
 
 import com.google.common.collect.Maps;
+import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.spec.builder.CommonRuntimeSpecBuilder;
 import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
+import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
 import net.minecraftforge.gradle.common.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static net.minecraftforge.gradle.common.util.GameArtifactUtils.doWhenRequired;
 
@@ -48,19 +56,9 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpec, B exte
         mcpRuntimeTask.getRuntimeJavaVersion().convention(spec.configureProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
     }
 
-    protected static Map<GameArtifact, TaskProvider<? extends IRuntimeTask>> buildDefaultArtifactProviderTasks(final CommonRuntimeSpec spec, final File minecraftCacheFile, final File runtimeWorkingDirectory, final ArtifactSide side) {
-        final EnumMap<GameArtifact, TaskProvider<? extends IRuntimeTask>> result = Maps.newEnumMap(GameArtifact.class);
-
-        doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> result.put(GameArtifact.LAUNCHER_MANIFEST, CommonRuntimeUtils.createFileCacheEntryProvidingTask(spec, "downloadManifest", "manifest.json", minecraftCacheFile, ICacheFileSelector.launcherMetadata(), "Provides the Minecraft Launcher Manifest from the global Minecraft File Cache")));
-        doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> result.put(GameArtifact.VERSION_MANIFEST, CommonRuntimeUtils.createFileCacheEntryProvidingTask(spec, "downloadJson", String.format("%s.json", spec.minecraftVersion()), minecraftCacheFile, ICacheFileSelector.forVersionJson(spec.minecraftVersion()), "Provides the Minecraft Launcher Version Metadata from the global Minecraft File Cache")));
-        doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> result.put(GameArtifact.CLIENT_JAR, CommonRuntimeUtils.createFileCacheEntryProvidingTask(spec, "downloadClient", "client.jar", minecraftCacheFile, ICacheFileSelector.forVersionJar(spec.minecraftVersion(), "client"), "Provides the Minecraft Client Jar from the global Minecraft File Cache")));
-        doWhenRequired(GameArtifact.SERVER_JAR, side, () -> result.put(GameArtifact.SERVER_JAR, CommonRuntimeUtils.createFileCacheEntryProvidingTask(spec, "downloadServer", "server.jar", minecraftCacheFile, ICacheFileSelector.forVersionJar(spec.minecraftVersion(), "server"), "Provides the Minecraft Server Jar from the global Minecraft File Cache")));
-        doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, CommonRuntimeUtils.createFileCacheEntryProvidingTask(spec, "downloadClientMappings", "client_mappings.txt", minecraftCacheFile, ICacheFileSelector.forVersionMappings(spec.minecraftVersion(), "client"), "Provides the Minecraft Client Mappings from the global Minecraft File Cache")));
-        doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> result.put(GameArtifact.SERVER_MAPPINGS, CommonRuntimeUtils.createFileCacheEntryProvidingTask(spec, "downloadServerMappings", "server_mappings.txt", minecraftCacheFile, ICacheFileSelector.forVersionMappings(spec.minecraftVersion(), "server"), "Provides the Minecraft Server Mappings from the global Minecraft File Cache")));
-
-        result.forEach(((artifact, taskProvider) -> taskProvider.configure(task -> configureGameArtifactProvidingTaskWithDefaults(spec, runtimeWorkingDirectory, Collections.emptyMap(), task, artifact))));
-
-        return result;
+    protected static Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> buildDefaultArtifactProviderTasks(final CommonRuntimeSpec spec, final File runtimeWorkingDirectory) {
+        final MinecraftArtifactCacheExtension artifactCache = spec.configureProject().getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        return artifactCache.cacheGameVersionTasks(spec.project(), new File(runtimeWorkingDirectory, "cache"), spec.minecraftVersion(), spec.side());
     }
 
     public Project getProject() {
@@ -141,5 +139,21 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpec, B exte
 
     public final void bakeDefinitions() {
         this.runtimes.values().forEach(this::bakeDefinition);
+    }
+
+    @NotNull
+    public Set<D> findIn(final Configuration configuration) {
+        final Set<D> directDependency = configuration.getAllDependencies().
+                stream().flatMap(dep -> getRuntimes().get().values().stream().filter(runtime -> runtime.replacedDependency().equals(dep)))
+                .collect(Collectors.toSet());
+
+        if (directDependency.isEmpty())
+            return directDependency;
+
+        return project.getConfigurations().stream()
+                .filter(config -> config.getHierarchy().contains(configuration))
+                .flatMap(config -> config.getAllDependencies().stream())
+                .flatMap(dep -> getRuntimes().get().values().stream().filter(runtime -> runtime.replacedDependency().equals(dep)))
+                .collect(Collectors.toSet());
     }
 }

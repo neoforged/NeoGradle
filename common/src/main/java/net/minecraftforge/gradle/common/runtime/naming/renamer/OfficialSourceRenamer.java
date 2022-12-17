@@ -16,7 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  * USA
- */
+ *//*
+
 
 package net.minecraftforge.gradle.common.runtime.naming.renamer;
 
@@ -29,35 +30,34 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class IntermediaryMappingsFilteredOfficialSourceRenamer extends RegexBasedSourceRenamer {
+public class OfficialSourceRenamer extends RegexBasedSourceRenamer {
 
     private final Map<String, String> names;
     private final Map<String, String> docs;
 
-    private IntermediaryMappingsFilteredOfficialSourceRenamer(Map<String, String> names, Map<String, String> docs) {
+    private OfficialSourceRenamer(Map<String, String> names, Map<String, String> docs) {
         this.names = names;
         this.docs = docs;
     }
 
-    public static IntermediaryMappingsFilteredOfficialSourceRenamer from(File clientFile, final File serverFile, final File intermediaryMappingsFilterFile) throws IOException {
+    public static OfficialSourceRenamer from(File clientFile, final File serverFile) throws IOException {
         Map<String, String> names = new ConcurrentHashMap<>();
 
         IMappingFile pg_client = IMappingFile.load(clientFile);
         IMappingFile pg_server = IMappingFile.load(serverFile);
-        IMappingFile intermediaryFilterMappings = IMappingFile.load(intermediaryMappingsFilterFile);
 
         Map<String, String> cfields = new ConcurrentHashMap<>();
         Map<String, String> sfields = new ConcurrentHashMap<>();
         Map<String, String> cmethods = new ConcurrentHashMap<>();
         Map<String, String> smethods = new ConcurrentHashMap<>();
 
-        pg_client.getClasses().parallelStream().forEach(cls -> processClass(intermediaryFilterMappings, cfields, cmethods, cls));
-        pg_server.getClasses().parallelStream().forEach(cls -> processClass(intermediaryFilterMappings, sfields, smethods, cls));
+        pg_client.getClasses().parallelStream().forEach(cls -> processClass(cfields, cmethods, cls));
+        pg_server.getClasses().parallelStream().forEach(cls -> processClass(sfields, smethods, cls));
 
         cfields.keySet().parallelStream().forEach(name -> processName(names, cfields, sfields, name));
         cmethods.keySet().parallelStream().forEach(name -> processName(names, cmethods, smethods, name));
 
-        return new IntermediaryMappingsFilteredOfficialSourceRenamer(names, Collections.emptyMap());
+        return new OfficialSourceRenamer(names, Collections.emptyMap());
     }
 
     private static void processName(Map<String, String> names, Map<String, String> clientData, Map<String, String> serverData, String name) {
@@ -69,8 +69,8 @@ public class IntermediaryMappingsFilteredOfficialSourceRenamer extends RegexBase
         }
     }
 
-    private static void processClass(IMappingFile tsrgMappingData, Map<String, String> fields, Map<String, String> methods, IMappingFile.IClass classData) {
-        IMappingFile.IClass obf = tsrgMappingData.getClass(classData.getMapped());
+    IMappingFile intermediaryFilterMappings = IMappingFile.load(intermediaryMappingsFilterFile);
+    private static void processClass(Map<String, String> fields, Map<String, String> methods, IMappingFile.IClass classData) {
         if (obf == null) // Class exists in official source, but doesn't make it past obfusication so it's not in our mappings.
             return;
         for (IMappingFile.IField fld : classData.getFields()) {
@@ -97,3 +97,4 @@ public class IntermediaryMappingsFilteredOfficialSourceRenamer extends RegexBase
         return docs;
     }
 }
+*/

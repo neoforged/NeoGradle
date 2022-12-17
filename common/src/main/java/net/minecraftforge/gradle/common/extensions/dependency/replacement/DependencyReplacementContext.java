@@ -3,6 +3,8 @@ package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -10,12 +12,12 @@ import java.util.Objects;
 public final class DependencyReplacementContext {
         private final @NotNull Project project;
         private final @NotNull Configuration configuration;
-        private final @NotNull Dependency dependency;
+        private final @NotNull ModuleDependency dependency;
 
         public DependencyReplacementContext(
                 @NotNull Project project,
                 @NotNull Configuration configuration,
-                @NotNull Dependency dependency
+                @NotNull ModuleDependency dependency
         ) {
                 this.project = project;
                 this.configuration = configuration;
@@ -30,7 +32,7 @@ public final class DependencyReplacementContext {
                 return configuration;
         }
 
-        public @NotNull Dependency dependency() {
+        public @NotNull ModuleDependency dependency() {
                 return dependency;
         }
 

@@ -1,7 +1,9 @@
 package net.minecraftforge.gradle.common.repository;
 
+import net.minecraftforge.gradle.common.util.ResolvedDependencyUtils;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.ResolvedDependency;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -118,6 +120,14 @@ public final class IvyDummyRepositoryEntryDependency implements Serializable {
                 withClassifier(artifact.getClassifier());
                 withExtension(artifact.getExtension());
             }
+        }
+
+        public void from(ResolvedDependency externalModuleDependency) {
+            withGroup(externalModuleDependency.getModuleGroup());
+            withName(externalModuleDependency.getModuleName());
+            withVersion(externalModuleDependency.getModuleVersion());
+            withExtension(ResolvedDependencyUtils.getExtension(externalModuleDependency));
+            withClassifier(ResolvedDependencyUtils.getClassifier(externalModuleDependency));
         }
 
         public Builder but() {
