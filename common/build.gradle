@@ -4,11 +4,18 @@ plugins {
     id 'java-gradle-plugin'
 }
 
+sourceSets {
+    transform {}
+}
 
 gradlePlugin.testSourceSets(sourceSets.test)
 
 dependencies {
+    api 'org.codehaus.groovy:groovy-all:3.0.13'
+    transformImplementation 'org.codehaus.groovy:groovy-all:3.0.13'
+    api 'org.codehaus.groovy:groovy-all:3.0.13'
     api gradleApi()
+    transformImplementation gradleApi()
 
     api "commons-io:commons-io:${project.commons_io_version}"
     api "com.google.code.gson:gson:${project.gson_version}"
@@ -29,6 +36,9 @@ dependencies {
 
     // IDE support
     api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
+
+    api sourceSets.transform.output
+    compileOnly sourceSets.transform.output
 
     testImplementation gradleTestKit()
     testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
