@@ -2,6 +2,8 @@
 package net.minecraftforge.gradle.dsl.generator.transform
 
 import groovy.transform.*
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 import net.minecraftforge.gradle.dsl.generator.transform.property.*
 import net.minecraftforge.gradle.dsl.generator.transform.property.files.DirectoryPropertyHandler
 import net.minecraftforge.gradle.dsl.generator.transform.property.files.FileCollectionPropertyHandler
@@ -27,6 +29,7 @@ import java.util.stream.Stream
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 class DSLPropertyTransformer extends AbstractASTTransformation {
     private static final ClassNode DELEGATES_TO_TYPE = ClassHelper.make(DelegatesTo)
+    private static final ClassNode CLOSURE_PARAMS_TYPE = ClassHelper.make(ClosureParams)
     private static final ClassNode CONFIGURABLE_TYPE = ClassHelper.make(Configurable)
 
     public static final ClassNode RAW_GENERIC_CLOSURE = GenericsUtils.makeClassSafe(Closure)
@@ -155,6 +158,10 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
                 it.addAnnotation(new AnnotationNode(DELEGATES_TO_TYPE).tap {
                     it.addMember('value', GeneralUtils.classX(type))
                     it.addMember('strategy', GeneralUtils.constX(Closure.DELEGATE_FIRST))
+                })
+                it.addAnnotation(new AnnotationNode(CLOSURE_PARAMS_TYPE).tap {
+                    it.addMember('value', GeneralUtils.classX(SimpleType))
+                    it.addMember('options', GeneralUtils.constX(type.name.replace('$', '.')))
                 })
             }
         }

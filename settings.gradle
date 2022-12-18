@@ -23,3 +23,5 @@ include 'userdev'
 project(':dsl-generator').projectDir = new File(rootDir, 'dsl/generator')
 project(':dsl-annotations').projectDir = new File(rootDir, 'dsl/annotations')
 project(':dsl-specification').projectDir = new File(rootDir, 'dsl/specification')
+
+// include 'dsl-test'; project(':dsl-test').projectDir = new File(rootDir, 'dsl/test')
