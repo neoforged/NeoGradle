@@ -2,6 +2,11 @@ package net.minecraftforge.gradle.common
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.common.transform.DSLProperty
+import net.minecraftforge.gradle.common.transform.ProjectGetter
+import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -52,4 +57,17 @@ interface MapPropertyTest {
 
     @Inject
     abstract ObjectFactory getFactory()
+}
+
+@CompileStatic
+interface FileTests {
+    @ProjectGetter
+    abstract Project getProject()
+
+    @DSLProperty
+    abstract RegularFileProperty getOutput()
+    @DSLProperty
+    abstract ConfigurableFileCollection getInputs()
+    @DSLProperty
+    abstract DirectoryProperty getDirectoryInput()
 }
