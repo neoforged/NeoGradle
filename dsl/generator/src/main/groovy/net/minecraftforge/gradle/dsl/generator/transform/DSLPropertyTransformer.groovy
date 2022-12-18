@@ -198,6 +198,11 @@ interface PropertyQuery {
         Expression setter(MethodNode getterMethod, Expression args) {
             return GeneralUtils.callX(GeneralUtils.callThisX(getterMethod.name), 'set', args)
         }
+
+        @Override
+        Expression getOrElse(MethodNode node, Expression orElse) {
+            return GeneralUtils.callX(GeneralUtils.callThisX(node.name), 'getOrElse', orElse)
+        }
     }
 
     PropertyQuery GETTER = new PropertyQuery() {
@@ -210,10 +215,19 @@ interface PropertyQuery {
         Expression setter(MethodNode node, Expression args) {
             return null
         }
+
+        @Override
+        Expression getOrElse(MethodNode node, Expression orElse) {
+            final getter = getter(node)
+            return GeneralUtils.ternaryX(GeneralUtils.isNullX(getter), orElse, getter)
+        }
     }
 
     Expression getter(MethodNode getterMethod)
 
     @Nullable
     Expression setter(MethodNode node, Expression args)
+
+    @Nullable
+    Expression getOrElse(MethodNode node, Expression orElse)
 }

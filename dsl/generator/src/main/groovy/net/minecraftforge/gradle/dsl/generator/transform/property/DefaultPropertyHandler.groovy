@@ -32,8 +32,10 @@ class DefaultPropertyHandler implements PropertyHandler, Opcodes {
         final createDefaultMethod = utils.factory(type, annotation, propertyName)
 
         if (createDefaultMethod !== null) {
-            propertyGetExpr = GeneralUtils.ternaryX(GeneralUtils.isNullX(propertyGetExpr), GeneralUtils.callThisX(createDefaultMethod.name), propertyGetExpr)
+            propertyGetExpr = query.getOrElse(methodNode, GeneralUtils.callThisX(createDefaultMethod.name))
         }
+
+        final delegationStrategy = new DSLPropertyTransformer.OverloadDelegationStrategy(0, propertyGetExpr)
 
         utils.createAndAddMethod(
                 methodName: propertyName,
@@ -51,30 +53,37 @@ class DefaultPropertyHandler implements PropertyHandler, Opcodes {
             utils.createAndAddMethod(
                     methodName: propertyName,
                     modifiers: ACC_PUBLIC,
-                    parameters: [new Parameter(
+                    parameters: [new Parameter(type, 'val'), new Parameter(
                             actionClazzType,
                             'action'
                     )],
-                    code: GeneralUtils.stmt(GeneralUtils.callX(
-                            GeneralUtils.varX('action', actionClazzType),
-                            'execute',
-                            GeneralUtils.args(query.getter(methodNode))
-                    ))
+                    codeExpr: {
+                        final valVar = GeneralUtils.localVarX('val', type)
+                        [
+                                GeneralUtils.callX(
+                                        GeneralUtils.varX('action', actionClazzType),
+                                        'execute',
+                                        valVar
+                                ),
+                                GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'set', valVar)
+                        ]
+                    }(),
+                    delegationStrategies: { [delegationStrategy] }
             )
 
             utils.createAndAddMethod(
                     methodName: propertyName,
                     modifiers: ACC_PUBLIC,
-                    parameters: [utils.closureParam(type)],
+                    parameters: [new Parameter(type, 'val'), utils.closureParam(type)],
                     codeExpr: {
                         final List<Expression> expr = []
                         final closure = GeneralUtils.varX('closure', DSLPropertyTransformer.RAW_GENERIC_CLOSURE)
                         final valVar = GeneralUtils.localVarX('val', type)
-                        expr.add(GeneralUtils.declX(valVar, propertyGetExpr))
                         expr.addAll(utils.delegateAndCall(closure, valVar))
                         query.setter(methodNode, valVar)?.tap { expr.add(it) }
                         return expr
-                    }()
+                    }(),
+                    delegationStrategies: { [delegationStrategy] }
             )
         }
     }

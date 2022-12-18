@@ -9,10 +9,9 @@ import org.codehaus.groovy.ast.tools.GenericsUtils
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
-@CompileStatic
+@CompileStatic // TODO - Support create(String, V)
 class NamedDomainObjectContainerHandler implements PropertyHandler, Opcodes {
     private static final ClassNode MAP_PROPERTY_TYPE = ClassHelper.make(NamedDomainObjectContainer)
-    private static final ClassNode UTILS_CLASS = ClassHelper.make('net.minecraftforge.gradle.common.util')
 
     @Override
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {

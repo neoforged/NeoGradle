@@ -24,7 +24,7 @@ interface TestExtension {
     @DSLProperty(factory = { getFactory().newInstance(DSLYesImpl) })
     abstract ListProperty<DSLYes> getYeses()
 
-    @DSLProperty(factory = { new HelloWorld() })
+    @DSLProperty(factory = { new HelloWorld() }, isConfigurable = true)
     abstract Property<HelloWorld> getHelloWorld()
 
     @DSLProperty(factory = { new ListObject() })
