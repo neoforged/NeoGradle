@@ -42,14 +42,13 @@ public abstract class DownloadMavenArtifact extends DownloadingTask {
         this.artifact = getProject().getObjects().property(Artifact.class);
         this.changing = getProject().getObjects().property(Boolean.class);
 
-        getChanging().convention(false);
         getOutput().convention(getProject().getLayout().getBuildDirectory().dir(getName())
                         .zip(getArtifact(), (d, a) -> d.file("output." + a.getExtension())));
     }
 
     @Internal
     public Provider<String> getResolvedVersion() {
-        return getArtifact().flatMap(a -> getDownloader().flatMap(d -> d.getVersion(a.getDescriptor())));
+        return getArtifact().flatMap(a -> getDownloader().flatMap(d -> d.version(a.getDescriptor())));
     }
 
     @Input
@@ -61,17 +60,12 @@ public abstract class DownloadMavenArtifact extends DownloadingTask {
         getArtifact().set(Artifact.from(value));
     }
 
-    @Input
-    public Property<Boolean> getChanging() {
-        return changing;
-    }
-
     @OutputFile
     public abstract RegularFileProperty getOutput();
 
     @TaskAction
     public void run() throws IOException {
-        final Provider<File> downloadedArtifact = getDownloader().flatMap(d -> getArtifact().flatMap(a -> getChanging().flatMap(c -> d.download(a.getDescriptor(), c))));
+        final Provider<File> downloadedArtifact = getDownloader().flatMap(d -> getArtifact().flatMap(a -> d.file(a.getDescriptor())));
         setDidWork(downloadedArtifact.isPresent() && downloadedArtifact.get().exists());
 
         File output = getOutput().get().getAsFile();

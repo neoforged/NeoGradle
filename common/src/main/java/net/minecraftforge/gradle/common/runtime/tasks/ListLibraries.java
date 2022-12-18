@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
-import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
@@ -50,7 +49,7 @@ public abstract class ListLibraries extends Runtime {
             Set<File> libraries = new HashSet<>();
             for (String artifact : artifacts) {
                 final ArtifactDownloaderExtension downloader = getDownloader().get();
-                File lib = downloader.gradle(artifact, false).get();
+                File lib = downloader.file(artifact, false).get();
                 libraries.add(lib);
             }
 

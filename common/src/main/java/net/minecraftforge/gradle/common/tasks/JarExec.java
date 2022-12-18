@@ -20,10 +20,10 @@
 
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import org.codehaus.groovy.control.io.NullWriter;
 import org.gradle.api.Action;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
@@ -32,15 +32,25 @@ import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -56,9 +66,6 @@ import java.util.Objects;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
 
 /**
  * Executes the tool JAR.
@@ -77,8 +84,8 @@ public abstract class JarExec extends DownloadingTask {
     protected final Provider<RegularFile> logFile = workDir.map(d -> d.file("log.txt"));
 
     public JarExec() {
-        toolFile = getTool().flatMap(toolStr -> getDownloader().flatMap(downloader -> downloader.gradle(toolStr, false)));
-        resolvedVersion = getTool().flatMap(toolStr -> getDownloader().flatMap(downloader -> downloader.getVersion(toolStr)));
+        toolFile = getTool().flatMap(toolStr -> getDownloader().flatMap(downloader -> downloader.file(toolStr)));
+        resolvedVersion = getTool().flatMap(toolStr -> getDownloader().flatMap(downloader -> downloader.version(toolStr)));
 
         getDebug().convention(false);
 

@@ -1,8 +1,6 @@
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
-import org.gradle.api.file.Directory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -10,7 +8,6 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
@@ -42,7 +39,7 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements I
                 f -> new JarFile(f.getAsFile())
         )));
 
-        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.gradle(artifact, false))));
+        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact, false))));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
 
