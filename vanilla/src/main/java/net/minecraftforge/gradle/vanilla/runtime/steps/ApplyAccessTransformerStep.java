@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
-import net.minecraftforge.gradle.common.extensions.FilesWithEntriesExtension;
+import net.minecraftforge.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
@@ -23,7 +23,7 @@ public class ApplyAccessTransformerStep implements IStep {
     public TaskProvider<? extends IRuntimeTask> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends ITaskWithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull Map<String, TaskProvider<? extends ITaskWithOutput>> pipelineTasks, @NotNull Map<GameArtifact, File> gameArtifacts, @NotNull Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends IRuntimeTask>> additionalTaskConfigurator) {
         final VanillaRuntimeExtension vanillaRuntimeExtension = definition.spec().configureProject().getExtensions().getByType(VanillaRuntimeExtension.class);
         final MinecraftExtension minecraftExtension = definition.spec().configureProject().getExtensions().getByType(MinecraftExtension.class);
-        final FilesWithEntriesExtension accessTransformers = minecraftExtension.getAccessTransformers();
+        final BaseFilesWithEntriesExtension accessTransformers = minecraftExtension.getAccessTransformers();
 
         return definition.spec().project().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, String.format("apply%sAccessTransformer", Utils.capitalize(definition.spec().name()))), AccessTransformer.class, task -> {
             task.getAdditionalTransformers().addAll(accessTransformers.getEntries());

@@ -20,11 +20,10 @@
 
 package net.minecraftforge.gradle.common.extensions;
 
-import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
+import net.minecraftforge.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
-import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 
@@ -33,13 +32,13 @@ import javax.inject.Inject;
 public abstract class MinecraftExtension extends GroovyObjectSupport implements IConfigurableObject<MinecraftExtension> {
 
     private final Project project;
-    private final FilesWithEntriesExtension accessTransformers;
+    private final BaseFilesWithEntriesExtension accessTransformers;
     private final NamedDomainObjectContainer<NamingChannelProvider> namingChannelProviders;
 
     @Inject
     public MinecraftExtension(final Project project) {
         this.project = project;
-        this.accessTransformers = project.getObjects().newInstance(FilesWithEntriesExtension.class, project);
+        this.accessTransformers = project.getObjects().newInstance(BaseFilesWithEntriesExtension.class, project);
         this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannelProvider.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
     }
 
@@ -55,7 +54,7 @@ public abstract class MinecraftExtension extends GroovyObjectSupport implements 
         return project.getExtensions().getByType(MappingsExtension.class);
     }
 
-    public FilesWithEntriesExtension getAccessTransformers() {
+    public BaseFilesWithEntriesExtension getAccessTransformers() {
         return this.accessTransformers;
     }
 }

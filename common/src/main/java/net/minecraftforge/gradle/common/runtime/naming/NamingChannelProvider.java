@@ -25,10 +25,8 @@ import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.common.util.NamingConstants;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**

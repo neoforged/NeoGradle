@@ -8,5 +8,6 @@ dependencies {
     api gradleApi()
 
     compileOnly project(':dsl-annotations')
+    compileOnly project(':dsl-base')
     compileOnly project(':dsl-generator')
 }

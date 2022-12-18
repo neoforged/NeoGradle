@@ -1,0 +1,10 @@
+plugins {
+    id 'groovy'
+}
+
+dependencies {
+    api gradleApi()
+    api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
+
+    api project(':dsl-annotations')
+}

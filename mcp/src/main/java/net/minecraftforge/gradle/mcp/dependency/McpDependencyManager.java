@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
-import net.minecraftforge.gradle.common.extensions.FilesWithEntriesExtension;
+import net.minecraftforge.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementResult;
@@ -109,7 +109,7 @@ public final class McpDependencyManager {
 
     private static TaskTreeAdapter createAccessTransformerAdapter(final Project project) {
         final MinecraftExtension minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
-        final FilesWithEntriesExtension accessTransformerFiles = minecraftExtension.getAccessTransformers();
+        final BaseFilesWithEntriesExtension accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
         return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
             final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "User", new ArrayList<>(accessTransformerFiles.getFiles().getFiles()), accessTransformerFiles.getEntries().get());

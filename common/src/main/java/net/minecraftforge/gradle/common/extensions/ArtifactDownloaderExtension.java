@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.extensions;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
-import net.minecraftforge.gradle.dsl.common.extensions.IArtifactDownloaderExtensionDSL;
+import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -14,7 +14,7 @@ import java.io.File;
  * Extension which handles multiple downloads of artifacts, including generating them if needed.
  * This is based of the MavenArtifactDownloader in FG5 but is now project specific.
  */
-public abstract class ArtifactDownloaderExtension implements IArtifactDownloaderExtensionDSL {
+public abstract class ArtifactDownloaderExtension implements ArtifactDownloader {
 
     private final Project project;
 

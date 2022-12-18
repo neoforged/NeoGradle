@@ -10,7 +10,6 @@ import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskProvider;

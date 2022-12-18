@@ -44,6 +44,8 @@ subprojects { Project subproject ->
         repository.url = 'https://repo.spongepowered.org/repository/maven-public/'
     }
 
+    subproject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
+
     subproject.gradlePlugin.automatedPublishing = true
 
     subproject.publishing.publications {
