@@ -13,5 +13,7 @@ import java.lang.annotation.Target
 @interface DSLProperty {
     String propertyName() default ''
 
-    Class<Closure<?>> factory() default Closure.class
+    Class<Closure> factory() default Closure.class
+
+    boolean isConfigurable() default true
 }
