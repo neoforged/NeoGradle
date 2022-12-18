@@ -9,6 +9,8 @@ gradlePlugin.testSourceSets(sourceSets.test)
 dependencies {
     api gradleApi()
 
+    api project(':dsl-specification-common')
+
     api "commons-io:commons-io:${project.commons_io_version}"
     api "com.google.code.gson:gson:${project.gson_version}"
     api "com.google.guava:guava:${project.guava_version}"

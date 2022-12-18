@@ -7,18 +7,9 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @CacheableTask
 public abstract class Execute extends Runtime implements IExecuteTask {
@@ -37,7 +28,7 @@ public abstract class Execute extends Runtime implements IExecuteTask {
                 f -> new JarFile(f.getAsFile())
         )));
 
-        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.gradle(artifact, false))));
+        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact, false))));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
     }

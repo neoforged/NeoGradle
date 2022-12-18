@@ -28,7 +28,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
 
-        project.getExtensions().create("artifactProviders", ArtifactProviderExtension.class, project);
         project.getExtensions().create("downloader", ArtifactDownloaderExtension.class, project);
         project.getExtensions().create("ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
         project.getExtensions().create("minecraftCache", MinecraftArtifactCacheExtension.class, project);
