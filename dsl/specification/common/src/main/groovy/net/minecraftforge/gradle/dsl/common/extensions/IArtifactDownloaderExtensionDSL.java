@@ -9,8 +9,10 @@ import java.io.File;
 /**
  * Interface which defines the DSL for an artifact downloader.
  * Classes that implement this interface ad here to the FG DSL for downloading different files and version information through gradle.
+ *
+ * @apiNote Classes that implement this should never store state in the class itself and as such should never be configurable.
  */
-@NotConfigurableForDSL
+@NotConfigurableForDSL(reason = "Classes which implement this should never store state and as such are not configurable.")
 public interface IArtifactDownloaderExtensionDSL {
 
     /**
