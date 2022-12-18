@@ -1,7 +1,8 @@
 //file:noinspection GrDeprecatedAPIUsage
 package net.minecraftforge.gradle.dsl.base.util
 
-
+import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
 import org.gradle.api.Action
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.util.Configurable
@@ -14,6 +15,8 @@ import java.util.function.Consumer
  * Defines an object which supports configuration using different systems available in Gradle.
  * @param <T> The type of the object, needs to be the target type.
  */
+@CompileStatic
+@DefaultMethods
 interface ConfigurableDSLElement<T extends ConfigurableDSLElement<T>> extends Configurable<T>, ExtensionAware {
 
     /**
