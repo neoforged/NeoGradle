@@ -2,7 +2,6 @@ package net.minecraftforge.gradle.dsl.generator.transform.property.files
 
 import groovy.transform.CompileStatic
 import groovyjarjarasm.asm.Opcodes
-import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
 import net.minecraftforge.gradle.dsl.generator.transform.DSLPropertyTransformer
 import net.minecraftforge.gradle.dsl.generator.transform.property.PropertyHandler
 import org.codehaus.groovy.ast.*
@@ -15,15 +14,12 @@ class DirectoryPropertyHandler implements PropertyHandler, Opcodes {
     private static final ClassNode TYPE = ClassHelper.make(DirectoryProperty)
     private static final ClassNode FILE_TYPE = ClassHelper.make(File)
     private static final ClassNode DIR_TYPE = ClassHelper.make(Directory)
-    private static final ClassNode PROJECT_GETTER_TYPE = ClassHelper.make(ProjectGetter)
 
     @Override
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
         if (!GeneralUtils.isOrImplements(methodNode.returnType, TYPE)) return false
 
-        final projectGetter = methodNode.declaringClass.methods.find {
-            it.annotations.any { it.classNode == PROJECT_GETTER_TYPE }
-        }
+        final projectGetter = FilePropertyHandler.findProjectGetter(methodNode)
         if (projectGetter === null) {
             utils.addError('Please provide a project getter for DirectoryProperties!', methodNode)
             return true

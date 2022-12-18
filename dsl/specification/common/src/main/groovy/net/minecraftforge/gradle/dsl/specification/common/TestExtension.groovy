@@ -64,14 +64,17 @@ interface MapPropertyTest {
 }
 
 @CompileStatic
-interface FileTests {
-    @ProjectGetter
-    abstract Project getProject()
-
+interface FileTests extends _BaseProjectAccessor {
     @DSLProperty
     abstract RegularFileProperty getOutput()
     @DSLProperty
     abstract ConfigurableFileCollection getInputs()
     @DSLProperty
     abstract DirectoryProperty getDirectoryInput()
+}
+
+@CompileStatic
+interface _BaseProjectAccessor {
+    @ProjectGetter
+    abstract Project getProject()
 }

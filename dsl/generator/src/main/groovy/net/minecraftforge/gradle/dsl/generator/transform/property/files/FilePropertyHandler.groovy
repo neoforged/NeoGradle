@@ -21,9 +21,7 @@ class FilePropertyHandler implements PropertyHandler, Opcodes {
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
         if (!GeneralUtils.isOrImplements(methodNode.returnType, TYPE)) return false
 
-        final projectGetter = methodNode.declaringClass.methods.find {
-            it.annotations.any { it.classNode == PROJECT_GETTER_TYPE }
-        }
+        final projectGetter = findProjectGetter(methodNode)
         if (projectGetter === null) {
             utils.addError('Please provide a project getter for RegularFileProperties!', methodNode)
             return true
@@ -67,5 +65,19 @@ class FilePropertyHandler implements PropertyHandler, Opcodes {
         )
 
         return true
+    }
+
+    static MethodNode findProjectGetter(MethodNode node, ClassNode clazz = node.declaringClass) {
+        MethodNode found = GeneralUtils.getAllMethods(clazz).find {
+            it.annotations.any { it.classNode == PROJECT_GETTER_TYPE }
+        }
+        if (found !== null) return found
+
+        for (final interfacE : node.declaringClass.interfaces) {
+            final res = findProjectGetter(node, interfacE)
+            if (res !== null) return res
+        }
+
+        return null
     }
 }
