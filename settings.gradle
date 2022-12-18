@@ -7,6 +7,9 @@ pluginManagement {
 
 rootProject.name = 'ForgeGradle'
 
+include 'dsl-generator'
+include 'dsl-annotations'
+include 'dsl-specification'
 include 'base-testing'
 include 'common'
 include 'vanilla'
@@ -16,3 +19,7 @@ include 'runs'
 //include 'patcher'
 include 'userdev-configurations'
 include 'userdev'
+
+project(':dsl-generator').projectDir = new File(rootDir, 'dsl/generator')
+project(':dsl-annotations').projectDir = new File(rootDir, 'dsl/annotations')
+project(':dsl-specification').projectDir = new File(rootDir, 'dsl/specification')

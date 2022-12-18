@@ -8,7 +8,7 @@ dependencies {
     api "com.google.guava:guava:${project.guava_version}"
     api "org.junit.jupiter:junit-jupiter:${project.junit_version}"
 
-    api ("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") {
+    api ("org.spockframework:spock-core:${project.spock_version}-groovy-${project.spock_groovy_version}") {
         exclude group: 'org.codehaus.groovy'
     }
 }
