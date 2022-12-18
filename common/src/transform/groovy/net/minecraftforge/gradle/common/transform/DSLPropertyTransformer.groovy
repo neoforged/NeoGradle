@@ -7,6 +7,7 @@ import groovy.transform.NamedParam
 import groovy.transform.NamedVariant
 import groovy.transform.TupleConstructor
 import net.minecraftforge.gradle.common.transform.property.DefaultPropertyHandler
+import net.minecraftforge.gradle.common.transform.property.NamedDomainObjectContainerHandler
 import net.minecraftforge.gradle.common.transform.property.files.DirectoryPropertyHandler
 import net.minecraftforge.gradle.common.transform.property.files.FileCollectionPropertyHandler
 import net.minecraftforge.gradle.common.transform.property.ListPropertyHandler
@@ -43,12 +44,21 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
             new FileCollectionPropertyHandler(),
             new FilePropertyHandler(),
             new DirectoryPropertyHandler(),
+            new NamedDomainObjectContainerHandler(),
             new DefaultPropertyHandler(),
     ] as List<PropertyHandler>
 
-    private static final List<ClassNode> NON_CONFIGURABLE_TYPES = [
-            ClassHelper.STRING_TYPE
-    ]
+    private static final Set<ClassNode> NON_CONFIGURABLE_TYPES = new HashSet<>([
+            ClassHelper.STRING_TYPE,
+            ClassHelper.int_TYPE, ClassHelper.Integer_TYPE,
+            ClassHelper.byte_TYPE, ClassHelper.Byte_TYPE,
+            ClassHelper.short_TYPE, ClassHelper.Short_TYPE,
+            ClassHelper.long_TYPE, ClassHelper.Long_TYPE,
+            ClassHelper.char_TYPE, ClassHelper.Character_TYPE,
+            ClassHelper.boolean_TYPE, ClassHelper.Boolean_TYPE,
+            ClassHelper.float_TYPE, ClassHelper.Float_TYPE,
+            ClassHelper.double_TYPE, ClassHelper.Double_TYPE,
+    ])
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {

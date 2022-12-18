@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.common
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.common.transform.DSLProperty
 import net.minecraftforge.gradle.common.transform.ProjectGetter
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -57,6 +58,9 @@ interface MapPropertyTest {
 
     @Inject
     abstract ObjectFactory getFactory()
+
+    @DSLProperty
+    abstract NamedDomainObjectContainer<TestExtension.HelloWorld> getNamedStuff()
 }
 
 @CompileStatic
