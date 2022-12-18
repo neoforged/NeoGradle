@@ -9,7 +9,7 @@ rootProject.name = 'ForgeGradle'
 
 include 'dsl-generator'
 include 'dsl-annotations'
-include 'dsl-specification'
+include 'dsl-specification-common'
 include 'base-testing'
 include 'common'
 include 'vanilla'
@@ -22,6 +22,6 @@ include 'userdev'
 
 project(':dsl-generator').projectDir = new File(rootDir, 'dsl/generator')
 project(':dsl-annotations').projectDir = new File(rootDir, 'dsl/annotations')
-project(':dsl-specification').projectDir = new File(rootDir, 'dsl/specification')
+project(':dsl-specification-common').projectDir = new File(rootDir, 'dsl/specification/common')
 
 // include 'dsl-test'; project(':dsl-test').projectDir = new File(rootDir, 'dsl/test')
