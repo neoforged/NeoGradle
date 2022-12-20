@@ -2,6 +2,7 @@
 package net.minecraftforge.gradle.dsl.base.util
 
 import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.annotations.BouncerMethod
 import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
 import org.gradle.api.Action
 import org.gradle.api.plugins.ExtensionAware
@@ -34,9 +35,10 @@ interface ConfigurableDSLElement<T extends ConfigurableDSLElement<T>> extends Co
      * @param closure The closure used to configure the target.
      * @return This object.
      */
-    @SuppressWarnings("deprecation") //Use internal variant if ever removed.
-    @Override
     @NotNull
+    @Override
+    @SuppressWarnings("deprecation") //Use internal variant if ever removed.
+    @BouncerMethod(returnType = Object.class)
     default T configure(Closure closure) {
         return ConfigureUtil.configureSelf(closure, getThis());
     }

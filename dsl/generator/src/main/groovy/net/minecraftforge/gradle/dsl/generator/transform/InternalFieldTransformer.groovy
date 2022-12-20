@@ -31,7 +31,6 @@ class InternalFieldTransformer extends AbstractASTTransformation implements Opco
         if (clazz instanceof InnerClassNode && clazz.name.endsWith('Trait$Helper')) {
             clazz = ((InnerClassNode) clazz).outerClass
         }
-        println "Screm: $clazz.name"
         getMemberStringList((AnnotationNode) astNodes[0], 'fields').each {
             clazz.getGetterMethod('get' + it.capitalize())?.addAnnotation(new AnnotationNode(INTERNAL_TYPE))
         }
