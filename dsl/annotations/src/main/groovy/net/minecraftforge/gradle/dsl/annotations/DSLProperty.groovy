@@ -1,21 +1,14 @@
 package net.minecraftforge.gradle.dsl.annotations
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
-import java.lang.annotation.Documented
-import java.lang.annotation.ElementType
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
-import java.lang.annotation.Target
-
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.file.Directory
-import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Project
+import org.gradle.api.file.*
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.SetProperty
+
+import java.lang.annotation.*
 
 /**
  * Annotate an <strong>abstract method of a groovy interface</strong> in order to generate DSL methods for the property. <br>
@@ -38,7 +31,7 @@ import org.gradle.api.Action
  *          </th>
  *     </tr>
  *     <tr>
- *          <th>{@link org.gradle.api.provider.ListProperty}</th>
+ *          <th>any {@link org.gradle.api.provider.HasMultipleValues} ({@link ListProperty}, {@link SetProperty})</th>
  *          <th>
  *              <ul>
  *                  <li>{@code $propertyName(T)} - the given value will be added to the list</li>
