@@ -1,5 +1,7 @@
-package net.minecraftforge.gradle.dsl.common.tasks;
+package net.minecraftforge.gradle.dsl.common.tasks
 
+import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.annotations.DefaultMethods;
 import org.gradle.api.Task;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
@@ -13,7 +15,9 @@ import java.io.File;
  *
  * This interface provides methods for working with this workspace.
  */
-public interface WithWorkspace extends Task {
+@CompileStatic
+@DefaultMethods
+trait WithWorkspace implements Task {
 
     /**
      * Ensures the workspace is ready for the file and realises the given property and regular file.

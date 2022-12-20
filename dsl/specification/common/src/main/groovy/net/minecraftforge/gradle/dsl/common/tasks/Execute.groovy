@@ -1,6 +1,9 @@
 package net.minecraftforge.gradle.dsl.common.tasks
 
+import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
+import net.minecraftforge.gradle.dsl.annotations.InternalFields
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -8,6 +11,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
+import org.gradle.process.JavaExecSpec
 
 import java.util.function.Function
 import java.util.regex.Matcher
@@ -18,6 +22,9 @@ import java.util.stream.Collectors
  * Defines a task which can execute any java command.
  * Has a workspace, output and a java version associated.
  */
+@CompileStatic
+@DefaultMethods
+@InternalFields(fields = 'REPLACE_PATTERN')
 interface Execute extends WithWorkspace, WithOutput, WithJavaVersion {
 
     Pattern REPLACE_PATTERN = Pattern.compile('^\\{(\\w+)}$');
@@ -38,15 +45,17 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion {
         final Provider<String> mainClass = getMainClass();
         final Provider<String> executable = getExecutablePath();
 
+        final Execute me = this
+
         try (BufferedOutputStream log_out = new BufferedOutputStream(new FileOutputStream(consoleLogFile))) {
-            getProject().javaexec(java -> {
+            getProject().javaexec({ JavaExecSpec java ->
                 PrintWriter writer = new PrintWriter(log_out);
-                Function<String, String> quote = s -> '"' + s + '"';
+                Function<String, CharSequence> quote = s -> (CharSequence)('"' + s + '"');
                 writer.println("JVM Args:          " + jvmArgs.get().stream().map(quote).collect(Collectors.joining(", ")));
                 writer.println("Run Args:          " + programArgs.get().stream().map(quote).collect(Collectors.joining(", ")));
                 writer.println("JVM:               " + executable.get());
-                writer.println("Classpath:         " + getExecutingJar().get().getAsFile().getAbsolutePath());
-                writer.println("Working Dir:       " + getOutputDirectory().get().getAsFile().getAbsolutePath());
+                writer.println("Classpath:         " + me.getExecutingJar().get().getAsFile().getAbsolutePath());
+                writer.println("Working Dir:       " + me.getOutputDirectory().get().getAsFile().getAbsolutePath());
                 writer.println("Main Class:        " + mainClass.get());
                 writer.println("Program log file:  " + logFile.getAbsolutePath());
                 writer.println("Output file:       " + outputFile.getAbsolutePath());
@@ -55,8 +64,8 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion {
                 java.executable(executable.get());
                 java.setJvmArgs(jvmArgs.get());
                 java.setArgs(programArgs.get());
-                java.setClasspath(getProject().files(getExecutingJar().get()));
-                java.setWorkingDir(getOutputDirectory().get());
+                java.setClasspath(me.getProject().files(me.getExecutingJar().get()));
+                java.setWorkingDir(me.getOutputDirectory().get());
                 java.getMainClass().set(mainClass);
                 java.setStandardOutput(log_out);
             }).rethrowFailure().assertNormalExitValue();

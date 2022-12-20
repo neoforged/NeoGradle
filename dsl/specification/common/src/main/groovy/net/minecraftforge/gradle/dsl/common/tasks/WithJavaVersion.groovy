@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.tasks
 
+import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import org.gradle.api.Task
 import org.gradle.api.provider.Property
@@ -12,6 +13,7 @@ import org.gradle.jvm.toolchain.JavaLauncher
 /**
  * Defines a task with a java version property.
  */
+@CompileStatic
 interface WithJavaVersion extends Task {
 
     /**

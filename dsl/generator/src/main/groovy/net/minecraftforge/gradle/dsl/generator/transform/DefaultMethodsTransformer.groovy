@@ -13,7 +13,6 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.AbstractASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.codehaus.groovy.transform.sc.StaticCompileTransformation
-import org.codehaus.groovy.transform.sc.transformers.StaticCompilationTransformer
 
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -26,6 +25,7 @@ class DefaultMethodsTransformer extends AbstractASTTransformation implements Opc
     @Override
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
         this.init(astNodes, sourceUnit)
+        if (astNodes[1] !instanceof InnerClassNode) return
         final traitHelper = (InnerClassNode)astNodes[1]
         final clazz = traitHelper.outerClass
         new ArrayList<MethodNode>(clazz.methods).each {

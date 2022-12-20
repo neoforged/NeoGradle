@@ -15,7 +15,7 @@ import org.gradle.api.tasks.OutputFile;
  */
 @CompileStatic
 @DefaultMethods
-interface WithOutput extends Task, WithWorkspace {
+trait WithOutput implements Task, WithWorkspace {
 
     /**
      * The output file of this task as configured.
@@ -25,7 +25,7 @@ interface WithOutput extends Task, WithWorkspace {
      */
     @DSLProperty
     @OutputFile
-    RegularFileProperty getOutput();
+    abstract RegularFileProperty getOutput();
 
     /**
      * The name of the output file name for this step.
@@ -36,5 +36,5 @@ interface WithOutput extends Task, WithWorkspace {
     @Input
     @Optional
     @DSLProperty
-    Property<String> getOutputFileName();
+    abstract Property<String> getOutputFileName();
 }

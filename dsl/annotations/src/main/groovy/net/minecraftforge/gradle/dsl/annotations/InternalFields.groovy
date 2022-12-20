@@ -9,7 +9,7 @@ import java.lang.annotation.Target
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-@GroovyASTTransformationClass('net.minecraftforge.gradle.dsl.generator.transform.DefaultMethodsTransformer')
-@interface DefaultMethods {
-
+@GroovyASTTransformationClass('net.minecraftforge.gradle.dsl.generator.transform.InternalFieldTransformer')
+@interface InternalFields {
+    String[] fields()
 }
