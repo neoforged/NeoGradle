@@ -12,6 +12,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 
 import javax.inject.Inject
 
@@ -49,6 +50,14 @@ interface DSLYes {
 @CompileStatic
 abstract class DSLYesImpl implements DSLYes {
 
+}
+
+@CompileStatic
+interface CollectionTest {
+    @DSLProperty
+    abstract ListProperty<String> getStrings()
+    @DSLProperty(isConfigurable = true)
+    abstract SetProperty<TestExtension.HelloWorld> getHelloWorlds()
 }
 
 @CompileStatic

@@ -19,6 +19,8 @@ import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.AbstractASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.SetProperty
 import org.gradle.util.Configurable
 
 import javax.annotation.Nullable
@@ -36,7 +38,7 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
 
     private static final List<PropertyHandler> HANDLERS = [
             new MapPropertyHandler(),
-            new ListPropertyHandler(),
+            new CollectionPropertyHandler(ListProperty, SetProperty),
             new FileCollectionPropertyHandler(),
             new FilePropertyHandler(),
             new DirectoryPropertyHandler(),

@@ -7,15 +7,31 @@ import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.ast.tools.GenericsUtils
 import org.gradle.api.Action
-import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.HasMultipleValues
+
+import java.util.stream.Collectors
+import java.util.stream.Stream
 
 @CompileStatic
-class ListPropertyHandler implements PropertyHandler, Opcodes {
-    private static final ClassNode LIST_PROPERTY_TYPE = ClassHelper.make(ListProperty)
+class CollectionPropertyHandler implements PropertyHandler, Opcodes {
+    private final Set<ClassNode> colTypes
+    CollectionPropertyHandler(Class<? extends HasMultipleValues>... classes) {
+        this.colTypes = Stream.of(classes).map(ClassHelper.&make).collect(Collectors.toSet())
+    }
 
     @Override
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
-        if (!GeneralUtils.isOrImplements(methodNode.returnType, LIST_PROPERTY_TYPE)) return false
+        final retType = methodNode.returnType
+        for (final type : colTypes) {
+            if (GeneralUtils.isOrImplements(retType, type)) {
+                handleInternal(methodNode, annotation, propertyName, utils)
+                return true
+            }
+        }
+        return false
+    }
+
+    boolean handleInternal(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
         final singularName = propertyName.endsWith('s') ? propertyName.substring(0, propertyName.size() - 1) : propertyName
         final type = methodNode.returnType.genericsTypes[0].type
         utils.visitPropertyType(type, annotation)
@@ -62,6 +78,5 @@ class ListPropertyHandler implements PropertyHandler, Opcodes {
                 parameters: [new Parameter(type, 'val')],
                 codeExpr: [GeneralUtils.callX(GeneralUtils.callThisX(methodNode.name), 'add', GeneralUtils.localVarX('val', type))]
         )
-        return true
     }
 }
