@@ -13,7 +13,7 @@ import java.io.File;
  *
  * This interface provides methods for working with this workspace.
  */
-interface WithWorkspace extends Task {
+public interface WithWorkspace extends Task {
 
     /**
      * Ensures the workspace is ready for the file and realises the given property and regular file.

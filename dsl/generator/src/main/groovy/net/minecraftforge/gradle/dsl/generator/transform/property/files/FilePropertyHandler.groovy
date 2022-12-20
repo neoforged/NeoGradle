@@ -73,7 +73,7 @@ class FilePropertyHandler implements PropertyHandler, Opcodes {
         }
         if (found !== null) return found
 
-        for (final interfacE : node.declaringClass.interfaces) {
+        for (final interfacE : clazz.interfaces) {
             final res = findProjectGetter(node, interfacE)
             if (res !== null) return res
         }

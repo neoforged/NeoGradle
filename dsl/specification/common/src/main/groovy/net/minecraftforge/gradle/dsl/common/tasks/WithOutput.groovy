@@ -1,6 +1,8 @@
 package net.minecraftforge.gradle.dsl.common.tasks
 
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
+import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gradle.dsl.annotations.DefaultMethods;
 import org.gradle.api.Task;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -11,6 +13,8 @@ import org.gradle.api.tasks.OutputFile;
 /**
  * Interface that indicates that a given task has an output which can be further processed.
  */
+@CompileStatic
+@DefaultMethods
 interface WithOutput extends Task, WithWorkspace {
 
     /**
