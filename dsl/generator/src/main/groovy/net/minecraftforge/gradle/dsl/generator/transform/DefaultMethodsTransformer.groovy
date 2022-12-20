@@ -48,6 +48,7 @@ class DefaultMethodsTransformer extends AbstractASTTransformation implements Opc
                     it.exceptions,
                     (Statement) (it.returnType == ClassHelper.VOID_TYPE ? GeneralUtils.stmt(call) : GeneralUtils.returnS(call))
             )
+            mtd.genericsTypes = method.genericsTypes
             final ann = new AnnotationNode(CSTATIC)
             mtd.addAnnotation(ann)
             new StaticCompileTransformation().visit(new ASTNode[] {
