@@ -11,7 +11,7 @@ import org.gradle.api.provider.ListProperty
  * @param <TSelf> The type of the implementing class.
  */
 @CompileStatic
-interface BaseDSLElementWithFilesAndEntries<TSelf extends BaseDSLElementWithFilesAndEntries<TSelf>> extends ProjectAssociatedBaseDSLElement<TSelf> {
+interface BaseDSLElementWithFilesAndEntries<TSelf extends BaseDSLElementWithFilesAndEntries<TSelf>> extends BaseDSLElement<TSelf> {
 
     /**
      * @return The files which contain entries relevant to this extension.
