@@ -2,12 +2,13 @@ package net.minecraftforge.gradle.mcp.dependency;
 
 import net.minecraftforge.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
-import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementExtension;
-import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
+import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
-import net.minecraftforge.gradle.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
 import net.minecraftforge.gradle.common.util.Utils;
@@ -34,29 +35,32 @@ public final class McpDependencyManager {
     }
 
     public void apply(final Project project) {
-        final DependencyReplacementExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementExtension.class);
-        dependencyReplacer.getReplacementHandlers().add(context -> {
-            if (isNotAMatchingDependency(context.dependency())) {
-                return Optional.empty();
-            }
+        final DependencyReplacementsExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementsExtension.class);
 
-            if (!(context.dependency() instanceof ExternalModuleDependency)) {
-                return Optional.empty();
-            }
+        dependencyReplacer.getReplacementHandlers().create("mcp", handler -> {
+            handler.getReplacer().set(context -> {
+                if (isNotAMatchingDependency(context.getDependency())) {
+                    return Optional.empty();
+                }
 
-            final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) context.dependency();
+                if (!(context.getDependency() instanceof ExternalModuleDependency)) {
+                    return Optional.empty();
+                }
 
-            final McpRuntimeDefinition runtimeDefinition = buildMcpRuntimeFromDependency(project, context.project(), externalModuleDependency);
-            return Optional.of(
-                    new DependencyReplacementResult(
-                            project,
-                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
-                            runtimeDefinition.sourceJarTask(),
-                            runtimeDefinition.rawJarTask(),
-                            runtimeDefinition.minecraftDependenciesConfiguration(),
-                            builder -> builder.withVersion(runtimeDefinition.spec().mcpVersion()),
-                            runtimeDefinition::replacedDependency)
-            );
+                final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) context.getDependency();
+
+                final McpRuntimeDefinition runtimeDefinition = buildMcpRuntimeFromDependency(project, context.getProject(), externalModuleDependency);
+                return Optional.of(
+                        new DependencyReplacementResult(
+                                project,
+                                name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
+                                runtimeDefinition.sourceJarTask(),
+                                runtimeDefinition.rawJarTask(),
+                                runtimeDefinition.minecraftDependenciesConfiguration(),
+                                builder -> builder.setVersion(runtimeDefinition.spec().mcpVersion()),
+                                runtimeDefinition::replacedDependency)
+                );
+            });
         });
     }
 
@@ -109,11 +113,11 @@ public final class McpDependencyManager {
 
     private static TaskTreeAdapter createAccessTransformerAdapter(final Project project) {
         final MinecraftExtension minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
-        final BaseFilesWithEntriesExtension accessTransformerFiles = minecraftExtension.getAccessTransformers();
+        final AccessTransformers accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
         return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
             final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "User", new ArrayList<>(accessTransformerFiles.getFiles().getFiles()), accessTransformerFiles.getEntries().get());
-            accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput)));
+            accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;
         };

@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.userdev.dependency;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementExtension;
-import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.userdev.runtime.ForgeUserDevRuntimeDefinition;
 import net.minecraftforge.gradle.userdev.runtime.extension.ForgeUserDevRuntimeExtension;
@@ -26,7 +26,7 @@ public final class ForgeUserDevDependencyManager {
     }
 
     public void apply(final Project project) {
-        final DependencyReplacementExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementExtension.class);
+        final DependencyReplacementsExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementsExtension.class);
         dependencyReplacer.getReplacementHandlers().add(context -> {
             if (isNotAMatchingDependency(context.dependency())) {
                 return Optional.empty();
@@ -52,7 +52,7 @@ public final class ForgeUserDevDependencyManager {
                             runtimeDefinition.mcpRuntimeDefinition().sourceJarTask(),
                             runtimeDefinition.mcpRuntimeDefinition().rawJarTask(),
                             additionalDependenciesConfiguration,
-                            builder -> builder.withVersion(runtimeDefinition.spec().forgeVersion()),
+                            builder -> builder.setVersion(runtimeDefinition.spec().forgeVersion()),
                             runtimeDefinition::)
             );
         });

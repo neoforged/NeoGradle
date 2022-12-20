@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
-import net.minecraftforge.gradle.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @CacheableTask
-public abstract class Runtime extends JavaRuntimeTask implements IRuntimeTask {
+public abstract class Runtime extends JavaRuntimeTask implements net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime {
 
     public Runtime() {
         super();
@@ -69,6 +69,6 @@ public abstract class Runtime extends JavaRuntimeTask implements IRuntimeTask {
         arguments.computeIfAbsent("stepName", key -> getStepName());
         arguments.computeIfAbsent("side", key -> getDistribution().map(ArtifactSide::getName));
         arguments.computeIfAbsent("minecraftVersion", key -> getMinecraftVersion().map(Object::toString));
-        arguments.computeIfAbsent("javaVersion", key -> getRuntimeJavaLauncher().map(launcher -> launcher.getMetadata().getLanguageVersion().toString()));
+        arguments.computeIfAbsent("javaVersion", key -> getJavaLauncher().map(launcher -> launcher.getMetadata().getLanguageVersion().toString()));
     }
 }

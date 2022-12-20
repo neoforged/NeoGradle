@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import net.minecraftforge.gradle.common.runtime.naming.renamer.UnfilteredOfficialSourceRenamer;
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -12,7 +12,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 @CacheableTask
-public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSourceJar implements IRuntimeTask {
+public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSourceJar implements Runtime {
 
     public ApplyOfficialMappingsToSourceJar() {
         getSourceRenamer().set(

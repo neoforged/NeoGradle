@@ -2,20 +2,19 @@ package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
 import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.tasks.JavaToolExecutingTask;
-import net.minecraftforge.gradle.common.util.ArtifactSide;
-import net.minecraftforge.gradle.common.util.CacheableMinecraftVersion;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.common.util.Utils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
-import java.nio.file.Files;
 
 @CacheableTask
-public abstract class UnapplyOfficialMappingsToCompiledJar extends JavaToolExecutingTask implements ITaskWithOutput {
+public abstract class UnapplyOfficialMappingsToCompiledJar extends JavaToolExecutingTask implements WithOutput {
 
     public UnapplyOfficialMappingsToCompiledJar() {
         getExecutingArtifact().set(Utils.SPECIALSOURCE);

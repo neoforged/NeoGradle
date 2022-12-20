@@ -1,6 +1,5 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
-import net.minecraftforge.gradle.common.tasks.IExecuteTask;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -12,7 +11,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
 @CacheableTask
-public abstract class Execute extends Runtime implements IExecuteTask {
+public abstract class Execute extends Runtime implements net.minecraftforge.gradle.dsl.common.tasks.Execute {
 
     public Execute() {
         super();
@@ -36,7 +35,7 @@ public abstract class Execute extends Runtime implements IExecuteTask {
     @TaskAction
     @Override
     public void execute() throws Throwable {
-        IExecuteTask.super.execute();
+        net.minecraftforge.gradle.dsl.common.tasks.Execute.super.execute();
     }
 
     @Input

@@ -1,19 +1,15 @@
 package net.minecraftforge.gradle.common.runtime;
 
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.common.util.GameArtifact;
-import org.apache.commons.lang3.NotImplementedException;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.internal.impldep.org.eclipse.jgit.errors.NotSupportedException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -25,10 +21,10 @@ import java.util.Map;
  */
 public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
     private final S spec;
-    private final LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs;
+    private final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs;
     private final TaskProvider<? extends ArtifactProvider> sourceJarTask;
     private final TaskProvider<? extends ArtifactProvider> rawJarTask;
-    private final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks;
+    private final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks;
     private final Map<GameArtifact, File> gameArtifacts;
     private final Configuration minecraftDependenciesConfiguration;
     private final Map<String, String> configuredMappingVersionData = Maps.newHashMap();
@@ -36,10 +32,10 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
 
     protected CommonRuntimeDefinition(
             S spec,
-            LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs,
+            LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
             TaskProvider<? extends ArtifactProvider> sourceJarTask,
             TaskProvider<? extends ArtifactProvider> rawJarTask,
-            Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks,
+            Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
             Map<GameArtifact, File> gameArtifacts,
             Configuration minecraftDependenciesConfiguration) {
         this.spec = spec;
@@ -60,7 +56,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
      * @return The named task.
      */
     @NotNull
-    public final Provider<? extends ITaskWithOutput> task(String name) {
+    public final Provider<? extends WithOutput> task(String name) {
         final String taskName = CommonRuntimeUtils.buildTaskName(this, name);
         if (!taskOutputs.containsKey(taskName)) {
             throw new IllegalArgumentException("No task with name " + name + " found in runtime " + spec.name());
@@ -82,7 +78,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
         return spec;
     }
 
-    public final LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs() {
+    public final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs() {
         return taskOutputs;
     }
 
@@ -90,7 +86,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
         return sourceJarTask;
     }
 
-    public final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks() {
+    public final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks() {
         return gameArtifactProvidingTasks;
     }
 

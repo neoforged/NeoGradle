@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
-public abstract class RecompileSourceJar extends JavaCompile implements IRuntimeTask {
+public abstract class RecompileSourceJar extends JavaCompile implements Runtime {
 
     public RecompileSourceJar() {
         super();
@@ -34,13 +34,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements IRuntime
         getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProject().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))));
         getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().map(d::file)));
 
-        getRuntimeJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
-        getRuntimeJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
-            if (!getRuntimeJavaVersion().isPresent()) {
+        getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
+        getJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
+            if (!getJavaVersion().isPresent()) {
                 return toolChain.launcherFor(new CurrentJvmToolchainSpec(getProject().getObjects()));
             }
 
-            return toolChain.launcherFor(spec -> spec.getLanguageVersion().set(getRuntimeJavaVersion()));
+            return toolChain.launcherFor(spec -> spec.getLanguageVersion().set(getJavaVersion()));
         }));
         getLogging().captureStandardOutput(LogLevel.DEBUG);
         getLogging().captureStandardError(LogLevel.ERROR);
@@ -58,7 +58,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements IRuntime
         final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
 
         getModularity().getInferModulePath().convention(javaPluginExtension.getModularity().getInferModulePath());
-        getJavaCompiler().convention(getRuntimeJavaVersion().flatMap(javaVersion -> service.compilerFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(javaVersion))));
+        getJavaCompiler().convention(getJavaVersion().flatMap(javaVersion -> service.compilerFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(javaVersion))));
 
         getDestinationDirectory().set(getOutputDirectory().map(directory -> directory.dir("classes")));
 

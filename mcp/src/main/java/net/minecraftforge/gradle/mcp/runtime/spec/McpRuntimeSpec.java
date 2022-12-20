@@ -3,12 +3,9 @@ package net.minecraftforge.gradle.mcp.runtime.spec;
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
-import net.minecraftforge.gradle.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
-
-import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Defines a specification for a MCP runtime.

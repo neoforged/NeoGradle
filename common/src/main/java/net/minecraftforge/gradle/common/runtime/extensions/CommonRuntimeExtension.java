@@ -5,9 +5,11 @@ import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtensi
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.spec.builder.CommonRuntimeSpecBuilder;
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
-import net.minecraftforge.gradle.common.util.*;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -16,21 +18,14 @@ import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import static net.minecraftforge.gradle.common.util.GameArtifactUtils.doWhenRequired;
 
 public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpec, B extends CommonRuntimeSpecBuilder<S, B>, D extends CommonRuntimeDefinition<S>> {
     protected final Map<String, D> runtimes = Maps.newHashMap();
@@ -42,21 +37,21 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpec, B exte
         this.getSide().convention(ArtifactSide.JOINED);
     }
 
-    protected static void configureGameArtifactProvidingTaskWithDefaults(CommonRuntimeSpec spec, File runtimeWorkingDirectory, Map<String, File> data, IRuntimeTask mcpRuntimeTask, GameArtifact gameArtifact) {
+    protected static void configureGameArtifactProvidingTaskWithDefaults(CommonRuntimeSpec spec, File runtimeWorkingDirectory, Map<String, File> data, Runtime mcpRuntimeTask, GameArtifact gameArtifact) {
         mcpRuntimeTask.getArguments().set(Maps.newHashMap());
         configureCommonMcpRuntimeTaskParameters(mcpRuntimeTask, data, String.format("provide%s", StringUtils.capitalize(gameArtifact.name())), spec, runtimeWorkingDirectory);
     }
 
-    protected static void configureCommonMcpRuntimeTaskParameters(IRuntimeTask mcpRuntimeTask, Map<String, File> data, String step, CommonRuntimeSpec spec, File runtimeDirectory) {
+    protected static void configureCommonMcpRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, CommonRuntimeSpec spec, File runtimeDirectory) {
         mcpRuntimeTask.getData().set(data);
         mcpRuntimeTask.getStepName().set(step);
         mcpRuntimeTask.getDistribution().set(spec.side());
         mcpRuntimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.minecraftVersion()));
         mcpRuntimeTask.getRuntimeDirectory().set(runtimeDirectory);
-        mcpRuntimeTask.getRuntimeJavaVersion().convention(spec.configureProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
+        mcpRuntimeTask.getJavaVersion().convention(spec.configureProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
     }
 
-    protected static Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> buildDefaultArtifactProviderTasks(final CommonRuntimeSpec spec, final File runtimeWorkingDirectory) {
+    protected static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final CommonRuntimeSpec spec, final File runtimeWorkingDirectory) {
         final MinecraftArtifactCacheExtension artifactCache = spec.configureProject().getExtensions().getByType(MinecraftArtifactCacheExtension.class);
         return artifactCache.cacheGameVersionTasks(spec.project(), new File(runtimeWorkingDirectory, "cache"), spec.minecraftVersion(), spec.side());
     }

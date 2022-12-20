@@ -3,12 +3,16 @@ package net.minecraftforge.gradle.common.extensions;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntry;
 import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryMetadataSupplier;
+import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryReference;
 import net.minecraftforge.gradle.common.repository.IvyModuleWriter;
+import net.minecraftforge.gradle.common.util.ConfigurableObject;
 import net.minecraftforge.gradle.common.util.FileUtils;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository;
 import org.gradle.api.file.Directory;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +25,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public abstract class IvyDummyRepositoryExtension {
+public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<IvyDummyRepositoryExtension> implements Repository<IvyDummyRepositoryExtension, IvyDummyRepositoryEntry, IvyDummyRepositoryEntry.Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder>
+{
     /**
      * A version for stored metadata.
      */
@@ -42,20 +47,21 @@ public abstract class IvyDummyRepositoryExtension {
     public IvyDummyRepositoryExtension(Project project) {
         this.project = project;
         this.createRepositories();
+
+        this.getRepositoryDirectory().convention(project.getLayout().getBuildDirectory().dir("libs"));
     }
 
 
     private void createRepositories() {
         project.getRepositories().ivy(repositoryConfiguration(
                 "ForgeGradle Artifacts",
-                createRepoBaseDir()
+                getRepositoryDirectory()
         ));
     }
 
+    @Override
     @NotNull
-    public Provider<Directory> createRepoBaseDir() {
-        return project.getLayout().getBuildDirectory().dir("libs");
-    }
+    public abstract Property<Directory> getRepositoryDirectory();
 
     @SuppressWarnings("SameParameterValue") // Potentially this needs extension in the future.
     private Action<IvyArtifactRepository> repositoryConfiguration(
@@ -77,9 +83,10 @@ public abstract class IvyDummyRepositoryExtension {
         };
     }
 
+    @Override
     public void withDependency(final Action<IvyDummyRepositoryEntry.Builder> configurator, final Consumer<IvyDummyRepositoryEntry> configuredEntryConsumer) throws XMLStreamException, IOException {
         project.afterEvaluate(evaluatedProject -> {
-            final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create();
+            final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create(getProject());
             configurator.execute(builder);
             final IvyDummyRepositoryEntry entry = builder.build();
 
@@ -97,9 +104,9 @@ public abstract class IvyDummyRepositoryExtension {
     private void writeDummyDataIfNeeded(
             final IvyDummyRepositoryEntry entry
     ) throws IOException, XMLStreamException {
-        final Path jarFile = entry.artifactPath(createRepoBaseDir().get().getAsFile().toPath());
+        final Path jarFile = entry.buildArtifactPath(getRepositoryDirectory().get().getAsFile().toPath());
         final Path baseDir = jarFile.getParent();
-        final Path metaFile = baseDir.resolve(String.format("ivy-%s-fg%d.xml", entry.version(), METADATA_VERSION));
+        final Path metaFile = baseDir.resolve(String.format("ivy-%s-fg%d.xml", entry.getVersion(), METADATA_VERSION));
 
         if (Files.exists(metaFile))
             return;
@@ -112,10 +119,11 @@ public abstract class IvyDummyRepositoryExtension {
         FileUtils.atomicMove(metaFileTmp, metaFile);
         Files.createFile(jarFile);
 
-        final Path sourcesFile = entry.asSources().artifactPath(createRepoBaseDir().get().getAsFile().toPath());
+        final Path sourcesFile = entry.asSources().buildArtifactPath(getRepositoryDirectory().get().getAsFile().toPath());
         Files.createFile(sourcesFile);
     }
 
+    @Override
     public Collection<IvyDummyRepositoryEntry> getEntries() {
         return entries;
     }

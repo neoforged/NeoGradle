@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.common.tasks;
 
 import net.minecraftforge.gradle.common.util.TransformerUtils;
+import net.minecraftforge.gradle.dsl.common.tasks.Execute;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -13,7 +14,7 @@ import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
-public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements IExecuteTask {
+public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements Execute {
 
     public JavaToolExecutingTask() {
         super();
@@ -55,7 +56,7 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements I
     @TaskAction
     @Override
     public void execute() throws Throwable {
-        IExecuteTask.super.execute();
+        Execute.super.execute();
     }
 
     /**
@@ -81,7 +82,7 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements I
     protected void buildRuntimeArguments(final Map<String, Provider<String>> arguments) {
         arguments.computeIfAbsent("output", key -> newProvider(getOutput().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("outputDir", key -> newProvider(getOutputDirectory().get().getAsFile().getAbsolutePath()));
-        arguments.computeIfAbsent("javaVersion", key -> getRuntimeJavaLauncher().map(launcher -> launcher.getMetadata().getLanguageVersion().toString()));
+        arguments.computeIfAbsent("javaVersion", key -> getJavaLauncher().map(launcher -> launcher.getMetadata().getLanguageVersion().toString()));
         arguments.computeIfAbsent("log", k -> newProvider(getLogFile().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("console.log", k -> newProvider(getConsoleLogFile().get().getAsFile().getAbsolutePath()));
     }

@@ -1,37 +1,43 @@
 package net.minecraftforge.gradle.common.repository;
 
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
-import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
  * An entry which can potentially be requested by IDEs which interface with gradle.
  */
-public final class IvyDummyRepositoryEntry implements Serializable {
+public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDummyRepositoryEntry> implements RepositoryEntry<IvyDummyRepositoryEntry, IvyDummyRepositoryReference> {
 
     private static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
     private static final long serialVersionUID = 4025734172533096653L;
+
+    private final Project project;
     private final String group;
     private final String name;
     private final String version;
     private final String classifier;
     private final String extension;
-    private final Collection<IvyDummyRepositoryEntryDependency> dependencies;
+    private final Collection<IvyDummyRepositoryReference> dependencies;
 
     /**
+     * @param project      The project thsi entry resides in.
      * @param group        The group of the dependency.
      * @param name         The name of the dependency.
      * @param version      The version of the dependency.
@@ -39,7 +45,8 @@ public final class IvyDummyRepositoryEntry implements Serializable {
      * @param extension    The extension of the dependency.
      * @param dependencies The dependencies for this entry.
      */
-    public IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension, Collection<IvyDummyRepositoryEntryDependency> dependencies) {
+    public IvyDummyRepositoryEntry(Project project, String group, String name, String version, String classifier, String extension, Collection<IvyDummyRepositoryReference> dependencies) {
+        this.project = project;
         this.group = group;
         this.name = name;
         this.version = version;
@@ -48,69 +55,77 @@ public final class IvyDummyRepositoryEntry implements Serializable {
         this.dependencies = dependencies;
     }
 
-    public IvyDummyRepositoryEntry(String group, String name, String version, String classifier, String extension) {
-        this(group, name, version, classifier, extension, Collections.emptyList());
-    }
-
-    public String fullGroup() {
-        if (group() == null) {
+    @Override
+    public String getFullGroup() {
+        if (getGroup() == null) {
             return FG_DUMMY_FG_MARKER;
         }
 
-        return String.format("%s.%s", FG_DUMMY_FG_MARKER, group());
+        return String.format("%s.%s", FG_DUMMY_FG_MARKER, getGroup());
     }
 
+    @Override
     public boolean matches(ModuleComponentIdentifier id) {
-        return fullGroup().equals(id.getGroup()) &&
-                name().equals(id.getModule()) &&
-                version().equals(id.getVersion());
+        return getFullGroup().equals(id.getGroup()) &&
+                getName().equals(id.getModule()) &&
+                getVersion().equals(id.getVersion());
     }
 
-    public Dependency asDependency(Project project) {
+    @Override
+    public Dependency toGradle(Project project) {
         return project.getDependencies().create(toString());
     }
 
-    public Path artifactPath(final Path baseDir) throws IOException {
-        final Path artifactPath = baseDir.resolve(artifactPath());
+    @Override
+    public IvyDummyRepositoryEntry asSources() {
+        return Builder.create(project, this).setClassifier("sources").build();
+    }
+
+    @Override
+    public Path buildArtifactPath(final Path baseDir) throws IOException {
+        final Path artifactPath = baseDir.resolve(buildArtifactPath());
         Files.createDirectories(artifactPath.getParent());
         return artifactPath;
     }
 
-    public String artifactPath() {
-        final String fileName = classifier() == null || classifier().equals("") ?
-                String.format("%s-%s.%s", name(), version(), extension()) :
-                String.format("%s-%s-%s.%s", name(), version(), classifier(), extension());
+    @Override
+    public String buildArtifactPath() {
+        final String fileName = getClassifier() == null || getClassifier().equals("") ?
+                String.format("%s-%s.%s", getName(), getVersion(), getExtension()) :
+                String.format("%s-%s-%s.%s", getName(), getVersion(), getClassifier(), getExtension());
 
-        final String groupPath = fullGroup().replace('.', '/') + '/';
+        final String groupPath = getFullGroup().replace('.', '/') + '/';
 
-        return String.format("%s%s/%s/%s", groupPath, name(), version(), fileName);
+        return String.format("%s%s/%s/%s", groupPath, getName(), getVersion(), fileName);
     }
 
-    public IvyDummyRepositoryEntry asSources() {
-        return Builder.create(this).withClassifier("sources").build();
-    }
-
-    public String group() {
+    @Override
+    public String getGroup() {
         return group;
     }
 
-    public String name() {
+    @Override
+    public String getName() {
         return name;
     }
 
-    public String version() {
+    @Override
+    public String getVersion() {
         return version;
     }
 
-    public String classifier() {
+    @Override
+    public String getClassifier() {
         return classifier;
     }
 
-    public String extension() {
+    @Override
+    public String getExtension() {
         return extension;
     }
 
-    public Collection<IvyDummyRepositoryEntryDependency> dependencies() {
+    @Override
+    public Collection<IvyDummyRepositoryReference> getDependencies() {
         return dependencies;
     }
 
@@ -143,104 +158,118 @@ public final class IvyDummyRepositoryEntry implements Serializable {
                 '}';
     }
 
-    public static final class Builder {
+    public static abstract class Builder extends ConfigurableObject<Builder> implements RepositoryEntry.Builder<Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder> {
+        private final Project project;
         private String group;
         private String name;
         private String version;
         private String classifier = "";
         private String extension = "jar";
-        private Set<IvyDummyRepositoryEntryDependency> dependencies = Sets.newHashSet();
+        private final Set<IvyDummyRepositoryReference> dependencies = Sets.newHashSet();
 
-        private Builder() {
+        private Builder(Project project) {
+            this.project = project;
         }
 
-        public static Builder create() {
-            return new Builder();
+        public static Builder create(Project project) {
+            return project.getObjects().newInstance(Builder.class, project);
         }
 
-        public static Builder create(IvyDummyRepositoryEntry entry) {
-            return new Builder()
-                    .withGroup(entry.group())
-                    .withName(entry.name())
-                    .withVersion(entry.version())
-                    .withClassifier(entry.classifier())
-                    .withExtension(entry.extension())
-                    .withDependencies(entry.dependencies());
+        public static Builder create(Project project, IvyDummyRepositoryEntry entry) {
+            return create(project)
+                    .setGroup(entry.getGroup())
+                    .setName(entry.getName())
+                    .setVersion(entry.getVersion())
+                    .setClassifier(entry.getClassifier())
+                    .setExtension(entry.getExtension())
+                    .setDependencies(entry.getDependencies());
         }
 
-        public Builder withGroup(String group) {
+        @Override
+        public Builder setGroup(String group) {
             this.group = group;
             return this;
         }
 
-        public Builder withName(String name) {
+        @Override
+        public Builder setName(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder withVersion(String version) {
+        @Override
+        public Builder setVersion(String version) {
             this.version = version;
             return this;
         }
 
-        public Builder withClassifier(String classifier) {
+        @Override
+        public Builder setClassifier(String classifier) {
             this.classifier = classifier;
             return this;
         }
 
-        public Builder withExtension(String extension) {
+        @Override
+        public Builder setExtension(String extension) {
             this.extension = extension;
             return this;
         }
 
+        @Override
         public Builder from(final ModuleDependency dependency) {
-            withGroup(dependency.getGroup());
-            withName(dependency.getName());
-            withVersion(dependency.getVersion());
+            setGroup(dependency.getGroup());
+            setName(dependency.getName());
+            setVersion(dependency.getVersion());
 
             if (!dependency.getArtifacts().isEmpty()) {
                 final DependencyArtifact artifact = dependency.getArtifacts().iterator().next();
-                withClassifier(artifact.getClassifier());
-                withExtension(artifact.getExtension());
+                setClassifier(artifact.getClassifier());
+                setExtension(artifact.getExtension());
             }
             return this;
         }
 
-        public void from(ResolvedDependency resolvedDependency) {
-            withGroup(resolvedDependency.getModuleGroup());
-            withName(resolvedDependency.getModuleName());
-            withVersion(resolvedDependency.getModuleVersion());
+        @Override
+        public Builder from(ResolvedDependency resolvedDependency) {
+            setGroup(resolvedDependency.getModuleGroup());
+            setName(resolvedDependency.getModuleName());
+            setVersion(resolvedDependency.getModuleVersion());
 
             if (resolvedDependency.getModuleArtifacts().size() > 0) {
                 final ResolvedArtifact artifact = resolvedDependency.getModuleArtifacts().iterator().next();
-                withClassifier(artifact.getClassifier());
-                withExtension(artifact.getExtension());
+                setClassifier(artifact.getClassifier());
+                setExtension(artifact.getExtension());
             }
+            return this;
         }
 
-        public Builder withDependencies(final Collection<IvyDummyRepositoryEntryDependency> dependencies) {
+        @Override
+        public Builder setDependencies(final Collection<IvyDummyRepositoryReference> dependencies) {
             this.dependencies.addAll(dependencies);
             return this;
         }
 
-        public Builder withDependencies(final IvyDummyRepositoryEntryDependency... dependencies) {
+        @Override
+        public Builder setDependencies(final IvyDummyRepositoryReference... dependencies) {
             this.dependencies.addAll(Arrays.asList(dependencies));
             return this;
         }
 
-        public Builder withDependency(final Consumer<IvyDummyRepositoryEntryDependency.Builder> consumer) {
-            final IvyDummyRepositoryEntryDependency.Builder builder = IvyDummyRepositoryEntryDependency.Builder.create();
+        @Override
+        public Builder withDependency(final Consumer<IvyDummyRepositoryReference.Builder> consumer) {
+            final IvyDummyRepositoryReference.Builder builder = IvyDummyRepositoryReference.Builder.create(project);
             consumer.accept(builder);
             this.dependencies.add(builder.build());
             return this;
         }
 
+        @Override
         public Builder but() {
-            return create().withGroup(group).withName(name).withVersion(version).withClassifier(classifier).withExtension(extension).withDependencies(dependencies);
+            return create(project).setGroup(group).setName(name).setVersion(version).setClassifier(classifier).setExtension(extension).setDependencies(dependencies);
         }
 
         public IvyDummyRepositoryEntry build() {
-            return new IvyDummyRepositoryEntry(group, name, version, classifier, extension, dependencies);
+            return project.getObjects().newInstance(IvyDummyRepositoryEntry.class, project, group, name, version, classifier, extension, dependencies);
         }
     }
 }

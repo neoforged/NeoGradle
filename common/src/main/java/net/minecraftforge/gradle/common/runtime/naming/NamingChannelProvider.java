@@ -24,17 +24,15 @@ import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.common.util.NamingConstants;
 import org.gradle.api.Project;
-import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
-import java.util.function.Supplier;
 
 /**
  * A channel provider for a mappings channel.
  * The providers job is, knowing how to construct taskOutputs that can remap certain jar types,
  * like source, compiled or javadoc jar.
  */
-public abstract class NamingChannelProvider extends GroovyObjectSupport implements IConfigurableObject<NamingChannelProvider> {
+public abstract class NamingChannelProvider extends GroovyObjectSupport implements IConfigurableObject<NamingChannelProvider>, net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel {
 
     private final Project project;
     private final String name;
@@ -47,73 +45,14 @@ public abstract class NamingChannelProvider extends GroovyObjectSupport implemen
         getMinecraftVersionExtractor().convention(project.getProviders().provider(() -> data -> data.get(NamingConstants.Version.VERSION)));
     }
 
-    /**
-     * The project that this provider belongs to.
-     *
-     * @return The project.
-     */
+    @Override
     public Project getProject() {
         return project;
     }
 
-    /**
-     * The name of this provider.
-     *
-     * @return The name.
-     */
+    @Override
     public String getName() {
         return name;
     }
-
-    /**
-     * The extractor which can extract the minecraft version from the current mapping channel.
-     *
-     * @return The extractor.
-     */
-    public abstract Property<MinecraftVersionFromVersionDataProducer> getMinecraftVersionExtractor();
-
-    /**
-     * The builder which can construct a new task provider for a source jar mapping.
-     * Every time this is invoked the builder needs to produce a new task.
-     * However, the builder is allowed to reuse an old task if the inputs match.
-     *
-     * @return The builder property.
-     */
-    public abstract Property<ApplyMappingsToSourceJarTaskBuilder> getApplySourceMappingsTaskBuilder();
-
-    /**
-     * The builder which can construct a new task provider for a compiled jar mapping.
-     * Every time this is invoked the builder needs to produce a new task.
-     * However, the builder is allowed to reuse an old task if the inputs match.
-     *
-     * @return The builder property.
-     */
-    public abstract Property<ApplyMappingsToCompiledJarTaskBuilder> getApplyCompiledMappingsTaskBuilder();
-
-    /**
-     * The builder which can construct a new task provider for a compiled jar unmapping.
-     * Every time this is invoked the builder needs to produce a new task.
-     * However, the builder is allowed to reuse an old task if the inputs match.
-     *
-     * @return The builder property.
-     */
-    public abstract Property<UnapplyMappingsToCompiledJarTaskBuilder> getUnapplyCompiledMappingsTaskBuilder();
-
-    /**
-     * Returns the group prefix for the current channel that is prefixed to the deobfuscated dependency groups.
-     *
-     * @return The group prefix.
-     */
-    public abstract Property<Supplier<String>> getDeobfuscationGroupSupplier();
-
-    /**
-     * {@return Indicates if the user has accepted this mappings license.}
-     */
-    public abstract Property<Boolean> getHasAcceptedLicense();
-
-    /**
-     * {@return The license text of this mappings channel.}
-     */
-    public abstract Property<String> getLicenseText();
 
 }

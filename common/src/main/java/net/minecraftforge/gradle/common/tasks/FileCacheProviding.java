@@ -1,9 +1,8 @@
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
-import net.minecraftforge.gradle.common.tasks.ITaskWithWorkspace;
-import net.minecraftforge.gradle.common.util.ICacheFileSelector;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace;
+import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
@@ -13,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CacheableTask
-public abstract class FileCacheProviding extends ForgeGradleBaseTask implements ITaskWithOutput, ITaskWithWorkspace {
+public abstract class FileCacheProviding extends ForgeGradleBaseTask implements WithOutput, WithWorkspace {
 
     public FileCacheProviding() {
     }
@@ -35,5 +34,5 @@ public abstract class FileCacheProviding extends ForgeGradleBaseTask implements 
     public abstract DirectoryProperty getFileCache();
 
     @Nested
-    public abstract Property<ICacheFileSelector> getSelector();
+    public abstract Property<CacheFileSelector> getSelector();
 }

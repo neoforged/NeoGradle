@@ -2,13 +2,11 @@ package net.minecraftforge.gradle.mcp.runtime;
 
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
-import net.minecraftforge.gradle.common.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
 import java.io.File;
@@ -24,12 +22,12 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
 
     public McpRuntimeDefinition(
             McpRuntimeSpec spec,
-            LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs,
+            LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
             File unpackedMcpZipDirectory,
             McpConfigConfigurationSpecV2 mcpConfig,
             TaskProvider<? extends ArtifactProvider> sourceJarTask,
             TaskProvider<? extends ArtifactProvider> rawJarTask,
-            Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactProvidingTasks,
+            Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
             Map<GameArtifact, File> gameArtifacts,
             Configuration minecraftDependenciesConfiguration) {
         super(spec, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, gameArtifacts, minecraftDependenciesConfiguration);

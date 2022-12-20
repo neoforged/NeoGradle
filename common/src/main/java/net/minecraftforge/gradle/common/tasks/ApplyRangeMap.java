@@ -22,16 +22,17 @@ package net.minecraftforge.gradle.common.tasks;
 
 import net.minecraftforge.gradle.common.util.Utils;
 
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
+
 import java.util.List;
 
 @CacheableTask
-public abstract class ApplyRangeMap extends JarExec implements ITaskWithOutput {
+public abstract class ApplyRangeMap extends JarExec implements WithOutput {
     public boolean annotate = false;
     public boolean keepImports = true;
 

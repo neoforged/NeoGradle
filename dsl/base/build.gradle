@@ -9,13 +9,3 @@ dependencies {
     api project(':dsl-annotations')
     api project(':dsl-generator')
 }
-
-groovydoc {
-    use = true
-}
-
-tasks.register('groovydocJar', Jar) {
-    classifier 'javadoc'
-    from groovydoc.destinationDir
-    dependsOn(groovydoc)
-}

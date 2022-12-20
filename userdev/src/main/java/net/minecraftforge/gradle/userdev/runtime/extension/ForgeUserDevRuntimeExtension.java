@@ -4,9 +4,10 @@ import com.google.common.collect.Maps;
 import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.util.*;
 import net.minecraftforge.gradle.configurations.UserDevConfigurationSpecV2;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
@@ -142,7 +143,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
 
     private Optional<TaskTreeAdapter> createInjectionAdapter(final Optional<String> injectionDirectory, final File unpackedForgeUserDevDirectory) {
         return injectionDirectory.map(s -> (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "injectUserDev"), Inject.class, task -> {
-            task.getInjectionSource().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput));
+            task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
             task.getInjectionDirectory().fileValue(new File(unpackedForgeUserDevDirectory, s));
         }));
 
@@ -150,7 +151,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
 
     private TaskTreeAdapter createPatchAdapter(final String patchDirectory, final File unpackForgeUserDevDirectory) {
         return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "patchUserDev"), Patch.class, task -> {
-            task.getInput().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput));
+            task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
             task.getPatchDirectory().fileProvider(spec.project().provider(() -> new File(unpackForgeUserDevDirectory, patchDirectory)));
         });
     }
@@ -171,7 +172,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
             dependentTaskConfigurationHandler.accept(unzipForgeSources);
 
             return spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "injectForgesSources"), Inject.class, task -> {
-                task.getInjectionSource().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput));
+                task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
                 task.getInjectionDirectory().set(unzipForgeSources.flatMap(UnpackZip::getUnpackingTarget));
                 task.getInclusionFilter().set("net/**");
                 task.dependsOn(unzipForgeSources);
@@ -183,7 +184,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
         final List<File> accessTransformerFiles = accessTransformerPaths.stream().map(path -> new File(unpackedForgeUserDevDirectory, path)).collect(Collectors.toList());
         return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
             final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "Forges", accessTransformerFiles, Collections.emptyList());
-            accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput)));
+            accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;
         };
@@ -193,7 +194,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
         final List<File> sideAnnotationStripperFiles = sideAnnotationStripperPaths.stream().map(path -> new File(unpackedForgeUserDevDirectory, path)).collect(Collectors.toList());
         return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
             final TaskProvider<? extends SideAnnotationStripper> sideAnnotationStripper = McpRuntimeUtils.createSideAnnotationStripper(spec, "Forges", sideAnnotationStripperFiles, Collections.emptyList());
-            sideAnnotationStripper.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(ITaskWithOutput::getOutput)));
+            sideAnnotationStripper.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             sideAnnotationStripper.configure(task -> task.dependsOn(previousTasksOutput));
             return sideAnnotationStripper;
         };

@@ -2,10 +2,9 @@ package net.minecraftforge.gradle.common.util;
 
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.apache.commons.lang3.StringUtils;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -53,7 +52,7 @@ public final class CommonRuntimeUtils {
         return StringUtils.uncapitalize(name.replace(spec.name(), ""));
     }
 
-    public static Provider<File> getInputForTaskFrom(final CommonRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends IRuntimeTask>> tasks) {
+    public static Provider<File> getInputForTaskFrom(final CommonRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends Runtime>> tasks) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {
             return spec.project().provider(() -> new File(inputValue));
@@ -69,7 +68,7 @@ public final class CommonRuntimeUtils {
         throw new IllegalStateException("The string '" + inputValue + "' did not return a valid substitution match!");
     }
 
-    public static Optional<TaskProvider<? extends ITaskWithOutput>> getInputTaskForTaskFrom(final CommonRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends ITaskWithOutput>> tasks) {
+    public static Optional<TaskProvider<? extends WithOutput>> getInputTaskForTaskFrom(final CommonRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {
             return Optional.empty();
@@ -84,17 +83,17 @@ public final class CommonRuntimeUtils {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static <T extends CommonRuntimeDefinition<?>> Map<String, Provider<String>> buildArguments(final T definition, Map<String, String> values, final Map<String, TaskProvider<? extends ITaskWithOutput>> tasks, final IRuntimeTask taskForArguments, final Optional<TaskProvider<? extends ITaskWithOutput>> alternativeInputProvider) {
+    public static <T extends CommonRuntimeDefinition<?>> Map<String, Provider<String>> buildArguments(final T definition, Map<String, String> values, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         return buildArguments(value -> getInputTaskForTaskFrom(definition.spec(), value, tasks), value -> definition.spec().project().provider(() -> value), values, taskForArguments, alternativeInputProvider);
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static Map<String, Provider<String>> buildArguments(final Function<String, Optional<TaskProvider<? extends ITaskWithOutput>>> inputBuilder, final Function<String, Provider<String>> providerBuilder, Map<String, String> values, final IRuntimeTask taskForArguments, final Optional<TaskProvider<? extends ITaskWithOutput>> alternativeInputProvider) {
+    public static Map<String, Provider<String>> buildArguments(final Function<String, Optional<TaskProvider<? extends WithOutput>>> inputBuilder, final Function<String, Provider<String>> providerBuilder, Map<String, String> values, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         final Map<String, Provider<String>> arguments = new HashMap<>();
 
         values.forEach((key, value) -> {
             if (value.startsWith("{") && value.endsWith("}")) {
-                Optional<TaskProvider<? extends ITaskWithOutput>> dependentTask;
+                Optional<TaskProvider<? extends WithOutput>> dependentTask;
                 if (!Objects.equals(key, "input") || !alternativeInputProvider.isPresent()) {
                     dependentTask = inputBuilder.apply(value);
                 } else {

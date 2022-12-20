@@ -1,13 +1,12 @@
 package net.minecraftforge.gradle.common.tasks;
 
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
-import java.io.File;
-
 @CacheableTask
-public abstract class ArtifactFromOutput extends ForgeGradleBaseTask implements ITaskWithOutput {
+public abstract class ArtifactFromOutput extends ForgeGradleBaseTask implements WithOutput {
 
     public ArtifactFromOutput() {
         getOutputFileName().convention(getName() + ".jar");

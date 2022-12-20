@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.common.tasks;
 
 import net.minecraftforge.gradle.common.util.Utils;
 
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
@@ -30,7 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.List;
 
 @CacheableTask
-public abstract class ApplyBinPatches extends JarExec implements ITaskWithOutput {
+public abstract class ApplyBinPatches extends JarExec implements WithOutput {
     public ApplyBinPatches() {
         getTool().set(Utils.BINPATCHER);
         getArgs().addAll("--clean", "{clean}", "--output", "{output}", "--apply", "{patch}");

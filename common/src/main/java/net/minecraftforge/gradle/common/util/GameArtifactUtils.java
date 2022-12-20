@@ -1,5 +1,8 @@
 package net.minecraftforge.gradle.common.util;
 
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+
 public final class GameArtifactUtils {
 
     private GameArtifactUtils() {

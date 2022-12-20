@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.extensions
 
+import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import org.gradle.api.provider.Provider
@@ -8,6 +9,7 @@ import org.gradle.api.provider.Provider
  * Interface which defines the DSL for an artifact downloader.
  * Classes that implement this interface ad here to the FG DSL for downloading different files and version information through gradle.
  */
+@CompileStatic
 interface ArtifactDownloader extends BaseDSLElement<ArtifactDownloader> {
 
     /**

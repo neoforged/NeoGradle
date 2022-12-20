@@ -46,7 +46,7 @@ public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetada
         }
 
         try {
-            final Path artifactPath = entryCandidate.get().artifactPath(this.rootDirectoryProvider.get().getAsFile().toPath());
+            final Path artifactPath = entryCandidate.get().buildArtifactPath(this.rootDirectoryProvider.get().getAsFile().toPath());
             Files.createFile(artifactPath);
         } catch (IOException e) {
             throw new RuntimeException("Failed to create dummy artifact!", e);

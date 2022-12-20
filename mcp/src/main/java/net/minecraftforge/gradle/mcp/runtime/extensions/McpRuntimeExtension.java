@@ -2,22 +2,23 @@ package net.minecraftforge.gradle.mcp.runtime.extensions;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.extensions.MappingsExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.minecraftforge.gradle.common.runtime.naming.ApplyMappingsTaskBuildingContext;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.runtime.tasks.ListLibraries;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.util.Artifact;
-import net.minecraftforge.gradle.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.FileUtils;
-import net.minecraftforge.gradle.common.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.common.util.NamingConstants;
 import net.minecraftforge.gradle.common.util.VersionJson;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"}) // API Design
@@ -67,19 +69,19 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         );
     }
 
-    private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpec spec, File mcpDirectory, Map<String, File> data, LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> tasks, McpConfigConfigurationSpecV1.Step step, IRuntimeTask mcpRuntimeTask, Optional<TaskProvider<? extends ITaskWithOutput>> alternativeInputProvider) {
+    private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpec spec, File mcpDirectory, Map<String, File> data, LinkedHashMap<String, TaskProvider<? extends WithOutput>> tasks, McpConfigConfigurationSpecV1.Step step, Runtime mcpRuntimeTask, Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         mcpRuntimeTask.getArguments().set(buildArguments(spec, step, tasks, mcpRuntimeTask, alternativeInputProvider));
         configureCommonMcpRuntimeTaskParameters(mcpRuntimeTask, data, step.getName(), spec, mcpDirectory);
     }
 
-    private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpec spec, File mcpDirectory, Map<String, File> data, IRuntimeTask mcpRuntimeTask) {
+    private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpec spec, File mcpDirectory, Map<String, File> data, Runtime mcpRuntimeTask) {
         mcpRuntimeTask.getArguments().set(Maps.newHashMap());
         configureCommonMcpRuntimeTaskParameters(mcpRuntimeTask, data, McpRuntimeUtils.buildStepName(spec, mcpRuntimeTask.getName()), spec, mcpDirectory);
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @Nullable
-    private static TaskProvider<? extends ITaskWithOutput> createBuiltIn(final McpRuntimeSpec spec, McpConfigConfigurationSpecV2 mcpConfigV2, McpConfigConfigurationSpecV1.Step step, final Map<String, TaskProvider<? extends ITaskWithOutput>> tasks, final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactTaskProviders, final Optional<TaskProvider<? extends ITaskWithOutput>> adaptedInput) {
+    private static TaskProvider<? extends WithOutput> createBuiltIn(final McpRuntimeSpec spec, McpConfigConfigurationSpecV2 mcpConfigV2, McpConfigConfigurationSpecV1.Step step, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviders, final Optional<TaskProvider<? extends WithOutput>> adaptedInput) {
         switch (step.getType()) {
             case "downloadManifest":
                 return gameArtifactTaskProviders.computeIfAbsent(GameArtifact.LAUNCHER_MANIFEST, a -> {
@@ -131,7 +133,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         return null;
     }
 
-    private static TaskProvider<? extends IRuntimeTask> createExecute(final McpRuntimeSpec spec, final McpConfigConfigurationSpecV1.Step step, final McpConfigConfigurationSpecV1.Function function) {
+    private static TaskProvider<? extends Runtime> createExecute(final McpRuntimeSpec spec, final McpConfigConfigurationSpecV1.Step step, final McpConfigConfigurationSpecV1.Function function) {
         return spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
             task.getExecutingArtifact().set(function.getVersion());
             task.getJvmArguments().addAll(function.getJvmArgs());
@@ -139,12 +141,12 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         });
     }
 
-    private static Map<String, Provider<String>> buildArguments(final McpRuntimeSpec spec, McpConfigConfigurationSpecV1.Step step, final Map<String, TaskProvider<? extends ITaskWithOutput>> tasks, final IRuntimeTask taskForArguments, final Optional<TaskProvider<? extends ITaskWithOutput>> alternativeInputProvider) {
+    private static Map<String, Provider<String>> buildArguments(final McpRuntimeSpec spec, McpConfigConfigurationSpecV1.Step step, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         final Map<String, Provider<String>> arguments = new HashMap<>();
 
         step.getValues().forEach((key, value) -> {
             if (value.startsWith("{") && value.endsWith("}")) {
-                Optional<TaskProvider<? extends ITaskWithOutput>> dependentTask;
+                Optional<TaskProvider<? extends WithOutput>> dependentTask;
                 if (!Objects.equals(key, "input") || !alternativeInputProvider.isPresent()) {
                     dependentTask = McpRuntimeUtils.getInputTaskForTaskFrom(spec, value, tasks);
                 } else {
@@ -218,7 +220,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                 spec.project().getDependencies().create(library)
         ));
 
-        final Map<GameArtifact, TaskProvider<? extends ITaskWithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec, mcpDirectory);
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec, mcpDirectory);
 
         final Map<String, File> data = buildDataMap(mcpConfig, spec.side(), unpackedMcpZipDirectory);
 
@@ -261,9 +263,9 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
             throw new IllegalArgumentException("Unknown side: " + spec.side() + " For Config: " + definition.spec().mcpVersion());
         }
 
-        final LinkedHashMap<String, TaskProvider<? extends ITaskWithOutput>> taskOutputs = definition.taskOutputs();
+        final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs = definition.taskOutputs();
         for (McpConfigConfigurationSpecV1.Step step : steps) {
-            Optional<TaskProvider<? extends ITaskWithOutput>> adaptedInput = Optional.empty();
+            Optional<TaskProvider<? extends WithOutput>> adaptedInput = Optional.empty();
 
             if (spec.preTaskTypeAdapters().containsKey(step.getName())) {
                 final String inputArgumentMarker = step.getValue("input");
@@ -271,11 +273,11 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                     throw new IllegalStateException("Can not change input chain on: " + step.getName() + " it has no input to transform!");
                 }
 
-                Optional<TaskProvider<? extends ITaskWithOutput>> inputTask = McpRuntimeUtils.getInputTaskForTaskFrom(spec, inputArgumentMarker, taskOutputs);
+                Optional<TaskProvider<? extends WithOutput>> inputTask = McpRuntimeUtils.getInputTaskForTaskFrom(spec, inputArgumentMarker, taskOutputs);
 
                 if (!spec.preTaskTypeAdapters().get(step.getName()).isEmpty() && inputTask.isPresent()) {
                     for (TaskTreeAdapter taskTreeAdapter : spec.preTaskTypeAdapters().get(step.getName())) {
-                        final TaskProvider<? extends IRuntimeTask> modifiedTree = taskTreeAdapter.adapt(spec, inputTask.get(), taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task)));
+                        final TaskProvider<? extends Runtime> modifiedTree = taskTreeAdapter.adapt(spec, inputTask.get(), taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task)));
                         modifiedTree.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task));
                         inputTask = Optional.of(modifiedTree);
                     }
@@ -284,7 +286,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                 }
             }
 
-            TaskProvider<? extends ITaskWithOutput> mcpRuntimeTaskProvider = createBuiltIn(spec, mcpConfig, step, taskOutputs, definition.gameArtifactProvidingTasks(), adaptedInput);
+            TaskProvider<? extends WithOutput> mcpRuntimeTaskProvider = createBuiltIn(spec, mcpConfig, step, taskOutputs, definition.gameArtifactProvidingTasks(), adaptedInput);
 
             if (mcpRuntimeTaskProvider == null) {
                 McpConfigConfigurationSpecV1.Function function = mcpConfig.getFunction(step.getType());
@@ -295,10 +297,10 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                 mcpRuntimeTaskProvider = createExecute(spec, step, function);
             }
 
-            Optional<TaskProvider<? extends ITaskWithOutput>> finalAdaptedInput = adaptedInput;
-            mcpRuntimeTaskProvider.configure((ITaskWithOutput mcpRuntimeTask) ->{
-                if (mcpRuntimeTask instanceof IRuntimeTask) {
-                    final IRuntimeTask runtimeTask = (IRuntimeTask) mcpRuntimeTask;
+            Optional<TaskProvider<? extends WithOutput>> finalAdaptedInput = adaptedInput;
+            mcpRuntimeTaskProvider.configure((WithOutput mcpRuntimeTask) ->{
+                if (mcpRuntimeTask instanceof Runtime) {
+                    final Runtime runtimeTask = (Runtime) mcpRuntimeTask;
                     configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, taskOutputs, step, runtimeTask, finalAdaptedInput);
                 }
             });
@@ -307,7 +309,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                 taskOutputs.put(mcpRuntimeTaskProvider.getName(), mcpRuntimeTaskProvider);
             } else {
                 for (TaskTreeAdapter taskTreeAdapter : spec.postTypeAdapters().get(step.getName())) {
-                    final TaskProvider<? extends IRuntimeTask> taskProvider = taskTreeAdapter.adapt(spec, mcpRuntimeTaskProvider, dependentTaskProvider -> dependentTaskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task)));
+                    final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(spec, mcpRuntimeTaskProvider, dependentTaskProvider -> dependentTaskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task)));
                     taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task));
                     mcpRuntimeTaskProvider = taskProvider;
                 }
@@ -316,24 +318,25 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
             }
         }
 
-        final TaskProvider<? extends ITaskWithOutput> lastTask = Iterators.getLast(taskOutputs.values().iterator());
+        final TaskProvider<? extends WithOutput> lastTask = Iterators.getLast(taskOutputs.values().iterator());
 
-        final Map<String, String> versionData = Maps.newHashMap(mappingsExtension.getMappingVersion().get());
+        final Map<String, String> versionData = Maps.newHashMap(mappingsExtension.getVersion().get());
         versionData.put(NamingConstants.Version.MINECRAFT_VERSION, spec.minecraftVersion());
         versionData.put(McpRuntimeConstants.Naming.Version.MCP_RUNTIME, spec.name());
         definition.configureMappingVersionData(versionData);
-        final ApplyMappingsTaskBuildingContext context = new ApplyMappingsTaskBuildingContext(
-                spec.project(), "mapGame", lastTask, versionData, definition.gameArtifactProvidingTasks()
+        final Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks = Sets.newHashSet();
+        final TaskBuildingContext context = new TaskBuildingContext(
+                spec.project(), "mapGame", lastTask, definition.gameArtifactProvidingTasks(), versionData, additionalRuntimeTasks
         );
 
-        final TaskProvider<? extends IRuntimeTask> remapTask = context.namingChannelProvider().getApplySourceMappingsTaskBuilder().get().build(context);
-        context.additionalRuntimeTasks().forEach(taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task)));
+        final TaskProvider<? extends Runtime> remapTask = context.getNamingChannel().getApplySourceMappingsTaskBuilder().get().build(context);
+        additionalRuntimeTasks.forEach(taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task)));
         remapTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task));
 
         final FileCollection recompileDependencies = spec.additionalRecompileDependencies().plus(spec.project().files(definition.minecraftDependenciesConfiguration()));
-        final TaskProvider<? extends IRuntimeTask> recompileTask = spec.project()
+        final TaskProvider<? extends Runtime> recompileTask = spec.project()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, recompileSourceJar -> {
-                    recompileSourceJar.getInputJar().set(remapTask.flatMap(ITaskWithOutput::getOutput));
+                    recompileSourceJar.getInputJar().set(remapTask.flatMap(WithOutput::getOutput));
                     recompileSourceJar.getCompileClasspath().setFrom(recompileDependencies);
                     recompileSourceJar.getStepName().set("recompile");
                 });
@@ -342,11 +345,11 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         taskOutputs.put(recompileTask.getName(), recompileTask);
 
         definition.sourceJarTask().configure(task -> {
-            task.getInput().set(remapTask.flatMap(ITaskWithOutput::getOutput));
+            task.getInput().set(remapTask.flatMap(WithOutput::getOutput));
             task.dependsOn(remapTask);
         });
         definition.rawJarTask().configure(task -> {
-            task.getInput().set(recompileTask.flatMap(ITaskWithOutput::getOutput));
+            task.getInput().set(recompileTask.flatMap(WithOutput::getOutput));
             task.dependsOn(recompileTask);
         });
     }

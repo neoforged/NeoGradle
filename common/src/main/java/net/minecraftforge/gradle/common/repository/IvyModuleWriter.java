@@ -73,7 +73,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer.writeAttribute("version", "2.0");
 
         this.writeInfo(descriptor);
-        this.writeDependencies(descriptor.dependencies());
+        this.writeDependencies(descriptor.getDependencies());
 
         this.writer.writeEndElement();
         this.writer.writeEndDocument();
@@ -82,9 +82,9 @@ public final class IvyModuleWriter implements AutoCloseable {
     private void writeInfo(final IvyDummyRepositoryEntry entry) throws XMLStreamException {
         this.writer.writeStartElement("info");
         // Common attributes
-        this.writer.writeAttribute("organisation", entry.fullGroup());
-        this.writer.writeAttribute("module", entry.name());
-        this.writer.writeAttribute("revision", entry.version());
+        this.writer.writeAttribute("organisation", entry.getFullGroup());
+        this.writer.writeAttribute("module", entry.getName());
+        this.writer.writeAttribute("revision", entry.getVersion());
         this.writer.writeAttribute("status", "release"); // gradle wants release... we must please the gradle...
 
         // License
@@ -97,18 +97,18 @@ public final class IvyModuleWriter implements AutoCloseable {
     }
 
 
-    private void writeDependencies(final Collection<IvyDummyRepositoryEntryDependency> dependencies) throws XMLStreamException {
+    private void writeDependencies(final Collection<IvyDummyRepositoryReference> dependencies) throws XMLStreamException {
         this.writer.writeStartElement("dependencies");
 
-        for (final IvyDummyRepositoryEntryDependency extra : dependencies) {
+        for (final IvyDummyRepositoryReference extra : dependencies) {
             this.writeDependency(extra);
         }
 
         this.writer.writeEndElement();
     }
 
-    private void writeDependency(final IvyDummyRepositoryEntryDependency dep) throws XMLStreamException {
-        boolean hasClassifier = dep.classifier() != null;
+    private void writeDependency(final IvyDummyRepositoryReference dep) throws XMLStreamException {
+        boolean hasClassifier = dep.getClassifier() != null;
 
         if (hasClassifier) {
             this.writer.writeStartElement("dependency");
@@ -116,15 +116,15 @@ public final class IvyModuleWriter implements AutoCloseable {
             this.writer.writeEmptyElement("dependency");
         }
 
-        this.writer.writeAttribute("org", dep.group());
-        this.writer.writeAttribute("name", dep.name());
-        this.writer.writeAttribute("rev", dep.version());
+        this.writer.writeAttribute("org", dep.getGroup());
+        this.writer.writeAttribute("name", dep.getName());
+        this.writer.writeAttribute("rev", dep.getVersion());
         this.writer.writeAttribute("transitive", "false");
 
         if (hasClassifier) {
             this.writer.writeEmptyElement("artifact");
-            this.writer.writeAttribute("name", dep.name());
-            this.writer.writeAttribute("classifier", dep.classifier());
+            this.writer.writeAttribute("name", dep.getName());
+            this.writer.writeAttribute("classifier", dep.getClassifier());
             this.writer.writeAttribute("ext", "jar");
             this.writer.writeEndElement();
         }

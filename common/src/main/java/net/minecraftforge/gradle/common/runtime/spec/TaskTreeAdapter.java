@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.spec;
 
-import net.minecraftforge.gradle.common.runtime.tasks.IRuntimeTask;
-import net.minecraftforge.gradle.common.tasks.ITaskWithOutput;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +24,7 @@ public interface TaskTreeAdapter {
      * @return The task to run.
      */
     @NotNull
-    TaskProvider<? extends IRuntimeTask> adapt(final CommonRuntimeSpec spec, final Provider<? extends ITaskWithOutput> previousTasksOutput, final Consumer<TaskProvider<? extends IRuntimeTask>> dependentTaskConfigurationHandler);
+    TaskProvider<? extends Runtime> adapt(final CommonRuntimeSpec spec, final Provider<? extends WithOutput> previousTasksOutput, final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler);
 
     /**
      * Runs the given task adapter after the current one.
@@ -38,10 +38,10 @@ public interface TaskTreeAdapter {
     default TaskTreeAdapter andThen(final TaskTreeAdapter after) {
         Objects.requireNonNull(after);
         return (spec, previousTaskOutput, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends IRuntimeTask> currentAdapted = TaskTreeAdapter.this.adapt(spec, previousTaskOutput, dependentTaskConfigurationHandler);
+            final TaskProvider<? extends Runtime> currentAdapted = TaskTreeAdapter.this.adapt(spec, previousTaskOutput, dependentTaskConfigurationHandler);
             dependentTaskConfigurationHandler.accept(currentAdapted);
 
-            final TaskProvider<? extends IRuntimeTask> afterAdapted = after.adapt(spec, currentAdapted, dependentTaskConfigurationHandler);
+            final TaskProvider<? extends Runtime> afterAdapted = after.adapt(spec, currentAdapted, dependentTaskConfigurationHandler);
             afterAdapted.configure(task -> task.dependsOn(currentAdapted));
 
             return afterAdapted;

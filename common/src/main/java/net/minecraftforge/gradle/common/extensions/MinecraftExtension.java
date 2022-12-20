@@ -20,41 +20,53 @@
 
 package net.minecraftforge.gradle.common.extensions;
 
-import groovy.lang.GroovyObjectSupport;
-import net.minecraftforge.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
-import net.minecraftforge.gradle.common.util.IConfigurableObject;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
+import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.dsl.common.extensions.Deobfuscation;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
-public abstract class MinecraftExtension extends GroovyObjectSupport implements IConfigurableObject<MinecraftExtension> {
+public abstract class MinecraftExtension extends ConfigurableObject<Minecraft> implements Minecraft {
 
     private final Project project;
-    private final BaseFilesWithEntriesExtension accessTransformers;
-    private final NamedDomainObjectContainer<NamingChannelProvider> namingChannelProviders;
+    private final AccessTransformersExtension accessTransformers;
+    private final NamedDomainObjectContainer<NamingChannel> namingChannelProviders;
 
     @Inject
     public MinecraftExtension(final Project project) {
         this.project = project;
-        this.accessTransformers = project.getObjects().newInstance(BaseFilesWithEntriesExtension.class, project);
-        this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannelProvider.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
+        this.accessTransformers = project.getObjects().newInstance(AccessTransformersExtension.class, project);
+        this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannel.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
     }
 
+    @Override
     public Project getProject() {
         return project;
     }
 
-    public NamedDomainObjectContainer<NamingChannelProvider> getNamingChannelProviders() {
+    @Override
+    public NamedDomainObjectContainer<NamingChannel> getNamingChannelProviders() {
         return namingChannelProviders;
     }
 
+    @Override
     public MappingsExtension getMappings() {
         return project.getExtensions().getByType(MappingsExtension.class);
     }
 
-    public BaseFilesWithEntriesExtension getAccessTransformers() {
+    @Override
+    public AccessTransformersExtension getAccessTransformers() {
         return this.accessTransformers;
+    }
+
+    @NotNull
+    @Override
+    public Deobfuscation getDeobfuscation() {
+        return project.getExtensions().getByType(DeobfuscationExtension.class);
     }
 }

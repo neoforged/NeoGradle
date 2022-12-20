@@ -12,7 +12,7 @@ import org.gradle.api.Project
 interface ProjectAssociatedDSLElement {
 
     /**
-     * @returns The project that this object belongs to.
+     * @return The project that this object belongs to.
      */
     @ProjectGetter
     Project getProject();

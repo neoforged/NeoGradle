@@ -1,14 +1,12 @@
 package net.minecraftforge.gradle.common.tasks;
 
 import net.minecraftforge.gradle.common.util.AdaptingZipBuildingFileTreeVisitor;
-import net.minecraftforge.gradle.common.util.FileUtils;
-import net.minecraftforge.gradle.common.util.ZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileVisitDetails;
-import org.gradle.api.file.FileVisitor;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
-import org.gradle.internal.impldep.org.apache.ivy.util.FileUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +15,7 @@ import java.util.function.BiConsumer;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
-public abstract class ObfuscatedDependencyMarker extends DefaultTask implements ITaskWithOutput, ITaskWithWorkspace {
+public abstract class ObfuscatedDependencyMarker extends DefaultTask implements WithOutput, WithWorkspace {
 
 
     public ObfuscatedDependencyMarker() {
