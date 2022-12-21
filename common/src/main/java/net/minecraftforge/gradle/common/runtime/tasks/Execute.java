@@ -27,7 +27,7 @@ public abstract class Execute extends Runtime implements net.minecraftforge.grad
                 f -> new JarFile(f.getAsFile())
         )));
 
-        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact, false))));
+        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact))));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
     }

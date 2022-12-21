@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.repository;
+package net.minecraftforge.gradle.common.extensions.repository;
 
 import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
@@ -6,12 +6,12 @@ import net.minecraftforge.gradle.common.util.ResolvedDependencyUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryReference;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.DependencyArtifact;
-import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedDependency;
 
 import java.util.Objects;
 
-public abstract class IvyDummyRepositoryReference extends ConfigurableObject<IvyDummyRepositoryReference> implements RepositoryReference<IvyDummyRepositoryReference> {
+public abstract class IvyDummyRepositoryReference extends ConfigurableObject<IvyDummyRepositoryReference> implements RepositoryReference {
     private static final long serialVersionUID = 8472300128115908221L;
 
     private final Project project;
@@ -129,7 +129,7 @@ public abstract class IvyDummyRepositoryReference extends ConfigurableObject<Ivy
         }
 
         @Override
-        public Builder from(ExternalModuleDependency externalModuleDependency) {
+        public Builder from(ModuleDependency externalModuleDependency) {
             setGroup(externalModuleDependency.getGroup());
             setName(externalModuleDependency.getName());
             setVersion(externalModuleDependency.getVersion());

@@ -1,10 +1,10 @@
 package net.minecraftforge.gradle.common.runtime.extensions;
 
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.spec.builder.CommonRuntimeSpecBuilder;
+import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
@@ -52,7 +52,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpec, B exte
     }
 
     protected static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final CommonRuntimeSpec spec, final File runtimeWorkingDirectory) {
-        final MinecraftArtifactCacheExtension artifactCache = spec.configureProject().getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        final MinecraftArtifactCache artifactCache = spec.configureProject().getExtensions().getByType(MinecraftArtifactCache.class);
         return artifactCache.cacheGameVersionTasks(spec.project(), new File(runtimeWorkingDirectory, "cache"), spec.minecraftVersion(), spec.side());
     }
 

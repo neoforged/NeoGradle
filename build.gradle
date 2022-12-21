@@ -15,7 +15,7 @@ changelog {
 subprojects { Project subproject ->
     subproject.apply plugin: 'net.minecraftforge.gradleutils'
 
-    subproject.apply plugin: 'java-gradle-plugin'
+    subproject.apply plugin: 'java-library'
     subproject.apply plugin: 'maven-publish'
 
     subproject.apply plugin: 'eclipse'
@@ -46,7 +46,11 @@ subprojects { Project subproject ->
 
     subproject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
 
-    subproject.gradlePlugin.automatedPublishing = true
+    subproject.afterEvaluate { Project evaledSubProject ->
+        if (evaledSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
+            subproject.gradlePlugin.automatedPublishing = true
+        }
+    }
 
     subproject.publishing.publications {
         pluginMaven(MavenPublication) { MavenPublication publication ->

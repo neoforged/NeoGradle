@@ -21,14 +21,13 @@
 package net.minecraftforge.gradle.common.util;
 
 import com.google.common.collect.Lists;
-import groovy.lang.GroovyObjectSupport;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 
-public abstract class ModConfig extends GroovyObjectSupport implements IConfigurableObject<ModConfig> {
+public abstract class ModConfig extends ConfigurableObject<ModConfig> {
     private final Provider<String> name;
 
     public ModConfig(final Project project, final String name) {

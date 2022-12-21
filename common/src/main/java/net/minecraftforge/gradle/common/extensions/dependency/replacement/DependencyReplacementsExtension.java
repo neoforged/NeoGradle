@@ -1,9 +1,9 @@
 package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.extensions.IvyDummyRepositoryExtension;
+import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
 import net.minecraftforge.gradle.common.ide.IdeManager;
-import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntry;
+import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryEntry;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.DependencyGenerationTask;
 import net.minecraftforge.gradle.common.tasks.RawAndSourceCombiner;
@@ -12,6 +12,8 @@ import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -54,6 +56,11 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
     }
 
     @Override
+    public Project getProject() {
+        return project;
+    }
+
+    @Override
     @NotNull
     public NamedDomainObjectContainer<DependencyReplacementHandler> getReplacementHandlers() {
         return this.dependencyReplacementHandlers;
@@ -67,9 +74,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
                 .filter(Optional::isPresent)
                 .findFirst()
                 .map(Optional::get)
-                .ifPresent(result -> {
-                    handleDependencyReplacement(configuration, dependency, result);
-                });
+                .ifPresent(result -> handleDependencyReplacement(configuration, dependency, result));
     }
 
     private void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result) {
@@ -133,7 +138,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
 
         final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
 
-        final IvyDummyRepositoryExtension extension = project.getExtensions().getByType(IvyDummyRepositoryExtension.class);
+        final Repository<?,?,?,?,?> extension = project.getExtensions().getByType(Repository.class);
         final Provider<Directory> repoBaseDir = extension.getRepositoryDirectory();
         try {
             extension.withDependency(builder -> {
@@ -162,7 +167,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
     @FunctionalInterface
     private interface TaskProviderGenerator {
 
-        TaskProvider<? extends Task> generate(final Provider<Directory> repoBaseDir, final IvyDummyRepositoryEntry entry);
+        TaskProvider<? extends Task> generate(final Provider<Directory> repoBaseDir, final RepositoryEntry<?,?> entry);
     }
 
 }

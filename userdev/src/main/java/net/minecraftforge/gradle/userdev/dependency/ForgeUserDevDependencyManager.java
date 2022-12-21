@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.userdev.dependency;
 
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.userdev.runtime.ForgeUserDevRuntimeDefinition;
@@ -26,7 +27,7 @@ public final class ForgeUserDevDependencyManager {
     }
 
     public void apply(final Project project) {
-        final DependencyReplacementsExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementsExtension.class);
+        final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
         dependencyReplacer.getReplacementHandlers().add(context -> {
             if (isNotAMatchingDependency(context.dependency())) {
                 return Optional.empty();

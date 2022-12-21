@@ -7,6 +7,8 @@ import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +23,7 @@ import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class ObfuscationExtension extends ConfigurableObject<ObfuscationExtension> {
+public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscation> implements Obfuscation {
 
     private final Project project;
 
@@ -44,7 +46,11 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
         });
     }
 
-    public abstract Property<Boolean> getCreateAutomatically();
+
+    @Override
+    public Project getProject() {
+        return project;
+    }
 
     @SuppressWarnings({"unchecked", "deprecation"})
     public Object methodMissing(String name, Object args) {
@@ -72,7 +78,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
 
     private TaskProvider<? extends WithOutput> createObfuscateTask(TaskProvider<? extends Jar> jarTask) {
         jarTasksWithObfuscation.add(jarTask.getName());
-        final MappingsExtension mappingsExtension = project.getExtensions().getByType(MappingsExtension.class);
+        final Mappings mappingsExtension = project.getExtensions().getByType(Mappings.class);
 
         //TODO: Handle mapping version detection!
         final TaskProvider<? extends WithOutput> devArtifactProvider = project.getTasks().register("provideDevelop" + StringUtils.capitalize(jarTask.getName()), ArtifactFromOutput.class, task -> {

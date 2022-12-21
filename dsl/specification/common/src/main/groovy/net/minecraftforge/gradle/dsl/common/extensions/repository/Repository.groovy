@@ -20,7 +20,7 @@ import java.util.function.Consumer
  * @param <TDependencyBuilder> The type of the dependency builder which is used to define the dummy repository entry dependencies.
  */
 @CompileStatic
-interface Repository<TSelf extends Repository<TSelf, TEntry, TEntryBuilder, TDependency, TDependencyBuilder>, TEntry extends RepositoryEntry<TEntry, TDependency>, TEntryBuilder extends RepositoryEntry.Builder<TEntryBuilder, TDependency, TDependencyBuilder>, TDependency extends RepositoryReference<TDependency>, TDependencyBuilder extends RepositoryReference.Builder<TDependencyBuilder, TDependency>> extends BaseDSLElement<TSelf> {
+interface Repository<TSelf extends Repository<TSelf, TEntry, TEntryBuilder, TDependency, TDependencyBuilder>, TEntry extends RepositoryEntry<TEntry, TDependency>, TEntryBuilder extends RepositoryEntry.Builder<TEntryBuilder, TDependency, TDependencyBuilder>, TDependency extends RepositoryReference, TDependencyBuilder extends RepositoryReference.Builder<TDependencyBuilder, TDependency>> extends BaseDSLElement<TSelf> {
 
     /**
      * Defines the directory which functions as root for the dummy repository.

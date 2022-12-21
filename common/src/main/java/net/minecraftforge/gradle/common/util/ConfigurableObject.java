@@ -10,8 +10,4 @@ public abstract class ConfigurableObject<TSelf extends BaseDSLElement<TSelf>> ex
 
     public ConfigurableObject() {
     }
-
-    @Override
-    @Inject
-    public abstract ExtensionContainer getExtensions();
 }

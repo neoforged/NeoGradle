@@ -1,8 +1,5 @@
 package net.minecraftforge.gradle.common.runtime.naming;
 
-import net.minecraftforge.gradle.common.extensions.MappingsExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
@@ -10,7 +7,13 @@ import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappin
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
-import net.minecraftforge.gradle.common.util.*;
+import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.common.util.GradleInternalUtils;
+import net.minecraftforge.gradle.common.util.MappingUtils;
+import net.minecraftforge.gradle.common.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
@@ -22,9 +25,7 @@ import org.gradle.api.Transformer;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.reflect.TypeOf;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -46,9 +47,9 @@ public final class OfficialNamingChannelConfigurator {
     }
 
     public void configure(final Project project) {
-        final MinecraftExtension minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
+        final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
 
-        final MappingsExtension mappingsExtension = minecraftExtension.getMappings();
+        final Mappings mappingsExtension = minecraftExtension.getMappings();
         mappingsExtension.getExtensions().add(TypeOf.typeOf(Boolean.class), "acceptMojangEula", false);
 
         minecraftExtension.getNamingChannelProviders().register("official", namingChannelProvider -> {
@@ -164,7 +165,7 @@ public final class OfficialNamingChannelConfigurator {
     }
 
     private @NotNull Provider<String> getLicenseText(Project project) {
-        final MinecraftArtifactCacheExtension cacheExtension = project.getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        final MinecraftArtifactCache cacheExtension = project.getExtensions().getByType(MinecraftArtifactCache.class);
 
         return project.provider(() -> GradleInternalUtils.getExtensions(project.getExtensions())
                 .stream()

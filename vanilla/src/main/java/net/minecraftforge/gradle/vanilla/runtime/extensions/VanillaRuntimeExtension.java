@@ -2,26 +2,22 @@ package net.minecraftforge.gradle.vanilla.runtime.extensions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
-import net.minecraftforge.gradle.common.extensions.MappingsExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
+import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.common.util.VersionJson;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
-import net.minecraftforge.gradle.common.util.Utils;
-import net.minecraftforge.gradle.common.util.VersionJson;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpec;
 import net.minecraftforge.gradle.vanilla.runtime.spec.builder.VanillaRuntimeSpecBuilder;
-import net.minecraftforge.gradle.vanilla.runtime.steps.ApplyAccessTransformerStep;
-import net.minecraftforge.gradle.vanilla.runtime.steps.CollectLibraryInformationStep;
-import net.minecraftforge.gradle.vanilla.runtime.steps.DecompileStep;
-import net.minecraftforge.gradle.vanilla.runtime.steps.IStep;
-import net.minecraftforge.gradle.vanilla.runtime.steps.RenameStep;
+import net.minecraftforge.gradle.vanilla.runtime.steps.*;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Property;
@@ -54,9 +50,9 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         if (this.runtimes.containsKey(spec.name()))
             throw new IllegalArgumentException("Cannot register runtime with name '" + spec.name() + "' because it already exists");
 
-        final MinecraftExtension minecraftExtension = spec.project().getExtensions().getByType(MinecraftExtension.class);
-        final MappingsExtension mappingsExtension = minecraftExtension.getMappings();
-        final MinecraftArtifactCacheExtension artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        final Minecraft minecraftExtension = spec.project().getExtensions().getByType(Minecraft.class);
+        final Mappings mappingsExtension = minecraftExtension.getMappings();
+        final MinecraftArtifactCache artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCache.class);
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
@@ -107,9 +103,9 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     protected void bakeDefinition(VanillaRuntimeDefinition definition) {
         final VanillaRuntimeSpec spec = definition.spec();
 
-        final MinecraftExtension minecraftExtension = spec.project().getExtensions().getByType(MinecraftExtension.class);
-        final MappingsExtension mappingsExtension = minecraftExtension.getMappings();
-        final MinecraftArtifactCacheExtension artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        final Minecraft minecraftExtension = spec.project().getExtensions().getByType(Minecraft.class);
+        final Mappings mappingsExtension = minecraftExtension.getMappings();
+        final MinecraftArtifactCache artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCache.class);
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 

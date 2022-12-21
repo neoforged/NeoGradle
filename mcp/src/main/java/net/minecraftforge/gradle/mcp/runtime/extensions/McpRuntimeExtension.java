@@ -3,24 +3,20 @@ package net.minecraftforge.gradle.mcp.runtime.extensions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.extensions.MappingsExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
-import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.runtime.tasks.ListLibraries;
+import net.minecraftforge.gradle.common.util.*;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
-import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
-import net.minecraftforge.gradle.common.util.NamingConstants;
-import net.minecraftforge.gradle.common.util.VersionJson;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.extensions.McpExtension;
@@ -46,13 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"}) // API Design
@@ -177,9 +167,9 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         if (this.runtimes.containsKey(spec.name()))
             throw new IllegalArgumentException("Cannot register runtime with name '" + spec.name() + "' because it already exists");
 
-        final MinecraftExtension minecraftExtension = spec.project().getExtensions().getByType(MinecraftExtension.class);
-        final MappingsExtension mappingsExtension = minecraftExtension.getMappings();
-        final MinecraftArtifactCacheExtension artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        final Minecraft minecraftExtension = spec.project().getExtensions().getByType(Minecraft.class);
+        final Mappings mappingsExtension = minecraftExtension.getMappings();
+        final MinecraftArtifactCache artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCache.class);
         final Dependency mcpConfigDependency = spec.project().getDependencies().create("de.oceanlabs.mcp:mcp_config:" + spec.mcpVersion() + "@zip");
         final Configuration mcpDownloadConfiguration = spec.project().getConfigurations().detachedConfiguration(mcpConfigDependency);
         final ResolvedConfiguration resolvedConfiguration = mcpDownloadConfiguration.getResolvedConfiguration();
@@ -246,9 +236,9 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         final McpRuntimeSpec spec = definition.spec();
         final McpConfigConfigurationSpecV2 mcpConfig = definition.mcpConfig();
 
-        final MinecraftExtension minecraftExtension = spec.project().getExtensions().getByType(MinecraftExtension.class);
-        final MappingsExtension mappingsExtension = minecraftExtension.getMappings();
-        final MinecraftArtifactCacheExtension artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        final Minecraft minecraftExtension = spec.project().getExtensions().getByType(Minecraft.class);
+        final Mappings mappingsExtension = minecraftExtension.getMappings();
+        final MinecraftArtifactCache artifactCacheExtension = spec.project().getExtensions().getByType(MinecraftArtifactCache.class);
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 

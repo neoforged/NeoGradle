@@ -1,10 +1,10 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
-import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
-import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import net.minecraftforge.gradle.vanilla.runtime.spec.builder.VanillaRuntimeSpecBuilder;
@@ -28,7 +28,7 @@ public final class VanillaDependencyManager {
     }
 
     public void apply(final Project project) {
-        final DependencyReplacementsExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementsExtension.class);
+        final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
         dependencyReplacer.getReplacementHandlers().add(context -> {
             if (isNotAMatchingDependency(context.dependency())) {
                 return Optional.empty();

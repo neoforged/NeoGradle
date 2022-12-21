@@ -32,6 +32,5 @@ public abstract class DependencyReplacementHandlerImpl extends ConfigurableObjec
     }
 
     @Override
-    @Inject
     public abstract Property<DependencyReplacer> getReplacer();
 }

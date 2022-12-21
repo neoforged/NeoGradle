@@ -1,19 +1,18 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
-import net.minecraftforge.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
-import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
-import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
-import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
+import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
-import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
-import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
+import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -22,7 +21,10 @@ import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.tasks.TaskProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 
 public final class McpDependencyManager {
     private static final McpDependencyManager INSTANCE = new McpDependencyManager();
@@ -35,7 +37,7 @@ public final class McpDependencyManager {
     }
 
     public void apply(final Project project) {
-        final DependencyReplacementsExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementsExtension.class);
+        final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
 
         dependencyReplacer.getReplacementHandlers().create("mcp", handler -> {
             handler.getReplacer().set(context -> {
@@ -112,7 +114,7 @@ public final class McpDependencyManager {
     }
 
     private static TaskTreeAdapter createAccessTransformerAdapter(final Project project) {
-        final MinecraftExtension minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
+        final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
         final AccessTransformers accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
         return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {

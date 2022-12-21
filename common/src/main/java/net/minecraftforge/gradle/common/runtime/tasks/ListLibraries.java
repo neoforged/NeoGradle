@@ -49,7 +49,7 @@ public abstract class ListLibraries extends Runtime {
             Set<File> libraries = new HashSet<>();
             for (String artifact : artifacts) {
                 final ArtifactDownloaderExtension downloader = getDownloader().get();
-                File lib = downloader.file(artifact, false).get();
+                File lib = downloader.file(artifact).get();
                 libraries.add(lib);
             }
 

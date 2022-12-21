@@ -18,7 +18,7 @@ import java.util.function.Consumer
  */
 @CompileStatic
 @DefaultMethods
-interface ConfigurableDSLElement<T extends ConfigurableDSLElement<T>> extends Configurable<T>, ExtensionAware {
+trait ConfigurableDSLElement<T extends ConfigurableDSLElement<T>> implements Configurable<T>, ExtensionAware {
 
     /**
      * Returns the current instance cast to the right target.

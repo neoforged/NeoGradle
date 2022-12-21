@@ -40,7 +40,7 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements E
                 f -> new JarFile(f.getAsFile())
         )));
 
-        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact, false))));
+        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact))));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
 

@@ -15,7 +15,7 @@ import org.gradle.api.tasks.OutputFile;
  */
 @CompileStatic
 @DefaultMethods
-trait WithOutput implements Task, WithWorkspace {
+trait WithOutput implements Task, WithWorkspace, WithProject {
 
     /**
      * The output file of this task as configured.

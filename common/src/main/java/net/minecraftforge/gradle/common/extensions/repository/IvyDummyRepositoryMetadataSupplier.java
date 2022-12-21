@@ -1,7 +1,6 @@
-package net.minecraftforge.gradle.common.repository;
+package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.Lists;
-import net.minecraftforge.gradle.common.extensions.IvyDummyRepositoryExtension;
 import org.gradle.api.artifacts.ComponentMetadataBuilder;
 import org.gradle.api.artifacts.ComponentMetadataSupplier;
 import org.gradle.api.artifacts.ComponentMetadataSupplierDetails;

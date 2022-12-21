@@ -25,6 +25,11 @@ public abstract class ArtifactDownloaderExtension extends ConfigurableObject<Art
     }
 
     @Override
+    public Project getProject() {
+        return project;
+    }
+
+    @Override
     @NotNull
     public Provider<String> version(String notation) {
         return project.provider(() -> {

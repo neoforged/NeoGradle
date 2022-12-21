@@ -1,8 +1,9 @@
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.extensions.MappingsExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -24,14 +25,14 @@ public abstract class DisplayMappingsLicenseTask extends ForgeGradleBaseTask {
         });
 
         this.setOnlyIf(task -> {
-            final MappingsExtension mappingsExtension = getProject().getExtensions().getByType(MappingsExtension.class);
+            final Mappings mappingsExtension = getProject().getExtensions().getByType(Mappings.class);
             return mappingsExtension.getChannel().isPresent() && !mappingsExtension.getChannel().get().getHasAcceptedLicense().getOrElse(false);
         });
     }
 
     @TaskAction
     public void run() {
-        final MappingsExtension mappingsExtension = getProject().getExtensions().getByType(MinecraftExtension.class).getMappings();
+        final Mappings mappingsExtension = getProject().getExtensions().getByType(Minecraft.class).getMappings();
 
         displayWarning(mappingsExtension.getChannel().get());
 
@@ -40,7 +41,7 @@ public abstract class DisplayMappingsLicenseTask extends ForgeGradleBaseTask {
         displayWarning(getUpdateChannel().get());
     }
 
-    private void displayWarning(NamingChannelProvider channel) {
+    private void displayWarning(NamingChannel channel) {
         Provider<String> license = channel.getLicenseText();
 
         String warning = buildWarning();

@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.repository;
+package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;

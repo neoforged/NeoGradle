@@ -1,9 +1,6 @@
 package net.minecraftforge.gradle.common.extensions.deobfuscation;
 
 import net.minecraftforge.gradle.common.extensions.DeobfuscationExtension;
-import net.minecraftforge.gradle.common.extensions.MappingsExtension;
-import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
-import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
@@ -11,35 +8,24 @@ import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.DecompileUtils;
 import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.Context;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.artifacts.LenientConfiguration;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedConfiguration;
-import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.*;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
@@ -59,33 +45,29 @@ public final class DependencyDeobfuscator {
     }
 
     public void apply(final Project project) {
-        final DependencyReplacementsExtension dependencyReplacer = project.getExtensions().getByType(DependencyReplacementsExtension.class);
+        final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
 
         dependencyReplacer.getReplacementHandlers().create("obfuscatedDependencies", handler -> {
-            handler.getReplacer().set(new DependencyReplacer() {
-
-                @Override
-                public @NotNull Optional<DependencyReplacementResult> get(@NotNull Context context) {
-                    if (!(context.getDependency() instanceof ExternalModuleDependency)) {
-                        return Optional.empty();
-                    }
-
-                    final Configuration resolver = context.getProject().getConfigurations().detachedConfiguration(context.getDependency());
-                    if (resolver.getResolvedConfiguration().getLenientConfiguration().getFiles().isEmpty()) {
-                        return Optional.empty();
-                    }
-
-                    final Set<ResolvedDependency> dependencies = resolver.getResolvedConfiguration().getLenientConfiguration().getFirstLevelModuleDependencies();
-                    if (dependencies.size() == 0) {
-                        return Optional.empty();
-                    }
-                    if (dependencies.size() != 1) {
-                        LOGGER.warn("Dependency resolution for: " + context.getDependency() + " resulted in more then one resolved dependency. Skipping deobfuscation!");
-                        return Optional.empty();
-                    }
-
-                    return determineReplacementOptions(context, dependencies.iterator().next());
+            handler.getReplacer().set(context -> {
+                if (!(context.getDependency() instanceof ExternalModuleDependency)) {
+                    return Optional.empty();
                 }
+
+                final Configuration resolver = context.getProject().getConfigurations().detachedConfiguration(context.getDependency());
+                if (resolver.getResolvedConfiguration().getLenientConfiguration().getFiles().isEmpty()) {
+                    return Optional.empty();
+                }
+
+                final Set<ResolvedDependency> dependencies = resolver.getResolvedConfiguration().getLenientConfiguration().getFirstLevelModuleDependencies();
+                if (dependencies.size() == 0) {
+                    return Optional.empty();
+                }
+                if (dependencies.size() != 1) {
+                    LOGGER.warn("Dependency resolution for: " + context.getDependency() + " resulted in more then one resolved dependency. Skipping deobfuscation!");
+                    return Optional.empty();
+                }
+
+                return determineReplacementOptions(context, dependencies.iterator().next());
             });
         });
     }
@@ -148,7 +130,7 @@ public final class DependencyDeobfuscator {
                             });
                             builder.from(resolvedDependency);
 
-                            final MappingsExtension mappings = context.getProject().getExtensions().getByType(MappingsExtension.class);
+                            final Mappings mappings = context.getProject().getExtensions().getByType(Mappings.class);
                             String deobfuscatedMappingsPrefix = mappings.getChannel().get().getDeobfuscationGroupSupplier().get();
                             if (deobfuscatedMappingsPrefix.trim().isEmpty()) {
                                 deobfuscatedMappingsPrefix = mappings.getChannel().get().getName();
@@ -159,7 +141,7 @@ public final class DependencyDeobfuscator {
                         builder -> {
                             builder.from(resolvedDependency);
 
-                            final MappingsExtension mappings = context.getProject().getExtensions().getByType(MappingsExtension.class);
+                            final Mappings mappings = context.getProject().getExtensions().getByType(Mappings.class);
                             String deobfuscatedMappingsPrefix = mappings.getChannel().get().getDeobfuscationGroupSupplier().get();
                             if (deobfuscatedMappingsPrefix == null || deobfuscatedMappingsPrefix.trim().isEmpty()) {
                                 deobfuscatedMappingsPrefix = mappings.getChannel().get().getName();
@@ -246,7 +228,7 @@ public final class DependencyDeobfuscator {
 
     private void createRawProvidingTask(final Project project, final DeobfuscatingTaskConfiguration deobfuscatingTaskConfiguration) {
         final CommonRuntimeExtension<?,?,?> commonRuntimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
-        final MappingsExtension mappingsExtension = project.getExtensions().getByType(MappingsExtension.class);
+        final Mappings mappingsExtension = project.getExtensions().getByType(Mappings.class);
 
         final File runtimeWorkingDirectory = project.getLayout().getBuildDirectory().dir("dependencies").map(dir -> dir.dir("raw")).get().getAsFile();
 
@@ -260,7 +242,7 @@ public final class DependencyDeobfuscator {
         }
         runtimeDefinition = runtimeDefinitions.iterator().next();
 
-        final MinecraftArtifactCacheExtension artifactCache = project.getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+        final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().minecraftVersion(), runtimeDefinition.spec().side());
 
         final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
@@ -295,7 +277,7 @@ public final class DependencyDeobfuscator {
         final Optional<File> sourcesFileCandidate = getFileFrom(sourcesConfiguration.getResolvedConfiguration());
 
         final CommonRuntimeExtension<?,?,?> commonRuntimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
-        final MappingsExtension mappingsExtension = project.getExtensions().getByType(MappingsExtension.class);
+        final Mappings mappingsExtension = project.getExtensions().getByType(Mappings.class);
 
         final File runtimeWorkingDirectory = project.getLayout().getBuildDirectory().dir("dependencies").map(dir -> dir.dir("sources")).get().getAsFile();
 
@@ -311,7 +293,7 @@ public final class DependencyDeobfuscator {
             }
             runtimeDefinition = runtimeDefinitions.iterator().next();
 
-            final MinecraftArtifactCacheExtension artifactCache = project.getExtensions().getByType(MinecraftArtifactCacheExtension.class);
+            final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().minecraftVersion(), runtimeDefinition.spec().side());
 
             final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {

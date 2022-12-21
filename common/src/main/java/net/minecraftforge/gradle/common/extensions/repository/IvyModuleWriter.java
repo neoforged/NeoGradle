@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.minecraftforge.gradle.common.repository;
+package net.minecraftforge.gradle.common.extensions.repository;
 
 import net.minecraftforge.gradle.common.util.IndentingXmlStreamWriter;
 

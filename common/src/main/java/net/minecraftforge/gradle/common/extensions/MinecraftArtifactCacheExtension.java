@@ -46,7 +46,6 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
     }
 
     @Override
-    @Inject
     public abstract DirectoryProperty getCacheDirectory();
 
     @Override

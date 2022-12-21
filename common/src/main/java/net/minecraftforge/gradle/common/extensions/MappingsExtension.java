@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.common.extensions;
 
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import org.gradle.api.Project;
 
 import javax.inject.Inject;
@@ -12,12 +13,12 @@ import javax.inject.Inject;
 public abstract class MappingsExtension extends ConfigurableObject<Mappings> implements Mappings {
 
     private final Project project;
-    private final MinecraftExtension minecraftExtension;
+    private final Minecraft minecraftExtension;
 
     @Inject
     public MappingsExtension(Project project) {
         this.project = project;
-        this.minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
+        this.minecraftExtension = project.getExtensions().getByType(Minecraft.class);
     }
 
     @Override
@@ -26,7 +27,7 @@ public abstract class MappingsExtension extends ConfigurableObject<Mappings> imp
     }
 
     @Override
-    public MinecraftExtension getMinecraft() {
+    public Minecraft getMinecraft() {
         return minecraftExtension;
     }
 

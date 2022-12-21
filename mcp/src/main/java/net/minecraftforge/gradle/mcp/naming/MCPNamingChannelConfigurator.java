@@ -1,13 +1,13 @@
 package net.minecraftforge.gradle.mcp.naming;
 
 import com.google.common.collect.ImmutableSet;
-import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
-import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.common.tasks.DownloadMavenArtifact;
-import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
-import net.minecraftforge.gradle.mcp.naming.tasks.ApplyMcpMappingsToSourceJar;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.mcp.naming.tasks.ApplyMcpMappingsToSourceJar;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
@@ -29,7 +29,7 @@ public final class MCPNamingChannelConfigurator {
     }
 
     public void configure(final Project project) {
-        final MinecraftExtension minecraftExtension = project.getExtensions().getByType(MinecraftExtension.class);
+        final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
         SUPPORTED_CHANNELS.forEach(channelName -> minecraftExtension.getNamingChannelProviders().register(channelName, namingChannelProvider -> {
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::build);
             namingChannelProvider.getHasAcceptedLicense().set(true);
@@ -37,7 +37,7 @@ public final class MCPNamingChannelConfigurator {
         }));
     }
 
-    public TaskProvider<DownloadMavenArtifact> buildMcpMappingsDownloadTask(@NotNull final Project project, @NotNull final NamingChannelProvider namingChannelProvider, @NotNull final String mappingsVersion) {
+    public TaskProvider<DownloadMavenArtifact> buildMcpMappingsDownloadTask(@NotNull final Project project, @NotNull final NamingChannel namingChannelProvider, @NotNull final String mappingsVersion) {
         final String mcpDownloadTaskName = String.format("downloadMcpMappings%s%s", namingChannelProvider.getName(), mappingsVersion);
 
         if (project.getTasks().findByName(mcpDownloadTaskName) != null) {
@@ -56,12 +56,12 @@ public final class MCPNamingChannelConfigurator {
         if (mappingVersion == null) {
             throw new IllegalStateException("Missing mapping version");
         }
-        final TaskProvider<DownloadMavenArtifact> downloadMavenArtifact = buildMcpMappingsDownloadTask(context.spec().project(), context.getNamingChannel(), mappingVersion);
-        final String applyTaskName = String.format("apply%s%sMappingsTo%s", StringUtils.capitalize(context.getNamingChannel().getName()), mappingVersion, StringUtils.capitalize(context.spec().name()));
+        final TaskProvider<DownloadMavenArtifact> downloadMavenArtifact = buildMcpMappingsDownloadTask(context.getProject(), context.getNamingChannel(), mappingVersion);
+        final String applyTaskName = String.format("apply%s%sMappingsTo%s", StringUtils.capitalize(context.getNamingChannel().getName()), mappingVersion, StringUtils.capitalize(context.getEnvironmentName()));
 
-        return context.spec().project().getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
+        return context.getProject().getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
             applyMcpMappingsToSourceJarTask.setGroup("ForgeGradle");
-            applyMcpMappingsToSourceJarTask.setDescription(String.format("Applies the MCP mappings for version %s to %s pipeline", mappingVersion, context.spec().name()));
+            applyMcpMappingsToSourceJarTask.setDescription(String.format("Applies the MCP mappings for version %s to %s pipeline", mappingVersion, context.getEnvironmentName()));
 
             applyMcpMappingsToSourceJarTask.getMappings().set(downloadMavenArtifact.flatMap(DownloadMavenArtifact::getOutput));
             applyMcpMappingsToSourceJarTask.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));

@@ -1,10 +1,6 @@
-package net.minecraftforge.gradle.common.extensions;
+package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryEntry;
-import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryMetadataSupplier;
-import net.minecraftforge.gradle.common.repository.IvyDummyRepositoryReference;
-import net.minecraftforge.gradle.common.repository.IvyModuleWriter;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
@@ -12,6 +8,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +18,6 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -46,11 +42,14 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
     @Inject
     public IvyDummyRepositoryExtension(Project project) {
         this.project = project;
-        this.createRepositories();
-
         this.getRepositoryDirectory().convention(project.getLayout().getBuildDirectory().dir("libs"));
+        this.createRepositories();
     }
 
+    @Override
+    public Project getProject() {
+        return project;
+    }
 
     private void createRepositories() {
         project.getRepositories().ivy(repositoryConfiguration(
@@ -61,7 +60,7 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
 
     @Override
     @NotNull
-    public abstract Property<Directory> getRepositoryDirectory();
+    public abstract DirectoryProperty getRepositoryDirectory();
 
     @SuppressWarnings("SameParameterValue") // Potentially this needs extension in the future.
     private Action<IvyArtifactRepository> repositoryConfiguration(
@@ -123,8 +122,7 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
         Files.createFile(sourcesFile);
     }
 
-    @Override
-    public Collection<IvyDummyRepositoryEntry> getEntries() {
+    public Set<IvyDummyRepositoryEntry> getEntries() {
         return entries;
     }
 }

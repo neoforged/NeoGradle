@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
-import net.minecraftforge.gradle.common.extensions.MappingsExtension;
+import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
@@ -11,21 +12,23 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class RenameStep implements IStep {
 
     @Override
     public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, File> gameArtifacts, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
-        final MappingsExtension mappingsExtension = definition.spec().project().getExtensions().getByType(MappingsExtension.class);
+        final Mappings mappingsExtension = definition.spec().project().getExtensions().getByType(Mappings.class);
         final Map<String, String> mappingVersionData = mappingsExtension.getVersion().get();
 
+        final Set<TaskProvider<? extends Runtime>> additionalTasks = Sets.newHashSet();
         final TaskBuildingContext context = new TaskBuildingContext(
-                definition.spec().project(), "mapGame", inputProvidingTask, mappingVersionData, definition.gameArtifactProvidingTasks()
-        );
+                definition.spec().project(), "mapGame", inputProvidingTask, definition.gameArtifactProvidingTasks(), mappingVersionData, additionalTasks
+                );
 
         final TaskProvider<? extends Runtime> namingTask = context.getNamingChannel().getApplySourceMappingsTaskBuilder().get().build(context);
-        context.getAdditionalTasks().forEach(additionalTaskConfigurator);
+        additionalTasks.forEach(additionalTaskConfigurator);
 
         return namingTask;
     }

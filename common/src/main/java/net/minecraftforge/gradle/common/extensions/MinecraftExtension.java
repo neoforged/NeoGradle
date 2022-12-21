@@ -22,7 +22,9 @@ package net.minecraftforge.gradle.common.extensions;
 
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.Deobfuscation;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -34,13 +36,13 @@ import javax.inject.Inject;
 public abstract class MinecraftExtension extends ConfigurableObject<Minecraft> implements Minecraft {
 
     private final Project project;
-    private final AccessTransformersExtension accessTransformers;
+    private final AccessTransformers accessTransformers;
     private final NamedDomainObjectContainer<NamingChannel> namingChannelProviders;
 
     @Inject
     public MinecraftExtension(final Project project) {
         this.project = project;
-        this.accessTransformers = project.getObjects().newInstance(AccessTransformersExtension.class, project);
+        this.accessTransformers = project.getExtensions().getByType(AccessTransformers.class);
         this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannel.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
     }
 
@@ -55,12 +57,12 @@ public abstract class MinecraftExtension extends ConfigurableObject<Minecraft> i
     }
 
     @Override
-    public MappingsExtension getMappings() {
-        return project.getExtensions().getByType(MappingsExtension.class);
+    public Mappings getMappings() {
+        return project.getExtensions().getByType(Mappings.class);
     }
 
     @Override
-    public AccessTransformersExtension getAccessTransformers() {
+    public AccessTransformers getAccessTransformers() {
         return this.accessTransformers;
     }
 
