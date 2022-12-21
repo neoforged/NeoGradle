@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gradle.common.tasks.FileCacheProviding;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
@@ -72,12 +71,12 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
     public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, final File outputDirectory, final String gameVersion, ArtifactSide side) {
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
-        GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, this.createFileCacheEntryProvidingTask(project, "cacheLauncherMetadata", outputDirectory, CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> results.put(GameArtifact.VERSION_MANIFEST, this.createFileCacheEntryProvidingTask(project, "cacheVersionManifest", outputDirectory, CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, this.createFileCacheEntryProvidingTask(project, "cacheVersionArtifactClient", outputDirectory, CacheFileSelector.forVersionJar(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.CLIENT))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, this.createFileCacheEntryProvidingTask(project, "cacheVersionArtifactServer", outputDirectory, CacheFileSelector.forVersionJar(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.SERVER))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, this.createFileCacheEntryProvidingTask(project, "cacheVersionMappingsClient", outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.CLIENT))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, this.createFileCacheEntryProvidingTask(project, "cacheVersionMappingsServer", outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.SERVER))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, outputDirectory, CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
+        GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> results.put(GameArtifact.VERSION_MANIFEST, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, outputDirectory, CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.CLIENT))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.SERVER))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.CLIENT))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.SERVER))));
 
         return results;
     }

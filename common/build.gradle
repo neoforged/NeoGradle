@@ -16,9 +16,6 @@ dependencies {
     api "com.google.code.gson:gson:${project.gson_version}"
     api "com.google.guava:guava:${project.guava_version}"
     api "de.siegmar:fastcsv:${project.fastcsv_version}"
-    api ("net.minecraftforge:artifactural:${project.artifactural_version}") {
-        transitive = false
-    }
     api ("net.minecraftforge:unsafe:${project.unsafe_version}") {
         transitive = false
     }

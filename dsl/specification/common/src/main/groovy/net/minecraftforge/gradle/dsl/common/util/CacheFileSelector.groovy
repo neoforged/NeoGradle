@@ -52,16 +52,12 @@ abstract class CacheFileSelector implements Serializable {
 
     @Override
     boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
         if (!(obj instanceof CacheFileSelector)) {
             return false;
         }
 
         final CacheFileSelector cacheFileSelector = (CacheFileSelector) obj;
 
-        return cacheFileSelector.getCacheFileName().equals(this.getCacheFileName());
+        return cacheFileSelector.getCacheFileName() == this.getCacheFileName();
     }
 }

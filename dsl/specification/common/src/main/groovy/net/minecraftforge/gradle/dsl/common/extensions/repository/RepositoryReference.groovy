@@ -64,6 +64,47 @@ interface RepositoryReference {
      */
     @CompileStatic
     interface Builder<TSelf extends Builder<TSelf, TDependency>, TDependency extends RepositoryReference> extends BaseDSLElement<TSelf> {
+
+        /**
+         * The currently configured group in the builder.
+         *
+         * @return The currently configured group in the builder.
+         */
+        @NotNull
+        String getGroup();
+
+        /**
+         * The currently configured name in the builder.
+         *
+         * @return The currently configured name in the builder.
+         */
+        @NotNull
+        String getName();
+
+        /**
+         * The currently configured version in the builder.
+         *
+         * @return The currently configured version in the builder.
+         */
+        @NotNull
+        String getVersion();
+
+        /**
+         * The currently configured classifier in the builder.
+         *
+         * @return The currently configured classifier in the builder.
+         */
+        @Nullable
+        String getClassifier();
+
+        /**
+         * The currently configured extension in the builder.
+         *
+         * @return The currently configured extension in the builder.
+         */
+        @Nullable
+        String getExtension();
+
         /**
          * Sets the group of the reference.
          *

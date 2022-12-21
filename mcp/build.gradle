@@ -14,6 +14,10 @@ dependencies {
     api project(':base-testing')
     api project(':common')
 
+    api project(':dsl-base')
+    api project(':dsl-specification-common')
+    api project(':dsl-specification-mcp')
+
     testImplementation gradleTestKit()
     testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
 

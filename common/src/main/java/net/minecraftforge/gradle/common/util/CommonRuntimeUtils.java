@@ -48,26 +48,6 @@ public final class CommonRuntimeUtils {
         return String.format("%s%s", defaultName, StringUtils.capitalize(name));
     }
 
-    public static String buildStepName(CommonRuntimeSpec spec, String name) {
-        return StringUtils.uncapitalize(name.replace(spec.name(), ""));
-    }
-
-    public static Provider<File> getInputForTaskFrom(final CommonRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends Runtime>> tasks) {
-        Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
-        if (!matcher.find()) {
-            return spec.project().provider(() -> new File(inputValue));
-        }
-
-        String stepName = matcher.group(1);
-        if (stepName != null) {
-            return tasks.computeIfAbsent(buildTaskName(spec, stepName), value -> {
-                throw new IllegalArgumentException("Could not find mcp task for input: " + value);
-            }).flatMap(t -> t.getOutput().getAsFile());
-        }
-
-        throw new IllegalStateException("The string '" + inputValue + "' did not return a valid substitution match!");
-    }
-
     public static Optional<TaskProvider<? extends WithOutput>> getInputTaskForTaskFrom(final CommonRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {

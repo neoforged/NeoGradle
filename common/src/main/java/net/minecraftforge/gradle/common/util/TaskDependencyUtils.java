@@ -8,6 +8,7 @@ import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFound
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
@@ -62,19 +63,20 @@ public final class TaskDependencyUtils {
         return extractRuntimeDefinition(project, t.get());
     }
 
+    @SuppressWarnings("unchecked")
     public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
         final Optional<List<? extends CommonRuntimeDefinition<?>>> listCandidate = t.getTaskDependencies().getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
                 .findFirst()
                 .map(JavaCompile::getClasspath)
-                .map(classpath -> classpath.getBuildDependencies().getDependencies(null))
-                .flatMap(dependencies -> dependencies.stream().filter(ArtifactFromOutput.class::isInstance).map(ArtifactFromOutput.class::cast).findFirst())
-                .flatMap(artifactTask -> artifactTask.getTaskDependencies().getDependencies(artifactTask).stream().filter(ArtifactProvider.class::isInstance).map(ArtifactProvider.class::cast).findFirst())
-                .map(artifactProvider -> {
+                .filter(Configuration.class::isInstance)
+                .map(Configuration.class::cast)
+                .map(Configuration::getAllDependencies)
+                .map(dependencies -> {
                     final CommonRuntimeExtension<?, ?, ? extends CommonRuntimeDefinition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
                     return runtimeExtension.getRuntimes().get()
                             .values()
                             .stream()
-                            .filter(runtime -> runtime.rawJarTask().get().equals(artifactProvider));
+                            .filter(runtime -> dependencies.contains(runtime.replacedDependency()));
                 })
                 .map(stream -> stream.collect(Collectors.toList()));
 

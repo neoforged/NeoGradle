@@ -22,7 +22,6 @@ package net.minecraftforge.gradle.common.util;
 
 import com.google.gson.*;
 import groovy.lang.Closure;
-import net.minecraftforge.artifactural.gradle.GradleRepositoryAdapter;
 import net.minecraftforge.gradle.common.util.VersionJson.Download;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -313,17 +312,6 @@ public class Utils {
         return toCapitalize.length() > 1 ? toCapitalize.substring(0, 1).toUpperCase() + toCapitalize.substring(1) : toCapitalize;
     }
 
-    public static Stream<String> lines(InputStream input) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
-        return reader.lines().onClose(() -> {
-            try {
-                reader.close();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
-    }
-
     public static ZipEntry getStableEntry(String name) {
         return getStableEntry(name, Utils.ZIPTIME);
     }
@@ -335,26 +323,6 @@ public class Utils {
         ret.setTime(time);
         TimeZone.setDefault(_default);
         return ret;
-    }
-
-    public static void addRepoFilters(Project project) {
-        if (!ENABLE_FILTER_REPOS) return;
-
-        if (project.getGradle().getStartParameter().getTaskNames().stream().anyMatch(t -> t.endsWith("DownloadSources"))) {
-            // Only modify repos already present to fix issues with IntelliJ's download sources
-            project.getRepositories().forEach(Utils::addMappedFilter);
-        } else {
-            // Modify Repos already present and when they get added
-            project.getRepositories().all(Utils::addMappedFilter);
-        }
-    }
-
-    private static void addMappedFilter(ArtifactRepository repository) {
-        // Skip our "Fake" Repos that actually do provide the de-obfuscated Artifacts
-        if (repository instanceof GradleRepositoryAdapter) return;
-
-        // Exclude Artifacts that are being de-obfuscated via ForgeGradle (_mapped_ in version)
-        repository.content(rcd -> rcd.excludeVersionByRegex(".*", ".*", ".*_mapped_.*"));
     }
 
     public static File getMCDir()

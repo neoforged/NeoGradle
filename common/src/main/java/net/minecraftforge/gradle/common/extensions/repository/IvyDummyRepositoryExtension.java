@@ -36,6 +36,9 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
 
 
     private final Set<IvyDummyRepositoryEntry> entries = Sets.newHashSet();
+    private final Set<Consumer<Project>> entryConfigurators = Sets.newHashSet();
+    private final Set<Consumer<Project>> afterEntryCallbacks = Sets.newHashSet();
+    private boolean hasBeenRealized = false;
 
     private final Project project;
 
@@ -44,6 +47,11 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
         this.project = project;
         this.getRepositoryDirectory().convention(project.getLayout().getBuildDirectory().dir("libs"));
         this.createRepositories();
+        this.getProject().afterEvaluate(p -> {
+            this.hasBeenRealized = true;
+            this.entryConfigurators.forEach(e -> e.accept(p));
+            this.afterEntryCallbacks.forEach(e -> e.accept(p));
+        });
     }
 
     @Override
@@ -84,7 +92,7 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
 
     @Override
     public void withDependency(final Action<IvyDummyRepositoryEntry.Builder> configurator, final Consumer<IvyDummyRepositoryEntry> configuredEntryConsumer) throws XMLStreamException, IOException {
-        project.afterEvaluate(evaluatedProject -> {
+        entryConfigurators.add(evaluatedProject -> {
             final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create(getProject());
             configurator.execute(builder);
             final IvyDummyRepositoryEntry entry = builder.build();
@@ -124,5 +132,14 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
 
     public Set<IvyDummyRepositoryEntry> getEntries() {
         return entries;
+    }
+
+    @Override
+    public void afterEntryRealisation(Consumer<Project> projectConsumer) {
+        if (this.hasBeenRealized) {
+            projectConsumer.accept(this.getProject());
+        } else {
+            this.afterEntryCallbacks.add(projectConsumer);
+        }
     }
 }

@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.util.Artifact;
+import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;

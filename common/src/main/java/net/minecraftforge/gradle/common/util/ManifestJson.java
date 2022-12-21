@@ -20,11 +20,8 @@
 
 package net.minecraftforge.gradle.common.util;
 
-import net.minecraftforge.artifactural.gradle.ReflectionUtils;
-
-import java.net.URL;
-
 import javax.annotation.Nullable;
+import java.net.URL;
 
 public class ManifestJson {
     public ManifestJson.VersionInfo[] versions;

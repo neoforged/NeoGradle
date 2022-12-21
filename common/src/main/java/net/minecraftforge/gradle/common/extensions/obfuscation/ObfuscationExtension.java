@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.common.extensions.obfuscation;
 
 import com.google.common.collect.Maps;
+import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
@@ -11,6 +12,7 @@ import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFound
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.ObfuscationTarget;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.apache.commons.lang3.StringUtils;
@@ -50,7 +52,8 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
         });
         getCreateAutomatically().convention(true);
 
-        project.afterEvaluate(evaluatedProject -> {
+        final Repository<?,?,?,?,?> repository = project.getExtensions().getByType(Repository.class);
+        repository.afterEntryRealisation(evaluatedProject -> {
             manualObfuscationTargets.getAsMap().forEach((name, targetConfig) -> {
                 try {
                     final TaskProvider<? extends Jar> taskProvider = evaluatedProject.getTasks().named(name, Jar.class);

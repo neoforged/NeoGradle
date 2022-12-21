@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.extensions.repository
 
+import com.google.common.collect.ImmutableSet
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import org.gradle.api.Project
@@ -138,11 +139,53 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
     interface Builder<TSelf extends Builder<TSelf, TDependency, TDependencyBuilder>, TDependency extends RepositoryReference, TDependencyBuilder extends RepositoryReference.Builder<TDependencyBuilder, TDependency>> extends BaseDSLElement<TSelf>, Serializable {
 
         /**
-         * Sets the group of the entry.
+         * The currently configured group in the builder.
          *
-         * @param group The new group for the entry.
-         * @return The builder invoked on.
+         * @return The currently configured group in the builder.
          */
+        @NotNull
+        String getGroup();
+
+        /**
+         * The currently configured name in the builder.
+         *
+         * @return The currently configured name in the builder.
+         */
+        @NotNull
+        String getName();
+
+        /**
+         * The currently configured version in the builder.
+         *
+         * @return The currently configured version in the builder.
+         */
+        @NotNull
+        String getVersion();
+
+        /**
+         * The currently configured classifier in the builder.
+         *
+         * @return The currently configured classifier in the builder.
+         */
+        @Nullable
+        String getClassifier();
+
+        /**
+         * The currently configured extension in the builder.
+         *
+         * @return The currently configured extension in the builder.
+         */
+        @Nullable
+        String getExtension();
+
+        /**
+         * The currently configured dependencies in the builder.
+         *
+         * @return The currently configured dependencies in the builder.
+         */
+        @NotNull
+        ImmutableSet<TDependency> getDependencies();
+
         @NotNull
         TSelf setGroup(@NotNull String group);
 

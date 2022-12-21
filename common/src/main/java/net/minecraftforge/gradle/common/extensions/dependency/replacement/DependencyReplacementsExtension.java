@@ -92,7 +92,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
     private void registerDependencyProviderTaskIfNecessaryTo(Configuration configuration) {
         if (!this.configuredConfigurations.contains(configuration)) {
             this.configuredConfigurations.add(configuration);
-            configuration.getDependencies().add(this.project.getDependencies().create(this.dependencyGenerator));
+            configuration.getDependencies().add(this.project.getDependencies().create(this.project.files(this.dependencyGenerator.get())));
         }
 
         if (!registeredTaskToIde) {

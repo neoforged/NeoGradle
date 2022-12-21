@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.extensions.repository;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
@@ -11,11 +12,14 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 
+import javax.inject.Inject;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -23,12 +27,12 @@ import java.util.function.Consumer;
 /**
  * An entry which can potentially be requested by IDEs which interface with gradle.
  */
-public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDummyRepositoryEntry> implements RepositoryEntry<IvyDummyRepositoryEntry, IvyDummyRepositoryReference> {
+public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDummyRepositoryEntry> implements RepositoryEntry<IvyDummyRepositoryEntry, IvyDummyRepositoryReference>, Serializable {
 
     private static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
     private static final long serialVersionUID = 4025734172533096653L;
 
-    private final Project project;
+    private transient final Project project;
     private final String group;
     private final String name;
     private final String version;
@@ -45,6 +49,7 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
      * @param extension    The extension of the dependency.
      * @param dependencies The dependencies for this entry.
      */
+    @Inject
     public IvyDummyRepositoryEntry(Project project, String group, String name, String version, String classifier, String extension, Collection<IvyDummyRepositoryReference> dependencies) {
         this.project = project;
         this.group = group;
@@ -53,6 +58,11 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
         this.classifier = classifier;
         this.extension = extension;
         this.dependencies = dependencies;
+    }
+
+    @Override
+    public Project getProject() {
+        return project;
     }
 
     @Override
@@ -149,13 +159,35 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
 
     @Override
     public String toString() {
-        return "IvyDummyRepositoryEntry{" +
-                "group='" + group + '\'' +
-                ", name='" + name + '\'' +
-                ", version='" + version + '\'' +
-                ", classifier='" + classifier + '\'' +
-                ", extension='" + extension + '\'' +
-                '}';
+        final StringBuilder builder = new StringBuilder();
+
+        final String group = getFullGroup();
+        final String artifactName = getName();
+        final String version = getVersion();
+        final String extension = getExtension();
+        final String classifier = getClassifier();
+
+        if (!group.trim().isEmpty()) {
+            builder.append(group);
+        }
+
+        builder.append(":");
+        builder.append(artifactName);
+
+        builder.append(":");
+        builder.append(version);
+
+        if (classifier != null && !classifier.trim().isEmpty()) {
+            builder.append(":");
+            builder.append(classifier);
+        }
+
+        if (extension != null && !extension.trim().isEmpty() && !extension.trim().toLowerCase(Locale.ROOT).equals("jar")) {
+            builder.append("@")
+                    .append(extension);
+        }
+
+        return builder.toString();
     }
 
     public static abstract class Builder extends ConfigurableObject<Builder> implements RepositoryEntry.Builder<Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder> {
@@ -167,7 +199,8 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
         private String extension = "jar";
         private final Set<IvyDummyRepositoryReference> dependencies = Sets.newHashSet();
 
-        private Builder(Project project) {
+        @Inject
+        public Builder(Project project) {
             this.project = project;
         }
 
@@ -183,6 +216,41 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
                     .setClassifier(entry.getClassifier())
                     .setExtension(entry.getExtension())
                     .setDependencies(entry.getDependencies());
+        }
+
+        @Override
+        public Project getProject() {
+            return project;
+        }
+
+        @Override
+        public String getGroup() {
+            return group;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String getVersion() {
+            return version;
+        }
+
+        @Override
+        public String getClassifier() {
+            return classifier;
+        }
+
+        @Override
+        public String getExtension() {
+            return extension;
+        }
+
+        @Override
+        public ImmutableSet<IvyDummyRepositoryReference> getDependencies() {
+            return ImmutableSet.copyOf(dependencies);
         }
 
         @Override

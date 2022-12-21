@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.mcp.util;
 
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
+import net.minecraftforge.gradle.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;
@@ -57,9 +58,34 @@ public final class McpRuntimeUtils {
         }
 
         String stepName = matcher.group(1);
+
+
         if (stepName != null) {
-            return tasks.computeIfAbsent(CommonRuntimeUtils.buildTaskName(spec, stepName), value -> {
-                throw new IllegalArgumentException("Could not find mcp task for input: " + value);
+            String taskName = CommonRuntimeUtils.buildTaskName(spec, stepName);
+            switch (stepName) {
+                case "downloadManifest":
+                    taskName = NamingConstants.Task.CACHE_LAUNCHER_METADATA;
+                    break;
+                case "downloadJson":
+                    taskName = NamingConstants.Task.CACHE_VERSION_MANIFEST;
+                    break;
+                case "downloadClient":
+                    taskName = NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT;
+                    break;
+                case "downloadServer":
+                    taskName = NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER;
+                    break;
+                case "downloadClientMappings":
+                    taskName = NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT;
+                    break;
+                case "downloadServerMappings":
+                    taskName = NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER;
+                    break;
+            }
+
+            String finalTaskName = taskName;
+            return tasks.computeIfAbsent(taskName, value -> {
+                throw new IllegalArgumentException("Could not find mcp task for input: " + value + ", available tasks: " + tasks.keySet() + ", input: " + inputValue + " taskname: " + finalTaskName + " stepname: " + stepName);
             }).flatMap(t -> t.getOutput().getAsFile());
         }
 

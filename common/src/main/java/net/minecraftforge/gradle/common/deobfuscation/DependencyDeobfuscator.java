@@ -88,8 +88,8 @@ public final class DependencyDeobfuscator {
 
         try (final JarInputStream jarStream = new JarInputStream(Files.newInputStream(file.toPath()))) {
             Manifest mf = jarStream.getManifest();
-            final boolean isObfuscated = mf.getMainAttributes().containsKey("Obfuscated") && Boolean.parseBoolean(mf.getMainAttributes().getValue("Obfuscated"));
-            final boolean obfuscatedByForgeGradle = mf.getMainAttributes().containsKey("Obfuscated-By") && mf.getMainAttributes().getValue("Obfuscated-By").equals("ForgeGradle");
+            final boolean isObfuscated = mf != null && mf.getMainAttributes().containsKey("Obfuscated") && Boolean.parseBoolean(mf.getMainAttributes().getValue("Obfuscated"));
+            final boolean obfuscatedByForgeGradle = mf != null && mf.getMainAttributes().containsKey("Obfuscated-By") && mf.getMainAttributes().getValue("Obfuscated-By").equals("ForgeGradle");
             if (isObfuscated && obfuscatedByForgeGradle) {
                 final Set<ResolvedDependency> children = resolvedDependency.getChildren();
                 final Map<ResolvedDependency, Optional<DependencyReplacementResult>> childResults = children.stream()

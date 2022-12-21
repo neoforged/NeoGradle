@@ -20,17 +20,15 @@
 
 package net.minecraftforge.gradle.mcp.extensions;
 
-import groovy.lang.GroovyObjectSupport;
-import net.minecraftforge.gradle.common.util.Artifact;
-
-import net.minecraftforge.gradle.common.util.IConfigurableObject;
+import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.dsl.common.util.Artifact;
+import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import org.gradle.api.Project;
-import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
 
-public abstract class McpExtension extends GroovyObjectSupport implements IConfigurableObject<McpExtension> {
+public abstract class McpExtension extends ConfigurableObject<Mcp> implements Mcp {
 
     protected final Project project;
 
@@ -43,9 +41,10 @@ public abstract class McpExtension extends GroovyObjectSupport implements IConfi
         );
     }
 
-    public abstract Property<String> getMcpConfigVersion();
-
-    public abstract Property<Artifact> getMcpConfigArtifact();
+    @Override
+    public Project getProject() {
+        return project;
+    }
 
     public McpRuntimeExtension getRuntime() {
         return project.getExtensions().getByType(McpRuntimeExtension.class);

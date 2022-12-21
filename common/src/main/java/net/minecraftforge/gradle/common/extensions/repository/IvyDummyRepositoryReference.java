@@ -8,26 +8,35 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedDependency;
+import org.jetbrains.annotations.NotNull;
 
+import javax.inject.Inject;
+import java.io.Serializable;
 import java.util.Objects;
 
-public abstract class IvyDummyRepositoryReference extends ConfigurableObject<IvyDummyRepositoryReference> implements RepositoryReference {
+public abstract class IvyDummyRepositoryReference extends ConfigurableObject<IvyDummyRepositoryReference> implements RepositoryReference, Serializable {
     private static final long serialVersionUID = 8472300128115908221L;
 
-    private final Project project;
+    private transient final Project project;
     private final String group;
     private final String name;
     private final String version;
     private final String classifier;
     private final String extension;
 
-    public IvyDummyRepositoryReference(Project project, String group, String name, String version, String classifier, String extension) {
+    @Inject
+    public IvyDummyRepositoryReference(@NotNull Project project, String group, String name, String version, String classifier, String extension) {
         this.project = project;
         this.group = group;
         this.name = name;
         this.version = version;
-        this.classifier = classifier;
-        this.extension = extension;
+        this.classifier = classifier.isEmpty() ? null : classifier;
+        this.extension = extension.isEmpty() ? null : extension;
+    }
+
+    @Override
+    public Project getProject() {
+        return project;
     }
 
     @Override
@@ -90,12 +99,38 @@ public abstract class IvyDummyRepositoryReference extends ConfigurableObject<Ivy
         private String classifier;
         private String extension;
 
-        private Builder(Project project) {
+        @Inject
+        public Builder(Project project) {
             this.project = project;
         }
 
         public static Builder create(Project project) {
             return project.getObjects().newInstance(Builder.class, project);
+        }
+
+        @Override
+        public Project getProject() {
+            return project;
+        }
+
+        public String getGroup() {
+            return group;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public String getClassifier() {
+            return classifier;
+        }
+
+        public String getExtension() {
+            return extension;
         }
 
         @Override
@@ -158,7 +193,7 @@ public abstract class IvyDummyRepositoryReference extends ConfigurableObject<Ivy
         }
 
         public IvyDummyRepositoryReference build() {
-            return project.getObjects().newInstance(IvyDummyRepositoryReference.class, project, group, name, version, classifier, extension);
+            return project.getObjects().newInstance(IvyDummyRepositoryReference.class, project, group, name, version, classifier == null ? "" : classifier, extension == null ? "" : extension);
         }
     }
 }

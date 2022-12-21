@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
-import net.minecraftforge.gradle.common.util.Artifact;
+import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;

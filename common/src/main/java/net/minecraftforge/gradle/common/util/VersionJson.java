@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.common.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.*;
+import net.minecraftforge.gradle.dsl.common.util.Artifact;
 
 import java.io.*;
 import java.lang.reflect.Type;

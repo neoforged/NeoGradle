@@ -18,32 +18,23 @@
  * USA
  */
 
-package net.minecraftforge.gradle.common.util;
+package net.minecraftforge.gradle.dsl.common.util
 
-import net.minecraftforge.artifactural.api.artifact.ArtifactIdentifier;
+import com.google.common.base.Splitter
+import com.google.common.collect.ComparisonChain
+import com.google.common.collect.Iterables
+import org.apache.maven.artifact.versioning.ComparableVersion
+import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.DependencyArtifact
+import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.ResolvedArtifact
+import org.gradle.api.specs.Spec
 
-import org.apache.maven.artifact.versioning.ComparableVersion;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.DependencyArtifact;
-import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.specs.Spec;
+import javax.annotation.Nullable
+import java.util.function.Predicate
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Iterables;
-
-import java.io.File;
-import java.io.Serializable;
-import java.util.Comparator;
-import java.util.Locale;
-import java.util.function.Predicate;
-
-import javax.annotation.Nullable;
-
-public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Serializable {
-    private static final long serialVersionUID = 1L;
+class Artifact implements Comparable<Artifact>, Serializable {
 
     // group:name:version[:classifier][@extension]
     private final String group;
@@ -67,7 +58,7 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
     @Nullable
     private transient Boolean isSnapshot;
 
-    public static Artifact from(String descriptor) {
+    static Artifact from(String descriptor) {
         String group, name, version;
         String ext = null, classifier = null;
 
@@ -90,15 +81,11 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
         return new Artifact(group, name, version, classifier, ext);
     }
 
-    public static Artifact from(ArtifactIdentifier identifier) {
-        return new Artifact(identifier.getGroup(), identifier.getName(), identifier.getVersion(), identifier.getClassifier(), identifier.getExtension());
-    }
-
-    public static Artifact from(String group, String name, String version, @Nullable String classifier, @Nullable String ext) {
+    static Artifact from(String group, String name, String version, @Nullable String classifier, @Nullable String ext) {
         return new Artifact(group, name, version, classifier, ext);
     }
 
-    public static Artifact from(final Dependency dependency) {
+    static Artifact from(final Dependency dependency) {
         if (dependency instanceof ExternalModuleDependency) {
             final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
             return from(externalModuleDependency);
@@ -107,7 +94,7 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
         throw new IllegalArgumentException(String.format("Dependency: %s is not an external Artifact that can be referenced.", dependency));
     }
 
-    public static Artifact from(ExternalModuleDependency dependency) {
+    static Artifact from(ExternalModuleDependency dependency) {
         if (dependency.getArtifacts().isEmpty()) {
             return new Artifact(dependency.getGroup() == null ? "" : dependency.getGroup(), dependency.getName(), dependency.getVersion() == null ? "" : dependency.getVersion(), null, null);
         }
@@ -124,18 +111,18 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
         this.ext = ext != null ? ext : "jar";
     }
 
-    public String getLocalPath() {
-        return getPath().replace('/', File.separatorChar);
+    String getLocalPath() {
+        return getPath().replace('/' as char, File.separatorChar);
     }
 
-    public String getDescriptor() {
+    String getDescriptor() {
         if (fullDescriptor == null) {
             StringBuilder buf = new StringBuilder();
             buf.append(this.group).append(':').append(this.name).append(':').append(this.version);
             if (this.classifier != null) {
                 buf.append(':').append(this.classifier);
             }
-            if (ext != null && !"jar".equals(this.ext)) {
+            if (ext != null && "jar" != this.ext) {
                 buf.append('@').append(this.ext);
             }
             this.fullDescriptor = buf.toString();
@@ -143,41 +130,36 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
         return fullDescriptor;
     }
 
-    public String getPath() {
+    String getPath() {
         if (path == null) {
             this.path = String.join("/", this.group.replace('.', '/'), this.name, this.version, getFilename());
         }
         return path;
     }
 
-    @Override
-    public String getGroup() {
+    String getGroup() {
         return group;
     }
 
-    @Override
-    public String getName() {
+    String getName() {
         return name;
     }
 
-    @Override
-    public String getVersion() {
+    String getVersion() {
         return version;
     }
 
-    @Override
     @Nullable
-    public String getClassifier() {
+    String getClassifier() {
         return classifier;
     }
 
-    @Override
     @Nullable
-    public String getExtension() {
+    String getExtension() {
         return ext;
     }
 
-    public String getFilename() {
+    String getFilename() {
         if (file == null) {
             String file;
             file = this.name + '-' + this.version;
@@ -188,38 +170,38 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
         return file;
     }
 
-    public boolean isSnapshot() {
+    boolean isSnapshot() {
         if (isSnapshot == null) {
             this.isSnapshot = this.version.toLowerCase(Locale.ROOT).endsWith("-snapshot");
         }
         return isSnapshot;
     }
 
-    public Artifact withVersion(String version) {
-        return Artifact.from(group, name, version, classifier, ext);
+    Artifact withVersion(String version) {
+        return from(group, name, version, classifier, ext);
     }
 
     @Override
-    public String toString() {
+    String toString() {
         return getDescriptor();
     }
 
     @Override
-    public int hashCode() {
+    int hashCode() {
         return getDescriptor().hashCode();
     }
 
     @Override
-    public boolean equals(Object o) {
+    boolean equals(Object o) {
         return o instanceof Artifact &&
                 this.getDescriptor().equals(((Artifact) o).getDescriptor());
     }
 
-    public Spec<Dependency> asDependencySpec() {
+    Spec<Dependency> asDependencySpec() {
         return (dep) -> group.equals(dep.getGroup()) && name.equals(dep.getName()) && version.equals(dep.getVersion());
     }
 
-    public Predicate<ResolvedArtifact> asArtifactMatcher() {
+    Predicate<ResolvedArtifact> asArtifactMatcher() {
         return (art) -> {
             String theirClassifier;
             if (art.getClassifier() == null) {
@@ -247,7 +229,7 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
     }
 
     @Override
-    public int compareTo(Artifact o) {
+    int compareTo(Artifact o) {
         return ComparisonChain.start()
                 .compare(group, o.group)
                 .compare(name, o.name)
@@ -258,7 +240,7 @@ public class Artifact implements ArtifactIdentifier, Comparable<Artifact>, Seria
                 .result();
     }
 
-    public Dependency toDependency(Project project) {
+    Dependency toDependency(Project project) {
         return project.getDependencies().create(getDescriptor());
     }
 }

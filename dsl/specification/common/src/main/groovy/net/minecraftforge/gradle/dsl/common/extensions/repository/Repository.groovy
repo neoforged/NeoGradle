@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import org.gradle.api.Action
+import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Property
 
@@ -41,4 +42,11 @@ interface Repository<TSelf extends Repository<TSelf, TEntry, TEntryBuilder, TDep
      * @throws IOException when the entry could not be generated because of violations in the file system.
      */
     void withDependency(Action<TEntryBuilder> configurator, Consumer<TEntry> configuredEntryConsumer) throws XMLStreamException, IOException;
+
+    /**
+     * Allows for the registration of a callback that gets trigger in an after evaluate phase when the dummy repository is generated.
+     *
+     * @param projectConsumer The callback, called from an after evaluate phase, which receives the owning project.
+     */
+    void afterEntryRealisation(Consumer<Project> projectConsumer)
 }

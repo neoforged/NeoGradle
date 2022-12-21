@@ -38,11 +38,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project);
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
+        project.getExtensions().create(Obfuscation.class, "obfuscation", ObfuscationExtension.class, project);
 
         project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
         project.getExtensions().create(Mappings.class, "mappings", MappingsExtension.class, project);
-
-        project.getExtensions().create(Obfuscation.class, "obfuscation", ObfuscationExtension.class, project);
 
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 

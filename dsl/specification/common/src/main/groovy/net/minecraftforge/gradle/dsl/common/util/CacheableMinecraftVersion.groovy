@@ -119,7 +119,7 @@ final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVe
         String lower = version.toLowerCase(Locale.ENGLISH);
         char first = version.charAt(0);
         int preIntCodePoint = ('a' as char) - 1;
-        String preA = Character.toString(preIntCodePoint);
+        String preA = Character.toString(preIntCodePoint as char);
 
         if ("15w14a" == lower)                    // 2015 April Fools
             return new CacheableMinecraftVersion(Type.SNAPSHOT, version, 14, 15, 0, "a", splitDots("1.10"));
