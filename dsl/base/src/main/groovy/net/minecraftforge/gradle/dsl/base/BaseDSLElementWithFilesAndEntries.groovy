@@ -22,7 +22,7 @@ interface BaseDSLElementWithFilesAndEntries<TSelf extends BaseDSLElementWithFile
     /**
      * @return The raw additional entries relevant to this extension.
      */
-    @DSLProperty(propertyName = 'entry')
+    @DSLProperty
     ListProperty<String> getEntries()
 
     /**

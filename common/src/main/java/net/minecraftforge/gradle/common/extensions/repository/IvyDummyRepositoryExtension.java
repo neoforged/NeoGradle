@@ -6,6 +6,7 @@ import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.ProjectState;
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
@@ -50,7 +51,10 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
         this.getProject().afterEvaluate(p -> {
             this.hasBeenRealized = true;
             this.entryConfigurators.forEach(e -> e.accept(p));
-            this.afterEntryCallbacks.forEach(e -> e.accept(p));
+
+            if (p.getState().getFailure() == null) {
+                this.afterEntryCallbacks.forEach(e -> e.accept(p));
+            }
         });
     }
 

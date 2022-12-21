@@ -65,14 +65,7 @@ class FunctionalTests extends ForgeGradleTestSpecification {
             
             minecraft {
                 accessTransformers {
-                    entries {
-                        add "public net.minecraft.client.Minecraft f_90982_ # searchRegistry"
-                        field("public", "net.minecraft.client.Minecraft", "f_90982_") 
-                    }
-                }
-            
-                getAccessTransformers().configure {
-                    entries.add("public net.minecraft.client.Minecraft f_90982_ # searchRegistry")
+                    entry "public net.minecraft.client.Minecraft f_90982_ # searchRegistry"
                 }
             }
             

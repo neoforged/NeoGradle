@@ -25,8 +25,12 @@ import java.util.zip.ZipOutputStream;
 @CacheableTask
 public abstract class RecompileSourceJar extends JavaCompile implements Runtime {
 
+    private Property<JavaLanguageVersion> javaVersion;
+
     public RecompileSourceJar() {
         super();
+
+        this.javaVersion = getProject().getObjects().property(JavaLanguageVersion.class);
 
         getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
         getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
@@ -102,10 +106,12 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         return getProject().provider(() -> getProject().getExtensions().getByType(JavaToolchainService.class));
     }
 
-    @Input
     @Nested
     @Optional
-    public abstract Property<JavaLanguageVersion> getJavaVersion();
+    @Override
+    public Property<JavaLanguageVersion> getJavaVersion() {
+        return this.javaVersion;
+    }
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
 import net.minecraftforge.gradle.dsl.annotations.InternalFields
+import net.minecraftforge.gradle.dsl.common.util.RegexUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -15,7 +16,6 @@ import org.gradle.process.JavaExecSpec
 
 import java.util.function.Function
 import java.util.regex.Matcher
-import java.util.regex.Pattern
 import java.util.stream.Collectors
 
 /**
@@ -24,10 +24,8 @@ import java.util.stream.Collectors
  */
 @CompileStatic
 @DefaultMethods
-@InternalFields(fields = 'REPLACE_PATTERN')
 interface Execute extends WithWorkspace, WithOutput, WithJavaVersion {
 
-    Pattern REPLACE_PATTERN = Pattern.compile('^\\{(\\w+)}$');
 
     default Provider<List<String>> applyVariableSubstitutions(Provider<List<String>> list) {
         return list.map(values -> values.stream().map(this::applyVariableSubstitutions).collect(Collectors.toList())) as Provider<List<String>>;
@@ -76,7 +74,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion {
         final Map<String, Provider<String>> runtimeArguments = getRuntimeArguments().get();
         final Map<String, File> data = getRuntimeData().get();
 
-        Matcher matcher = REPLACE_PATTERN.matcher(value);
+        Matcher matcher = RegexUtils.REPLACE_PATTERN.matcher(value);
         if (!matcher.find()) return value; // Not a replaceable string
 
         String argName = matcher.group(1);

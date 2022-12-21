@@ -59,7 +59,6 @@ public final class McpRuntimeUtils {
 
         String stepName = matcher.group(1);
 
-
         if (stepName != null) {
             String taskName = CommonRuntimeUtils.buildTaskName(spec, stepName);
             switch (stepName) {
@@ -100,7 +99,30 @@ public final class McpRuntimeUtils {
 
         String stepName = matcher.group(1);
         if (stepName != null) {
-            return Optional.ofNullable(tasks.get(CommonRuntimeUtils.buildTaskName(spec, stepName)));
+            String taskName = CommonRuntimeUtils.buildTaskName(spec, stepName);
+            switch (stepName) {
+                case "downloadManifest":
+                    taskName = NamingConstants.Task.CACHE_LAUNCHER_METADATA;
+                    break;
+                case "downloadJson":
+                    taskName = NamingConstants.Task.CACHE_VERSION_MANIFEST;
+                    break;
+                case "downloadClient":
+                    taskName = NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT;
+                    break;
+                case "downloadServer":
+                    taskName = NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER;
+                    break;
+                case "downloadClientMappings":
+                    taskName = NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT;
+                    break;
+                case "downloadServerMappings":
+                    taskName = NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER;
+                    break;
+            }
+
+            String finalTaskName = taskName;
+            return Optional.ofNullable(tasks.get(finalTaskName));
         }
 
         return Optional.empty();
