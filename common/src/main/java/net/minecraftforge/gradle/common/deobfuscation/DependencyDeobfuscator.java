@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.extensions.deobfuscation;
+package net.minecraftforge.gradle.common.deobfuscation;
 
 import net.minecraftforge.gradle.common.extensions.DeobfuscationExtension;
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;

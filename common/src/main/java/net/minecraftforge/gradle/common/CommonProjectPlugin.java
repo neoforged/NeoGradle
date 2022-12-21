@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common;
 
-import net.minecraftforge.gradle.common.extensions.deobfuscation.DependencyDeobfuscator;
+import net.minecraftforge.gradle.common.deobfuscation.DependencyDeobfuscator;
 import net.minecraftforge.gradle.common.extensions.*;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.minecraftforge.gradle.common.extensions.obfuscation.ObfuscationExtension;

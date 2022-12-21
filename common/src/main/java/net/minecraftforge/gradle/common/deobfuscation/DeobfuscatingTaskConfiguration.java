@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.extensions.deobfuscation;
+package net.minecraftforge.gradle.common.deobfuscation;
 
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.Context;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;

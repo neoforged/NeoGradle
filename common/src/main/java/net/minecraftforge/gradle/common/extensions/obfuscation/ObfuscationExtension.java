@@ -1,45 +1,70 @@
 package net.minecraftforge.gradle.common.extensions.obfuscation;
 
 import com.google.common.collect.Maps;
-import groovy.lang.Closure;
-import net.minecraftforge.gradle.common.extensions.MappingsExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.common.util.NamingConstants;
+import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
+import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
+import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.ObfuscationTarget;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.UnknownTaskException;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.jvm.tasks.Jar;
-import org.gradle.util.ConfigureUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscation> implements Obfuscation {
 
-    private final Project project;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObfuscationExtension.class);
 
+    private final Project project;
     private final Set<String> jarTasksWithObfuscation = new HashSet<>();
+    private final NamedDomainObjectContainer<ObfuscationTarget> manualObfuscationTargets;
 
     @Inject
     public ObfuscationExtension(Project project) {
         this.project = project;
 
+        this.manualObfuscationTargets = project.container(ObfuscationTarget.class, name -> {
+            ObfuscationTargetImpl target = project.getObjects().newInstance(ObfuscationTargetImpl.class, project);
+            target.getMinecraftVersion().set(name);
+            return target;
+        });
         getCreateAutomatically().convention(true);
 
         project.afterEvaluate(evaluatedProject -> {
+            manualObfuscationTargets.getAsMap().forEach((name, targetConfig) -> {
+                try {
+                    final TaskProvider<? extends Jar> taskProvider = evaluatedProject.getTasks().named(name, Jar.class);
+
+                    createObfuscateTask(taskProvider, targetConfig.getMinecraftVersion());
+                } catch (UnknownTaskException taskException) {
+                    throw new RuntimeException("The task '" + name + "' does not exist. Please create it before using it as an obfuscation target.", taskException);
+                }
+            });
+
             if (getCreateAutomatically().get()) {
                 evaluatedProject.getTasks().withType(Jar.class).all(jarTask -> {
                     if (!jarTasksWithObfuscation.contains(jarTask.getName())) {
-                        createObfuscateTask(evaluatedProject.getTasks().named(jarTask.getName(), Jar.class));
+                        createObfuscateTask(evaluatedProject.getTasks().named(jarTask.getName(), Jar.class), null);
                     }
                 });
             }
@@ -52,33 +77,33 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
         return project;
     }
 
-    @SuppressWarnings({"unchecked", "deprecation"})
-    public Object methodMissing(String name, Object args) {
-        if (!(args instanceof Closure)) {
-            return super.invokeMethod(name, args);
-        }
-
-        try {
-            TaskProvider<? extends Jar> jarTask = project.getTasks().named(name, Jar.class);
-            final String unapplyTaskName = CommonRuntimeUtils.buildTaskName(jarTask, "obfuscate");
-
-            TaskProvider<? extends WithOutput> obfuscateTAsk;
-            try {
-                obfuscateTAsk = project.getTasks().named(unapplyTaskName, WithOutput.class);
-            } catch (UnknownTaskException e) {
-                obfuscateTAsk = createObfuscateTask(jarTask);
-            }
-
-            final Closure<? extends WithOutput> closure = (Closure<? extends WithOutput>) args;
-            return ConfigureUtil.configureSelf(closure, obfuscateTAsk);
-        } catch (UnknownTaskException e) {
-            return super.invokeMethod(name, args);
-        }
+    @NotNull
+    @Override
+    public NamedDomainObjectContainer<ObfuscationTarget> getTargets() {
+        return manualObfuscationTargets;
     }
 
-    private TaskProvider<? extends WithOutput> createObfuscateTask(TaskProvider<? extends Jar> jarTask) {
+    private void createObfuscateTask(TaskProvider<? extends Jar> jarTask, @Nullable Property<String> minecraftVersion) {
         jarTasksWithObfuscation.add(jarTask.getName());
         final Mappings mappingsExtension = project.getExtensions().getByType(Mappings.class);
+
+        String minecraftVersionString = minecraftVersion == null ? null : minecraftVersion.getOrNull();
+        Map<String, String> configuredMappingVersionData;
+        try {
+            configuredMappingVersionData = TaskDependencyUtils.realiseTaskAndExtractRuntimeDefinition(getProject(), jarTask).configuredMappingVersionData();
+        } catch (MultipleDefinitionsFoundException e) {
+            if (minecraftVersion == null) {
+                throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+            }
+
+            LOGGER.warn("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+            LOGGER.warn("Using the manually configured version: " + minecraftVersionString);
+            configuredMappingVersionData = Maps.newHashMap();
+        }
+
+        if (minecraftVersionString != null) {
+            configuredMappingVersionData.put(NamingConstants.Version.MINECRAFT_VERSION, minecraftVersionString);
+        }
 
         //TODO: Handle mapping version detection!
         final TaskProvider<? extends WithOutput> devArtifactProvider = project.getTasks().register("provideDevelop" + StringUtils.capitalize(jarTask.getName()), ArtifactFromOutput.class, task -> {
@@ -93,7 +118,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
                 CommonRuntimeUtils.buildTaskName(jarTask, "obfuscate"),
                 devArtifactProvider,
                 Maps.newHashMap(),
-                mappingsExtension.getVersion().get(),
+                configuredMappingVersionData,
                 new HashSet<>()
         );
 
@@ -110,6 +135,5 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
 
         obfuscator.configure(task -> task.finalizedBy(markerGenerator));
         jarTask.configure(task -> task.finalizedBy(obfuscator));
-        return obfuscator;
     }
 }

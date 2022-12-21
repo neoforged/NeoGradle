@@ -1,16 +1,15 @@
 package net.minecraftforge.gradle.common.runtime.naming;
 
-import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
-import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
-import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.GradleInternalUtils;
 import net.minecraftforge.gradle.common.util.MappingUtils;
 import net.minecraftforge.gradle.common.util.NamingConstants;
+import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
+import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -25,8 +24,9 @@ import org.gradle.api.Transformer;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.reflect.TypeOf;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class OfficialNamingChannelConfigurator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OfficialNamingChannelConfigurator.class);
     private static final OfficialNamingChannelConfigurator INSTANCE = new OfficialNamingChannelConfigurator();
 
     public static OfficialNamingChannelConfigurator getInstance() {
@@ -88,32 +89,18 @@ public final class OfficialNamingChannelConfigurator {
             task.setGroup("mappings/official");
             task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
 
-            task.getMinecraftVersion().convention(context.getProject().provider(() -> {
-                if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
-                    return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()));
-                } else {
+            if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
+                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()))));
+            } else {
+                task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
+                    try {
+                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).configuredMappingVersionData()));
+                    } catch (MultipleDefinitionsFoundException e) {
+                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+                    }
+                }));
+            }
 
-                    //This means we need to walk the tree -> this is a bad idea, but it's the only way to do it.
-                    return context.getInputTask().get().getTaskDependencies().getDependencies(task).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
-                            .findFirst()
-                            .map(JavaCompile::getClasspath)
-                            .map(classpath -> classpath.getBuildDependencies().getDependencies(null))
-                            .flatMap(depedendencies -> depedendencies.stream().filter(ArtifactFromOutput.class::isInstance).map(ArtifactFromOutput.class::cast).findFirst())
-                            .flatMap(artifactTask -> artifactTask.getTaskDependencies().getDependencies(artifactTask).stream().filter(ArtifactProvider.class::isInstance).map(ArtifactProvider.class::cast).findFirst())
-                            .map(artifactProvider -> {
-                                final CommonRuntimeExtension<?,?,? extends CommonRuntimeDefinition<?>> runtimeExtension = context.getProject().getExtensions().getByType(CommonRuntimeExtension.class);
-                                return runtimeExtension.getRuntimes().get()
-                                        .values()
-                                        .stream()
-                                        .filter(runtime -> runtime.rawJarTask().get().equals(artifactProvider))
-                                        .map(runtime -> runtime.spec().minecraftVersion())
-                                        .map(CacheableMinecraftVersion::from)
-                                        .findFirst()
-                                        .orElseThrow(() -> new IllegalStateException("Could not find minecraft version for task " + context.getInputTask().getName()));
-                            })
-                            .orElseThrow(() -> new IllegalStateException("Could not find minecraft version for task " + context.getInputTask().getName()));
-                }
-            }));
             task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
             task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName))));
         });
@@ -134,24 +121,11 @@ public final class OfficialNamingChannelConfigurator {
                 task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()))));
             } else {
                 task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
-                    return t.getTaskDependencies().getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
-                            .findFirst()
-                            .map(JavaCompile::getClasspath)
-                            .map(classpath -> classpath.getBuildDependencies().getDependencies(null))
-                            .flatMap(depedendencies -> depedendencies.stream().filter(ArtifactFromOutput.class::isInstance).map(ArtifactFromOutput.class::cast).findFirst())
-                            .flatMap(artifactTask -> artifactTask.getTaskDependencies().getDependencies(artifactTask).stream().filter(ArtifactProvider.class::isInstance).map(ArtifactProvider.class::cast).findFirst())
-                            .map(artifactProvider -> {
-                                final CommonRuntimeExtension<?,?,? extends CommonRuntimeDefinition<?>> runtimeExtension = context.getProject().getExtensions().getByType(CommonRuntimeExtension.class);
-                                return runtimeExtension.getRuntimes().get()
-                                        .values()
-                                        .stream()
-                                        .filter(runtime -> runtime.rawJarTask().get().equals(artifactProvider))
-                                        .map(runtime -> runtime.spec().minecraftVersion())
-                                        .map(CacheableMinecraftVersion::from)
-                                        .findFirst()
-                                        .orElseThrow(() -> new IllegalStateException("Could not find minecraft version for task " + context.getInputTask().getName()));
-                            })
-                            .orElseThrow(() -> new IllegalStateException("Could not find minecraft version for task " + context.getInputTask().getName()));
+                    try {
+                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).configuredMappingVersionData()));
+                    } catch (MultipleDefinitionsFoundException e) {
+                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+                    }
                 }));
             }
 
