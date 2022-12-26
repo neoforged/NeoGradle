@@ -39,24 +39,11 @@ public abstract class AccessTransformer extends Execute {
                                 args.add(f.getAbsolutePath());
                             });
 
-                            final Provider<File> additionalTransformersFileProvider = getAdditionalTransformers()
-                                    .flatMap(additionalTransformers -> transformEnsureFileWorkspaceReady(getFileInOutputDirectory(getProjectFileName("transformers.cfg")))
-                                            .map(TransformerUtils.guard(
-                                                    TransformerUtils.peakWithThrow(additionalTransformersFile ->
-                                                            Files.write(additionalTransformersFile.toPath(), additionalTransformers, StandardOpenOption.CREATE_NEW))
-                                            )));
-
-                            if (additionalTransformersFileProvider.isPresent()) {
-                                args.add("--atFile");
-                                args.add(additionalTransformersFileProvider.get().getAbsolutePath());
-                            }
-
                             return args;
                         }
                 )
         );
 
-        getAdditionalTransformers().finalizeValueOnRead();
         getTransformers().finalizeValueOnRead();
     }
 
@@ -64,9 +51,6 @@ public abstract class AccessTransformer extends Execute {
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInputFile();
 
-    @Input
-    @Optional
-    public abstract ListProperty<String> getAdditionalTransformers();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)

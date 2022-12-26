@@ -183,8 +183,8 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
 
     private TaskTreeAdapter createAccessTransformerAdapter(final List<String> accessTransformerPaths, final File unpackedForgeUserDevDirectory) {
         final List<File> accessTransformerFiles = accessTransformerPaths.stream().map(path -> new File(unpackedForgeUserDevDirectory, path)).collect(Collectors.toList());
-        return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "Forges", accessTransformerFiles, Collections.emptyList());
+        return (spec, previousTasksOutput, workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler)  -> {
+            final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "Forges", workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler, accessTransformerFiles, Collections.emptyList());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;
@@ -193,7 +193,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
 
     private TaskTreeAdapter createSideAnnotationStripperAdapter(final List<String> sideAnnotationStripperPaths, final File unpackedForgeUserDevDirectory) {
         final List<File> sideAnnotationStripperFiles = sideAnnotationStripperPaths.stream().map(path -> new File(unpackedForgeUserDevDirectory, path)).collect(Collectors.toList());
-        return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
+        return (spec, previousTasksOutput, workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler)  -> {
             final TaskProvider<? extends SideAnnotationStripper> sideAnnotationStripper = McpRuntimeUtils.createSideAnnotationStripper(spec, "Forges", sideAnnotationStripperFiles, Collections.emptyList());
             sideAnnotationStripper.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             sideAnnotationStripper.configure(task -> task.dependsOn(previousTasksOutput));

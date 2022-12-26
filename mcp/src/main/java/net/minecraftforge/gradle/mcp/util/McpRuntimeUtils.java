@@ -2,9 +2,15 @@ package net.minecraftforge.gradle.mcp.util;
 
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
+import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
+import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.common.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;
 import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
@@ -15,6 +21,7 @@ import org.gradle.api.tasks.TaskProvider;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -128,11 +135,56 @@ public final class McpRuntimeUtils {
         return Optional.empty();
     }
 
-    public static TaskProvider<? extends AccessTransformer> createAccessTransformer(CommonRuntimeSpec runtimeSpec, String namePreFix, List<File> files, Collection<String> data) {
+    public static TaskProvider<? extends AccessTransformer> createAccessTransformer(CommonRuntimeSpec runtimeSpec, String namePreFix, File workspaceDirectory, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviderMap, Map<String, String> versionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, List<File> files, Collection<String> data) {
+        final Collection<TaskProvider<? extends WithOutput>> fileRemapTasks = new ArrayList<>();
+        for (File file : files) {
+            final TaskProvider<? extends WithOutput> provider = runtimeSpec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, namePreFix + "AccessTransformerProvider" + file.getName()), ArtifactProvider.class, task -> {
+                task.getInput().set(file);
+                task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + file.getName()));
+            });
+
+            generateAccessTransformerRemapTask(runtimeSpec, gameArtifactTaskProviderMap, versionData, dependentTaskConfigurationHandler, fileRemapTasks, provider);
+        }
+
+        if (!data.isEmpty()) {
+            final TaskProvider<AccessTransformerFileGenerator> generator = runtimeSpec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {
+                task.getOutput().set(new File(workspaceDirectory, "accesstransformers/_script-access-transformer.cfg"));
+                task.getAdditionalTransformers().set(data);
+            });
+            dependentTaskConfigurationHandler.accept(generator);
+            generateAccessTransformerRemapTask(runtimeSpec, gameArtifactTaskProviderMap, versionData, dependentTaskConfigurationHandler, fileRemapTasks, generator);
+        }
+
         return runtimeSpec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, String.format("apply%sAccessTransformer", Utils.capitalize(namePreFix))), AccessTransformer.class, task -> {
-            task.getAdditionalTransformers().addAll(data);
-            task.getTransformers().setFrom(runtimeSpec.configureProject().files(files.toArray()));
+            for (TaskProvider<? extends WithOutput> fileRemapTask : fileRemapTasks) {
+                task.getTransformers().from(fileRemapTask.flatMap(WithOutput::getOutput));
+                task.dependsOn(fileRemapTask);
+            }
         });
+    }
+
+    private static void generateAccessTransformerRemapTask(CommonRuntimeSpec runtimeSpec, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviderMap, Map<String, String> versionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, Collection<TaskProvider<? extends WithOutput>> fileRemapTasks, TaskProvider<? extends WithOutput> provider) {
+        final Set<TaskProvider<? extends Runtime>> additionalRemapTasks = new HashSet<>();
+        final TaskBuildingContext context = new TaskBuildingContext(
+                runtimeSpec.project(),
+                "accessTransform" + StringUtils.capitalize(runtimeSpec.name()),
+                name -> CommonRuntimeUtils.buildTaskName(runtimeSpec, name),
+                provider,
+                gameArtifactTaskProviderMap,
+                versionData,
+                additionalRemapTasks
+        );
+
+        final TaskProvider<? extends Runtime> remapTask = runtimeSpec.project().getExtensions().getByType(Mappings.class).getChannel().get()
+                        .getUnapplyAccessTransformerMappingsTaskBuilder()
+                                .get().apply(context);
+
+        remapTask.configure(task -> task.dependsOn(provider));
+
+        additionalRemapTasks.forEach(dependentTaskConfigurationHandler);
+        dependentTaskConfigurationHandler.accept(remapTask);
+
+        fileRemapTasks.add(remapTask);
     }
 
     /**

@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.mcp;
 
 import net.minecraftforge.gradle.common.CommonPlugin;
 import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
 import net.minecraftforge.gradle.mcp.dependency.McpDependencyManager;
 import net.minecraftforge.gradle.mcp.extensions.McpExtension;
 import net.minecraftforge.gradle.mcp.naming.MCPNamingChannelConfigurator;
@@ -38,7 +39,7 @@ public class McpProjectPlugin implements Plugin<Project> {
         // Needed to gain access to the common systems
         project.getPluginManager().apply(CommonPlugin.class);
 
-        McpExtension extension = project.getExtensions().create("mcp", McpExtension.class, project);
+        Mcp extension = project.getExtensions().create(Mcp.class,"mcp", McpExtension.class, project);
         McpRuntimeExtension runtimeExtension = project.getExtensions().create("mcpRuntime", McpRuntimeExtension.class, project);
 
         MCPNamingChannelConfigurator.getInstance().configure(project);

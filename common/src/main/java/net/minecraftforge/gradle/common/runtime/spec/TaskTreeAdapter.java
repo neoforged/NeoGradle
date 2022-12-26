@@ -2,10 +2,14 @@ package net.minecraftforge.gradle.common.runtime.spec;
 
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -23,8 +27,8 @@ public interface TaskTreeAdapter {
      * @param previousTasksOutput The previous task build output.
      * @return The task to run.
      */
-    @NotNull
-    TaskProvider<? extends Runtime> adapt(final CommonRuntimeSpec spec, final Provider<? extends WithOutput> previousTasksOutput, final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler);
+    @Nullable
+    TaskProvider<? extends Runtime> adapt(final CommonRuntimeSpec spec, final Provider<? extends WithOutput> previousTasksOutput, final File runtimeWorkspace, final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts, final Map<String, String> mappingVersionData, final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler);
 
     /**
      * Runs the given task adapter after the current one.
@@ -37,12 +41,16 @@ public interface TaskTreeAdapter {
     @NotNull
     default TaskTreeAdapter andThen(final TaskTreeAdapter after) {
         Objects.requireNonNull(after);
-        return (spec, previousTaskOutput, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends Runtime> currentAdapted = TaskTreeAdapter.this.adapt(spec, previousTaskOutput, dependentTaskConfigurationHandler);
-            dependentTaskConfigurationHandler.accept(currentAdapted);
+        return (spec, previousTaskOutput, runtimeWorkspace, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler) -> {
+            final TaskProvider<? extends Runtime> currentAdapted = TaskTreeAdapter.this.adapt(spec, previousTaskOutput, runtimeWorkspace, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler);
 
-            final TaskProvider<? extends Runtime> afterAdapted = after.adapt(spec, currentAdapted, dependentTaskConfigurationHandler);
-            afterAdapted.configure(task -> task.dependsOn(currentAdapted));
+            if (currentAdapted != null)
+                dependentTaskConfigurationHandler.accept(currentAdapted);
+
+            final TaskProvider<? extends Runtime> afterAdapted = after.adapt(spec, currentAdapted, runtimeWorkspace, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler);
+
+            if (currentAdapted != null && afterAdapted != null)
+                afterAdapted.configure(task -> task.dependsOn(currentAdapted));
 
             return afterAdapted;
         };

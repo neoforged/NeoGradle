@@ -16,6 +16,7 @@ import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.De
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.*;
 import org.gradle.api.tasks.TaskProvider;
@@ -255,6 +256,7 @@ public final class DependencyDeobfuscator {
                         new TaskBuildingContext(
                                 project,
                                 postFix,
+                                taskName -> CommonRuntimeUtils.buildTaskName(String.format("deobfuscate%s", StringUtils.capitalize(postFix)), taskName),
                                 sourceFileProvider,
                                 gameArtifactTasks,
                                 runtimeDefinition.configuredMappingVersionData(),
@@ -306,6 +308,7 @@ public final class DependencyDeobfuscator {
                             new TaskBuildingContext(
                                     project,
                                     postFix,
+                                    taskName -> CommonRuntimeUtils.buildTaskName(String.format("deobfuscate%s", StringUtils.capitalize(postFix)), taskName),
                                     sourceFileProvider,
                                     gameArtifactTasks,
                                     runtimeDefinition.configuredMappingVersionData(),

@@ -57,7 +57,9 @@ public final class MCPNamingChannelConfigurator {
             throw new IllegalStateException("Missing mapping version");
         }
         final TaskProvider<DownloadMavenArtifact> downloadMavenArtifact = buildMcpMappingsDownloadTask(context.getProject(), context.getNamingChannel(), mappingVersion);
-        final String applyTaskName = String.format("apply%s%sMappingsTo%s", StringUtils.capitalize(context.getNamingChannel().getName()), mappingVersion, StringUtils.capitalize(context.getEnvironmentName()));
+        final String applyTaskName = context.getTaskNameBuilder().apply(
+                String.format("apply%s%sMappings", StringUtils.capitalize(context.getNamingChannel().getName()), mappingVersion)
+        );
 
         return context.getProject().getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
             applyMcpMappingsToSourceJarTask.setGroup("ForgeGradle");

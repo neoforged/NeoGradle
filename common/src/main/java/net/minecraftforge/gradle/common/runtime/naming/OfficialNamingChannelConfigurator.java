@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.common.runtime.naming;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
+import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.GradleInternalUtils;
@@ -57,16 +58,32 @@ public final class OfficialNamingChannelConfigurator {
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::buildApplySourceMappingTask);
             namingChannelProvider.getApplyCompiledMappingsTaskBuilder().set(this::buildApplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
+            namingChannelProvider.getUnapplyAccessTransformerMappingsTaskBuilder().set(this::buildUnapplyAccessTransformerMappingsTask);
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> (Boolean) mappingsExtension.getExtensions().getByName("acceptMojangEula")));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
         });
         minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannelProviders().named("official"));
     }
 
+    private TaskProvider<? extends Runtime> buildUnapplyAccessTransformerMappingsTask(TaskBuildingContext context) {
+        final String mappingVersion = MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion());
+
+        final String applyTaskName = context.getTaskNameBuilder().apply("unApplyAccessTransformer");
+        return context.getProject().getTasks().register(applyTaskName, UnapplyOfficialMappingsToAccessTransformer.class, task -> {
+            task.setGroup("mappings/official");
+            task.setDescription(String.format("Unapplies the Official mappings for version %s.", mappingVersion));
+
+            task.getClientMappings().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
+            task.getServerMappings().set(context.getGameArtifactTask(GameArtifact.SERVER_MAPPINGS).flatMap(WithOutput::getOutput));
+
+            task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
+        });
+    }
+
     private @NotNull TaskProvider<? extends Runtime> buildApplySourceMappingTask(@NotNull final TaskBuildingContext context) {
         final String mappingVersion = MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion());
 
-        final String applyTaskName = CommonRuntimeUtils.buildTaskName(context.getEnvironmentName(), "applyOfficialMappings");
+        final String applyTaskName = context.getTaskNameBuilder().apply("applyOfficialMappings");
         return context.getProject().getTasks().register(applyTaskName, ApplyOfficialMappingsToSourceJar.class, applyOfficialMappingsToSourceJar -> {
             applyOfficialMappingsToSourceJar.setGroup("mappings/official");
             applyOfficialMappingsToSourceJar.setDescription(String.format("Applies the Official mappings for version %s.", mappingVersion));

@@ -117,8 +117,12 @@ public final class McpDependencyManager {
         final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
         final AccessTransformers accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
-        return (spec, previousTasksOutput, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "User", new ArrayList<>(accessTransformerFiles.getFiles().getFiles()), accessTransformerFiles.getEntries().get());
+        return (spec, previousTasksOutput, workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler) -> {
+            if (accessTransformerFiles.getFiles().isEmpty() && accessTransformerFiles.getEntries().get().isEmpty()) {
+                return null;
+            }
+
+            final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "User", workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler, new ArrayList<>(accessTransformerFiles.getFiles().getFiles()), accessTransformerFiles.getEntries().get());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

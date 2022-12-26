@@ -60,6 +60,16 @@ interface NamingChannel extends BaseDSLElement<NamingChannel> {
     Property<UnapplyMappingsToCompiledJarTaskBuilder> getUnapplyCompiledMappingsTaskBuilder();
 
     /**
+     * The builder which can construct a new task provider for a access transformer unmapping.
+     * Every time this is invoked the builder needs to produce a new task.
+     * However, the builder is allowed to reuse an old task if the inputs match.
+     *
+     * @return The builder property.
+     */
+    @DSLProperty
+    Property<UnapplyMappingsToAccessTransformerTaskBuilder> getUnapplyAccessTransformerMappingsTaskBuilder();
+
+    /**
      * Returns the group prefix for the current channel that is prefixed to the deobfuscated dependency groups.
      *
      * @return The group prefix.

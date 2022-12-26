@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
-import net.minecraftforge.gradle.common.runtime.naming.renamer.UnfilteredOfficialSourceRenamer;
+import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.gradle.api.file.RegularFileProperty;
@@ -15,10 +15,10 @@ import org.gradle.api.tasks.PathSensitivity;
 public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSourceJar implements Runtime {
 
     public ApplyOfficialMappingsToSourceJar() {
-        getSourceRenamer().set(
+        getSourceRenamer().convention(
                 getClientMappings().flatMap(clientMappings ->
                         getServerMappings().map(TransformerUtils.guard(serverMappings ->
-                                UnfilteredOfficialSourceRenamer.from(clientMappings.getAsFile(), serverMappings.getAsFile()))))
+                                IMappingFileSourceRenamer.from(clientMappings.getAsFile(), serverMappings.getAsFile()))))
         );
         getRemapLambdas().convention(true);
         getSourceRenamer().finalizeValueOnRead();

@@ -81,13 +81,9 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
                 if (!injectJavadoc(lines, line, _package, innerClasses))
                     javadocs = false;
             }
-            lines.add(replaceInLine(line, blacklist));
+            lines.add(rename(line, blacklist));
         }
         return String.join(NEWLINE, lines).getBytes(sourceFileCharset);
-    }
-
-    public String rename(String entry) {
-        return getNames().getOrDefault(entry, entry);
     }
 
     /**
@@ -185,7 +181,11 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
         return ret;
     }
 
-    private String replaceInLine(String line, @Nullable Set<String> blacklist) {
+    private String rename(String line) {
+        return rename(line, null);
+    }
+
+    private String rename(String line, @Nullable Set<String> blacklist) {
         StringBuffer buf = new StringBuffer();
         Matcher matcher = SRG_FINDER.matcher(line);
         while (matcher.find()) {

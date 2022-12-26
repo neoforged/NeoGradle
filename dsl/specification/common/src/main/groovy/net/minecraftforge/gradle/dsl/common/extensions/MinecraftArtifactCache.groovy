@@ -1,24 +1,20 @@
-package net.minecraftforge.gradle.dsl.common.extensions;
+package net.minecraftforge.gradle.dsl.common.extensions
 
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
-import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
-import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
-import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
-import org.gradle.api.Project;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.net.URL;
-import java.util.Map;
+import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gradle.dsl.base.BaseDSLElement
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
+import net.minecraftforge.gradle.dsl.common.util.ArtifactSide
+import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact
+import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.annotations.NotNull
 
 /**
  * Defines a cache for minecraft artifacts.
  */
-public interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> {
+interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> {
 
     /**
      * The directory where the cache is stored.

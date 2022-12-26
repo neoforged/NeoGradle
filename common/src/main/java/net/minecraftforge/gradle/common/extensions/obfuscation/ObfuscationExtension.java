@@ -119,6 +119,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
         final TaskBuildingContext context = new TaskBuildingContext(
                 project,
                 CommonRuntimeUtils.buildTaskName(jarTask, "obfuscate"),
+                task -> String.format("obfuscate%s", StringUtils.capitalize(jarTask.getName())),
                 devArtifactProvider,
                 Maps.newHashMap(),
                 configuredMappingVersionData,

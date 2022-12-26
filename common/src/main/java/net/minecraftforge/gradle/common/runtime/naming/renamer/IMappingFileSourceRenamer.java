@@ -29,21 +29,25 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class UnfilteredOfficialSourceRenamer extends RegexBasedSourceRenamer {
+public class IMappingFileSourceRenamer extends RegexBasedSourceRenamer {
 
     private final Map<String, String> names;
     private final Map<String, String> docs;
 
-    private UnfilteredOfficialSourceRenamer(Map<String, String> names, Map<String, String> docs) {
+    private IMappingFileSourceRenamer(Map<String, String> names, Map<String, String> docs) {
         this.names = names;
         this.docs = docs;
     }
 
-    public static UnfilteredOfficialSourceRenamer from(File clientFile, final File serverFile) throws IOException {
-        Map<String, String> names = new ConcurrentHashMap<>();
-
+    public static IMappingFileSourceRenamer from(File clientFile, final File serverFile) throws IOException {
         IMappingFile pg_client = IMappingFile.load(clientFile);
         IMappingFile pg_server = IMappingFile.load(serverFile);
+
+        return from(pg_client, pg_server);
+    }
+
+    public static IMappingFileSourceRenamer from(IMappingFile pg_client, final IMappingFile pg_server) throws IOException {
+        Map<String, String> names = new ConcurrentHashMap<>();
 
         Map<String, String> cfields = new ConcurrentHashMap<>();
         Map<String, String> sfields = new ConcurrentHashMap<>();
@@ -56,7 +60,7 @@ public class UnfilteredOfficialSourceRenamer extends RegexBasedSourceRenamer {
         cfields.keySet().parallelStream().forEach(name -> processName(names, cfields, sfields, name));
         cmethods.keySet().parallelStream().forEach(name -> processName(names, cmethods, smethods, name));
 
-        return new UnfilteredOfficialSourceRenamer(names, Collections.emptyMap());
+        return new IMappingFileSourceRenamer(names, Collections.emptyMap());
     }
 
     private static void processName(Map<String, String> names, Map<String, String> clientData, Map<String, String> serverData, String name) {

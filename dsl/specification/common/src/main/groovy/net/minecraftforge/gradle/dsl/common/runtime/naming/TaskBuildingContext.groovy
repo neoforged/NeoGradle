@@ -12,6 +12,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 
 import javax.inject.Inject
+import java.util.function.Function
 
 /**
  * Defines the contextual data that is available to {@link NamingChannel naming channel providers} when they
@@ -21,6 +22,7 @@ import javax.inject.Inject
 class TaskBuildingContext {
     private final @NotNull Project project;
     private final @NotNull String environmentName;
+    private final @NotNull Function<String, String> taskNameBuilder;
     private final @NotNull TaskProvider<? extends WithOutput> taskOutputToModify;
     private final @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks;
     private final @NotNull Map<String, String> versionData;
@@ -30,12 +32,14 @@ class TaskBuildingContext {
     TaskBuildingContext(
             @NotNull Project project,
             @NotNull String environmentName,
+            @NotNull Function<String, String> taskNameBuilder,
             @NotNull TaskProvider<? extends WithOutput> taskOutputToModify,
             @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
             @NotNull Map<String, String> versionData,
             @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks) {
         this.project = project;
         this.environmentName = environmentName;
+        this.taskNameBuilder = taskNameBuilder;
         this.taskOutputToModify = taskOutputToModify;
         this.gameArtifactTasks = gameArtifactTasks;
         this.versionData = versionData;
@@ -70,6 +74,16 @@ class TaskBuildingContext {
     @NotNull
     String getEnvironmentName() {
         return environmentName;
+    }
+
+    /**
+     * A function that can be used to build a task name for a given task type.
+     *
+     * @return A function that can be used to build a task name for a given task type.
+     */
+    @NotNull
+    Function<String, String> getTaskNameBuilder() {
+        return taskNameBuilder
     }
 
     /**
