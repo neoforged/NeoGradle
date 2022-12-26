@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.spec.builder;
 
-import net.minecraftforge.gradle.common.runtime.spec.builder.CommonRuntimeSpecBuilder;
+import net.minecraftforge.gradle.dsl.common.runtime.spec.builder.CommonRuntimeSpecBuilder;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.McpRuntimeSpec;
 import org.gradle.api.Project;

@@ -20,9 +20,9 @@ public class DecompileStep implements IStep {
 
     @Override
     public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, File> gameArtifacts, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
-        final VanillaRuntimeExtension vanillaRuntimeExtension = definition.spec().configureProject().getExtensions().getByType(VanillaRuntimeExtension.class);
+        final VanillaRuntimeExtension vanillaRuntimeExtension = definition.spec().getConfigurationProject().getExtensions().getByType(VanillaRuntimeExtension.class);
 
-        return definition.spec().project().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "decompile"), Execute.class, task -> {
+        return definition.spec().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "decompile"), Execute.class, task -> {
             task.getExecutingArtifact().set(vanillaRuntimeExtension.getForgeFlowerVersion().map(version -> String.format(Utils.FORGEFLOWER_ARTIFACT_INTERPOLATION, version)));
             task.getJvmArguments().addAll(DecompileUtils.DEFAULT_JVM_ARGS);
             task.getProgramArguments().addAll(DecompileUtils.DEFAULT_PROGRAMM_ARGS);

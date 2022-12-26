@@ -3,7 +3,7 @@ package net.minecraftforge.gradle.dsl.common.extensions
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide
+import net.minecraftforge.gradle.dsl.common.util.DistributionType
 import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact
 import org.gradle.api.Project
@@ -38,7 +38,7 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      * @return A map which contains all cached files.
      */
     @NotNull
-    Map<GameArtifact, File> cacheGameVersion(@NotNull String gameVersion, @NotNull ArtifactSide side);
+    Map<GameArtifact, File> cacheGameVersion(@NotNull String gameVersion, @NotNull DistributionType side);
 
     /**
      * Caches an entire game version lazily.
@@ -50,7 +50,7 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      * @return A map which maps the game artifact to the task which caches it.
      */
     @NotNull
-    Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(@NotNull Project project, @NotNull File outputDirectory, @NotNull String gameVersion, @NotNull ArtifactSide side);
+    Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(@NotNull Project project, @NotNull File outputDirectory, @NotNull String gameVersion, @NotNull DistributionType side);
 
     /**
      * Eagerly caches the launcher metadata.
@@ -77,7 +77,7 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      * @return The cached game version.
      */
     @NotNull
-    File cacheVersionArtifact(@NotNull String gameVersion, @NotNull ArtifactSide side);
+    File cacheVersionArtifact(@NotNull String gameVersion, @NotNull DistributionType side);
 
     /**
      * Eagerly caches the given mappings of the given game version.
@@ -87,7 +87,7 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      * @return The cached game version.
      */
     @NotNull
-    File cacheVersionMappings(@NotNull String gameVersion, @NotNull ArtifactSide side);
+    File cacheVersionMappings(@NotNull String gameVersion, @NotNull DistributionType side);
 
     /**
      * Eagerly caches the URL to the location indicated by the given cache file selector.

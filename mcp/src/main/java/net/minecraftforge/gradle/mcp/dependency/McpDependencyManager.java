@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
-import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
@@ -9,7 +9,7 @@ import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
@@ -103,7 +103,7 @@ public final class McpDependencyManager {
         final McpRuntimeExtension runtimeExtension = project.getExtensions().getByType(McpRuntimeExtension.class);
         return runtimeExtension.maybeCreate((Action<McpRuntimeSpecBuilder>) builder -> {
             builder.configureFromProject(configureProject);
-            builder.withSide(ArtifactSide.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
+            builder.withSide(DistributionType.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
             final String version = dependency.getVersion() == null ? runtimeExtension.getDefaultVersion().get() : dependency.getVersion();
 
             builder.withMcpVersion(version);

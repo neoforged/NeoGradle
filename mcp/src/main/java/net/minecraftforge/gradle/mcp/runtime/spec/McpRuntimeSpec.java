@@ -2,8 +2,8 @@ package net.minecraftforge.gradle.mcp.runtime.spec;
 
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
-import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 
@@ -22,7 +22,7 @@ public class McpRuntimeSpec extends CommonRuntimeSpec {
      * @param mcpVersion       The MCP version to use.
      * @param side             The side to use.
      */
-    public McpRuntimeSpec(Project project, Project configureProject, String name, String mcpVersion, ArtifactSide side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, FileCollection additionalRecompileDependencies) {
+    public McpRuntimeSpec(Project project, Project configureProject, String name, String mcpVersion, DistributionType side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, FileCollection additionalRecompileDependencies) {
         super(project, configureProject, name, side, preTaskTypeAdapters, postTypeAdapters);
         this.mcpVersion = mcpVersion;
         this.additionalRecompileDependencies = additionalRecompileDependencies;
@@ -33,7 +33,7 @@ public class McpRuntimeSpec extends CommonRuntimeSpec {
      *
      * @return The minecraft version.
      */
-    public String minecraftVersion() {
+    public String getMinecraftVersion() {
         return mcpVersion().split("-")[0];
     }
 

@@ -30,10 +30,10 @@ public final class CommonRuntimeUtils {
     }
 
     public static String buildTaskName(final CommonRuntimeSpec runtimeSpec, final String defaultName) {
-        if (runtimeSpec.name().isEmpty())
+        if (runtimeSpec.getName().isEmpty())
             return defaultName;
 
-        return runtimeSpec.name() + StringUtils.capitalize(defaultName);
+        return runtimeSpec.getName() + StringUtils.capitalize(defaultName);
     }
 
     public static <D extends CommonRuntimeDefinition<?>> String buildTaskName(final D runtimeSpec, final String defaultName) {
@@ -87,7 +87,7 @@ public final class CommonRuntimeUtils {
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static <T extends CommonRuntimeDefinition<?>> Map<String, Provider<String>> buildArguments(final T definition, Map<String, String> values, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
-        return buildArguments(value -> getInputTaskForTaskFrom(definition.spec(), value, tasks), value -> definition.spec().project().provider(() -> value), values, taskForArguments, alternativeInputProvider);
+        return buildArguments(value -> getInputTaskForTaskFrom(definition.spec(), value, tasks), value -> definition.spec().getProject().provider(() -> value), values, taskForArguments, alternativeInputProvider);
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

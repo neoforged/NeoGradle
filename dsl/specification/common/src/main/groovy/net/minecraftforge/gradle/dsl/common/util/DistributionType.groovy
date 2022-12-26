@@ -3,7 +3,7 @@ package net.minecraftforge.gradle.dsl.common.util;
 /**
  * Defines the distribution type (also known as the side) of a game artifact.
  */
-public enum ArtifactSide {
+enum DistributionType {
     /**
      * Defines the client distribution type, generally contains the game code, including rendering logic and all its assets.
      */
@@ -20,7 +20,7 @@ public enum ArtifactSide {
     private final String side;
     private final GameArtifact gameArtifact;
 
-    ArtifactSide(String side, GameArtifact gameArtifact) {
+    DistributionType(String side, GameArtifact gameArtifact) {
         this.side = side;
         this.gameArtifact = gameArtifact;
     }

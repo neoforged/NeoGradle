@@ -2,13 +2,13 @@ package net.minecraftforge.gradle.userdev.runtime.extension;
 
 import com.google.common.collect.Maps;
 import groovy.lang.GroovyObjectSupport;
-import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.util.*;
 import net.minecraftforge.gradle.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.mcp.runtime.spec.builder.McpRuntimeSpecBuilder;
@@ -107,7 +107,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
 
         final McpRuntimeDefinition mcpRuntimeDefinition = mcpRuntimeExtension.maybeCreate((Action<McpRuntimeSpecBuilder>) builder -> {
             builder.withMcpVersion(mcpVersion)
-                    .withSide(ArtifactSide.JOINED)
+                    .withSide(DistributionType.JOINED)
                     .withName(runtimeSpec.name())
                     .withAdditionalDependencies(project.files(userDevAdditionalDependenciesConfiguration))
                     .configureFromProject(runtimeSpec.configureProject());

@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
@@ -67,7 +67,7 @@ public abstract class Runtime extends JavaRuntimeTask implements net.minecraftfo
         arguments.computeIfAbsent("unpackedMcpZip", key -> newProvider(getUnpackedMcpZipDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("stepsDir", key -> newProvider(getStepsDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("stepName", key -> getStepName());
-        arguments.computeIfAbsent("side", key -> getDistribution().map(ArtifactSide::getName));
+        arguments.computeIfAbsent("side", key -> getDistribution().map(DistributionType::getName));
         arguments.computeIfAbsent("minecraftVersion", key -> getMinecraftVersion().map(Object::toString));
         arguments.computeIfAbsent("javaVersion", key -> getJavaLauncher().map(launcher -> launcher.getMetadata().getLanguageVersion().toString()));
     }

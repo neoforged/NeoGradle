@@ -8,7 +8,7 @@ import net.minecraftforge.gradle.common.tasks.FileCacheProviding;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.util.*;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
 import org.gradle.api.Project;
@@ -53,30 +53,30 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
     }
 
     @Override
-    public final Map<GameArtifact, File> cacheGameVersion(final String gameVersion, ArtifactSide side) {
+    public final Map<GameArtifact, File> cacheGameVersion(final String gameVersion, DistributionType side) {
         final Map<GameArtifact, File> result = new EnumMap<>(GameArtifact.class);
 
         GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> result.put(GameArtifact.LAUNCHER_MANIFEST, this.cacheLauncherMetadata()));
         GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> result.put(GameArtifact.VERSION_MANIFEST, this.cacheVersionManifest(gameVersion)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> result.put(GameArtifact.CLIENT_JAR, this.cacheVersionArtifact(gameVersion, ArtifactSide.CLIENT)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> result.put(GameArtifact.SERVER_JAR, this.cacheVersionArtifact(gameVersion, ArtifactSide.SERVER)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, this.cacheVersionMappings(gameVersion, ArtifactSide.CLIENT)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(gameVersion, ArtifactSide.SERVER)));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> result.put(GameArtifact.CLIENT_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT)));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> result.put(GameArtifact.SERVER_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.SERVER)));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.CLIENT)));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.SERVER)));
 
         return result;
     }
 
     @Override
     @NotNull
-    public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, final File outputDirectory, final String gameVersion, ArtifactSide side) {
+    public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, final File outputDirectory, final String gameVersion, DistributionType side) {
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
         GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, outputDirectory, CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
         GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> results.put(GameArtifact.VERSION_MANIFEST, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, outputDirectory, CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.CLIENT))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, ArtifactSide.SERVER))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.CLIENT))));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, ArtifactSide.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, ArtifactSide.SERVER))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.SERVER))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.CLIENT))));
+        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.SERVER))));
 
         return results;
     }
@@ -104,13 +104,13 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
     }
 
     @Override
-    public final File cacheVersionArtifact(String gameVersion, ArtifactSide side) {
+    public final File cacheVersionArtifact(String gameVersion, DistributionType side) {
         final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionJar(gameVersion, side.getName());
         return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionArtifactToCache(project, getCacheDirectory().get().getAsFile(), gameVersion, side));
     }
 
     @Override
-    public final File cacheVersionMappings(String gameVersion, ArtifactSide side) {
+    public final File cacheVersionMappings(String gameVersion, DistributionType side) {
         final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionMappings(gameVersion, side.getName());
         return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionMappingsToCache(project, getCacheDirectory().get().getAsFile(), gameVersion, side));
     }
@@ -152,7 +152,7 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
         return downloadJsonToCache(project, url, cacheDirectory, CacheFileSelector.forVersionJson(minecraftVersion));
     }
 
-    private File downloadVersionArtifactToCache(final Project project, final File cacheDirectory, final String minecraftVersion, final ArtifactSide side) {
+    private File downloadVersionArtifactToCache(final Project project, final File cacheDirectory, final String minecraftVersion, final DistributionType side) {
         return doDownloadVersionDownloadToCache(project,
                 cacheDirectory,
                 minecraftVersion,
@@ -161,7 +161,7 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
                 String.format("Failed to download game artifact %s for %s", side.getName(), minecraftVersion));
     }
 
-    private File downloadVersionMappingsToCache(final Project project, final File cacheDirectory, final String minecraftVersion, final ArtifactSide side) {
+    private File downloadVersionMappingsToCache(final Project project, final File cacheDirectory, final String minecraftVersion, final DistributionType side) {
         return doDownloadVersionDownloadToCache(project,
                 cacheDirectory,
                 minecraftVersion,

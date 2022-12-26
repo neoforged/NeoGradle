@@ -17,7 +17,7 @@ import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.Project;
@@ -113,7 +113,7 @@ public final class OfficialNamingChannelConfigurator {
                     try {
                         return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).configuredMappingVersionData()));
                     } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().getName()).collect(Collectors.joining(", ")), e);
                     }
                 }));
             }
@@ -141,7 +141,7 @@ public final class OfficialNamingChannelConfigurator {
                     try {
                         return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).configuredMappingVersionData()));
                     } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().getName()).collect(Collectors.joining(", ")), e);
                     }
                 }));
             }
@@ -164,13 +164,13 @@ public final class OfficialNamingChannelConfigurator {
                 .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
                 .collect(Collectors.toList()))
                 .map(runtimeExtensions -> runtimeExtensions.stream().map(runtimeExtension -> runtimeExtension.getRuntimes()
-                        .map(runtimes -> runtimes.values().stream().map(runtime -> runtime.spec().minecraftVersion()).distinct().collect(Collectors.toList()))
+                        .map(runtimes -> runtimes.values().stream().map(runtime -> runtime.spec().getMinecraftVersion()).distinct().collect(Collectors.toList()))
                         .map((Transformer<List<File>, List<String>>) minecraftVersions -> {
                             if (minecraftVersions.isEmpty()) {
                                 return Collections.emptyList();
                             }
 
-                            return minecraftVersions.stream().map(version -> cacheExtension.cacheVersionMappings(version, ArtifactSide.CLIENT)).collect(Collectors.toList());
+                            return minecraftVersions.stream().map(version -> cacheExtension.cacheVersionMappings(version, DistributionType.CLIENT)).collect(Collectors.toList());
                         })
                         .map((Transformer<List<String>, List<File>>) mappingFiles -> {
                             if (mappingFiles.isEmpty())

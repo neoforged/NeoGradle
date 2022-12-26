@@ -2,8 +2,8 @@ package net.minecraftforge.gradle.vanilla.runtime.spec;
 
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
-import net.minecraftforge.gradle.common.runtime.spec.TaskTreeAdapter;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.Project;
 
 /**
@@ -17,7 +17,7 @@ public final class VanillaRuntimeSpec extends CommonRuntimeSpec {
     private final String forgeFlowerVersion;
     private final String accessTransformerApplierVersion;
 
-    public VanillaRuntimeSpec(Project project, Project configureProject, String name, ArtifactSide side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String minecraftVersion, String fartVersion, String forgeFlowerVersion, String accessTransformerApplierVersion) {
+    public VanillaRuntimeSpec(Project project, Project configureProject, String name, DistributionType side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String minecraftVersion, String fartVersion, String forgeFlowerVersion, String accessTransformerApplierVersion) {
         super(project, configureProject, name, side, preTaskTypeAdapters, postTypeAdapters);
         this.minecraftVersion = minecraftVersion;
         this.fartVersion = fartVersion;
@@ -25,7 +25,7 @@ public final class VanillaRuntimeSpec extends CommonRuntimeSpec {
         this.accessTransformerApplierVersion = accessTransformerApplierVersion;
     }
 
-    public String minecraftVersion() {
+    public String getMinecraftVersion() {
         return minecraftVersion;
     }
 

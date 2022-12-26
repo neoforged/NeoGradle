@@ -4,7 +4,7 @@ import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.common.tasks.WithJavaVersion
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
 import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide
+import net.minecraftforge.gradle.dsl.common.util.DistributionType
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
@@ -57,7 +57,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Input
     @DSLProperty
-    Property<ArtifactSide> getDistribution();
+    Property<DistributionType> getDistribution();
 
     /**
      * The requested minecraft version.

@@ -1,7 +1,6 @@
 package net.minecraftforge.gradle.common.extensions.obfuscation;
 
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
@@ -96,10 +95,10 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
             configuredMappingVersionData = TaskDependencyUtils.realiseTaskAndExtractRuntimeDefinition(getProject(), jarTask).configuredMappingVersionData();
         } catch (MultipleDefinitionsFoundException e) {
             if (minecraftVersion == null) {
-                throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+                throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().getName()).collect(Collectors.joining(", ")), e);
             }
 
-            LOGGER.warn("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().name()).collect(Collectors.joining(", ")), e);
+            LOGGER.warn("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().getName()).collect(Collectors.joining(", ")), e);
             LOGGER.warn("Using the manually configured version: " + minecraftVersionString);
             configuredMappingVersionData = Maps.newHashMap();
         }

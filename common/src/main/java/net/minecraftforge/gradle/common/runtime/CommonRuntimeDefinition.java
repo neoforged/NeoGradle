@@ -59,7 +59,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpec> {
     public final Provider<? extends WithOutput> task(String name) {
         final String taskName = CommonRuntimeUtils.buildTaskName(this, name);
         if (!taskOutputs.containsKey(taskName)) {
-            throw new IllegalArgumentException("No task with name " + name + " found in runtime " + spec.name());
+            throw new IllegalArgumentException("No task with name " + name + " found in runtime " + spec.getName());
         }
 
         return taskOutputs.get(taskName);

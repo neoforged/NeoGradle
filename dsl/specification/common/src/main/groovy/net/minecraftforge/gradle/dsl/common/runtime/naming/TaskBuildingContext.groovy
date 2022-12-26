@@ -10,6 +10,7 @@ import net.minecraftforge.gradle.dsl.common.util.GameArtifact
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.util.function.Function

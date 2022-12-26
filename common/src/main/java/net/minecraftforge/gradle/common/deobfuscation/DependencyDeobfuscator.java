@@ -244,7 +244,7 @@ public final class DependencyDeobfuscator {
         runtimeDefinition = runtimeDefinitions.iterator().next();
 
         final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
-        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().minecraftVersion(), runtimeDefinition.spec().side());
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().getMinecraftVersion(), runtimeDefinition.spec().getSide());
 
         final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
             task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).get());
@@ -296,7 +296,7 @@ public final class DependencyDeobfuscator {
             runtimeDefinition = runtimeDefinitions.iterator().next();
 
             final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
-            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().minecraftVersion(), runtimeDefinition.spec().side());
+            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().getMinecraftVersion(), runtimeDefinition.spec().getSide());
 
             final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
                 task.getInput().fileValue(sourcesFileCandidate.get());

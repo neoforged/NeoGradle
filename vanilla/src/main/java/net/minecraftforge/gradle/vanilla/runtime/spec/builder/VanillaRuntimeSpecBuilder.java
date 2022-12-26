@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.vanilla.runtime.spec.builder;
 
-import net.minecraftforge.gradle.common.runtime.spec.builder.CommonRuntimeSpecBuilder;
+import net.minecraftforge.gradle.dsl.common.runtime.spec.builder.CommonRuntimeSpecBuilder;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpec;
 import org.gradle.api.Project;

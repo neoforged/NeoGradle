@@ -33,7 +33,7 @@ public final class McpRuntimeUtils {
     }
 
     public static String buildStepName(McpRuntimeSpec spec, String name) {
-        return StringUtils.uncapitalize(name.replace(spec.name(), ""));
+        return StringUtils.uncapitalize(name.replace(spec.getName(), ""));
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -61,7 +61,7 @@ public final class McpRuntimeUtils {
     public static Provider<File> getInputForTaskFrom(final McpRuntimeSpec spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {
-            return spec.project().provider(() -> new File(inputValue));
+            return spec.getProject().provider(() -> new File(inputValue));
         }
 
         String stepName = matcher.group(1);
@@ -138,7 +138,7 @@ public final class McpRuntimeUtils {
     public static TaskProvider<? extends AccessTransformer> createAccessTransformer(CommonRuntimeSpec runtimeSpec, String namePreFix, File workspaceDirectory, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviderMap, Map<String, String> versionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, List<File> files, Collection<String> data) {
         final Collection<TaskProvider<? extends WithOutput>> fileRemapTasks = new ArrayList<>();
         for (File file : files) {
-            final TaskProvider<? extends WithOutput> provider = runtimeSpec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, namePreFix + "AccessTransformerProvider" + file.getName()), ArtifactProvider.class, task -> {
+            final TaskProvider<? extends WithOutput> provider = runtimeSpec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, namePreFix + "AccessTransformerProvider" + file.getName()), ArtifactProvider.class, task -> {
                 task.getInput().set(file);
                 task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + file.getName()));
             });
@@ -147,7 +147,7 @@ public final class McpRuntimeUtils {
         }
 
         if (!data.isEmpty()) {
-            final TaskProvider<AccessTransformerFileGenerator> generator = runtimeSpec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {
+            final TaskProvider<AccessTransformerFileGenerator> generator = runtimeSpec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {
                 task.getOutput().set(new File(workspaceDirectory, "accesstransformers/_script-access-transformer.cfg"));
                 task.getAdditionalTransformers().set(data);
             });
@@ -155,7 +155,7 @@ public final class McpRuntimeUtils {
             generateAccessTransformerRemapTask(runtimeSpec, gameArtifactTaskProviderMap, versionData, dependentTaskConfigurationHandler, fileRemapTasks, generator);
         }
 
-        return runtimeSpec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, String.format("apply%sAccessTransformer", Utils.capitalize(namePreFix))), AccessTransformer.class, task -> {
+        return runtimeSpec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeSpec, String.format("apply%sAccessTransformer", Utils.capitalize(namePreFix))), AccessTransformer.class, task -> {
             for (TaskProvider<? extends WithOutput> fileRemapTask : fileRemapTasks) {
                 task.getTransformers().from(fileRemapTask.flatMap(WithOutput::getOutput));
                 task.dependsOn(fileRemapTask);
@@ -166,8 +166,8 @@ public final class McpRuntimeUtils {
     private static void generateAccessTransformerRemapTask(CommonRuntimeSpec runtimeSpec, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviderMap, Map<String, String> versionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, Collection<TaskProvider<? extends WithOutput>> fileRemapTasks, TaskProvider<? extends WithOutput> provider) {
         final Set<TaskProvider<? extends Runtime>> additionalRemapTasks = new HashSet<>();
         final TaskBuildingContext context = new TaskBuildingContext(
-                runtimeSpec.project(),
-                "accessTransform" + StringUtils.capitalize(runtimeSpec.name()),
+                runtimeSpec.getProject(),
+                "accessTransform" + StringUtils.capitalize(runtimeSpec.getName()),
                 name -> CommonRuntimeUtils.buildTaskName(runtimeSpec, name),
                 provider,
                 gameArtifactTaskProviderMap,
@@ -175,7 +175,7 @@ public final class McpRuntimeUtils {
                 additionalRemapTasks
         );
 
-        final TaskProvider<? extends Runtime> remapTask = runtimeSpec.project().getExtensions().getByType(Mappings.class).getChannel().get()
+        final TaskProvider<? extends Runtime> remapTask = runtimeSpec.getProject().getExtensions().getByType(Mappings.class).getChannel().get()
                         .getUnapplyAccessTransformerMappingsTaskBuilder()
                                 .get().apply(context);
 
@@ -192,9 +192,9 @@ public final class McpRuntimeUtils {
      * Non-Public API, Can be changed at any time.
      */
     public static TaskProvider<? extends SideAnnotationStripper> createSideAnnotationStripper(CommonRuntimeSpec spec, String namePreFix, List<File> files, Collection<String> data) {
-        return spec.project().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, String.format("apply%sSideAnnotationStripper", Utils.capitalize(namePreFix))), SideAnnotationStripper.class, task -> {
+        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, String.format("apply%sSideAnnotationStripper", Utils.capitalize(namePreFix))), SideAnnotationStripper.class, task -> {
             task.getAdditionalDataEntries().addAll(data);
-            task.getDataFiles().setFrom(spec.configureProject().files(files.toArray()));
+            task.getDataFiles().setFrom(spec.getConfigurationProject().files(files.toArray()));
         });
     }
 }

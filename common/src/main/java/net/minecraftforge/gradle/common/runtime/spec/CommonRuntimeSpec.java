@@ -1,7 +1,8 @@
 package net.minecraftforge.gradle.common.runtime.spec;
 
 import com.google.common.collect.Multimap;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.Project;
 
 import java.io.Serializable;
@@ -14,11 +15,11 @@ public abstract class CommonRuntimeSpec implements Serializable {
     private final Project project;
     private final Project configureProject;
     private final String name;
-    private final ArtifactSide side;
+    private final DistributionType side;
     private final Multimap<String, TaskTreeAdapter> preTaskTypeAdapters;
     private final Multimap<String, TaskTreeAdapter> postTypeAdapters;
 
-    public CommonRuntimeSpec(Project project, Project configureProject, String name, ArtifactSide side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters) {
+    public CommonRuntimeSpec(Project project, Project configureProject, String name, DistributionType side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters) {
         this.project = project;
         this.configureProject = configureProject;
         this.name = name;
@@ -27,29 +28,29 @@ public abstract class CommonRuntimeSpec implements Serializable {
         this.postTypeAdapters = postTypeAdapters;
     }
 
-    public abstract String minecraftVersion();
+    public abstract String getMinecraftVersion();
 
-    public Project project() {
+    public Project getProject() {
         return project;
     }
 
-    public Project configureProject() {
+    public Project getConfigurationProject() {
         return configureProject;
     }
 
-    public String name() {
+    public String getName() {
         return name;
     }
 
-    public ArtifactSide side() {
+    public DistributionType getSide() {
         return side;
     }
 
-    public Multimap<String, TaskTreeAdapter> preTaskTypeAdapters() {
+    public Multimap<String, TaskTreeAdapter> getPreTaskTypeAdapters() {
         return preTaskTypeAdapters;
     }
 
-    public Multimap<String, TaskTreeAdapter> postTypeAdapters() {
+    public Multimap<String, TaskTreeAdapter> getPostTypeAdapters() {
         return postTypeAdapters;
     }
 

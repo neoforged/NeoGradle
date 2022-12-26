@@ -1,6 +1,5 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
-import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
@@ -22,11 +21,11 @@ public class ApplyAccessTransformerStep implements IStep {
 
     @Override
     public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, File> gameArtifacts, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
-        final VanillaRuntimeExtension vanillaRuntimeExtension = definition.spec().configureProject().getExtensions().getByType(VanillaRuntimeExtension.class);
-        final Minecraft minecraftExtension = definition.spec().configureProject().getExtensions().getByType(Minecraft.class);
+        final VanillaRuntimeExtension vanillaRuntimeExtension = definition.spec().getConfigurationProject().getExtensions().getByType(VanillaRuntimeExtension.class);
+        final Minecraft minecraftExtension = definition.spec().getConfigurationProject().getExtensions().getByType(Minecraft.class);
         final AccessTransformers accessTransformers = minecraftExtension.getAccessTransformers();
 
-        return definition.spec().project().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, String.format("apply%sAccessTransformer", Utils.capitalize(definition.spec().name()))), AccessTransformer.class, task -> {
+        return definition.spec().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, String.format("apply%sAccessTransformer", Utils.capitalize(definition.spec().getName()))), AccessTransformer.class, task -> {
             task.getAdditionalTransformers().addAll(accessTransformers.getEntries());
             task.getTransformers().setFrom(accessTransformers.getFiles());
             task.getExecutingArtifact().set(vanillaRuntimeExtension.getAccessTransformerApplierVersion().map(version -> String.format(Utils.ACCESSTRANSFORMER_VERSION_INTERPOLATION, version)));

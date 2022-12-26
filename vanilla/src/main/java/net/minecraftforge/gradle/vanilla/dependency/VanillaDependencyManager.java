@@ -4,7 +4,7 @@ import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import net.minecraftforge.gradle.vanilla.runtime.spec.builder.VanillaRuntimeSpecBuilder;
@@ -48,7 +48,7 @@ public final class VanillaDependencyManager {
                             runtimeDefinition.sourceJarTask(),
                             runtimeDefinition.rawJarTask(),
                             runtimeDefinition.minecraftDependenciesConfiguration(),
-                            builder -> builder.setVersion(runtimeDefinition.spec().minecraftVersion()),
+                            builder -> builder.setVersion(runtimeDefinition.spec().getMinecraftVersion()),
                             runtimeDefinition::replacedDependency)
             );
         });
@@ -95,7 +95,7 @@ public final class VanillaDependencyManager {
 
             builder.configureFromProject(configureProject);
             builder.withName(dependency.getName());
-            builder.withSide(ArtifactSide.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
+            builder.withSide(DistributionType.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
             builder.withMinecraftVersion(version);
             builder.withFartVersion(runtimeExtension.getFartVersion());
             builder.withForgeFlowerVersion(runtimeExtension.getForgeFlowerVersion());

@@ -1,11 +1,10 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
-import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.tasks.JavaToolExecutingTask;
-import net.minecraftforge.gradle.dsl.common.util.ArtifactSide;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.common.util.Utils;
 import org.gradle.api.file.RegularFileProperty;
@@ -24,7 +23,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends JavaToolExecuti
     public ApplyOfficialMappingsToCompiledJar() {
         getExecutingArtifact().set(Utils.SPECIALSOURCE);
         getProgramArguments().set(Lists.newArrayList("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}", "--live"));
-        getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), ArtifactSide.CLIENT)));
+        getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
 
         getArguments().put("input", getInput().getAsFile().map(File::getAbsolutePath));
         getArguments().put("mappings", getMappings().getAsFile().map(File::getAbsolutePath));
