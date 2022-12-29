@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.dsl.generator.transform
 
 import groovy.transform.*
 import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.FromString
 import groovy.transform.stc.SimpleType
 import net.minecraftforge.gradle.dsl.generator.transform.property.*
 import net.minecraftforge.gradle.dsl.generator.transform.property.files.DirectoryPropertyHandler
@@ -152,19 +153,26 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
             return null
         }
 
-        Parameter closureParam(ClassNode type, String name = 'closure') {
+        static Parameter closureParam(ClassNode type, String name = 'closure') {
             new Parameter(
                     RAW_GENERIC_CLOSURE,
                     name
             ).tap {
-                it.addAnnotation(new AnnotationNode(DELEGATES_TO_TYPE).tap {
-                    it.addMember('value', GeneralUtils.classX(type))
-                    it.addMember('strategy', GeneralUtils.constX(Closure.DELEGATE_FIRST))
-                })
-                it.addAnnotation(new AnnotationNode(CLOSURE_PARAMS_TYPE).tap {
-                    it.addMember('value', GeneralUtils.classX(SimpleType))
-                    it.addMember('options', GeneralUtils.constX(type.name.replace('$', '.')))
-                })
+                if (type.isGenericsPlaceHolder()) {
+                    it.addAnnotation(new AnnotationNode(CLOSURE_PARAMS_TYPE).tap {
+                        it.addMember('value', GeneralUtils.classX(FromString))
+                        it.addMember('options', GeneralUtils.constX(type.unresolvedName))
+                    })
+                } else {
+                    it.addAnnotation(new AnnotationNode(DELEGATES_TO_TYPE).tap {
+                        it.addMember('value', GeneralUtils.classX(type))
+                        it.addMember('strategy', GeneralUtils.constX(Closure.DELEGATE_FIRST))
+                    })
+                    it.addAnnotation(new AnnotationNode(CLOSURE_PARAMS_TYPE).tap {
+                        it.addMember('value', GeneralUtils.classX(SimpleType))
+                        it.addMember('options', GeneralUtils.constX(type.name.replace('$', '.')))
+                    })
+                }
             }
         }
 

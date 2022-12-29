@@ -1,8 +1,10 @@
 package net.minecraftforge.gradle.dsl.specification.common
 
 import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.annotations.ClosureEquivalent
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
+import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
@@ -49,7 +51,6 @@ interface DSLYes {
 
 @CompileStatic
 abstract class DSLYesImpl implements DSLYes {
-
 }
 
 @CompileStatic
@@ -86,4 +87,10 @@ interface FileTests extends _BaseProjectAccessor {
 interface _BaseProjectAccessor {
     @ProjectGetter
     abstract Project getProject()
+}
+
+@CompileStatic
+interface ClosureEquivTest {
+    @ClosureEquivalent
+    <T> void doThing(Action<T> action)
 }
