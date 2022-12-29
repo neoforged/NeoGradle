@@ -26,16 +26,21 @@ class ClosureEquivalentTransformer extends AbstractASTTransformation implements 
         this.init(astNodes, sourceUnit)
         if (astNodes[1] !instanceof MethodNode) return
         final method = (MethodNode) astNodes[1]
+        ClassNode clazz = method.declaringClass
+        if (clazz instanceof InnerClassNode && clazz.name.endsWith('Trait$Helper')) {
+            clazz = ((InnerClassNode) clazz).outerClass
+        }
+
         final actionParam = method.parameters.find { it.type == ACTION }
         final closureParam = DSLPropertyTransformer.Utils.closureParam(actionParam.type.genericsTypes[0].type)
         final stmt = GeneralUtils.callX(VariableExpression.THIS_EXPRESSION, method.name, GeneralUtils.args(
-                Stream.of(method.parameters).<Expression>map {
+                Stream.of(method.parameters).filter { it.name != '$self' }.<Expression>map {
                     it === actionParam ? GeneralUtils.callX(CLOSURE_TO_ACTION, 'delegateAndCall', GeneralUtils.varX(closureParam)) : GeneralUtils.varX(it)
                 }.toList()
         ))
-        final mtd = method.declaringClass.addMethod(
+        final mtd = clazz.addMethod(
                 method.name, ACC_PUBLIC,
-                method.returnType, Stream.of(method.parameters).map { it === actionParam ? closureParam : it }.<Parameter>toArray(Parameter[]::new),
+                method.returnType, Stream.of(method.parameters).filter { it.name != '$self'}.map { it === actionParam ? closureParam : it }.<Parameter>toArray(Parameter[]::new),
                 method.exceptions,
                 method.returnType == ClassHelper.VOID_TYPE ? GeneralUtils.stmt(stmt) : GeneralUtils.returnS(stmt)
         )
