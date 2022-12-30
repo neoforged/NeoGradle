@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.tasks;
 
+import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace;
 import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
@@ -12,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CacheableTask
-public abstract class FileCacheProviding extends ForgeGradleBaseTask implements WithOutput, WithWorkspace {
+public abstract class FileCacheProviding extends ForgeGradleBase implements WithOutput, WithWorkspace {
 
     public FileCacheProviding() {
     }

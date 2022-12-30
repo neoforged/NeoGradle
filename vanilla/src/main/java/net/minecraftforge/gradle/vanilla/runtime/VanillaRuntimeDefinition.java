@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.vanilla.runtime;
 
 import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
-import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
+import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;

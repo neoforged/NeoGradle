@@ -1,10 +1,8 @@
 package net.minecraftforge.gradle.common.util;
 
-import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.minecraftforge.gradle.common.runtime.tasks.ArtifactProvider;
-import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -59,28 +57,28 @@ public final class TaskDependencyUtils {
         getDependencies(queue, tasks);
     }
 
-    public static CommonRuntimeDefinition<?> realiseTaskAndExtractRuntimeDefinition(@NotNull Project project, TaskProvider<?> t) throws MultipleDefinitionsFoundException {
+    public static Definition<?> realiseTaskAndExtractRuntimeDefinition(@NotNull Project project, TaskProvider<?> t) throws MultipleDefinitionsFoundException {
         return extractRuntimeDefinition(project, t.get());
     }
 
     @SuppressWarnings("unchecked")
-    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
-        final Optional<List<? extends CommonRuntimeDefinition<?>>> listCandidate = t.getTaskDependencies().getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
+    public static Definition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
+        final Optional<List<? extends Definition<?>>> listCandidate = t.getTaskDependencies().getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
                 .findFirst()
                 .map(JavaCompile::getClasspath)
                 .filter(Configuration.class::isInstance)
                 .map(Configuration.class::cast)
                 .map(Configuration::getAllDependencies)
                 .map(dependencies -> {
-                    final CommonRuntimeExtension<?, ?, ? extends CommonRuntimeDefinition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
+                    final CommonRuntimeExtension<?, ?, ? extends Definition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
                     return runtimeExtension.getRuntimes().get()
                             .values()
                             .stream()
-                            .filter(runtime -> dependencies.contains(runtime.replacedDependency()));
+                            .filter(runtime -> dependencies.contains(runtime.getReplacedDependency()));
                 })
                 .map(stream -> stream.collect(Collectors.toList()));
 
-        final List<? extends CommonRuntimeDefinition<?>> definitions = listCandidate.orElseThrow(() -> new IllegalStateException("Could not find runtime definition for task: " + t.getName()));
+        final List<? extends Definition<?>> definitions = listCandidate.orElseThrow(() -> new IllegalStateException("Could not find runtime definition for task: " + t.getName()));
         if (definitions.size() != 1)
             throw new MultipleDefinitionsFoundException(definitions);
 

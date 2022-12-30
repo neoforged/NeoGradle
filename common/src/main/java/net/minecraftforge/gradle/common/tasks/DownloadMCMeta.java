@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.minecraftforge.gradle.common.util.ManifestJson;
 import net.minecraftforge.gradle.common.util.UrlConstants;
+import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -38,7 +39,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 
 @CacheableTask
-public abstract class DownloadMCMeta extends ForgeGradleBaseTask {
+public abstract class DownloadMCMeta extends ForgeGradleBase {
     // TODO: convert this into a property?
     private static final Gson GSON = new GsonBuilder().create();
 

@@ -5,10 +5,10 @@ import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappin
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
-import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.GradleInternalUtils;
 import net.minecraftforge.gradle.common.util.MappingUtils;
-import net.minecraftforge.gradle.common.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,6 +56,7 @@ public final class OfficialNamingChannelConfigurator {
         mappingsExtension.getExtensions().add(TypeOf.typeOf(Boolean.class), "acceptMojangEula", false);
 
         minecraftExtension.getNamingChannelProviders().register("official", namingChannelProvider -> {
+            namingChannelProvider.getMinecraftVersionExtractor().set(this::extractMinecraftVersion);
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::buildApplySourceMappingTask);
             namingChannelProvider.getApplyCompiledMappingsTaskBuilder().set(this::buildApplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
@@ -63,6 +65,10 @@ public final class OfficialNamingChannelConfigurator {
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
         });
         minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannelProviders().named("official"));
+    }
+
+    private String extractMinecraftVersion(Map<String, String> stringStringMap) {
+        return MappingUtils.getMinecraftVersion(stringStringMap);
     }
 
     private TaskProvider<? extends Runtime> buildUnapplyAccessTransformerMappingsTask(TaskBuildingContext context) {
@@ -88,8 +94,8 @@ public final class OfficialNamingChannelConfigurator {
             applyOfficialMappingsToSourceJar.setGroup("mappings/official");
             applyOfficialMappingsToSourceJar.setDescription(String.format("Applies the Official mappings for version %s.", mappingVersion));
 
-            applyOfficialMappingsToSourceJar.getClientMappings().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
-            applyOfficialMappingsToSourceJar.getServerMappings().set(context.getGameArtifactTask(GameArtifact.SERVER_MAPPINGS).flatMap(WithOutput::getOutput));
+            applyOfficialMappingsToSourceJar.getClientMappingsFile().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
+            applyOfficialMappingsToSourceJar.getServerMappingsFile().set(context.getGameArtifactTask(GameArtifact.SERVER_MAPPINGS).flatMap(WithOutput::getOutput));
 
             applyOfficialMappingsToSourceJar.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
 
@@ -111,9 +117,9 @@ public final class OfficialNamingChannelConfigurator {
             } else {
                 task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
                     try {
-                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).configuredMappingVersionData()));
+                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()));
                     } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().getName()).collect(Collectors.joining(", ")), e);
+                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getName()).collect(Collectors.joining(", ")), e);
                     }
                 }));
             }
@@ -139,9 +145,9 @@ public final class OfficialNamingChannelConfigurator {
             } else {
                 task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
                     try {
-                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).configuredMappingVersionData()));
+                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()));
                     } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.spec().getName()).collect(Collectors.joining(", ")), e);
+                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getName()).collect(Collectors.joining(", ")), e);
                     }
                 }));
             }
@@ -164,7 +170,7 @@ public final class OfficialNamingChannelConfigurator {
                 .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
                 .collect(Collectors.toList()))
                 .map(runtimeExtensions -> runtimeExtensions.stream().map(runtimeExtension -> runtimeExtension.getRuntimes()
-                        .map(runtimes -> runtimes.values().stream().map(runtime -> runtime.spec().getMinecraftVersion()).distinct().collect(Collectors.toList()))
+                        .map(runtimes -> runtimes.values().stream().map(runtime -> runtime.getSpecification().getMinecraftVersion()).distinct().collect(Collectors.toList()))
                         .map((Transformer<List<File>, List<String>>) minecraftVersions -> {
                             if (minecraftVersions.isEmpty()) {
                                 return Collections.emptyList();

@@ -11,7 +11,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
 @CacheableTask
-public abstract class Execute extends Runtime implements net.minecraftforge.gradle.dsl.common.tasks.Execute {
+public abstract class Execute extends DefaultRuntime implements net.minecraftforge.gradle.dsl.common.tasks.Execute {
 
     public Execute() {
         super();

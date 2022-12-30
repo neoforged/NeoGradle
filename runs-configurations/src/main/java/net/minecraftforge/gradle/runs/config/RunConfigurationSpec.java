@@ -2,7 +2,7 @@ package net.minecraftforge.gradle.runs.config;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.common.config.VersionedConfiguration;
+import net.minecraftforge.gradle.dsl.common.configuration.VersionedConfiguration;
 
 import java.util.List;
 import java.util.Map;

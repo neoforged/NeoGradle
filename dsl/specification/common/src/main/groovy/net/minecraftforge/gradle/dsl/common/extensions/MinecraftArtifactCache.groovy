@@ -50,7 +50,7 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      * @return A map which maps the game artifact to the task which caches it.
      */
     @NotNull
-    Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(@NotNull Project project, @NotNull File outputDirectory, @NotNull String gameVersion, @NotNull DistributionType side);
+    Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(@NotNull final Project project, @NotNull final File outputDirectory, @NotNull final String gameVersion, @NotNull final DistributionType side);
 
     /**
      * Eagerly caches the launcher metadata.

@@ -21,6 +21,7 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import net.minecraftforge.gradle.common.runtime.naming.renamer.ISourceRenamer;
+import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.common.util.Utils;
 import org.apache.commons.io.IOUtils;
@@ -37,7 +38,7 @@ import java.util.zip.ZipOutputStream;
 
 
 @CacheableTask
-public abstract class ApplyMappingsToSourceJar extends net.minecraftforge.gradle.common.runtime.tasks.Runtime implements Runtime {
+public abstract class ApplyMappingsToSourceJar extends DefaultRuntime implements Runtime {
 
     public ApplyMappingsToSourceJar() {
         getRemapJavadocs().convention(false);

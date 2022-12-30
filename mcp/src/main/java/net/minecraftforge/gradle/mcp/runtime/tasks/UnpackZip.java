@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 
 @CacheableTask
-public abstract class UnpackZip extends Runtime {
+public abstract class UnpackZip extends DefaultRuntime {
 
     public UnpackZip() {
         getUnpackingTarget().convention(getOutputDirectory().map(dir -> dir.dir("unpacked")));

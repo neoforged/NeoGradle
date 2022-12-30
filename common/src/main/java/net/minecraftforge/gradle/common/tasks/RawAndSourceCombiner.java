@@ -1,14 +1,14 @@
 package net.minecraftforge.gradle.common.tasks;
 
 import com.google.common.io.Files;
-import net.minecraftforge.gradle.common.tasks.ForgeGradleBaseTask;
+import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
 
-public abstract class RawAndSourceCombiner extends ForgeGradleBaseTask {
+public abstract class RawAndSourceCombiner extends ForgeGradleBase {
 
     @TaskAction
     public void doCombine() {

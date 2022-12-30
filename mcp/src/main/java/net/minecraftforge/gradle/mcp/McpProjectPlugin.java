@@ -22,10 +22,12 @@ package net.minecraftforge.gradle.mcp;
 
 import net.minecraftforge.gradle.common.CommonPlugin;
 import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
 import net.minecraftforge.gradle.mcp.dependency.McpDependencyManager;
 import net.minecraftforge.gradle.mcp.extensions.McpExtension;
 import net.minecraftforge.gradle.mcp.naming.MCPNamingChannelConfigurator;
+import net.minecraftforge.gradle.mcp.naming.MCPOfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -43,13 +45,14 @@ public class McpProjectPlugin implements Plugin<Project> {
         McpRuntimeExtension runtimeExtension = project.getExtensions().create("mcpRuntime", McpRuntimeExtension.class, project);
 
         MCPNamingChannelConfigurator.getInstance().configure(project);
+        MCPOfficialNamingChannelConfigurator.getInstance().configure(project);
 
         //Setup handling of the dependencies
         McpDependencyManager.getInstance().apply(project);
 
         //Add Known repos
         project.getRepositories().maven(e -> {
-            e.setUrl(Utils.FORGE_MAVEN);
+            e.setUrl(Constants.FORGE_MAVEN);
             e.metadataSources(m -> {
                 m.mavenPom();
                 m.artifact();

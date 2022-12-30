@@ -12,7 +12,7 @@ class OfficialNamingChannelConfiguratorTest extends ForgeGradleTestSpecification
                 id 'net.minecraftforge.gradle.mcp'
             }
             
-            println project.minecraft.mappings.mappingChannel.get().getName()
+            println project.minecraft.mappings.channel.get().getName()
         """
 
         when:
@@ -32,7 +32,7 @@ class OfficialNamingChannelConfiguratorTest extends ForgeGradleTestSpecification
             
             minecraft {
                 mappings {
-                    mappingChannel = official()
+                    channel = official()
                 }
             }
         """
@@ -54,7 +54,7 @@ class OfficialNamingChannelConfiguratorTest extends ForgeGradleTestSpecification
             
             minecraft {
                 mappings {
-                    mappingChannel = official()
+                    channel = official()
                 }
             }
             

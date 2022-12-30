@@ -1,18 +1,18 @@
-package net.minecraftforge.gradle.common.util;
+package net.minecraftforge.gradle.dsl.common.util;
 
-public final class NamingConstants {
+final class NamingConstants {
 
     private NamingConstants() {
         throw new IllegalStateException("Can not instantiate an instance of: NamingConstants. This is a utility class");
     }
 
-    public static class Version {
+    static class Version {
 
         public static final String VERSION = "version";
         public static final String MINECRAFT_VERSION = "minecraft";
     }
 
-    public static class Task {
+    static class Task {
 
         public static final String CACHE_LAUNCHER_METADATA = "cacheLauncherMetadata";
         public static final String CACHE_VERSION_MANIFEST = "cacheVersionManifest";

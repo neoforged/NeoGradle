@@ -18,7 +18,30 @@
  * USA
  */
 
-@NonNullApi
-package net.minecraftforge.gradle.mcp.util;
+package net.minecraftforge.gradle.dsl.common.configuration;
 
-import org.gradle.api.NonNullApi;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+public class VersionedConfiguration {
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    public int spec = 1;
+
+    public static int getSpec(InputStream stream) throws IOException {
+        return GSON.fromJson(new InputStreamReader(stream), VersionedConfiguration.class).spec;
+    }
+    public static int getSpec(byte[] data) throws IOException {
+        return getSpec(new ByteArrayInputStream(data));
+    }
+
+    public int getSpec() {
+        return spec;
+    }
+}

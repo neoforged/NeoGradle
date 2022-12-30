@@ -2,6 +2,8 @@ package net.minecraftforge.gradle.common.util;
 
 import net.minecraftforge.srgutils.IMappingFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -19,6 +21,14 @@ public final class IMappingFileUtils {
 
     private IMappingFileUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: IMappingFileUtils. This is a utility class");
+    }
+
+    public static IMappingFile load(final File file) {
+        try {
+            return IMappingFile.load(file);
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("Failed to load mappings file: %s", file.getAbsolutePath()), e);
+        }
     }
 
     enum Element{ PACKAGE, CLASS, FIELD, METHOD, PARAMETER }
@@ -67,7 +77,8 @@ public final class IMappingFileUtils {
 
         return lines;
     }
-    static void writeMeta(IMappingFile.Format format, List<String> lines, Element element, Map<String, String> meta) {
+
+    private static void writeMeta(IMappingFile.Format format, List<String> lines, Element element, Map<String, String> meta) {
         int indent = 0;
         switch (element) {
             case PACKAGE:
@@ -109,7 +120,7 @@ public final class IMappingFileUtils {
         }
     }
 
-    static String escapeTinyString(String value) {
+    private static String escapeTinyString(String value) {
         return value.replace("\\", "\\\\")
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
@@ -118,7 +129,8 @@ public final class IMappingFileUtils {
     }
 
     private static final List<String> ORDER = Arrays.asList("PK:", "CL:", "FD:", "MD:");
-    public static int compareLines(String o1, String o2) {
+
+    private static int compareLines(String o1, String o2) {
         String[] pt1 = o1.split(" ");
         String[] pt2 = o2.split(" ");
         if (!pt1[0].equals(pt2[0]))
@@ -127,14 +139,14 @@ public final class IMappingFileUtils {
         if ("PK:".equals(pt1[0]))
             return o1.compareTo(o2);
         if ("CL:".equals(pt1[0]))
-            return compareCls(pt1[1], pt2[1]);
+            return compareClasses(pt1[1], pt2[1]);
         if ("FD:".equals(pt1[0]) || "MD:".equals(pt1[0]))
         {
             String[][] y = {
                     {pt1[1].substring(0, pt1[1].lastIndexOf('/')), pt1[1].substring(pt1[1].lastIndexOf('/') + 1)},
                     {pt2[1].substring(0, pt2[1].lastIndexOf('/')), pt2[1].substring(pt2[1].lastIndexOf('/') + 1)}
             };
-            int ret = compareCls(y[0][0], y[1][0]);
+            int ret = compareClasses(y[0][0], y[1][0]);
             if (ret != 0)
                 return ret;
             return y[0][1].compareTo(y[1][1]);
@@ -142,7 +154,7 @@ public final class IMappingFileUtils {
         return o1.compareTo(o2);
     }
 
-    public static int compareCls(String cls1, String cls2) {
+    private static int compareClasses(String cls1, String cls2) {
         if (cls1.indexOf('/') > 0 && cls2.indexOf('/') > 0)
             return cls1.compareTo(cls2);
         String[][] t = { cls1.split("\\$"), cls2.split("\\$") };

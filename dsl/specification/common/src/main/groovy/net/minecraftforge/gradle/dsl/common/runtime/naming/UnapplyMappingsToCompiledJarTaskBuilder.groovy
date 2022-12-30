@@ -19,5 +19,5 @@ interface UnapplyMappingsToCompiledJarTaskBuilder {
      * @return The task provider.
      */
     @NotNull
-    TaskProvider<? extends WithOutput> apply(final TaskBuildingContext context);
+    TaskProvider<? extends WithOutput> build(final TaskBuildingContext context);
 }

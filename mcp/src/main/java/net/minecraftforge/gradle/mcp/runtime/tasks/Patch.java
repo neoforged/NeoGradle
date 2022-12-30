@@ -4,7 +4,7 @@ import codechicken.diffpatch.cli.CliOperation;
 import codechicken.diffpatch.cli.PatchOperation;
 import codechicken.diffpatch.util.LoggingOutputStream;
 import codechicken.diffpatch.util.PatchMode;
-import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
@@ -14,7 +14,7 @@ import org.gradle.api.tasks.*;
 import java.io.File;
 
 @CacheableTask
-public abstract class Patch extends Runtime {
+public abstract class Patch extends DefaultRuntime {
 
 
     public Patch() {

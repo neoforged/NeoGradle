@@ -4,6 +4,8 @@ package net.minecraftforge.gradle.dsl.common.runtime.naming
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings
+import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
+import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact
@@ -28,8 +30,8 @@ class TaskBuildingContext {
     private final @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks;
     private final @NotNull Map<String, String> versionData;
     private final @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks;
+    private final @Nullable Definition<? extends Specification> runtimeDefinition;
 
-    @Inject
     TaskBuildingContext(
             @NotNull Project project,
             @NotNull String environmentName,
@@ -45,6 +47,26 @@ class TaskBuildingContext {
         this.gameArtifactTasks = gameArtifactTasks;
         this.versionData = versionData;
         this.additionalRuntimeTasks = additionalRuntimeTasks;
+        this.runtimeDefinition = null;
+    }
+
+    TaskBuildingContext(
+            @NotNull Project project,
+            @NotNull String environmentName,
+            @NotNull Function<String, String> taskNameBuilder,
+            @NotNull TaskProvider<? extends WithOutput> taskOutputToModify,
+            @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
+            @NotNull Map<String, String> versionData,
+            @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks,
+            @Nullable Definition<? extends Specification> runtimeDefinition) {
+        this.project = project
+        this.environmentName = environmentName
+        this.taskNameBuilder = taskNameBuilder
+        this.taskOutputToModify = taskOutputToModify
+        this.gameArtifactTasks = gameArtifactTasks
+        this.versionData = versionData
+        this.additionalRuntimeTasks = additionalRuntimeTasks
+        this.runtimeDefinition = runtimeDefinition
     }
 
     /**
@@ -96,7 +118,7 @@ class TaskBuildingContext {
     @NotNull
     TaskProvider<? extends WithOutput> getGameArtifactTask(final GameArtifact artifact) {
         return gameArtifactTasks.computeIfAbsent(artifact, a -> {
-            throw new IllegalStateException(String.format('No task found for game artifact %s', a));
+            throw new IllegalStateException(String.format('No task found for game artifact %s. Available are: %s', a, gameArtifactTasks.keySet()));
         });
     }
 
@@ -186,5 +208,15 @@ class TaskBuildingContext {
      */
     @NotNull TaskProvider<? extends WithOutput> getInputTask() {
         return taskOutputToModify;
+    }
+
+    /**
+     * Gives access to an optional which holds the runtime definition that is being configured.
+     * This is only present when the runtime definition is being configured.
+     *
+     * @return An optional which holds the runtime definition that is being configured.
+     */
+    @NotNull Optional<? extends Definition<? extends Specification>> getRuntimeDefinition() {
+        return Optional.ofNullable(runtimeDefinition)
     }
 }

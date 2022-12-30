@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.util;
 
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -25,5 +26,15 @@ public final class MappingUtils {
             return minecraftVersion;
         }
         return mappingVersion;
+    }
+
+    @NotNull
+    public static String getMinecraftVersion(@NotNull Map<String, String> mappingVersionData) {
+        final String minecraftVersion = mappingVersionData.get(NamingConstants.Version.MINECRAFT_VERSION);
+        if (minecraftVersion == null) {
+            throw new IllegalStateException("Mapping version data does not contain a version or a minecraft version!");
+        }
+
+        return minecraftVersion;
     }
 }

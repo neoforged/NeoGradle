@@ -19,5 +19,5 @@ interface UnapplyMappingsToAccessTransformerTaskBuilder {
      * @return The task provider.
      */
     @NotNull
-    TaskProvider<? extends Runtime> apply(final TaskBuildingContext context)
+    TaskProvider<? extends Runtime> build(final TaskBuildingContext context)
 }

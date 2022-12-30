@@ -4,6 +4,7 @@ import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
+import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -14,7 +15,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public abstract class DisplayMappingsLicenseTask extends ForgeGradleBaseTask {
+public abstract class DisplayMappingsLicenseTask extends ForgeGradleBase {
 
     public DisplayMappingsLicenseTask() {
         getProject().getTasks().configureEach(task -> {

@@ -1,7 +1,11 @@
 package net.minecraftforge.gradle.common;
 
 import net.minecraftforge.gradle.common.deobfuscation.DependencyDeobfuscator;
-import net.minecraftforge.gradle.common.extensions.*;
+import net.minecraftforge.gradle.common.extensions.AccessTransformersExtension;
+import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
+import net.minecraftforge.gradle.common.extensions.MappingsExtension;
+import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
+import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.minecraftforge.gradle.common.extensions.obfuscation.ObfuscationExtension;
 import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
@@ -9,11 +13,15 @@ import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtensio
 import net.minecraftforge.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.minecraftforge.gradle.common.util.GradleInternalUtils;
-import net.minecraftforge.gradle.common.util.Utils;
-import net.minecraftforge.gradle.dsl.common.extensions.*;
+import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
+import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
+import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
+import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
@@ -48,7 +56,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getTasks().create("handleNamingLicense", DisplayMappingsLicenseTask.class);
 
         project.getRepositories().maven(e -> {
-            e.setUrl(Utils.MOJANG_MAVEN);
+            e.setUrl(Constants.MOJANG_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::artifact);
         });
 

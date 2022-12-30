@@ -4,8 +4,8 @@ import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.common.tasks.WithJavaVersion
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
 import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace
-import net.minecraftforge.gradle.dsl.common.util.DistributionType
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion
+import net.minecraftforge.gradle.dsl.common.util.DistributionType
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -18,21 +18,21 @@ import org.gradle.api.tasks.Nested
  * Defines the structure of a task which is run as part of a runtime execution.
  * By default, it has an output.
  */
-interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
+trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
 
     /**
      * The runtime directory, it is the location of the runtime working directory.
      * @return The mcp working directory.
      */
     @Internal
-    DirectoryProperty getRuntimeDirectory();
+    abstract DirectoryProperty getRuntimeDirectory();
 
     /**
      * The unpacked mcp directory in the global cache.
      * @return The unpacked mcp directory.
      */
     @Internal
-    DirectoryProperty getUnpackedMcpZipDirectory();
+    abstract DirectoryProperty getUnpackedMcpZipDirectory();
 
     /**
      * The steps directory, it is the location of the steps working directory.
@@ -40,7 +40,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      * @return The steps directory.
      */
     @Internal
-    DirectoryProperty getStepsDirectory();
+    abstract DirectoryProperty getStepsDirectory();
 
     /**
      * The name of the step.
@@ -48,7 +48,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Input
     @DSLProperty
-    Property<String> getStepName();
+    abstract Property<String> getStepName();
 
     /**
      * The requested distribution.
@@ -57,7 +57,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Input
     @DSLProperty
-    Property<DistributionType> getDistribution();
+    abstract Property<DistributionType> getDistribution();
 
     /**
      * The requested minecraft version.
@@ -66,7 +66,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Nested
     @DSLProperty
-    Property<CacheableMinecraftVersion> getMinecraftVersion();
+    abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
 
     /**
      * The custom pipeline file pointer data.
@@ -75,7 +75,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Input
     @DSLProperty
-    MapProperty<String, File> getData();
+    abstract MapProperty<String, File> getData();
 
     /**
      * The arguments for this step.
@@ -84,7 +84,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Input
     @DSLProperty
-    MapProperty<String, Provider<String>> getArguments();
+    abstract MapProperty<String, Provider<String>> getArguments();
 
     /**
      * The name of the output file name for this step.
@@ -93,7 +93,7 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Input
     @DSLProperty
-    Property<String> getOutputFileName();
+    abstract Property<String> getOutputFileName();
 
     /**
      * The output directory for this step, also doubles as working directory for this step.
@@ -101,5 +101,5 @@ interface Runtime extends WithOutput, WithWorkspace, WithJavaVersion {
      * @return The output and working directory for this step.
      */
     @Internal
-    DirectoryProperty getOutputDirectory();
+    abstract DirectoryProperty getOutputDirectory();
 }

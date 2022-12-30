@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.common.tasks;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -32,7 +33,7 @@ import java.util.List;
 @CacheableTask
 public abstract class CheckJarCompatibility extends JarExec {
     public CheckJarCompatibility() {
-        getTool().set(Utils.JARCOMPATIBILITYCHECKER);
+        getTool().set(Constants.JARCOMPATIBILITYCHECKER);
         getArgs().addAll("--base-jar", "{base_jar}", "--input-jar", "{input_jar}", "--lib", "{lib}", "--base-lib", "{base_lib}", "--concrete-lib", "{concrete_lib}");
 
         getBinaryMode().convention(false);

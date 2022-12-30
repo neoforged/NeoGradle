@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.apache.commons.io.IOUtils;
@@ -19,7 +19,7 @@ import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
 @CacheableTask
-public abstract class StripJar extends Runtime {
+public abstract class StripJar extends DefaultRuntime {
 
     public StripJar() {
         super();

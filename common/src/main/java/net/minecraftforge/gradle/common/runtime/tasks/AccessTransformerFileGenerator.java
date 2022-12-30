@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 
 @CacheableTask
-public abstract class AccessTransformerFileGenerator extends Runtime implements net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime {
+public abstract class AccessTransformerFileGenerator extends DefaultRuntime implements net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime {
 
     public AccessTransformerFileGenerator() {
         super();

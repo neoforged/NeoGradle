@@ -17,7 +17,7 @@ import java.io.File;
  */
 @CompileStatic
 @DefaultMethods
-public trait WithWorkspace implements Task {
+trait WithWorkspace implements Task {
 
     /**
      * Ensures the workspace is ready for the file and realises the given property and regular file.

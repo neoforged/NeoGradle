@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp
 
 import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
-import net.minecraftforge.gradle.common.util.Utils
+import net.minecraftforge.gradle.dsl.common.util.Constants
 import org.gradle.testkit.runner.TaskOutcome
 
 class McpPluginTests extends ForgeGradleTestSpecification {
@@ -96,8 +96,8 @@ class McpPluginTests extends ForgeGradleTestSpecification {
         def result = gradleRunner().build()
 
         then:
-        result.output.contains(Utils.MOJANG_MAVEN)
-        result.output.contains(Utils.FORGE_MAVEN)
+        result.output.contains(Constants.MOJANG_MAVEN)
+        result.output.contains(Constants.FORGE_MAVEN)
     }
 
     def "applying mcp plugin registers display mappings task"() {

@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.common.tasks;
 
 import net.minecraftforge.gradle.common.util.Utils;
 
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -36,7 +37,7 @@ public abstract class ExtractRangeMap extends JarExec {
     private boolean batch = true;
 
     public ExtractRangeMap() {
-        getTool().set(Utils.SRG2SOURCE);
+        getTool().set(Constants.SRG2SOURCE);
         getArgs().addAll("--extract", "--source-compatibility", "{compat}", "--output", "{output}", "--lib",
                 "{library}", "--input", "{input}", "--batch", "{batched}");
         setMinimumRuntimeJavaVersion(11);

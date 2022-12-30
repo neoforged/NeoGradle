@@ -23,6 +23,7 @@ package net.minecraftforge.gradle.common.tasks;
 import net.minecraftforge.gradle.common.util.Utils;
 
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
@@ -33,7 +34,7 @@ import java.util.List;
 @CacheableTask
 public abstract class ApplyBinPatches extends JarExec implements WithOutput {
     public ApplyBinPatches() {
-        getTool().set(Utils.BINPATCHER);
+        getTool().set(Constants.BINPATCHER);
         getArgs().addAll("--clean", "{clean}", "--output", "{output}", "--apply", "{patch}");
 
         getOutput().convention(getProject().getLayout().getBuildDirectory().dir(getName()).map(d -> d.file("output.jar")));

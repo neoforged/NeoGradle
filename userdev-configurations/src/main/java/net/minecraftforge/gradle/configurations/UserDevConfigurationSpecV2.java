@@ -22,7 +22,7 @@ package net.minecraftforge.gradle.configurations;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
+import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV1;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

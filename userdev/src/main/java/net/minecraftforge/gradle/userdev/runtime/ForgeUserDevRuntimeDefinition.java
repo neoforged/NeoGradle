@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.userdev.runtime;
 
 import net.minecraftforge.gradle.configurations.UserDevConfigurationSpecV2;
-import net.minecraftforge.gradle.mcp.runtime.McpRuntimeDefinition;
+import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.userdev.runtime.spec.ForgeUserDevRuntimeSpec;
 import org.gradle.api.artifacts.Configuration;
 

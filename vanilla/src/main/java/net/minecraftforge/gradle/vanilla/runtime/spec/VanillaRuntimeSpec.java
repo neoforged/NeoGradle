@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.vanilla.runtime.spec;
 
 import com.google.common.collect.Multimap;
-import net.minecraftforge.gradle.common.runtime.spec.CommonRuntimeSpec;
+import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpec;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.Project;

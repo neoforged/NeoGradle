@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.MapProperty;
@@ -12,9 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @CacheableTask
-public abstract class Runtime extends JavaRuntimeTask implements net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime {
+public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime {
 
-    public Runtime() {
+    public DefaultRuntime() {
         super();
 
         //All of these taskOutputs belong to the MCP group

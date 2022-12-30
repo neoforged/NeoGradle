@@ -4,6 +4,7 @@ import net.minecraftforge.gradle.common.util.ConfigurableObject;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
 import net.minecraftforge.gradle.dsl.common.extensions.Deobfuscation;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.Project;
 
 public abstract class DeobfuscationExtension extends ConfigurableObject<Deobfuscation> implements Deobfuscation {
@@ -12,7 +13,7 @@ public abstract class DeobfuscationExtension extends ConfigurableObject<Deobfusc
 
     public DeobfuscationExtension(final Project project) {
         this.project = project;
-        getForgeFlowerVersion().convention(Utils.FORGEFLOWER_VERSION);
+        getForgeFlowerVersion().convention(Constants.FORGEFLOWER_VERSION);
     }
 
     @Override

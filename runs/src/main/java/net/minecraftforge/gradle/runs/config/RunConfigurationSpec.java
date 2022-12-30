@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.runs.config;
 
-import net.minecraftforge.gradle.common.config.VersionedConfiguration;
+import net.minecraftforge.gradle.dsl.common.configuration.VersionedConfiguration;
 
 import java.util.List;
 import java.util.Map;

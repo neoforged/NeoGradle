@@ -1,12 +1,14 @@
-package net.minecraftforge.gradle.common.tasks;
+package net.minecraftforge.gradle.dsl.common.tasks;
 
-import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.logging.LogLevel;
 
-public abstract class ForgeGradleBaseTask extends DefaultTask implements WithWorkspace {
+/**
+ * Base class for all ForgeGradle tasks.
+ */
+abstract class ForgeGradleBase extends DefaultTask implements WithWorkspace {
 
-    public ForgeGradleBaseTask() {
+    ForgeGradleBase() {
         setGroup("ForgeGradle");
 
         getLogging().captureStandardOutput(LogLevel.DEBUG);

@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 @CacheableTask
-public abstract class DownloadArtifact extends Runtime {
+public abstract class DownloadArtifact extends DefaultRuntime {
     public DownloadArtifact() {
         getArtifact().convention(getArtifactCoordinate().map(Artifact::from));
         getArtifactCoordinate().finalizeValueOnRead();

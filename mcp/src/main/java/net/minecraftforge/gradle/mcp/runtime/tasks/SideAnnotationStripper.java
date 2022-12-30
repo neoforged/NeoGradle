@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -21,7 +22,7 @@ public abstract class SideAnnotationStripper extends Execute {
     public SideAnnotationStripper() {
         super();
 
-        getExecutingArtifact().convention(Utils.SIDESTRIPPER);
+        getExecutingArtifact().convention(Constants.SIDESTRIPPER);
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                     final List<String> args = Lists.newArrayList();

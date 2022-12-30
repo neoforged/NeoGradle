@@ -20,6 +20,7 @@
 
 package net.minecraftforge.gradle.common.util;
 
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.Project;
 import org.gradle.util.GradleVersion;
 import org.slf4j.Logger;
@@ -74,7 +75,7 @@ public class EnvironmentChecks {
      * <ul>
      *     <li>Java version is <em>1.8.0_101</em> or above (first JDK version to include Let's Encrypt certificates)</li>
      *     <li>Gradle version is <em>7.1</em> or above (minimum version required by ForgeGradle)</li>
-     *     <li>Certificates for {@link Utils#FORGE_MAVEN} and {@link Utils#MOJANG_MAVEN} are valid (required repositories)</li>
+     *     <li>Certificates for {@link Constants#FORGE_MAVEN} and {@link Constants#MOJANG_MAVEN} are valid (required repositories)</li>
      * </ul>
      *
      * @see #checkGradleRange(GradleVersion, GradleVersion)
@@ -106,8 +107,8 @@ public class EnvironmentChecks {
 
         if (ENABLE_CERTIFICATE_CHECK) {
             logger.debug(ENV_CHECK, "Checking server connections");
-            testServerConnection(Utils.FORGE_MAVEN);
-            testServerConnection(Utils.MOJANG_MAVEN);
+            testServerConnection(Constants.FORGE_MAVEN);
+            testServerConnection(Constants.MOJANG_MAVEN);
         } else {
             logger.debug(ENV_CHECK, "Server connection check disabled by system property");
         }

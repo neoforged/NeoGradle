@@ -23,6 +23,7 @@ package net.minecraftforge.gradle.common.tasks;
 import net.minecraftforge.gradle.common.util.Utils;
 
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
@@ -37,7 +38,7 @@ public abstract class ApplyRangeMap extends JarExec implements WithOutput {
     public boolean keepImports = true;
 
     public ApplyRangeMap() {
-        getTool().set(Utils.SRG2SOURCE);
+        getTool().set(Constants.SRG2SOURCE);
         getArgs().addAll("--apply", "--input", "{input}", "--range", "{range}", "--srg", "{srg}", "--exc", "{exc}",
                 "--output", "{output}", "--keepImports", "{keepImports}");
         setMinimumRuntimeJavaVersion(11);

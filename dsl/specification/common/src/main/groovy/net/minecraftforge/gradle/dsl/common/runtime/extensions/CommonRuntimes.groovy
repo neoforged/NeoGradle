@@ -11,6 +11,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.Nullable
 
 /**
  * Defines the extension which handles the runtime specifications and definitions.
@@ -62,15 +63,38 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      */
     D maybeCreate(Action<B> configurator);
 
-    D maybeCreate(S spec);
-
+    /**
+     * Creates a new runtime based on the specification created by the given builder.
+     * If a runtime with the same name already exists, an exception is thrown.
+     *
+     * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
+     * @return The runtime definition, unbaked.
+     */
     D create(Action<B> configurator);
 
-    D create(S spec);
-
+    /**
+     * Looks up a runtime definition by name.
+     * Throws an exception of not found.
+     *
+     * @param name The name of the runtime definition.
+     * @return The runtime definition.
+     */
     D getByName(String name);
 
+    /**
+     * Looks up a runtime definition by name.
+     *
+     * @param name The name of the runtime definition.
+     * @return The runtime definition, or null if not found.
+     */
+    @Nullable
     D findByName(String name);
 
+    /**
+     * Tries to find all runtimes which can be found in the given configuration or its dependents.
+     *
+     * @param configuration The gradle configuration to find the runtimes in.
+     * @return The set of runtimes in the configuration.
+     */
     @NotNull Set<D> findIn(Configuration configuration);
 }

@@ -1,10 +1,13 @@
 package net.minecraftforge.gradle.base
 
 import com.google.common.collect.Lists
+import net.minecraftforge.gradle.base.util.LoggerWriter
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.jetbrains.annotations.NotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInfo
+import org.slf4j.LoggerFactory
 import spock.lang.Specification
 import spock.lang.TempDir
 
@@ -12,10 +15,7 @@ import java.nio.file.Files
 
 abstract class ForgeGradleTestSpecification extends Specification {
 
-    private static boolean DEBUG = true
-    private static boolean LOG_LEVEL_INFO = false;
-    private static boolean STACKTRACE = true
-
+    private static final boolean DEBUG = true;
     public TestInfo state
 
     @BeforeEach
@@ -48,15 +48,19 @@ abstract class ForgeGradleTestSpecification extends Specification {
                         org.gradle.console=rich
                         org.gradle.native=false
                         org.gradle.java.installations.auto-detect=true
+                        org.gradle.jvmargs=-Xmx4g
                         """
     }
 
     protected GradleRunner gradleRunner() {
+        def logger = LoggerFactory.getLogger("Test")
+
         def runner = GradleRunner.create()
-                .withDebug(DEBUG)
                 .withPluginClasspath()
                 .withProjectDir(testProjectDir)
-                .forwardOutput()
+                //.withDebug(DEBUG)
+                .forwardStdOutput(new LoggerWriter(logger, LoggerWriter.Level.INFO))
+                .forwardStdError(new LoggerWriter(logger, LoggerWriter.Level.ERROR))
 
         return runner
     }
@@ -65,13 +69,8 @@ abstract class ForgeGradleTestSpecification extends Specification {
         def runner = gradleRunner()
 
         def arguments = Lists.newArrayList(tasks)
-        if (LOG_LEVEL_INFO) {
-            arguments.add('--info')
-        }
-        if (STACKTRACE) {
-            arguments.add('--stacktrace')
-        }
-
+        arguments.add('--stacktrace')
+        arguments.add('--info')
         return runner.withArguments(arguments).build()
     }
 }

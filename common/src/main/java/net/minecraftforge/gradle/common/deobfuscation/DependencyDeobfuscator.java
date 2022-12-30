@@ -1,13 +1,12 @@
 package net.minecraftforge.gradle.common.deobfuscation;
 
 import net.minecraftforge.gradle.common.extensions.DeobfuscationExtension;
-import net.minecraftforge.gradle.common.runtime.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
-import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.DecompileUtils;
-import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.Context;
@@ -15,6 +14,7 @@ import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.De
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
@@ -39,8 +39,6 @@ public final class DependencyDeobfuscator {
     public static DependencyDeobfuscator getInstance() {
         return INSTANCE;
     }
-
-    private final Collection<DeobfuscatingTaskConfiguration> configurations = new ArrayList<>();
 
     private DependencyDeobfuscator() {
     }
@@ -144,7 +142,7 @@ public final class DependencyDeobfuscator {
 
                             final Mappings mappings = context.getProject().getExtensions().getByType(Mappings.class);
                             String deobfuscatedMappingsPrefix = mappings.getChannel().get().getDeobfuscationGroupSupplier().get();
-                            if (deobfuscatedMappingsPrefix == null || deobfuscatedMappingsPrefix.trim().isEmpty()) {
+                            if (deobfuscatedMappingsPrefix.trim().isEmpty()) {
                                 deobfuscatedMappingsPrefix = mappings.getChannel().get().getName();
                             }
 
@@ -152,8 +150,6 @@ public final class DependencyDeobfuscator {
                         });
 
                 final DeobfuscatingTaskConfiguration configuration = new DeobfuscatingTaskConfiguration(context, result, resolvedDependency, file);
-                this.configurations.add(configuration);
-
                 context.getProject().afterEvaluate(evaluatedProject -> bakeDependencyReplacement(evaluatedProject, configuration));
 
                 return Optional.of(result);
@@ -235,8 +231,8 @@ public final class DependencyDeobfuscator {
 
         final String postFix = deobfuscatingTaskConfiguration.resolvedDependency().getName();
 
-        final Set<? extends CommonRuntimeDefinition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.context().getConfiguration());
-        CommonRuntimeDefinition<?> runtimeDefinition;
+        final Set<? extends Definition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.context().getConfiguration());
+        Definition<?> runtimeDefinition;
         if (runtimeDefinitions.size() != 1) {
             LOGGER.warn("Found {} runtime definitions for configuration {}!", runtimeDefinitions.size(), deobfuscatingTaskConfiguration.context().getConfiguration());
             LOGGER.warn("Raw jar deobfuscation might not deobfuscate to the correct version!");
@@ -244,10 +240,10 @@ public final class DependencyDeobfuscator {
         runtimeDefinition = runtimeDefinitions.iterator().next();
 
         final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
-        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().getMinecraftVersion(), runtimeDefinition.spec().getSide());
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.getSpecification().getMinecraftVersion(), runtimeDefinition.getSpecification().getDistribution());
 
         final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
-            task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).get());
+            task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).orElseThrow(() -> new IllegalStateException("Failed to get file from resolved dependency!")));
             task.getOutput().fileValue(new File(runtimeWorkingDirectory,  deobfuscatingTaskConfiguration.resolvedDependency().getName() + "-sources.jar"));
         });
 
@@ -259,8 +255,9 @@ public final class DependencyDeobfuscator {
                                 taskName -> CommonRuntimeUtils.buildTaskName(String.format("deobfuscate%s", StringUtils.capitalize(postFix)), taskName),
                                 sourceFileProvider,
                                 gameArtifactTasks,
-                                runtimeDefinition.configuredMappingVersionData(),
-                                new HashSet<>())
+                                runtimeDefinition.getMappingVersionData(),
+                                new HashSet<>(),
+                                runtimeDefinition)
                 );
 
         deobfuscatingTaskConfiguration.dependencyReplacementResult().getRawJarTaskProvider().configure(task -> {
@@ -287,8 +284,8 @@ public final class DependencyDeobfuscator {
 
         TaskProvider<? extends WithOutput> generateSourcesTask;
         if (sourcesFileCandidate.isPresent()) {
-            final Set<? extends CommonRuntimeDefinition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.context().getConfiguration());
-            CommonRuntimeDefinition<?> runtimeDefinition;
+            final Set<? extends Definition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.context().getConfiguration());
+            Definition<?> runtimeDefinition;
             if (runtimeDefinitions.size() != 1) {
                 LOGGER.warn("Found {} runtime definitions for configuration {}!", runtimeDefinitions.size(), deobfuscatingTaskConfiguration.context().getConfiguration());
                 LOGGER.warn("Source deobfuscation might not deobfuscate to the correct version!");
@@ -296,7 +293,7 @@ public final class DependencyDeobfuscator {
             runtimeDefinition = runtimeDefinitions.iterator().next();
 
             final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
-            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.spec().getMinecraftVersion(), runtimeDefinition.spec().getSide());
+            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.getSpecification().getMinecraftVersion(), runtimeDefinition.getSpecification().getDistribution());
 
             final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
                 task.getInput().fileValue(sourcesFileCandidate.get());
@@ -311,8 +308,9 @@ public final class DependencyDeobfuscator {
                                     taskName -> CommonRuntimeUtils.buildTaskName(String.format("deobfuscate%s", StringUtils.capitalize(postFix)), taskName),
                                     sourceFileProvider,
                                     gameArtifactTasks,
-                                    runtimeDefinition.configuredMappingVersionData(),
-                                    new HashSet<>())
+                                    runtimeDefinition.getMappingVersionData(),
+                                    new HashSet<>(),
+                                    runtimeDefinition)
                     );
         } else {
             LOGGER.warn("Could not find sources for dependency {} decompiling!", deobfuscatingTaskConfiguration.resolvedDependency().getName());
@@ -320,12 +318,12 @@ public final class DependencyDeobfuscator {
             final DeobfuscationExtension deobfuscationExtension = project.getExtensions().getByType(DeobfuscationExtension.class);
 
             final TaskProvider<? extends WithOutput> rawFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
-                task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).get());
+                task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).orElseThrow(() -> new IllegalStateException("Could not find file for dependency " + deobfuscatingTaskConfiguration.resolvedDependency().getName())));
                 task.getOutput().fileValue(new File(runtimeWorkingDirectory,  deobfuscatingTaskConfiguration.resolvedDependency().getName() + "-sources.jar"));
             });
 
             generateSourcesTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("decompile", postFix), Execute.class, task -> {
-                task.getExecutingArtifact().set(deobfuscationExtension.getForgeFlowerVersion().map(version -> String.format(Utils.FORGEFLOWER_ARTIFACT_INTERPOLATION, version)));
+                task.getExecutingArtifact().set(deobfuscationExtension.getForgeFlowerVersion().map(version -> String.format(Constants.FORGEFLOWER_ARTIFACT_INTERPOLATION, version)));
                 task.getJvmArguments().addAll(DecompileUtils.DEFAULT_JVM_ARGS);
                 task.getProgramArguments().addAll(DecompileUtils.DEFAULT_PROGRAMM_ARGS);
                 task.getArguments().set(CommonRuntimeUtils.buildArguments(

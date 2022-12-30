@@ -2,6 +2,8 @@ package net.minecraftforge.gradle.common.util;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.gradle.api.Transformer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
@@ -10,6 +12,8 @@ import java.util.function.Consumer;
  * Utility class which handles gradles transformers.
  */
 public final class TransformerUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransformerUtils.class);
 
     private TransformerUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: TransformerUtils. This is a utility class");
@@ -30,6 +34,7 @@ public final class TransformerUtils {
                 //noinspection ConstantConditions - We are allowed to return null here. It is not a problem.
                 return toGuard.transform(t);
             } catch (Throwable e) {
+                LOGGER.error("Failed to transform: " + t, e);
                 throw new RuntimeException("Failed to transform: " + t, e);
             }
         };
@@ -50,6 +55,7 @@ public final class TransformerUtils {
                 //noinspection ConstantConditions - We are allowed to return null here. It is not a problem.
                 return toGuard.transform(closeable);
             } catch (Throwable e) {
+                LOGGER.error("Failed to transform: " + t, e);
                 throw new RuntimeException("Failed to transform: " + t, e);
             }
         };
@@ -71,6 +77,7 @@ public final class TransformerUtils {
                 return toGuard.transform(t);
             } catch (Throwable e) {
                 onFailure.accept(e);
+                LOGGER.error("Failed to transform: " + t, e);
                 throw new RuntimeException("Failed to transform: " + t, e);
             }
         };
@@ -99,6 +106,7 @@ public final class TransformerUtils {
                 return ret;
             } catch (Throwable e) {
                 onFailure.accept(e);
+                LOGGER.error("Failed to transform: " + t, e);
                 throw new RuntimeException("Failed to transform: " + t, e);
             } finally {
                 finalizer.run();

@@ -9,7 +9,7 @@ import org.gradle.api.Task
  * Interface that indicates that a given task has a project associated with it.
  */
 @CompileStatic
-interface WithProject extends Task {
+trait WithProject implements Task {
 
     /**
      * The project for the task.
@@ -19,5 +19,5 @@ interface WithProject extends Task {
      */
     @ProjectGetter
     @Override
-    Project getProject();
+    abstract Project getProject();
 }

@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.runtime.tasks;
+package net.minecraftforge.gradle.dsl.common.tasks;
 
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
@@ -7,10 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CacheableTask
-public abstract class ArtifactProvider extends Runtime {
+abstract class ArtifactProvider extends ForgeGradleBase implements WithOutput {
 
     @TaskAction
-    public void doProvide() throws Exception {
+    void doProvide() throws Exception {
         final Path output = ensureFileWorkspaceReady(getOutput()).toPath();
         final Path source = getInput().get().getAsFile().toPath();
 
@@ -21,12 +21,11 @@ public abstract class ArtifactProvider extends Runtime {
         Files.copy(source, output);
     }
 
-
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract RegularFileProperty getInput();
+    abstract RegularFileProperty getInput();
 
     @OutputFile
-    public abstract RegularFileProperty getOutput();
+    abstract RegularFileProperty getOutput();
 
 }

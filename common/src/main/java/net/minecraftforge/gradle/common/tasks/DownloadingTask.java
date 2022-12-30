@@ -1,11 +1,11 @@
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
+import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 
-public abstract class DownloadingTask extends ForgeGradleBaseTask {
+public abstract class DownloadingTask extends ForgeGradleBase {
     @Internal
     public final Provider<ArtifactDownloader> getDownloader() {
         return getProject().provider(() -> getProject().getExtensions().getByType(ArtifactDownloader.class));

@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
@@ -23,7 +23,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
-public abstract class Inject extends Runtime {
+public abstract class Inject extends DefaultRuntime {
     private static final CacheableMinecraftVersion v1_14_4 = CacheableMinecraftVersion.from("1.14.4");
 
     public Inject() {

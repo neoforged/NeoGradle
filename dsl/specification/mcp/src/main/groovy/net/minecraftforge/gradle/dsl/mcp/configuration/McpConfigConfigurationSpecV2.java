@@ -18,10 +18,9 @@
  * USA
  */
 
-package net.minecraftforge.gradle.mcp.configuration;
+package net.minecraftforge.gradle.dsl.mcp.configuration;
 
-import net.minecraftforge.gradle.common.config.VersionedConfiguration;
-
+import net.minecraftforge.gradle.dsl.common.configuration.VersionedConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.tasks.Input;
 

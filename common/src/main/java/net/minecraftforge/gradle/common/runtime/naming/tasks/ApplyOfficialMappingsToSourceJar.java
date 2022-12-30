@@ -8,6 +8,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
@@ -16,8 +17,8 @@ public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSo
 
     public ApplyOfficialMappingsToSourceJar() {
         getSourceRenamer().convention(
-                getClientMappings().flatMap(clientMappings ->
-                        getServerMappings().map(TransformerUtils.guard(serverMappings ->
+                getClientMappingsFile().flatMap(clientMappings ->
+                        getServerMappingsFile().map(TransformerUtils.guard(serverMappings ->
                                 IMappingFileSourceRenamer.from(clientMappings.getAsFile(), serverMappings.getAsFile()))))
         );
         getRemapLambdas().convention(true);
@@ -29,9 +30,11 @@ public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSo
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract RegularFileProperty getClientMappings();
+    @Optional
+    public abstract RegularFileProperty getClientMappingsFile();
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract RegularFileProperty getServerMappings();
+    @Optional
+    public abstract RegularFileProperty getServerMappingsFile();
 }

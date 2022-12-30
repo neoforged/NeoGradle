@@ -1,8 +1,7 @@
 package net.minecraftforge.gradle.dsl.common.runtime.tasks.tree
 
-
+import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
-import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact
@@ -16,7 +15,7 @@ import java.util.function.Consumer
 /**
  * Defines a callback which is invoked to handle modifications to an MCP task tree.
  */
-@FunctionalInterface
+@DefaultMethods
 interface TaskTreeAdapter {
 
     /**
@@ -41,23 +40,6 @@ interface TaskTreeAdapter {
     @NotNull
     default TaskTreeAdapter andThen(final TaskTreeAdapter after) {
         Objects.requireNonNull(after);
-
-        return new TaskTreeAdapter() {
-            @Override
-            TaskProvider<? extends Runtime> adapt(Definition<? extends Specification> definition, Provider<? extends WithOutput> previousTasksOutput, File runtimeWorkspace, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts, Map<String, String> mappingVersionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler) {
-                final TaskProvider<? extends Runtime> currentAdapted = TaskTreeAdapter.this.adapt(definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler);
-
-                if (currentAdapted != null)
-                    dependentTaskConfigurationHandler.accept(currentAdapted);
-
-                final TaskProvider<? extends Runtime> afterAdapted = after.adapt(definition, currentAdapted, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler);
-
-                if (currentAdapted != null && afterAdapted != null)
-                    afterAdapted.configure(task -> task.dependsOn(currentAdapted));
-
-                return afterAdapted;
-            }
-        }
+        return new AndTaskTreeAdapter(this, after);
     }
-
 }

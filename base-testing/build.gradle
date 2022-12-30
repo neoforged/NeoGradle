@@ -1,6 +1,5 @@
 plugins {
     id 'groovy'
-    id 'java-gradle-plugin'
 }
 
 dependencies {

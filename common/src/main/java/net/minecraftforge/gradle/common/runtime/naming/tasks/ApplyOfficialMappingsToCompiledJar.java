@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.tasks.JavaToolExecutingTask;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.common.util.Utils;
@@ -21,7 +22,7 @@ import java.io.File;
 public abstract class ApplyOfficialMappingsToCompiledJar extends JavaToolExecutingTask implements WithOutput {
 
     public ApplyOfficialMappingsToCompiledJar() {
-        getExecutingArtifact().set(Utils.SPECIALSOURCE);
+        getExecutingArtifact().set(Constants.SPECIALSOURCE);
         getProgramArguments().set(Lists.newArrayList("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}", "--live"));
         getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
 

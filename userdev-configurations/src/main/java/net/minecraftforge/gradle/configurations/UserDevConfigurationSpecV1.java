@@ -24,8 +24,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraftforge.gradle.common.config.VersionedConfiguration;
-import net.minecraftforge.gradle.mcp.configuration.McpConfigConfigurationSpecV1;
+import net.minecraftforge.gradle.dsl.common.configuration.VersionedConfiguration;
+import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.runs.config.RunConfigurationSpec;
 
 import java.io.ByteArrayInputStream;

@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.common.runtime.tasks;
 import com.google.common.collect.Lists;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -24,7 +25,7 @@ public abstract class AccessTransformer extends Execute {
         setDescription("Runs the access transformer on the decompiled sources.");
 
         getData().set(Collections.emptyMap());
-        getExecutingArtifact().convention(Utils.ACCESSTRANSFORMER);
+        getExecutingArtifact().convention(Constants.ACCESSTRANSFORMER);
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();

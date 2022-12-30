@@ -14,7 +14,7 @@ import org.gradle.jvm.toolchain.JavaLauncher
  * Defines a task with a java version property.
  */
 @CompileStatic
-interface WithJavaVersion extends Task, WithProject {
+trait WithJavaVersion extends WithProject implements Task {
 
     /**
      * The java version to use for this task.
@@ -24,7 +24,7 @@ interface WithJavaVersion extends Task, WithProject {
     @Input
     @Nested
     @DSLProperty
-    Property<JavaLanguageVersion> getJavaVersion();
+    abstract Property<JavaLanguageVersion> getJavaVersion();
 
     /**
      * The java launcher to use for this task.
@@ -32,5 +32,5 @@ interface WithJavaVersion extends Task, WithProject {
      * @return The java launcher to use for this task.
      */
     @Internal
-    Property<JavaLauncher> getJavaLauncher();
+    abstract Property<JavaLauncher> getJavaLauncher();
 }

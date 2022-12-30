@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
-import net.minecraftforge.gradle.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;

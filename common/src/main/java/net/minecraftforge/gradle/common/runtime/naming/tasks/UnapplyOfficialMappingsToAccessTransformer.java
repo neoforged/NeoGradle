@@ -2,7 +2,7 @@ package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileTypeRenamer;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.ITypeRenamer;
-import net.minecraftforge.gradle.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.gradle.api.file.RegularFileProperty;
@@ -11,6 +11,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -25,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @CacheableTask
-public abstract class UnapplyOfficialMappingsToAccessTransformer extends Runtime implements net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime {
+public abstract class UnapplyOfficialMappingsToAccessTransformer extends DefaultRuntime {
 
     public UnapplyOfficialMappingsToAccessTransformer() {
         super();
@@ -33,7 +34,10 @@ public abstract class UnapplyOfficialMappingsToAccessTransformer extends Runtime
         getTypeRenamer().convention(
                 getClientMappings().flatMap(clientMappings ->
                         getServerMappings().map(TransformerUtils.guard(serverMappings ->
-                                IMappingFileTypeRenamer.from(IMappingFile.load(clientMappings.getAsFile()), IMappingFile.load(serverMappings.getAsFile())))))
+                                IMappingFileTypeRenamer.from(
+                                        IMappingFile.load(clientMappings.getAsFile()).reverse(),
+                                        IMappingFile.load(serverMappings.getAsFile()).reverse()
+                                ))))
         );
         getTypeRenamer().finalizeValueOnRead();
     }
@@ -69,7 +73,7 @@ public abstract class UnapplyOfficialMappingsToAccessTransformer extends Runtime
         final String[] parts = line.split(" ");
         final List<String> renamedParts = new ArrayList<>();
         renamedParts.add(parts[0]);
-        renamedParts.add(typeRenamer.renameType(parts[1].replace(".", "/")).replace("/", "."));
+        renamedParts.add(parts[1]);
         if (parts.length > 2) {
             if (parts[2].contains("(")) {
                 final String name = parts[2].substring(0, parts[2].indexOf('('));

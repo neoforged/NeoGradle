@@ -34,23 +34,23 @@ public class IMappingFileTypeRenamer implements ITypeRenamer {
 
     @Override
     public String renameType(String type) {
-        final String clientType = clientMappings.remapClass(type);
+        final String clientType = clientMappings.remapClass(type.replace('.', '/')).replace('.', '/');
         if (Objects.equals(clientType, type))
-            return serverMappings.remapClass(type);
+            return serverMappings.remapClass(type.replace('.', '/')).replace('.', '/');
 
         return clientType;
     }
 
     @Override
     public String renameField(String owner, String name) {
-        final IMappingFile.IClass clientClass = clientMappings.getClass(owner);
+        final IMappingFile.IClass clientClass = clientMappings.getClass(owner.replace('.', '/'));
         if (clientClass != null) {
             final String clientName = clientClass.remapField(name);
             if (!Objects.equals(clientName, name))
                 return clientName;
         }
 
-        final IMappingFile.IClass serverClass = serverMappings.getClass(owner);
+        final IMappingFile.IClass serverClass = serverMappings.getClass(owner.replace('.', '/'));
         if (serverClass != null) {
             final String serverName = serverClass.remapField(name);
             if (!Objects.equals(serverName, name))
@@ -62,14 +62,14 @@ public class IMappingFileTypeRenamer implements ITypeRenamer {
 
     @Override
     public String renameMethod(String owner, String name, String desc) {
-        final IMappingFile.IClass clientClass = clientMappings.getClass(owner);
+        final IMappingFile.IClass clientClass = clientMappings.getClass(owner.replace('.', '/'));
         if (clientClass != null) {
             final String clientName = clientClass.remapMethod(name, desc);
             if (!Objects.equals(clientName, name))
                 return clientName;
         }
 
-        final IMappingFile.IClass serverClass = serverMappings.getClass(owner);
+        final IMappingFile.IClass serverClass = serverMappings.getClass(owner.replace('.', '/'));
         if (serverClass != null) {
             final String serverName = serverClass.remapMethod(name, desc);
             if (!Objects.equals(serverName, name))
