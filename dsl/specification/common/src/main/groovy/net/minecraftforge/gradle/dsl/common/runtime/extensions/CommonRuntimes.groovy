@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.runtime.extensions
 
+import net.minecraftforge.gradle.dsl.annotations.ClosureEquivalent
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
@@ -61,6 +62,7 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
      * @return The runtime definition, unbaked.
      */
+    @ClosureEquivalent
     D maybeCreate(Action<B> configurator);
 
     /**
@@ -70,6 +72,7 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
      * @return The runtime definition, unbaked.
      */
+    @ClosureEquivalent
     D create(Action<B> configurator);
 
     /**
