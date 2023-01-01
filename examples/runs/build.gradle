@@ -1,0 +1,7 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0-SNAPSHOT'
+}
+
+dependencies {
+    implementation 'net.minecraftforge:forge:1.19.3-44.0.48'
+}

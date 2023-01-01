@@ -49,14 +49,22 @@ subprojects { Project subproject ->
     subproject.afterEvaluate { Project evaledSubProject ->
         if (evaledSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
             subproject.gradlePlugin.automatedPublishing = true
+
+            subproject.publishing.publications {
+                pluginMaven(MavenPublication) { MavenPublication publication ->
+                    project.changelog.publish(publication)
+                }
+            }
+        } else {
+            subproject.publishing.publications {
+                maven(MavenPublication) { MavenPublication publication ->
+                    project.changelog.publish(publication)
+                    from components.java
+                }
+            }
         }
     }
 
-    subproject.publishing.publications {
-        pluginMaven(MavenPublication) { MavenPublication publication ->
-            project.changelog.publish(publication)
-        }
-    }
 
     subproject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
 }
