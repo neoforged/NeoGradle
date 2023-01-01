@@ -95,7 +95,7 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
     }
 
     @Override
-    public void withDependency(final Action<IvyDummyRepositoryEntry.Builder> configurator, final Consumer<IvyDummyRepositoryEntry> configuredEntryConsumer) throws XMLStreamException, IOException {
+    public void withDependency(final Action<IvyDummyRepositoryEntry.Builder> configurator, final Action<IvyDummyRepositoryEntry> configuredEntryConsumer) throws XMLStreamException, IOException {
         entryConfigurators.add(evaluatedProject -> {
             final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create(getProject());
             configurator.execute(builder);
@@ -105,7 +105,7 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
 
             try {
                 writeDummyDataIfNeeded(entry);
-                configuredEntryConsumer.accept(entry);
+                configuredEntryConsumer.execute(entry);
             } catch (IOException | XMLStreamException e) {
                 throw new RuntimeException("Failed to write dummy data for dependency: " + entry, e);
             }

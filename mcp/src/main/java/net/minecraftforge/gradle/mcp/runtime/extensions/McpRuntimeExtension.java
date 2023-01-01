@@ -53,7 +53,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"}) // API Design
@@ -72,12 +71,12 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
 
     private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpecification spec, File mcpDirectory, Map<String, File> data, LinkedHashMap<String, TaskProvider<? extends WithOutput>> tasks, McpConfigConfigurationSpecV1.Step step, Runtime mcpRuntimeTask, Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         mcpRuntimeTask.getArguments().set(buildArguments(spec, step, tasks, mcpRuntimeTask, alternativeInputProvider));
-        configureCommonMcpRuntimeTaskParameters(mcpRuntimeTask, data, step.getName(), spec, mcpDirectory);
+        configureCommonRuntimeTaskParameters(mcpRuntimeTask, data, step.getName(), spec, mcpDirectory);
     }
 
     private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpecification spec, File mcpDirectory, Map<String, File> data, Runtime mcpRuntimeTask) {
         mcpRuntimeTask.getArguments().set(Maps.newHashMap());
-        configureCommonMcpRuntimeTaskParameters(mcpRuntimeTask, data, CommonRuntimeUtils.buildStepName(spec, mcpRuntimeTask.getName()), spec, mcpDirectory);
+        configureCommonRuntimeTaskParameters(mcpRuntimeTask, data, CommonRuntimeUtils.buildStepName(spec, mcpRuntimeTask.getName()), spec, mcpDirectory);
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

@@ -34,7 +34,7 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
                                 @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
                                 @NotNull File unpackedMcpZipDirectory,
                                 @NotNull McpConfigConfigurationSpecV2 mcpConfig) {
-        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, gameArtifacts, minecraftDependenciesConfiguration, associatedTaskConsumer);
+        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
         this.unpackedMcpZipDirectory = unpackedMcpZipDirectory;
         this.mcpConfig = mcpConfig;
     }
@@ -50,6 +50,12 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
     @NotNull
     public McpConfigConfigurationSpecV2 getMcpConfig() {
         return mcpConfig;
+    }
+
+    @NotNull
+    @Override
+    public String getMinecraftVersion() {
+        return getSpecification().getMinecraftVersion();
     }
 
     @Override

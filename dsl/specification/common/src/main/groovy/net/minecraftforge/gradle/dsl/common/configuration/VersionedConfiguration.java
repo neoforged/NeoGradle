@@ -41,7 +41,7 @@ public class VersionedConfiguration {
         return getSpec(new ByteArrayInputStream(data));
     }
 
-    public int getSpec() {
+    public final int getSpec() {
         return spec;
     }
 }

@@ -240,7 +240,7 @@ public final class DependencyDeobfuscator {
         runtimeDefinition = runtimeDefinitions.iterator().next();
 
         final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
-        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.getSpecification().getMinecraftVersion(), runtimeDefinition.getSpecification().getDistribution());
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.getMinecraftVersion(), runtimeDefinition.getSpecification().getDistribution());
 
         final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
             task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).orElseThrow(() -> new IllegalStateException("Failed to get file from resolved dependency!")));
@@ -293,7 +293,7 @@ public final class DependencyDeobfuscator {
             runtimeDefinition = runtimeDefinitions.iterator().next();
 
             final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
-            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.getSpecification().getMinecraftVersion(), runtimeDefinition.getSpecification().getDistribution());
+            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.getMinecraftVersion(), runtimeDefinition.getSpecification().getDistribution());
 
             final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
                 task.getInput().fileValue(sourcesFileCandidate.get());

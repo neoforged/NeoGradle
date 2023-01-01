@@ -2,7 +2,7 @@ package net.minecraftforge.gradle.userdev.runtime;
 
 import net.minecraftforge.gradle.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
-import net.minecraftforge.gradle.userdev.runtime.spec.ForgeUserDevRuntimeSpec;
+import net.minecraftforge.gradle.userdev.runtime.spec.ForgeUserDevRuntimeSpecification;
 import org.gradle.api.artifacts.Configuration;
 
 import java.io.File;
@@ -12,14 +12,14 @@ import java.util.Objects;
  * Represents a configured and registered runtime for forges userdev environment.
  */
 public final class ForgeUserDevRuntimeDefinition {
-    private final ForgeUserDevRuntimeSpec spec;
+    private final ForgeUserDevRuntimeSpecification spec;
     private final McpRuntimeDefinition mcpRuntimeDefinition;
     private final File unpackedUserDevJarDirectory;
     private final UserDevConfigurationSpecV2 userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
 
     public ForgeUserDevRuntimeDefinition(
-            ForgeUserDevRuntimeSpec spec,
+            ForgeUserDevRuntimeSpecification spec,
             McpRuntimeDefinition mcpRuntimeDefinition,
             File unpackedUserDevJarDirectory,
             UserDevConfigurationSpecV2 userdevConfiguration,
@@ -31,7 +31,7 @@ public final class ForgeUserDevRuntimeDefinition {
         this.additionalUserDevDependencies = additionalUserDevDependencies;
     }
 
-    public ForgeUserDevRuntimeSpec spec() {
+    public ForgeUserDevRuntimeSpecification spec() {
         return spec;
     }
 

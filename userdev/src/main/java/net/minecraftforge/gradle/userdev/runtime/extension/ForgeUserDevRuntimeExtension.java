@@ -17,7 +17,7 @@ import net.minecraftforge.gradle.mcp.runtime.tasks.*;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.userdev.extension.ForgeUserDevExtension;
 import net.minecraftforge.gradle.userdev.runtime.ForgeUserDevRuntimeDefinition;
-import net.minecraftforge.gradle.userdev.runtime.spec.ForgeUserDevRuntimeSpec;
+import net.minecraftforge.gradle.userdev.runtime.spec.ForgeUserDevRuntimeSpecification;
 import net.minecraftforge.gradle.userdev.runtime.spec.builder.ForgeUserDevRuntimeSpecBuilder;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -57,7 +57,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
     public abstract Property<String> getDefaultVersion();
 
     public ForgeUserDevRuntimeDefinition registerOrGet(Action<ForgeUserDevRuntimeSpecBuilder> builder) {
-        final ForgeUserDevRuntimeSpec runtimeSpec = createSpec(builder);
+        final ForgeUserDevRuntimeSpecification runtimeSpec = createSpec(builder);
 
         if (runtimes.containsKey(runtimeSpec.name())) {
             final ForgeUserDevRuntimeDefinition runtimeDefinition = runtimes.get(runtimeSpec.name());
@@ -73,7 +73,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private ForgeUserDevRuntimeDefinition create(ForgeUserDevRuntimeSpec runtimeSpec) {
+    private ForgeUserDevRuntimeDefinition create(ForgeUserDevRuntimeSpecification runtimeSpec) {
         final McpRuntimeExtension mcpRuntimeExtension = project.getExtensions().getByType(McpRuntimeExtension.class);
 
         final Dependency userDevDependency = project.getDependencies().create(String.format("net.minecraftforge:forge:%s:userdev", runtimeSpec.forgeVersion()));
@@ -137,7 +137,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
     }
 
     @NotNull
-    private ForgeUserDevRuntimeSpec createSpec(Action<ForgeUserDevRuntimeSpecBuilder> configurator) {
+    private ForgeUserDevRuntimeSpecification createSpec(Action<ForgeUserDevRuntimeSpecBuilder> configurator) {
         final ForgeUserDevRuntimeSpecBuilder builder = ForgeUserDevRuntimeSpecBuilder.from(project);
         configurator.execute(builder);
         return builder.build();
@@ -185,7 +185,7 @@ public abstract class ForgeUserDevRuntimeExtension extends GroovyObjectSupport i
     private TaskTreeAdapter createAccessTransformerAdapter(final List<String> accessTransformerPaths, final File unpackedForgeUserDevDirectory) {
         final List<File> accessTransformerFiles = accessTransformerPaths.stream().map(path -> new File(unpackedForgeUserDevDirectory, path)).collect(Collectors.toList());
         return (spec, previousTasksOutput, workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler)  -> {
-            final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(spec, "Forges", workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler, accessTransformerFiles, Collections.emptyList());
+            final TaskProvider<? extends AccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createAccessTransformer(spec, "Forges", workspaceDirectory, gameArtifactTaskProviderMap, mappingVersionData, dependentTaskConfigurationHandler, accessTransformerFiles, Collections.emptyList());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

@@ -12,6 +12,9 @@ include 'dsl-annotations'
 include 'dsl-base'
 include 'dsl-specification-common'
 include 'dsl-specification-mcp'
+include 'dsl-specification-runs'
+include 'dsl-specification-vanilla'
+include 'dsl-specification-userdev'
 include 'base-testing'
 include 'common'
 include 'vanilla'
@@ -26,6 +29,9 @@ project(':dsl-generator').projectDir = new File(rootDir, 'dsl/generator')
 project(':dsl-annotations').projectDir = new File(rootDir, 'dsl/annotations')
 project(':dsl-specification-common').projectDir = new File(rootDir, 'dsl/specification/common')
 project(':dsl-specification-mcp').projectDir = new File(rootDir, 'dsl/specification/mcp')
+project(':dsl-specification-runs').projectDir = new File(rootDir, 'dsl/specification/runs')
+project(':dsl-specification-vanilla').projectDir = new File(rootDir, 'dsl/specification/vanilla')
+project(':dsl-specification-userdev').projectDir = new File(rootDir, 'dsl/specification/userdev')
 project(':dsl-base').projectDir = new File(rootDir, 'dsl/base')
 
 // include 'dsl-test'; project(':dsl-test').projectDir = new File(rootDir, 'dsl/test')

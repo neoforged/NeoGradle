@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.userdev.runtime.spec.builder;
 
 import net.minecraftforge.gradle.userdev.runtime.extension.ForgeUserDevRuntimeExtension;
-import net.minecraftforge.gradle.userdev.runtime.spec.ForgeUserDevRuntimeSpec;
+import net.minecraftforge.gradle.userdev.runtime.spec.ForgeUserDevRuntimeSpecification;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 
@@ -59,7 +59,7 @@ public final class ForgeUserDevRuntimeSpecBuilder {
         return this;
     }
 
-    public ForgeUserDevRuntimeSpec build() {
-        return new ForgeUserDevRuntimeSpec(project, configureProject, namePrefix, forgeVersionProvider.get());
+    public ForgeUserDevRuntimeSpecification build() {
+        return new ForgeUserDevRuntimeSpecification(project, configureProject, namePrefix, forgeVersionProvider.get());
     }
 }

@@ -37,9 +37,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     private final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks;
 
     @NotNull
-    private final Map<GameArtifact, File> gameArtifacts;
-
-    @NotNull
     private final Configuration minecraftDependenciesConfiguration;
 
     @NotNull
@@ -57,7 +54,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
             @NotNull final TaskProvider<? extends ArtifactProvider> sourceJarTask,
             @NotNull final TaskProvider<? extends ArtifactProvider> rawJarTask,
             @NotNull final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
-            @NotNull final Map<GameArtifact, File> gameArtifacts,
             @NotNull final Configuration minecraftDependenciesConfiguration,
             @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer) {
         this.specification = specification;
@@ -65,7 +61,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.sourceJarTask = sourceJarTask;
         this.rawJarTask = rawJarTask;
         this.gameArtifactProvidingTasks = gameArtifactProvidingTasks;
-        this.gameArtifacts = gameArtifacts;
         this.minecraftDependenciesConfiguration = minecraftDependenciesConfiguration;
         this.associatedTaskConsumer = associatedTaskConsumer;
     }

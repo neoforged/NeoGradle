@@ -1,13 +1,14 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
-import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
-import net.minecraftforge.gradle.vanilla.runtime.spec.builder.VanillaRuntimeSpecBuilder;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
@@ -15,7 +16,6 @@ import org.gradle.api.artifacts.ExternalModuleDependency;
 
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public final class VanillaDependencyManager {
     private static final VanillaDependencyManager INSTANCE = new VanillaDependencyManager();
@@ -29,28 +29,34 @@ public final class VanillaDependencyManager {
 
     public void apply(final Project project) {
         final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
-        dependencyReplacer.getReplacementHandlers().add(context -> {
-            if (isNotAMatchingDependency(context.dependency())) {
-                return Optional.empty();
+
+        dependencyReplacer.getReplacementHandlers().create("vanilla", new Action<DependencyReplacementHandler>() {
+            @Override
+            public void execute(DependencyReplacementHandler dependencyReplacementHandler) {
+                dependencyReplacementHandler.getReplacer().set(context -> {
+                    if (isNotAMatchingDependency(context.getDependency())) {
+                        return Optional.empty();
+                    }
+
+                    if (!(context.getDependency() instanceof ExternalModuleDependency)) {
+                        return Optional.empty();
+                    }
+
+                    final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) context.getDependency();
+
+                    final VanillaRuntimeDefinition runtimeDefinition = buildVanillaRuntimeDefinition(project, context.getProject(), externalModuleDependency);
+                    return Optional.of(
+                            new DependencyReplacementResult(
+                                    project,
+                                    name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
+                                    runtimeDefinition.getSourceJarTask(),
+                                    runtimeDefinition.getRawJarTask(),
+                                    runtimeDefinition.getMinecraftDependenciesConfiguration(),
+                                    builder -> builder.setVersion(runtimeDefinition.getSpecification().getMinecraftVersion()),
+                                    runtimeDefinition::setReplacedDependency)
+                    );
+                });
             }
-
-            if (!(context.dependency() instanceof ExternalModuleDependency)) {
-                return Optional.empty();
-            }
-
-            final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) context.dependency();
-
-            final VanillaRuntimeDefinition runtimeDefinition = buildVanillaRuntimeDefinition(project, context.project(), externalModuleDependency);
-            return Optional.of(
-                    new DependencyReplacementResult(
-                            project,
-                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
-                            runtimeDefinition.sourceJarTask(),
-                            runtimeDefinition.rawJarTask(),
-                            runtimeDefinition.minecraftDependenciesConfiguration(),
-                            builder -> builder.setVersion(runtimeDefinition.spec().getMinecraftVersion()),
-                            runtimeDefinition::replacedDependency)
-            );
         });
     }
 
@@ -90,12 +96,11 @@ public final class VanillaDependencyManager {
     private static VanillaRuntimeDefinition buildVanillaRuntimeDefinition(Project project, Project configureProject, ExternalModuleDependency dependency) {
         final VanillaRuntimeExtension runtimeExtension = project.getExtensions().getByType(VanillaRuntimeExtension.class);
 
-        return runtimeExtension.maybeCreate((Consumer<VanillaRuntimeSpecBuilder>) builder -> {
+        return runtimeExtension.maybeCreate(builder -> {
             final String version = dependency.getVersion() == null ? runtimeExtension.getVersion().get() : dependency.getVersion();
 
-            builder.configureFromProject(configureProject);
             builder.withName(dependency.getName());
-            builder.withSide(DistributionType.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
+            builder.withDistributionType(DistributionType.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
             builder.withMinecraftVersion(version);
             builder.withFartVersion(runtimeExtension.getFartVersion());
             builder.withForgeFlowerVersion(runtimeExtension.getForgeFlowerVersion());

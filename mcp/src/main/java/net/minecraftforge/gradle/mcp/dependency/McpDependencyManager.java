@@ -1,7 +1,6 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
-import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
-import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -12,27 +11,18 @@ import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.De
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
-import net.minecraftforge.gradle.mcp.runtime.specification.McpRuntimeSpecification;
-import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public final class McpDependencyManager {
     private static final McpDependencyManager INSTANCE = new McpDependencyManager();
@@ -129,7 +119,7 @@ public final class McpDependencyManager {
                 return null;
             }
 
-            final TaskProvider<? extends AccessTransformer> accessTransformerTask = McpRuntimeUtils.createAccessTransformer(definition, "User", runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler, new ArrayList<>(accessTransformerFiles.getFiles().getFiles()), accessTransformerFiles.getEntries().get());
+            final TaskProvider<? extends AccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createAccessTransformer(definition, "User", runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler, new ArrayList<>(accessTransformerFiles.getFiles().getFiles()), accessTransformerFiles.getEntries().get());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

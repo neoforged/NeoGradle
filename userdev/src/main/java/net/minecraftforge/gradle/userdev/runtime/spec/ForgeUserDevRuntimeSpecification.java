@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * Defines a specification for a ForgeUserDev runtime.
  */
-public final class ForgeUserDevRuntimeSpec implements Serializable {
+public final class ForgeUserDevRuntimeSpecification implements Serializable {
     private static final long serialVersionUID = -4521690551635113967L;
     private final Project project;
     private final Project configureProject;
@@ -18,7 +18,7 @@ public final class ForgeUserDevRuntimeSpec implements Serializable {
     /**
      *
      */
-    public ForgeUserDevRuntimeSpec(Project project, Project configureProject, String name, String forgeVersion) {
+    public ForgeUserDevRuntimeSpecification(Project project, Project configureProject, String name, String forgeVersion) {
         this.project = project;
         this.configureProject = configureProject;
         this.name = name;
@@ -45,7 +45,7 @@ public final class ForgeUserDevRuntimeSpec implements Serializable {
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        final ForgeUserDevRuntimeSpec that = (ForgeUserDevRuntimeSpec) obj;
+        final ForgeUserDevRuntimeSpecification that = (ForgeUserDevRuntimeSpecification) obj;
         return Objects.equals(this.project, that.project) &&
                 Objects.equals(this.configureProject, that.configureProject) &&
                 Objects.equals(this.name, that.name) &&

@@ -4,9 +4,11 @@ import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
+import net.minecraftforge.gradle.common.util.ConfigurableNamedDSLObjectContainer;
 import net.minecraftforge.gradle.common.util.ConfigurableObject;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
@@ -22,9 +24,8 @@ import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import org.apache.commons.lang3.StringUtils;
-import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
-import org.gradle.api.Transformer;
 import org.gradle.api.UnknownTaskException;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskProvider;
@@ -48,18 +49,24 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
 
     private final Project project;
     private final Set<String> jarTasksWithObfuscation = new HashSet<>();
-    private final NamedDomainObjectContainer<ObfuscationTarget> manualObfuscationTargets;
+    private final ConfigurableNamedDSLObjectContainer.Simple<ObfuscationTarget> manualObfuscationTargets;
 
     @SuppressWarnings("unchecked")
     @Inject
     public ObfuscationExtension(Project project) {
         this.project = project;
 
-        this.manualObfuscationTargets = project.container(ObfuscationTarget.class, name -> {
-            ObfuscationTargetImpl target = project.getObjects().newInstance(ObfuscationTargetImpl.class, project);
-            target.getMinecraftVersion().set(name);
-            return target;
-        });
+        this.manualObfuscationTargets = project.getObjects().newInstance(
+                ConfigurableNamedDSLObjectContainer.Simple.class,
+                getProject(),
+                ObfuscationTargetImpl.class,
+                (NamedDomainObjectFactory<ObfuscationTarget>) name -> project.getObjects().newInstance(
+                        ObfuscationTargetImpl.class,
+                        getProject(),
+                        name
+                )
+        );
+
         getCreateAutomatically().convention(project.provider(() -> (CommonRuntimes<?,?,?>) project.getExtensions().getByType(CommonRuntimes.class)).flatMap(CommonRuntimes::getRuntimes).map(runtimes -> !runtimes.isEmpty()));
 
         final Repository<?, ?, ?, ?, ?> repository = project.getExtensions().getByType(Repository.class);
@@ -92,7 +99,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
 
     @NotNull
     @Override
-    public NamedDomainObjectContainer<ObfuscationTarget> getTargets() {
+    public NamedDSLObjectContainer<?, ObfuscationTarget> getTargets() {
         return manualObfuscationTargets;
     }
 
@@ -174,7 +181,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
             if (finalRuntimeDefinition != null) {
                 finalRuntimeDefinition.configureAssociatedTask(task);
             } else {
-                task.configure(t -> CommonRuntimeExtension.configureCommonMcpRuntimeTaskParameters(
+                task.configure(t -> CommonRuntimeExtension.configureCommonRuntimeTaskParameters(
                         t,
                         Maps.newHashMap(),
                         t.getName(),

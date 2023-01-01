@@ -35,7 +35,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         this.getDistributionType().convention(DistributionType.JOINED);
     }
 
-    public static void configureCommonMcpRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, Specification spec, File runtimeDirectory) {
+    public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, Specification spec, File runtimeDirectory) {
         mcpRuntimeTask.getData().set(data);
         mcpRuntimeTask.getStepName().set(step);
         mcpRuntimeTask.getDistribution().set(spec.getDistribution());
@@ -44,7 +44,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         mcpRuntimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
     }
 
-    public static void configureCommonMcpRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, DistributionType distributionType, String minecraftVersion, Project project, File runtimeDirectory) {
+    public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, DistributionType distributionType, String minecraftVersion, Project project, File runtimeDirectory) {
         mcpRuntimeTask.getData().set(data);
         mcpRuntimeTask.getStepName().set(step);
         mcpRuntimeTask.getDistribution().set(distributionType);

@@ -8,14 +8,21 @@ import org.gradle.api.provider.Property;
 public abstract class ObfuscationTargetImpl implements ObfuscationTarget {
 
     private final Project project;
+    private final String name;
 
-    protected ObfuscationTargetImpl(Project project) {
+    protected ObfuscationTargetImpl(Project project, String name) {
         this.project = project;
+        this.name = name;
     }
 
     @Override
     public Project getProject() {
         return project;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     @Override

@@ -13,6 +13,7 @@ configurations.functionalTestImplementation.extendsFrom(configurations.testImple
 dependencies {
     api project(':base-testing')
     api project(':common')
+    api project(':runs')
 
     api project(':dsl-base')
     api project(':dsl-specification-common')

@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.dsl.common.extensions.obfuscation;
 
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
+import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.provider.Property;
 import org.jetbrains.annotations.NotNull;
@@ -29,5 +30,5 @@ interface Obfuscation extends BaseDSLElement<Obfuscation> {
      */
     @NotNull
     @DSLProperty
-    NamedDomainObjectContainer<ObfuscationTarget> getTargets();
+    NamedDSLObjectContainer<?, ObfuscationTarget> getTargets();
 }

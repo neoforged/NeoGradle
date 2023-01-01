@@ -1,7 +1,8 @@
 package net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement;
 
 import groovy.transform.CompileStatic;
-import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
+import net.minecraftforge.gradle.dsl.base.BaseDSLElement
+import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,5 +18,5 @@ interface DependencyReplacement extends BaseDSLElement<DependencyReplacement> {
      * @return The handlers.
      */
     @NotNull
-    NamedDomainObjectContainer<DependencyReplacementHandler> getReplacementHandlers();
+    NamedDSLObjectContainer<?, DependencyReplacementHandler> getReplacementHandlers();
 }

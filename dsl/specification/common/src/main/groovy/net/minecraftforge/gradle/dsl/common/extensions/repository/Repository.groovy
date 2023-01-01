@@ -41,7 +41,7 @@ interface Repository<TSelf extends Repository<TSelf, TEntry, TEntryBuilder, TDep
      * @throws XMLStreamException when the entry could not be generated because of violations in the XML structure.
      * @throws IOException when the entry could not be generated because of violations in the file system.
      */
-    void withDependency(Action<TEntryBuilder> configurator, Consumer<TEntry> configuredEntryConsumer) throws XMLStreamException, IOException;
+    void withDependency(Action<TEntryBuilder> configurator, Action<TEntry> configuredEntryConsumer) throws XMLStreamException, IOException;
 
     /**
      * Allows for the registration of a callback that gets trigger in an after evaluate phase when the dummy repository is generated.

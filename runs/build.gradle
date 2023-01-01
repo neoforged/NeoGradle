@@ -4,12 +4,14 @@ plugins {
 
 dependencies {
     api project(':common')
-    api project(':mcp')
+    api project(':dsl-specification-runs')
+
+    api "com.google.code.gson:gson:${project.gson_version}"
 }
 
 gradlePlugin {
     plugins {
-        mcp {
+        runs {
             id = 'net.minecraftforge.gradle.runs'
             implementationClass = 'net.minecraftforge.gradle.runs.RunsPlugin'
         }
