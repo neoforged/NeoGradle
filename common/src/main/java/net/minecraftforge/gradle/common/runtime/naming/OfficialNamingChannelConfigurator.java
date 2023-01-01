@@ -79,6 +79,8 @@ public final class OfficialNamingChannelConfigurator {
             task.setGroup("mappings/official");
             task.setDescription(String.format("Unapplies the Official mappings for version %s.", mappingVersion));
 
+            task.getOutputFileName().set("at.cfg");
+
             task.getClientMappings().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
             task.getServerMappings().set(context.getGameArtifactTask(GameArtifact.SERVER_MAPPINGS).flatMap(WithOutput::getOutput));
 

@@ -49,14 +49,14 @@ class UserDevPluginTests extends ForgeGradleTestSpecification {
                 id 'net.minecraftforge.gradle'
             }
             
-            println project.forge.class.toString()
+            println project.userDev.class.toString()
         """
 
         when:
         def result = gradleRunner().build()
 
         then:
-        result.output.contains('ForgeUserDevExtension')
+        result.output.contains('UserDevExtension')
     }
 
     def "applying userdev plugin applies userDev runtime extension"() {
@@ -67,13 +67,13 @@ class UserDevPluginTests extends ForgeGradleTestSpecification {
                 id 'net.minecraftforge.gradle'
             }
             
-            println project.forgeUserDevRuntime.class.toString()
+            println project.userDevRuntime.class.toString()
         """
 
         when:
         def result = gradleRunner().build()
 
         then:
-        result.output.contains('ForgeUserDevRuntimeExtension')
+        result.output.contains('UserDevRuntimeExtension')
     }
 }

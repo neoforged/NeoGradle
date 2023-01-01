@@ -32,4 +32,4 @@ project(':dsl-specification-vanilla').projectDir = new File(rootDir, 'dsl/specif
 project(':dsl-specification-userdev').projectDir = new File(rootDir, 'dsl/specification/userdev')
 project(':dsl-base').projectDir = new File(rootDir, 'dsl/base')
 
-// include 'dsl-test'; project(':dsl-test').projectDir = new File(rootDir, 'dsl/test')
+//includeBuild'dsl-test'; project(':dsl-test').projectDir = new File(rootDir, 'dsl/test')

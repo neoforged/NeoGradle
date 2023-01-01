@@ -12,18 +12,26 @@ import spock.lang.Specification
 import spock.lang.TempDir
 
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 abstract class ForgeGradleTestSpecification extends Specification {
 
     private static final boolean DEBUG = false;
+    private static final boolean DEBUG_PROJECT_DIR = false;
+
     public TestInfo state
 
     @BeforeEach
     void configureState(TestInfo state) {
         this.state = state
+        this.getSpecificationContext()
     }
 
     @TempDir
+    protected File internalTestDir;
+    protected File testDir;
+
     protected File testProjectDir
     protected File propertiesFile
     protected File settingsFile
@@ -31,6 +39,12 @@ abstract class ForgeGradleTestSpecification extends Specification {
     protected File localBuildCacheDirectory
 
     def setup() {
+        if (DEBUG_PROJECT_DIR) {
+            testDir = Paths.get("build", "test", this.getSpecificationContext().getCurrentSpec().getName(), this.getSpecificationContext().getCurrentFeature().getName()).toFile()
+            testDir.mkdirs();
+        }
+
+        testProjectDir = !DEBUG_PROJECT_DIR ? internalTestDir : testDir;
         localBuildCacheDirectory = new File(testProjectDir, 'local-cache')
         propertiesFile = new File(testProjectDir, 'gradle.properties')
         settingsFile = new File(testProjectDir, 'settings.gradle')

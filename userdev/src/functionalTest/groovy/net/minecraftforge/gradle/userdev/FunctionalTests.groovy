@@ -92,22 +92,8 @@ class FunctionalTests extends ForgeGradleTestSpecification {
                 }
             }
             
-            sourceSet {
-                otherSet {
-                    java {
-                        srcDir 'src/other/java'
-                    }
-                }
-            }
-            
             dependencies {
                 implementation 'net.minecraftforge:forge:1.19.2-43.1.34'
-                
-                otherSetImplementation 'net.minecraftforge:forge:1.18.2-39.1.34'
-            }
-            
-            tasks.register('otherJar') {
-                from sourceSets.otherSet.output
             }
         """
         codeFile << """
@@ -123,14 +109,14 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         """
 
         when:
-        def result = runTask('--build-cache', ':dependencyForge1.19.2-43.1.34SelectRawArtifact')
+        def result = runTask('--build-cache', 'build')
 
         then:
         result.task(":dependencyForge1.19.2-43.1.34Recompile").outcome == TaskOutcome.SUCCESS
 
         when:
         new File(testProjectDir, 'build').deleteDir()
-        result = runTask('--build-cache', ':dependencyForge1.19.2-43.1.34SelectRawArtifact')
+        result = runTask('--build-cache', 'build')
 
         then:
         result.task(":dependencyForge1.19.2-43.1.34Recompile").outcome == TaskOutcome.FROM_CACHE

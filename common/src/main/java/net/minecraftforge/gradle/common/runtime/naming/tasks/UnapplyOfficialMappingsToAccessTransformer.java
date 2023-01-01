@@ -78,7 +78,7 @@ public abstract class UnapplyOfficialMappingsToAccessTransformer extends Default
             if (parts[2].contains("(")) {
                 final String name = parts[2].substring(0, parts[2].indexOf('('));
                 final String desc = parts[2].substring(parts[2].indexOf('('));
-                renamedParts.add(typeRenamer.renameMethod(parts[1], name, desc) + typeRenamer.renameDescriptor(desc));
+                renamedParts.add(typeRenamer.renameMethod(parts[1], name, desc) + desc);
             } else {
                 renamedParts.add(typeRenamer.renameField(parts[1], parts[2]));
             }

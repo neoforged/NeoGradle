@@ -17,16 +17,16 @@ class LoggerWriter extends Writer {
     void write(@NotNull char[] cbuf, int off, int len) throws IOException {
         switch (level) {
             case Level.DEBUG:
-                logger.debug(new String(cbuf, off, len))
+                logger.debug(new String(cbuf, off, len).trim())
                 break
             case Level.INFO:
-                logger.info(new String(cbuf, off, len))
+                logger.info(new String(cbuf, off, len).trim())
                 break
             case Level.WARN:
-                logger.warn(new String(cbuf, off, len))
+                logger.warn(new String(cbuf, off, len).trim())
                 break
             case Level.ERROR:
-                logger.error(new String(cbuf, off, len))
+                logger.error(new String(cbuf, off, len).trim())
                 break
         }
     }
