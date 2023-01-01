@@ -4,7 +4,7 @@ import com.google.common.collect.Multimap;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import net.minecraftforge.gradle.dsl.mcp.runtime.spec.McpSpecification;
+import net.minecraftforge.gradle.dsl.mcp.runtime.specification.McpSpecification;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;

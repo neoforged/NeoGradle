@@ -19,10 +19,8 @@ include 'base-testing'
 include 'common'
 include 'vanilla'
 include 'mcp'
-include 'runs-configurations'
 include 'runs'
 //include 'patcher'
-include 'userdev-configurations'
 include 'userdev'
 
 project(':dsl-generator').projectDir = new File(rootDir, 'dsl/generator')

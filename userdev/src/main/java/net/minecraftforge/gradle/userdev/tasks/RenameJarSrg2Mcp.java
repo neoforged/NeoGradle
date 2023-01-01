@@ -23,6 +23,7 @@ package net.minecraftforge.gradle.userdev.tasks;
 import net.minecraftforge.gradle.common.tasks.JarExec;
 import net.minecraftforge.gradle.common.util.Utils;
 
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -35,7 +36,7 @@ public abstract class RenameJarSrg2Mcp extends JarExec {
     private boolean signatureRemoval = false;
 
     public RenameJarSrg2Mcp() {
-        getTool().set(Utils.INSTALLERTOOLS);
+        getTool().set(Constants.INSTALLERTOOLS);
         getArgs().addAll("--task", "SRG_TO_MCP", "--input", "{input}", "--output", "{output}", "--mcp", "{mappings}", "{strip}");
     }
 

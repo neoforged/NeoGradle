@@ -12,7 +12,9 @@ import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
 import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -115,10 +117,16 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
         });
     }
 
+    @SuppressWarnings("Convert2Lambda") // Task actions can not be lambdas.
     @NotNull
     private TaskProvider<FileCacheProviding> createFileCacheEntryProvidingTask(final Project project, final String name, final String gameVersion, final File outputDirectory, final CacheFileSelector selector, final Runnable action) {
         return project.getTasks().register(String.format("%s%s", name, gameVersion), FileCacheProviding.class, task -> {
-            task.doFirst(t -> action.run());
+            task.doFirst(new Action<Task>() {
+                @Override
+                public void execute(Task task) {
+                    action.run();
+                }
+            });
             task.getOutput().fileValue(new File(outputDirectory, selector.getCacheFileName()));
             task.getFileCache().set(getCacheDirectory());
             task.getSelector().set(selector);

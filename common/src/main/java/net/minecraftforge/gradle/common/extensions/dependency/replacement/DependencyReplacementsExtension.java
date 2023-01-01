@@ -44,6 +44,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
     private final ConfigurableNamedDSLObjectContainer.Simple<DependencyReplacementHandler> dependencyReplacementHandlers;
     private boolean registeredTaskToIde;
 
+    @SuppressWarnings("unchecked")
     @Inject
     public DependencyReplacementsExtension(Project project) {
         this.project = project;

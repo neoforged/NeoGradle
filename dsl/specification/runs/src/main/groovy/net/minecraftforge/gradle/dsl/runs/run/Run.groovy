@@ -11,6 +11,8 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar;
 
@@ -45,6 +47,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return {@code true} if all the projects in the current Gradle project should be build ahead of running the game; otherwise, {@code false}.
      */
+    @Internal
     @DSLProperty
     Property<Boolean> getShouldBuildAllProjects();
 
@@ -72,6 +75,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return {@code true} if this run is a single instance run; otherwise, {@code false}.
      */
+    @Internal
     @DSLProperty
     Property<Boolean> getIsSingleInstance();
 
@@ -80,6 +84,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return The system properties that are passed to the JVM when running the game.
      */
+    @Input
     @DSLProperty
     MapProperty<String, String> getSystemProperties();
 
@@ -88,6 +93,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return The working directory that is used when running the game.
      */
+    @InputDirectory
     @DSLProperty
     DirectoryProperty getWorkingDirectory();
 
@@ -96,6 +102,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return {@code true} if this run is a client run; otherwise, {@code false}.
      */
+    @Input
     @DSLProperty
     Property<Boolean> getIsClient();
 
@@ -104,6 +111,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return The jars that are used as a mod.
      */
+    @Internal
     @DSLProperty
     ListProperty<TaskProvider<? extends Jar>> getRunningJars();
 

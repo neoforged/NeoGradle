@@ -14,7 +14,7 @@ configurations.functionalTestImplementation.extendsFrom(configurations.testImple
 dependencies {
     api project(':common')
     api project(':mcp')
-    api project(':userdev-configurations')
+    api project(':dsl-specification-userdev')
 
     testImplementation gradleTestKit()
     testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"

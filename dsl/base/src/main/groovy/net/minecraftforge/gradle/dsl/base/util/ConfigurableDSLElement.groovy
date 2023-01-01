@@ -6,6 +6,7 @@ import net.minecraftforge.gradle.dsl.annotations.BouncerMethod
 import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
 import org.gradle.api.Action
 import org.gradle.api.plugins.ExtensionAware
+import org.gradle.api.tasks.Internal
 import org.gradle.util.Configurable
 import org.gradle.util.ConfigureUtil
 import org.jetbrains.annotations.NotNull
@@ -26,6 +27,7 @@ trait ConfigurableDSLElement<T extends ConfigurableDSLElement<T>> implements Con
      */
     @SuppressWarnings("unchecked")
     @NotNull
+    @Internal
     default T getThis() {
         return (T) this;
     }

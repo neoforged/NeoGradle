@@ -23,6 +23,7 @@ package net.minecraftforge.gradle.userdev.tasks;
 import net.minecraftforge.gradle.common.tasks.JarExec;
 import net.minecraftforge.gradle.common.util.Utils;
 
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.InputFile;
@@ -36,7 +37,7 @@ import java.util.List;
 
 public abstract class RenameJar extends JarExec {
     public RenameJar() {
-        getTool().set(Utils.SPECIALSOURCE);
+        getTool().set(Constants.SPECIALSOURCE);
         getArgs().addAll("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}");
     }
 

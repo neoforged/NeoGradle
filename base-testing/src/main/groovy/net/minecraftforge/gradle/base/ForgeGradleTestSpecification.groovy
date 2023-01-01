@@ -15,7 +15,7 @@ import java.nio.file.Files
 
 abstract class ForgeGradleTestSpecification extends Specification {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     public TestInfo state
 
     @BeforeEach
@@ -58,7 +58,7 @@ abstract class ForgeGradleTestSpecification extends Specification {
         def runner = GradleRunner.create()
                 .withPluginClasspath()
                 .withProjectDir(testProjectDir)
-                //.withDebug(DEBUG)
+                .withDebug(DEBUG)
                 .forwardStdOutput(new LoggerWriter(logger, LoggerWriter.Level.INFO))
                 .forwardStdError(new LoggerWriter(logger, LoggerWriter.Level.ERROR))
 

@@ -43,7 +43,7 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @return The default distribution type.
      */
     @DSLProperty
-    Property<DistributionType> getDistributionType();
+    Property<DistributionType> getDefaultDistributionType();
 
     /**
      * Gives access to a provider which provides the runtime definitions which are defined in this extension.

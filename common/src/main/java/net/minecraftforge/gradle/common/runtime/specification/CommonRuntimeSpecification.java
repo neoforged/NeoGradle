@@ -133,7 +133,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
             final CommonRuntimes<?,?,?> runtimeExtension = this.project.getExtensions().getByType(CommonRuntimes.class);
 
             if (!this.hasConfiguredDistributionType) {
-                this.distributionType = runtimeExtension.getDistributionType();
+                this.distributionType = runtimeExtension.getDefaultDistributionType();
             }
         }
 

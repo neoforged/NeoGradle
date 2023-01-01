@@ -14,4 +14,5 @@ dependencies {
     compileOnly project(':dsl-generator')
     compileOnly project(':dsl-specification-common')
     compileOnly project(':dsl-specification-mcp')
+    compileOnly project(':dsl-specification-runs')
 }

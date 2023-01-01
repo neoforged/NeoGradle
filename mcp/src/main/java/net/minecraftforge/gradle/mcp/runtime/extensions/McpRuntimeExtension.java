@@ -26,7 +26,7 @@ import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpe
 import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.specification.McpRuntimeSpecification;
-import net.minecraftforge.gradle.mcp.runtime.tasks.Inject;
+import net.minecraftforge.gradle.mcp.runtime.tasks.InjectCode;
 import net.minecraftforge.gradle.mcp.runtime.tasks.Patch;
 import net.minecraftforge.gradle.mcp.runtime.tasks.RecompileSourceJar;
 import net.minecraftforge.gradle.mcp.runtime.tasks.StripJar;
@@ -106,7 +106,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                     task.getDownloadedVersionJsonFile().fileProvider(McpRuntimeUtils.getTaskInputFor(spec, tasks, step, "downloadJson", adaptedInput));
                 });
             case "inject":
-                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Inject.class, task -> {
+                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), InjectCode.class, task -> {
                     task.getInjectionSource().fileProvider(McpRuntimeUtils.getTaskInputFor(spec, tasks, step));
                     if (spec.getDistribution().equals(DistributionType.SERVER)) {
                         task.getInclusionFilter().set("**/server/**");
@@ -358,7 +358,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         });
     }
 
-    public abstract Property<DistributionType> getDistributionType();
+    public abstract Property<DistributionType> getDefaultDistributionType();
 
     public abstract Property<String> getDefaultVersion();
 

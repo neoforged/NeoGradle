@@ -189,7 +189,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         return new StepData(steps, rawJarStep, sourcesStep);
     }
 
-    public abstract Property<DistributionType> getDistributionType();
+    public abstract Property<DistributionType> getDefaultDistributionType();
 
     public abstract Property<String> getVersion();
 

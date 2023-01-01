@@ -23,6 +23,7 @@ package net.minecraftforge.gradle.userdev.tasks;
 import net.minecraftforge.gradle.common.tasks.JarExec;
 import net.minecraftforge.gradle.common.util.Utils;
 
+import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
@@ -45,7 +46,7 @@ public abstract class RenameJarInPlace extends JarExec {
     private final Provider<RegularFile> temp = workDir.map(s -> s.file("output.jar"));
 
     public RenameJarInPlace() {
-        getTool().set(Utils.SPECIALSOURCE);
+        getTool().set(Constants.SPECIALSOURCE);
         getArgs().addAll("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}", "--live");
         this.getOutputs().upToDateWhen(task -> false);
     }

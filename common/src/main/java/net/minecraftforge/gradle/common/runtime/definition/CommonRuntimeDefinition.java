@@ -121,7 +121,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         return this.replacedDependency;
     }
 
-    public final void setReplacedDependency(@NotNull final Dependency dependency) {
+    public void setReplacedDependency(@NotNull final Dependency dependency) {
         this.replacedDependency = dependency;
     }
 
