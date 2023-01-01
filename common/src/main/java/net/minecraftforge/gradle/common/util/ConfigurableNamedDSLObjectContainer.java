@@ -61,6 +61,11 @@ public abstract class ConfigurableNamedDSLObjectContainer<TSelf extends NamedDSL
     }
 
     @Override
+    public TEntry create(String name, Closure configurator) throws InvalidUserDataException {
+        return this.delegate.create(name, configurator);
+    }
+
+    @Override
     public NamedDomainObjectProvider<TEntry> register(String name, Action<? super TEntry> configurationAction) throws InvalidUserDataException {
         return this.delegate.register(name, configurationAction);
     }

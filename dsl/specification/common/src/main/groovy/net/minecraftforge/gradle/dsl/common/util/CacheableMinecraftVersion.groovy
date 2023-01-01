@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.util
 
+import groovy.transform.CompileStatic
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.jetbrains.annotations.Nullable
@@ -7,6 +8,7 @@ import org.jetbrains.annotations.Nullable
 /**
  * A cacheable implementation of a minecraft version reference.
  */
+@CompileStatic
 final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVersion>, Serializable {
 
     static CacheableMinecraftVersion from(String version) {
@@ -118,7 +120,7 @@ final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVe
     private static CacheableMinecraftVersion get(String version) {
         String lower = version.toLowerCase(Locale.ENGLISH);
         char first = version.charAt(0);
-        int preIntCodePoint = ('a' as char) - 1;
+        int preIntCodePoint = (('a' as char) - 1).intValue();
         String preA = Character.toString(preIntCodePoint as char);
 
         if ("15w14a" == lower)                    // 2015 April Fools
@@ -224,16 +226,16 @@ final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVe
         if (this.type != o.type) {
             int ret = 0;
             switch (this.type) {
-                case ALPHA: return -1;
-                case BETA:  return o.type == Type.ALPHA ? 1 : -1;
-                case SNAPSHOT:
+                case Type.ALPHA: return -1;
+                case Type.BETA:  return o.type == Type.ALPHA ? 1 : -1;
+                case Type.SNAPSHOT:
                     ret = compareFull(o);
                     return ret == 0 ? -1 : ret;
-                case RELEASE:
+                case Type.RELEASE:
                     switch (o.type) {
-                        case ALPHA:
-                        case BETA: return 1;
-                        case SNAPSHOT:
+                        case Type.ALPHA:
+                        case Type.BETA: return 1;
+                        case Type.SNAPSHOT:
                             ret = compareFull(o);
                             return ret == 0 ? 1 : ret;
                     }
@@ -241,8 +243,8 @@ final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVe
         }
 
         switch (this.type) {
-            case ALPHA:
-            case BETA:
+            case Type.ALPHA:
+            case Type.BETA:
                 int ret = compareFull(o);
                 if (ret != 0)                                    return ret;
                 if (this.revision == null && o.revision == null) return  0;
@@ -250,7 +252,7 @@ final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVe
                 if (o.revision == null) return -1;
                 return this.revision <=> o.revision;
 
-            case SNAPSHOT:
+            case Type.SNAPSHOT:
                 if (this.year != o.year) return this.year - o.year;
                 if (this.week != o.week) return this.week - o.week;
                 if (this.revision == null && o.revision == null) return  0;
@@ -258,7 +260,7 @@ final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVe
                 if (o.revision == null) return -1;
                 return this.revision <=> o.revision;
 
-            case RELEASE:
+            case Type.RELEASE:
                 return compareFull(o);
 
             default:

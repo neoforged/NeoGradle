@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.base.util
 
+import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import org.gradle.api.Action
 import org.gradle.api.InvalidUserDataException
@@ -13,6 +14,7 @@ import org.gradle.api.NamedDomainObjectSet
  * @param TSelf The type of the container itself.
  * @param TElement The type of the elements in the container.
  */
+@CompileStatic
 interface NamedDSLObjectContainer<TSelf extends NamedDSLObjectContainer<TSelf, TEntry>, TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> extends NamedDomainObjectSet<TEntry>, BaseDSLElement<TSelf> {
     /**
      * Creates a new element in the container, with the given name.
@@ -41,6 +43,16 @@ interface NamedDSLObjectContainer<TSelf extends NamedDSLObjectContainer<TSelf, T
      * @throws InvalidUserDataException When an object with the given name already exists.
      */
     TEntry create(String name, Action<? super TEntry> configureAction) throws InvalidUserDataException;
+
+    /**
+     * Creates a new element in the container, with the given name, and configures it with the given closure.
+     *
+     * @param name The name of the element
+     * @param configurator The closure to configure the element with
+     * @return The created element
+     * @throws InvalidUserDataException When an object with the given name already exists.
+     */
+    TEntry create(String name, Closure configurator) throws InvalidUserDataException;
 
     /**
      * Creates a new element in the container, with the given name, and configures it with the given action.

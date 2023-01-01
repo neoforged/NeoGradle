@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.dsl.generator.transform.property
 
 import groovy.transform.CompileStatic
 import groovyjarjarasm.asm.Opcodes
+import net.minecraftforge.gradle.dsl.generator.transform.ClosureEquivalentTransformer
 import net.minecraftforge.gradle.dsl.generator.transform.DSLPropertyTransformer
 import net.minecraftforge.gradle.dsl.generator.transform.Unpluralizer
 import org.codehaus.groovy.ast.*
@@ -10,15 +11,18 @@ import org.codehaus.groovy.ast.tools.GenericsUtils
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
-@CompileStatic // TODO - Support create(String, V)
+@CompileStatic
 class NamedDomainObjectContainerHandler implements PropertyHandler, Opcodes {
-    private static final ClassNode MAP_PROPERTY_TYPE = ClassHelper.make(NamedDomainObjectContainer)
+    private static final ClassNode PROPERTY_TYPE = ClassHelper.make(NamedDomainObjectContainer)
+    private static final ClassNode PROPERTY_TYPE_CUSTOM = ClassHelper.make('net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer')
 
     @Override
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
-        if (!GeneralUtils.isOrImplements(methodNode.returnType, MAP_PROPERTY_TYPE)) return false
+        boolean isCustom = GeneralUtils.isOrImplements(methodNode.returnType, PROPERTY_TYPE_CUSTOM)
+        if (!(GeneralUtils.isOrImplements(methodNode.returnType, PROPERTY_TYPE) || isCustom)) return false
+
         final singularName = Unpluralizer.unpluralize(propertyName)
-        final type = methodNode.returnType.genericsTypes[0].type
+        final type = (isCustom ? methodNode.returnType.genericsTypes[1] : methodNode.returnType.genericsTypes[0]).type
 
         final actionClazzType = GenericsUtils.makeClassSafeWithGenerics(Action, type)
 
@@ -44,10 +48,10 @@ class NamedDomainObjectContainerHandler implements PropertyHandler, Opcodes {
                 parameters: [new Parameter(ClassHelper.STRING_TYPE, 'name'), utils.closureParam(type)],
                 code: GeneralUtils.block(scope, GeneralUtils.stmt(GeneralUtils.callX(
                         GeneralUtils.callThisX(methodNode.name),
-                        'create', // TODO - Use register in the future
+                        'register',
                         GeneralUtils.args(
                                 GeneralUtils.localVarX('name', ClassHelper.STRING_TYPE),
-                                GeneralUtils.localVarX('closure', DSLPropertyTransformer.RAW_GENERIC_CLOSURE)
+                                ClosureEquivalentTransformer.asAction(GeneralUtils.localVarX('closure', DSLPropertyTransformer.RAW_GENERIC_CLOSURE))
                         )
                 )))
         )

@@ -1,5 +1,8 @@
 package net.minecraftforge.gradle.dsl.common.util
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class Constants {
     public static final String FORGE_MAVEN = "https://maven.minecraftforge.net/";
     public static final String MOJANG_MAVEN = "https://libraries.minecraft.net/";

@@ -1,5 +1,8 @@
-package net.minecraftforge.gradle.dsl.common.util;
+package net.minecraftforge.gradle.dsl.common.util
 
+import groovy.transform.CompileStatic;
+
+@CompileStatic
 final class NamingConstants {
 
     private NamingConstants() {

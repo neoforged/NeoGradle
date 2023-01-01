@@ -16,6 +16,6 @@ interface Deobfuscation extends BaseDSLElement<Deobfuscation> {
      *
      * @return The version of the forge flower artifact that should be used.
      */
-    @DSLProperty(propertyName = "forgeFlowerVersion")
+    @DSLProperty
     Property<String> getForgeFlowerVersion();
 }

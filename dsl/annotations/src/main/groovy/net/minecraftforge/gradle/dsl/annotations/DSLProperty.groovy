@@ -65,7 +65,7 @@ import java.lang.annotation.*
  *          <th>
  *              <ul>
  *                  <li>{@code $propertyName(String, Action<T>)} - calls {@link NamedDomainObjectContainer#register(java.lang.String, Action)}</li>
- *                  <li>{@code $propertyName(K, @DelegatesTo(V.class) Closure<V>)} - calls {@link NamedDomainObjectContainer#create(java.lang.String, groovy.lang.Closure)}</li>
+ *                  <li>{@code $propertyName(K, @DelegatesTo(V.class) Closure<V>)} - calls {@link NamedDomainObjectContainer#register(java.lang.String, Action)}</li>
  *              </ul>
  *          </th>
  *     </tr>

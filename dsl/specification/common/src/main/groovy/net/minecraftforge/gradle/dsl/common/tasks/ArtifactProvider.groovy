@@ -1,5 +1,7 @@
-package net.minecraftforge.gradle.dsl.common.tasks;
+package net.minecraftforge.gradle.dsl.common.tasks
 
+import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
@@ -7,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CacheableTask
+@CompileStatic
 abstract class ArtifactProvider extends ForgeGradleBase implements WithOutput {
 
     @TaskAction
@@ -22,10 +25,12 @@ abstract class ArtifactProvider extends ForgeGradleBase implements WithOutput {
     }
 
     @InputFile
+    @DSLProperty
     @PathSensitive(PathSensitivity.RELATIVE)
     abstract RegularFileProperty getInput();
 
     @OutputFile
+    @DSLProperty
     abstract RegularFileProperty getOutput();
 
 }

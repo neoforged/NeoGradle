@@ -14,6 +14,7 @@ import org.gradle.api.provider.Property
 @CompileStatic
 class DefaultPropertyHandler implements PropertyHandler, Opcodes {
     private static final ClassNode PROPERTY_TYPE = ClassHelper.make(Property)
+    private static final ClassNode ENUM_TYPE = ClassHelper.make(Enum)
 
     @Override
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
@@ -95,6 +96,19 @@ class DefaultPropertyHandler implements PropertyHandler, Opcodes {
                         return expr
                     }(),
                     delegationStrategies: { [delegationStrategy] }
+            )
+        }
+
+        if (type.superClass == ENUM_TYPE) {
+            utils.createAndAddMethod(
+                    methodName: propertyName,
+                    modifiers: ACC_PUBLIC,
+                    parameters: [new Parameter(ClassHelper.STRING_TYPE, propertyName)],
+                    code: GeneralUtils.stmt(GeneralUtils.callX(
+                            GeneralUtils.callThisX(methodNode.name),
+                            'set',
+                            GeneralUtils.callX(type, 'valueOf', GeneralUtils.localVarX(propertyName, ClassHelper.STRING_TYPE))
+                    ))
             )
         }
     }

@@ -23,6 +23,7 @@ package net.minecraftforge.gradle.dsl.common.util
 import com.google.common.base.Splitter
 import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Iterables
+import groovy.transform.CompileStatic
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
@@ -34,6 +35,7 @@ import org.gradle.api.specs.Spec
 import javax.annotation.Nullable
 import java.util.function.Predicate
 
+@CompileStatic
 class Artifact implements Comparable<Artifact>, Serializable {
 
     // group:name:version[:classifier][@extension]
@@ -198,11 +200,11 @@ class Artifact implements Comparable<Artifact>, Serializable {
     }
 
     Spec<Dependency> asDependencySpec() {
-        return (dep) -> group.equals(dep.getGroup()) && name.equals(dep.getName()) && version.equals(dep.getVersion());
+        return (Dependency dep) -> group.equals(dep.getGroup()) && name.equals(dep.getName()) && version.equals(dep.getVersion());
     }
 
     Predicate<ResolvedArtifact> asArtifactMatcher() {
-        return (art) -> {
+        return (ResolvedArtifact art) -> {
             String theirClassifier;
             if (art.getClassifier() == null) {
                 theirClassifier = "";

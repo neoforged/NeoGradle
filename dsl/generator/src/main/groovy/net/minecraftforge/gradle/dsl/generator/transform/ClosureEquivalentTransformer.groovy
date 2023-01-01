@@ -35,7 +35,7 @@ class ClosureEquivalentTransformer extends AbstractASTTransformation implements 
         final closureParam = DSLPropertyTransformer.Utils.closureParam(actionParam.type.genericsTypes[0].type)
         final stmt = GeneralUtils.callX(VariableExpression.THIS_EXPRESSION, method.name, GeneralUtils.args(
                 Stream.of(method.parameters).filter { it.name != '$self' }.<Expression>map {
-                    it === actionParam ? GeneralUtils.callX(CLOSURE_TO_ACTION, 'delegateAndCall', GeneralUtils.varX(closureParam)) : GeneralUtils.varX(it)
+                    it === actionParam ? asAction(GeneralUtils.varX(closureParam)) : GeneralUtils.varX(it)
                 }.toList()
         ))
         final mtd = clazz.addMethod(
@@ -50,5 +50,9 @@ class ClosureEquivalentTransformer extends AbstractASTTransformation implements 
         new StaticCompileTransformation().visit(new ASTNode[] {
                 ann, mtd
         }, sourceUnit)
+    }
+
+    static Expression asAction(Expression closure) {
+        GeneralUtils.callX(CLOSURE_TO_ACTION, 'delegateAndCall', closure)
     }
 }

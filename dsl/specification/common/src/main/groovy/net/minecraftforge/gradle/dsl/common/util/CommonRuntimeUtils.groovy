@@ -1,5 +1,7 @@
 package net.minecraftforge.gradle.dsl.common.util
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
@@ -14,6 +16,7 @@ import java.util.function.Function
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
+@CompileStatic
 final class CommonRuntimeUtils {
     private static final Pattern OUTPUT_REPLACE_PATTERN = Pattern.compile('^\\{(\\w+)Output}$');
 
@@ -90,6 +93,7 @@ final class CommonRuntimeUtils {
         return buildArguments(value -> getInputTaskForTaskFrom(definition.getSpecification(), value, tasks), value -> definition.getSpecification().getProject().provider(() -> value), values, taskForArguments, alternativeInputProvider);
     }
 
+    @CompileDynamic
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     static Map<String, Provider<String>> buildArguments(final Function<String, Optional<TaskProvider<? extends WithOutput>>> inputBuilder, final Function<String, Provider<String>> providerBuilder, Map<String, String> values, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         final Map<String, Provider<String>> arguments = new HashMap<>();

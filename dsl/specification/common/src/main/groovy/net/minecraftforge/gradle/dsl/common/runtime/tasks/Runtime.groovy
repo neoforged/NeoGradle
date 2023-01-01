@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.runtime.tasks
 
+import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.common.tasks.WithJavaVersion
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
@@ -18,6 +19,7 @@ import org.gradle.api.tasks.Nested
  * Defines the structure of a task which is run as part of a runtime execution.
  * By default, it has an output.
  */
+@CompileStatic
 trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
 
     /**

@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.runtime.definition
 
+import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider
@@ -10,6 +11,7 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 
+@CompileStatic
 interface Definition<S extends Specification> {
     /**
      * Returns the runtimes task with the given name.

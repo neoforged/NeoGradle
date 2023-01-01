@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.runtime.extensions
 
+import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.ClosureEquivalent
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
@@ -27,6 +28,7 @@ import org.jetbrains.annotations.Nullable
  * @param <B> The type of the runtime specification builder.
  * @param <D> The type of the runtime definition.
  */
+@CompileStatic
 interface CommonRuntimes<S extends Specification, B extends Specification.Builder<S, B>, D extends Definition<S>> {
 
     /**

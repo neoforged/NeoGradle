@@ -1,8 +1,11 @@
-package net.minecraftforge.gradle.dsl.common.util;
+package net.minecraftforge.gradle.dsl.common.util
+
+import groovy.transform.CompileStatic;
 
 /**
  * Defines the distribution type (also known as the side) of a game artifact.
  */
+@CompileStatic
 enum DistributionType {
     /**
      * Defines the client distribution type, generally contains the game code, including rendering logic and all its assets.

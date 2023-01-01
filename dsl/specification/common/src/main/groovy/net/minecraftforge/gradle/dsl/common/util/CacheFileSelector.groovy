@@ -1,9 +1,9 @@
-package net.minecraftforge.gradle.dsl.common.util;
+package net.minecraftforge.gradle.dsl.common.util
 
+import groovy.transform.CompileStatic;
 import org.gradle.api.tasks.Input;
 
-import java.io.Serializable;
-
+@CompileStatic
 abstract class CacheFileSelector implements Serializable {
 
     static CacheFileSelector launcherMetadata() {

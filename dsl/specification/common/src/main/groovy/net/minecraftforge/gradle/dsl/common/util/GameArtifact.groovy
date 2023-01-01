@@ -1,15 +1,18 @@
-package net.minecraftforge.gradle.dsl.common.util;
+package net.minecraftforge.gradle.dsl.common.util
+
+import groovy.transform.CompileStatic;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public enum GameArtifact {
-    LAUNCHER_MANIFEST((version) -> CacheFileSelector.launcherMetadata(), (side) -> true),
-    VERSION_MANIFEST(CacheFileSelector::forVersionJson, (side) -> true),
-    CLIENT_JAR((version) -> CacheFileSelector.forVersionJar(version, "client"), (side) -> side != DistributionType.SERVER),
-    SERVER_JAR((version) -> CacheFileSelector.forVersionJar(version, "server"), (side) -> side != DistributionType.CLIENT),
-    CLIENT_MAPPINGS((version) -> CacheFileSelector.forVersionMappings(version, "client"), (side) -> true),
-    SERVER_MAPPINGS((version) -> CacheFileSelector.forVersionMappings(version, "server"), (side) -> true);
+@CompileStatic
+enum GameArtifact {
+    LAUNCHER_MANIFEST((String version) -> CacheFileSelector.launcherMetadata(), (side) -> true),
+    VERSION_MANIFEST(CacheFileSelector.&forVersionJson, (DistributionType side) -> true),
+    CLIENT_JAR((String version) -> CacheFileSelector.forVersionJar(version, "client"), (side) -> side != DistributionType.SERVER),
+    SERVER_JAR((String version) -> CacheFileSelector.forVersionJar(version, "server"), (side) -> side != DistributionType.CLIENT),
+    CLIENT_MAPPINGS((String version) -> CacheFileSelector.forVersionMappings(version, "client"), (side) -> true),
+    SERVER_MAPPINGS((String version) -> CacheFileSelector.forVersionMappings(version, "server"), (side) -> true);
 
     private final Function<String, CacheFileSelector> selectorBuilder;
     private final Predicate<DistributionType> isRequiredForSide;
@@ -19,11 +22,11 @@ public enum GameArtifact {
         this.isRequiredForSide = isRequiredForSide;
     }
 
-    public CacheFileSelector getCacheSelectorForVersion(final String minecraftVersion) {
+    CacheFileSelector getCacheSelectorForVersion(final String minecraftVersion) {
         return selectorBuilder.apply(minecraftVersion);
     }
 
-    public boolean isRequiredForSide(final DistributionType side) {
+    boolean isRequiredForSide(final DistributionType side) {
         return isRequiredForSide.test(side);
     }
 }

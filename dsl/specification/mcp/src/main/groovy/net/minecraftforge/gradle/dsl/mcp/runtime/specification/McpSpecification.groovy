@@ -1,5 +1,6 @@
-package net.minecraftforge.gradle.dsl.mcp.runtime.specification;
+package net.minecraftforge.gradle.dsl.mcp.runtime.specification
 
+import groovy.transform.CompileStatic;
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification;
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider;
@@ -8,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Defines an MCP specific runtime specification.
  */
+@CompileStatic
 interface McpSpecification extends Specification {
 
     /**
