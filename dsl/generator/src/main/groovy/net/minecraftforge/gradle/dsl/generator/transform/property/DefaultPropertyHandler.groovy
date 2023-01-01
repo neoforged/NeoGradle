@@ -27,6 +27,7 @@ class DefaultPropertyHandler implements PropertyHandler, Opcodes {
 
     static void generateDirectProperty(ClassNode type, PropertyQuery query, MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
         utils.visitPropertyType(type, annotation)
+        type = DSLPropertyTransformer.WRAPPER_TO_PRIMITIVE.getOrDefault(type, type)
 
         Expression propertyGetExpr = query.getter(methodNode)
         final createDefaultMethod = utils.factory(type, annotation, propertyName)
@@ -37,28 +38,38 @@ class DefaultPropertyHandler implements PropertyHandler, Opcodes {
 
         final delegationStrategy = new DSLPropertyTransformer.OverloadDelegationStrategy(0, propertyGetExpr)
 
-        utils.createAndAddMethod(
-                methodName: propertyName,
-                modifiers: ACC_PUBLIC,
-                parameters: [new Parameter(type, 'val')],
-                code: GeneralUtils.stmt(GeneralUtils.callX(
-                        GeneralUtils.callThisX(methodNode.name),
-                        'set',
-                        GeneralUtils.localVarX('val', type)
-                ))
-        )
+        final defaultSetter = { String methodName ->
+            utils.createAndAddMethod(
+                    methodName: methodName,
+                    modifiers: ACC_PUBLIC,
+                    parameters: [new Parameter(type, propertyName)],
+                    code: GeneralUtils.stmt(GeneralUtils.callX(
+                            GeneralUtils.callThisX(methodNode.name),
+                            'set',
+                            GeneralUtils.localVarX(propertyName, type)
+                    ))
+            )
+        }
+
+        if (propertyName.startsWith('is')) {
+            final name = propertyName.substring(2)
+            defaultSetter("set$name")
+            defaultSetter(name.uncapitalize())
+        } else {
+            defaultSetter(propertyName)
+        }
 
         if (utils.getBoolean(annotation, 'isConfigurable', true)) {
             final actionClazzType = GenericsUtils.makeClassSafeWithGenerics(Action, type)
             utils.createAndAddMethod(
                     methodName: propertyName,
                     modifiers: ACC_PUBLIC,
-                    parameters: [new Parameter(type, 'val'), new Parameter(
+                    parameters: [new Parameter(type, propertyName), new Parameter(
                             actionClazzType,
                             'action'
                     )],
                     codeExpr: {
-                        final valVar = GeneralUtils.localVarX('val', type)
+                        final valVar = GeneralUtils.localVarX(propertyName, type)
                         [
                                 GeneralUtils.callX(
                                         GeneralUtils.varX('action', actionClazzType),
@@ -74,11 +85,11 @@ class DefaultPropertyHandler implements PropertyHandler, Opcodes {
             utils.createAndAddMethod(
                     methodName: propertyName,
                     modifiers: ACC_PUBLIC,
-                    parameters: [new Parameter(type, 'val'), utils.closureParam(type)],
+                    parameters: [new Parameter(type, propertyName), utils.closureParam(type)],
                     codeExpr: {
                         final List<Expression> expr = []
                         final closure = GeneralUtils.varX('closure', DSLPropertyTransformer.RAW_GENERIC_CLOSURE)
-                        final valVar = GeneralUtils.localVarX('val', type)
+                        final valVar = GeneralUtils.localVarX(propertyName, type)
                         expr.addAll(utils.delegateAndCall(closure, valVar))
                         query.setter(methodNode, valVar)?.tap { expr.add(it) }
                         return expr

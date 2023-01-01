@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.dsl.generator.transform.property.files
 import groovy.transform.CompileStatic
 import groovyjarjarasm.asm.Opcodes
 import net.minecraftforge.gradle.dsl.generator.transform.DSLPropertyTransformer
+import net.minecraftforge.gradle.dsl.generator.transform.Unpluralizer
 import net.minecraftforge.gradle.dsl.generator.transform.property.PropertyHandler
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.tools.GeneralUtils
@@ -15,7 +16,7 @@ class FileCollectionPropertyHandler implements PropertyHandler, Opcodes {
     @Override
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
         if (!GeneralUtils.isOrImplements(methodNode.returnType, TYPE)) return false
-        final singularName = propertyName.endsWith('s') ? propertyName.substring(0, propertyName.size() - 1) : propertyName
+        final singularName = Unpluralizer.unpluralize(propertyName)
 
         final objArray = ClassHelper.OBJECT_TYPE.makeArray()
         utils.createAndAddMethod(

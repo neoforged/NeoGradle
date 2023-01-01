@@ -9,6 +9,7 @@ import net.minecraftforge.gradle.dsl.generator.transform.property.*
 import net.minecraftforge.gradle.dsl.generator.transform.property.files.DirectoryPropertyHandler
 import net.minecraftforge.gradle.dsl.generator.transform.property.files.FileCollectionPropertyHandler
 import net.minecraftforge.gradle.dsl.generator.transform.property.files.FilePropertyHandler
+import org.apache.groovy.util.Maps
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.VariableExpression
@@ -58,6 +59,17 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
             ClassHelper.float_TYPE, ClassHelper.Float_TYPE,
             ClassHelper.double_TYPE, ClassHelper.Double_TYPE,
     ])
+
+    public static final Map<ClassNode, ClassNode> WRAPPER_TO_PRIMITIVE = Maps.of(
+            ClassHelper.Integer_TYPE, ClassHelper.int_TYPE,
+            ClassHelper.Byte_TYPE, ClassHelper.byte_TYPE,
+            ClassHelper.Short_TYPE, ClassHelper.short_TYPE,
+            ClassHelper.Long_TYPE, ClassHelper.long_TYPE,
+            ClassHelper.Character_TYPE, ClassHelper.char_TYPE,
+            ClassHelper.Boolean_TYPE, ClassHelper.boolean_TYPE,
+            ClassHelper.Float_TYPE, ClassHelper.float_TYPE,
+            ClassHelper.Double_TYPE, ClassHelper.double_TYPE
+    )
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {

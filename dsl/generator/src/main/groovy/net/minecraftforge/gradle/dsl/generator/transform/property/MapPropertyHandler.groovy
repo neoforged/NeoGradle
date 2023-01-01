@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.dsl.generator.transform.property
 import groovy.transform.CompileStatic
 import groovyjarjarasm.asm.Opcodes
 import net.minecraftforge.gradle.dsl.generator.transform.DSLPropertyTransformer
+import net.minecraftforge.gradle.dsl.generator.transform.Unpluralizer
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.ast.tools.GenericsUtils
@@ -20,7 +21,7 @@ class MapPropertyHandler implements PropertyHandler, Opcodes {
         final keyType = methodNode.returnType.genericsTypes[0].type
         final valueType = methodNode.returnType.genericsTypes[1].type
         utils.visitPropertyType(valueType, annotation)
-        final singularName = propertyName.endsWith('s') ? propertyName.substring(0, propertyName.size() - 1) : propertyName
+        final singularName = Unpluralizer.unpluralize(propertyName)
 
         final factoryMethod = utils.factory(valueType, annotation, singularName)
         final valueDelegation = factoryMethod === null ? null : new DSLPropertyTransformer.OverloadDelegationStrategy(1, GeneralUtils.callThisX(factoryMethod.name))
