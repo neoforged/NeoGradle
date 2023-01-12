@@ -4,12 +4,12 @@ import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtensio
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.common.util.FileUtils;
-import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.runs.type.Types;
 import net.minecraftforge.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
@@ -22,6 +22,8 @@ import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.minecraftforge.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.minecraftforge.gradle.userdev.utils.UserDevConfigurationSpecUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -100,6 +102,20 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
 
+        final Types types = getProject().getExtensions().getByType(Types.class);
+        userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
+            try {
+                types.register(name, type::copyTo);
+            } catch (InvalidUserDataException baseNameExistException) {
+                final String newName = spec.getName() + StringUtils.capitalize(name);
+                try {
+                    types.register(newName, type::copyTo);
+                } catch (InvalidUserDataException ignored) {
+                    //Noop there is already a spec with this name. A bit weird as we guard for that case, but just to be sure.
+                }
+            }
+        });
+
         return new UserDevRuntimeDefinition(
                 spec,
                 mcpRuntimeDefinition,
@@ -116,8 +132,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
     @Override
     protected void bakeDefinition(UserDevRuntimeDefinition definition) {
-        //This is a noop for this for now.
-        //We use a secondary mcp runtime to handle the forge runtime which bakes into this runtime.
+        //Noop.
     }
 
     public abstract Property<String> getDefaultVersion();

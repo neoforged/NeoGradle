@@ -153,7 +153,7 @@ public class UserDevConfigurationSpecV1 extends VersionedConfiguration {
     /**
      * {@return The map of run configuration specifications that this configuration defines.}
      */
-    public Map<String, Type> getRunConfigurationSpecifications() {
+    public Map<String, Type> getRunTypes() {
         return runs;
     }
 

@@ -21,6 +21,6 @@ import java.util.function.Consumer;
 public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<VanillaRuntimeSpecification> {
 
     public VanillaRuntimeDefinition(@NotNull VanillaRuntimeSpecification specification, @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs, @NotNull TaskProvider<? extends ArtifactProvider> sourceJarTask, @NotNull TaskProvider<? extends ArtifactProvider> rawJarTask, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks, @NotNull Map<GameArtifact, File> gameArtifacts, @NotNull Configuration minecraftDependenciesConfiguration, @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer) {
-        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
+        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer, assetsTaskProvider);
     }
 }

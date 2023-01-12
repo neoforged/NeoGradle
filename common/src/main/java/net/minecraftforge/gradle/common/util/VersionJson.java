@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-public class VersionJson {
+public class VersionJson implements Serializable {
 
     protected static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(VersionJson.Argument.class, new VersionJson.Argument.Deserializer())
@@ -57,12 +57,12 @@ public class VersionJson {
     }
 
     @Nullable
-    public Arguments arguments;
-    public AssetIndex assetIndex;
-    public String assets;
+    private Arguments arguments;
+    private AssetIndex assetIndex;
+    private String assets;
     @Nullable
-    public Map<String, Download> downloads;
-    public Library[] libraries;
+    private Map<String, Download> downloads;
+    private Library[] libraries;
 
     private List<LibraryDownload> _natives = null;
     private List<Library> _libraries = null;
@@ -137,13 +137,13 @@ public class VersionJson {
         return _libraries.toArray(new Library[0]);
     }
 
-    public static class Arguments {
+    public static class Arguments implements Serializable {
         public Argument[] game;
         @Nullable
         public Argument[] jvm;
     }
 
-    public static class Argument extends RuledObject {
+    public static class Argument extends RuledObject implements Serializable {
         public List<String> value;
 
         public Argument(@Nullable Rule[] rules, List<String> value) {
@@ -172,7 +172,7 @@ public class VersionJson {
         }
     }
 
-    public static class RuledObject {
+    public static class RuledObject implements Serializable {
         @Nullable
         protected Rule[] rules;
 
@@ -193,7 +193,7 @@ public class VersionJson {
         }
     }
 
-    public static class Rule {
+    public static class Rule implements Serializable {
         private String action;
         @org.jetbrains.annotations.Nullable
         private OsCondition os;
@@ -212,7 +212,7 @@ public class VersionJson {
         }
     }
 
-    public static class OsCondition {
+    public static class OsCondition implements Serializable {
         @Nullable
         private String name;
         @Nullable
@@ -252,7 +252,7 @@ public class VersionJson {
         }
     }
 
-    public static class AssetIndex extends Download {
+    public static class AssetIndex extends Download implements Serializable {
         private String id;
         private int totalSize;
 
@@ -265,7 +265,7 @@ public class VersionJson {
         }
     }
 
-    public static class Download {
+    public static class Download implements Serializable {
         private String sha1;
         private int size;
         private URL url;
@@ -283,7 +283,7 @@ public class VersionJson {
         }
     }
 
-    public static class LibraryDownload extends Download {
+    public static class LibraryDownload extends Download implements Serializable {
         private String path;
 
         public String getPath() {
@@ -291,7 +291,7 @@ public class VersionJson {
         }
     }
 
-    public static class Downloads {
+    public static class Downloads implements Serializable {
         @Nullable
         private Map<String, LibraryDownload> classifiers;
         @Nullable
@@ -308,7 +308,7 @@ public class VersionJson {
         }
     }
 
-    public static class Library extends RuledObject {
+    public static class Library extends RuledObject implements Serializable {
         //Extract? rules?
         private String name;
         private Map<String, String> natives;
@@ -366,7 +366,7 @@ public class VersionJson {
         }
     }
 
-    private static final class Entry {
+    private static final class Entry implements Serializable {
         private final int priority;
         private final LibraryDownload download;
 

@@ -62,6 +62,16 @@ public abstract class TypeImpl extends ConfigurableObject<Type> implements Type 
     @Override
     public abstract MapProperty<String, String> getSystemProperties();
 
+    @Override
+    public void copyTo(Type other) {
+        other.getIsSingleInstance().set(getIsSingleInstance().get());
+        other.getMainClass().set(getMainClass().get());
+        other.getArguments().set(getArguments().get());
+        other.getJvmArguments().set(getJvmArguments().get());
+        other.getIsClient().set(getIsClient().get());
+        other.getEnvironmentVariables().set(getEnvironmentVariables().get());
+        other.getSystemProperties().set(getSystemProperties().get());
+    }
 
     public static final class Serializer implements JsonSerializer<Type>, JsonDeserializer<Type> {
 

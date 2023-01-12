@@ -21,7 +21,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     private final Configuration additionalUserDevDependencies;
 
     public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, McpRuntimeDefinition mcpRuntimeDefinition, File unpackedUserDevJarDirectory, UserDevConfigurationSpecV2 userdevConfiguration, Configuration additionalUserDevDependencies) {
-        super(specification, mcpRuntimeDefinition.getTasks(), mcpRuntimeDefinition.getSourceJarTask(), mcpRuntimeDefinition.getRawJarTask(), mcpRuntimeDefinition.getGameArtifactProvidingTasks(), mcpRuntimeDefinition.getMinecraftDependenciesConfiguration(), mcpRuntimeDefinition::configureAssociatedTask);
+        super(specification, mcpRuntimeDefinition.getTasks(), mcpRuntimeDefinition.getSourceJarTask(), mcpRuntimeDefinition.getRawJarTask(), mcpRuntimeDefinition.getGameArtifactProvidingTasks(), mcpRuntimeDefinition.getMinecraftDependenciesConfiguration(), mcpRuntimeDefinition::configureAssociatedTask, assetsTaskProvider);
         this.mcpRuntimeDefinition = mcpRuntimeDefinition;
         this.unpackedUserDevJarDirectory = unpackedUserDevJarDirectory;
         this.userdevConfiguration = userdevConfiguration;

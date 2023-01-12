@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.runs;
 
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.runs.run.Runs;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
 import net.minecraftforge.gradle.runs.run.RunsImpl;
@@ -21,5 +22,13 @@ public class RunsProjectPlugin implements Plugin<Project> {
                 RunsConstants.Extensions.RUNS,
                 project.getObjects().newInstance(RunsImpl.class, project)
         );
+
+        project.afterEvaluate(p -> {
+            final Types types = p.getExtensions().getByType(Types.class);
+
+            p.getExtensions().getByType(Runs.class).forEach(run -> {
+                types.matching(type -> type.getName().equals(run.getName())).forEach(run::configure);
+            });
+        });
     }
 }

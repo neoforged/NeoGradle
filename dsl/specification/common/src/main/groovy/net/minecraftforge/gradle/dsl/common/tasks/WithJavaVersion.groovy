@@ -1,36 +1,12 @@
 package net.minecraftforge.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gradle.dsl.common.tasks.specifications.JavaVersionSpecification
 import org.gradle.api.Task
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.jvm.toolchain.JavaLauncher
 
 /**
  * Defines a task with a java version property.
  */
 @CompileStatic
-trait WithJavaVersion extends WithProject implements Task {
-
-    /**
-     * The java version to use for this task.
-     *
-     * @return The java version to use for this task.
-     */
-    @Input
-    @Nested
-    @DSLProperty
-    abstract Property<JavaLanguageVersion> getJavaVersion();
-
-    /**
-     * The java launcher to use for this task.
-     *
-     * @return The java launcher to use for this task.
-     */
-    @Internal
-    abstract Property<JavaLauncher> getJavaLauncher();
+trait WithJavaVersion extends WithProject implements Task, JavaVersionSpecification {
 }

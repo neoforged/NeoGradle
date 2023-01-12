@@ -3,12 +3,15 @@ package net.minecraftforge.gradle.common.runtime.extensions;
 import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
+import net.minecraftforge.gradle.common.util.VersionJson;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.runtime.extensions.CommonRuntimes;
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.Action;
@@ -52,7 +55,6 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         mcpRuntimeTask.getRuntimeDirectory().set(runtimeDirectory);
         mcpRuntimeTask.getJavaVersion().convention(project.getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
     }
-
 
     protected static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final Specification spec, final File runtimeWorkingDirectory) {
         final MinecraftArtifactCache artifactCache = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
@@ -138,5 +140,13 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                 .flatMap(config -> config.getAllDependencies().stream())
                 .flatMap(dep -> getRuntimes().get().values().stream().filter(runtime -> runtime.getReplacedDependency().equals(dep)))
                 .collect(Collectors.toSet());
+    }
+
+    protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final VersionJson versionJson) {
+        return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "downloadAssets"), DownloadAssets.class, task -> {
+            task.getVersionJson().set(versionJson);
+
+            configureCommonRuntimeTaskParameters(task, data, "downloadAssets", specification, runtimeDirectory);
+        });
     }
 }

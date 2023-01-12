@@ -22,6 +22,7 @@ package net.minecraftforge.gradle.common.util;
 
 import com.google.gson.*;
 import groovy.lang.Closure;
+import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.util.VersionJson.Download;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.apache.commons.io.FileUtils;
@@ -55,6 +56,8 @@ public class Utils {
     private static final boolean ENABLE_FILTER_REPOS = Boolean.parseBoolean(System.getProperty("net.minecraftforge.gradle.filter_repos", "true"));
     static final int CACHE_TIMEOUT = 1000 * 60 * 60; //1 hour, Timeout used for version_manifest.json so we dont ping their server every request.
                                                           //manifest doesn't include sha1's so we use this for the per-version json as well
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void extractFile(ZipFile zip, String name, File output) throws IOException {
         extractFile(zip, zip.getEntry(name), output);
@@ -220,6 +223,26 @@ public class Utils {
         }
 
         return replaceTokens(vars, value);
+    }
+
+    public static <T> T fromJson(File file, Class<T> assetIndexClass) {
+        InputStream fileInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            return GSON.fromJson(new InputStreamReader(fileInputStream), assetIndexClass);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("Could not find the file!", e);
+        }
+        finally {
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                    //noinspection ThrowFromFinallyBlock
+                    throw new RuntimeException("Failed to close file stream!", e);
+                }
+            }
+        }
     }
 
     @FunctionalInterface

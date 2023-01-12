@@ -139,6 +139,12 @@ class FunctionalTests extends ForgeGradleTestSpecification {
             dependencies {
                 implementation 'net.minecraftforge:forge:1.19.2-43.1.34'
             }
+            
+            runs {
+                client {
+                    modSources = [sourceSets.main]
+                }
+            }
         """
         codeFile << """
             package net.minecraftforge.gradle.mcp;
@@ -233,10 +239,10 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         """
 
         when:
-        def result = runTask(':build')
+        def result = runTask(':runClient')
 
         then:
-        result.task(":build").outcome == TaskOutcome.SUCCESS
+        result.task(":runClient").outcome == TaskOutcome.SUCCESS
 
     }
 }

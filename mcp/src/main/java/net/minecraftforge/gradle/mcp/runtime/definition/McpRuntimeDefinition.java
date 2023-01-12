@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.definition;
 
+import com.google.common.collect.ImmutableMap;
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
@@ -9,6 +10,7 @@ import net.minecraftforge.gradle.dsl.mcp.runtime.definition.McpDefinition;
 import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.specification.McpRuntimeSpecification;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +36,7 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
                                 @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
                                 @NotNull File unpackedMcpZipDirectory,
                                 @NotNull McpConfigConfigurationSpecV2 mcpConfig) {
-        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
+        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer, assetsTaskProvider);
         this.unpackedMcpZipDirectory = unpackedMcpZipDirectory;
         this.mcpConfig = mcpConfig;
     }
@@ -50,6 +52,15 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
     @NotNull
     public McpConfigConfigurationSpecV2 getMcpConfig() {
         return mcpConfig;
+    }
+
+    @Override
+    public Map<String, Provider<String>> getTokenizedProperties() {
+        final ImmutableMap.Builder<String, Provider<String>> builder = ImmutableMap.builder();
+        builder.putAll(super.getTokenizedProperties());
+        builder.put("mcp_config", createProvider(getMcpConfig().getVersion()));
+
+        WorkerExecutor
     }
 
     @Override

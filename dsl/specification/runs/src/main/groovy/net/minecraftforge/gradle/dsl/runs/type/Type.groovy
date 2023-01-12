@@ -72,4 +72,11 @@ interface Type extends BaseDSLElement<Type>, NamedDSLElement {
      */
     @DSLProperty
     MapProperty<String, String> getSystemProperties();
+
+    /**
+     * Copies this run type into a new instance.
+     *
+     * @param other The other run type to copy into.
+     */
+    void copyTo(Type other);
 }

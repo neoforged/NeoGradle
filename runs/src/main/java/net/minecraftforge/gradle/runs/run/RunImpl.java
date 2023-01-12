@@ -10,14 +10,18 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.jvm.tasks.Jar;
+
+import javax.inject.Inject;
 
 public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
 
     private final Project project;
     private final String name;
 
+    @Inject
     public RunImpl(final Project project, final String name) {
         this.project = project;
         this.name = name;
@@ -62,7 +66,7 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     public abstract Property<Boolean> getIsClient();
 
     @Override
-    public abstract ListProperty<TaskProvider<? extends Jar>> getRunningJars();
+    public abstract ListProperty<SourceSet> getModSources();
 
     @Override
     @NotNull
@@ -73,13 +77,22 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     @Override
     @NotNull
     public final void configure(final String name) {
-        final Types types = getProject().getExtensions().getByType(Types.class);
-        configure(types.getByName(name));
+        getProject().afterEvaluate(evaluatedProject -> {
+            final Types types = getProject().getExtensions().getByType(Types.class);
+            configureInternally(types.getByName(name));
+        });
     }
 
     @Override
     @NotNull
-    public final void configure(final Type spec) {
+    public final void configure(final Type type) {
+        getProject().afterEvaluate(evaluatedProject -> {
+            configureInternally(type);
+        });
+    }
+
+    @NotNull
+    public void configureInternally(final Type spec) {
         getEnvironmentVariables().convention(spec.getEnvironmentVariables());
         getMainClass().convention(spec.getMainClass());
         getProgramArguments().convention(spec.getArguments());

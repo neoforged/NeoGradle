@@ -124,4 +124,8 @@ public final class FileUtils {
             Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
         }
     }
+
+    public static int getFileSize(File asFile) {
+        return readAllBytes(asFile.toPath()).length;
+    }
 }

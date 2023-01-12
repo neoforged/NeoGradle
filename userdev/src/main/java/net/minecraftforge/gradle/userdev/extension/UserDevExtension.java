@@ -18,5 +18,4 @@ public abstract class UserDevExtension extends ConfigurableObject<UserDev> imple
     public Project getProject() {
         return project;
     }
-
 }

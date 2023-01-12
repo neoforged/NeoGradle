@@ -304,6 +304,32 @@ public abstract class ConfigurableNamedDSLObjectContainer<TSelf extends NamedDSL
         return this.delegate.findAll(spec);
     }
 
+    public Object methodMissing(String name, Object args) {
+        Object[] params = (Object[])args;
+        try {
+            if (params.length == 0) {
+                return this.delegate.getByName(name);
+            } else if (params.length == 1 && params[0] instanceof Closure) {
+                return this.delegate.getByName(name, (Closure)params[0]);
+            } else if (params.length == 1 && params[0] instanceof Action) {
+                return this.delegate.getByName(name, (Action) params[0]);
+            } else {
+                return super.invokeMethod(name, args);
+            }
+        } catch (UnknownDomainObjectException var5) {
+            if (params.length == 0) {
+                return this.delegate.create(name);
+            } else if (params.length == 1 && params[0] instanceof Closure) {
+                return this.delegate.create(name, (Closure)params[0]);
+            } else if (params.length == 1 && params[0] instanceof Action) {
+                return this.delegate.create(name, (Action) params[0]);
+            } else {
+                return super.invokeMethod(name, args);
+            }
+        }
+
+    }
+
     public static abstract class Simple<TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> extends ConfigurableNamedDSLObjectContainer<Simple<TEntry>, TEntry> {
 
         @Inject

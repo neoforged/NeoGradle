@@ -17,7 +17,7 @@ import java.nio.file.Paths
 
 abstract class ForgeGradleTestSpecification extends Specification {
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     private static final boolean DEBUG_PROJECT_DIR = false;
 
     public TestInfo state

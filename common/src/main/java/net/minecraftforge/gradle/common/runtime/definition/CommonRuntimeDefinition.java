@@ -1,7 +1,9 @@
 package net.minecraftforge.gradle.common.runtime.definition;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
@@ -10,11 +12,11 @@ import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -45,6 +47,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @NotNull
     private final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer;
 
+    @NotNull
+    private final TaskProvider<DownloadAssets> assetsTaskProvider;
+
     @Nullable
     private Dependency replacedDependency = null;
 
@@ -55,7 +60,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
             @NotNull final TaskProvider<? extends ArtifactProvider> rawJarTask,
             @NotNull final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
             @NotNull final Configuration minecraftDependenciesConfiguration,
-            @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer) {
+            @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer, @NotNull TaskProvider<DownloadAssets> assetsTaskProvider) {
         this.specification = specification;
         this.taskOutputs = taskOutputs;
         this.sourceJarTask = sourceJarTask;
@@ -63,6 +68,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.gameArtifactProvidingTasks = gameArtifactProvidingTasks;
         this.minecraftDependenciesConfiguration = minecraftDependenciesConfiguration;
         this.associatedTaskConsumer = associatedTaskConsumer;
+        this.assetsTaskProvider = assetsTaskProvider;
     }
 
     @Override
@@ -139,5 +145,21 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @Override
     public void configureAssociatedTask(@NotNull TaskProvider<? extends Runtime> runtimeTask) {
         this.associatedTaskConsumer.accept(runtimeTask);
+    }
+
+    public Map<String, Provider<String>> getTokenizedProperties() {
+        final ImmutableMap.Builder<String, Provider<String>> builder = ImmutableMap.builder();
+        builder.put("runtime_name", createProvider(specification.getName()));
+        builder.put("mc_version", createProvider(specification.getMinecraftVersion()));
+        return builder.build();
+    }
+
+    @NotNull
+    public TaskProvider<DownloadAssets> getAssetsTaskProvider() {
+        return assetsTaskProvider;
+    }
+
+    protected <T> Provider<T> createProvider(T value) {
+        return getSpecification().getProject().getProviders().provider(() -> value);
     }
 }

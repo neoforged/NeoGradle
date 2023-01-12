@@ -5,6 +5,7 @@ import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.work.DisableCachingByDefault;
 
@@ -17,6 +18,11 @@ public abstract class RunExec extends JavaExec {
         super();
 
         setGroup(GROUP);
+
+        getMainClass().convention(getRun().flatMap(Run::getMainClass));
+
+        JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
+        getJavaLauncher().convention(service.launcherFor(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain()));
     }
 
     @Override
@@ -24,16 +30,15 @@ public abstract class RunExec extends JavaExec {
         final Run run = getRun().get();
 
         setWorkingDir(run.getWorkingDirectory().get().getAsFile());
-        getMainClass().set(run.getMainClass().get());
-
-        JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
-        getJavaLauncher().set(service.launcherFor(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain()));
-
         args(run.getProgramArguments().get());
         jvmArgs(run.getJvmArguments().get());
 
         environment(run.getEnvironmentVariables().get());
         systemProperties(run.getSystemProperties().get());
+
+        run.getModSources().get().stream()
+                .map(SourceSet::getRuntimeClasspath)
+                .forEach(this::classpath);
 
         super.exec();
     }

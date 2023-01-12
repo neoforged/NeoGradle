@@ -11,6 +11,6 @@ public abstract class TypesImpl extends ConfigurableNamedDSLObjectContainer<Type
 
     @Inject
     public TypesImpl(Project project) {
-        super(project, Type.class, name -> project.getObjects().newInstance(Type.class, project, name));
+        super(project, Type.class, name -> project.getObjects().newInstance(TypeImpl.class, project, name));
     }
 }

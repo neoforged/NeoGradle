@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 
 /**
  * Defines a DSL object which which is part of a project structure.
@@ -15,7 +16,7 @@ interface ProjectAssociatedDSLElement {
     /**
      * @return The project that this object belongs to.
      */
-    @Input
+    @Internal
     @ProjectGetter
     Project getProject();
 }

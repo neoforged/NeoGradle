@@ -4,6 +4,7 @@ import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
@@ -51,6 +52,10 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
 
     protected Provider<File> getFileInOutputDirectory(final Provider<String> fileName) {
         return getOutputDirectory().flatMap(directory -> fileName.map(f -> directory.file(f).getAsFile()));
+    }
+
+    protected Provider<RegularFile> getRegularFileInOutputDirectory(final Provider<String> fileName) {
+        return getOutputDirectory().flatMap(directory -> fileName.map(directory::file));
     }
 
     @Internal

@@ -13,6 +13,9 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectories
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar;
 
@@ -93,7 +96,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return The working directory that is used when running the game.
      */
-    @InputDirectory
+    @OutputDirectory
     @DSLProperty
     DirectoryProperty getWorkingDirectory();
 
@@ -107,13 +110,13 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     Property<Boolean> getIsClient();
 
     /**
-     * Defines the jars that are used as a mod.
+     * Defines the source sets that are used as a mod.
      *
-     * @return The jars that are used as a mod.
+     * @return The source sets that are used as a mod.
      */
     @Internal
     @DSLProperty
-    ListProperty<TaskProvider<? extends Jar>> getRunningJars();
+    ListProperty<SourceSet> getModSources();
 
     /**
      * Configures the run using the type with the same name.

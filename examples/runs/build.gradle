@@ -2,6 +2,18 @@ plugins {
     id 'net.minecraftforge.gradle' version '6.0-SNAPSHOT'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 dependencies {
     implementation 'net.minecraftforge:forge:1.19.3-44.0.48'
+}
+
+runs {
+    client {
+        modSources = [sourceSets.main]
+    }
 }

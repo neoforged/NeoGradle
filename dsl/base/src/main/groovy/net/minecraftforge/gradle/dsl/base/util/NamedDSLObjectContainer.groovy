@@ -12,10 +12,11 @@ import org.gradle.api.NamedDomainObjectSet
  * Similar to a NamedDomainObjectContainer, but without its hardcoded configure methods.
  *
  * @param TSelf The type of the container itself.
- * @param TElement The type of the elements in the container.
+ * @param TEntry The type of the elements in the container.
  */
 @CompileStatic
 interface NamedDSLObjectContainer<TSelf extends NamedDSLObjectContainer<TSelf, TEntry>, TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> extends NamedDomainObjectSet<TEntry>, BaseDSLElement<TSelf> {
+
     /**
      * Creates a new element in the container, with the given name.
      *

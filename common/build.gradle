@@ -20,6 +20,7 @@ dependencies {
         transitive = false
     }
     api "org.apache.maven:maven-artifact:${project.maven_artifact_version}"
+    api "org.apache.ivy:ivy:${project.ivy_artifact_version}"
     api "org.apache.httpcomponents:httpclient:${project.httpclient_version}"
     api "net.minecraftforge:srgutils:${project.srgutils_version}"
     api "net.minecraftforge:DiffPatch:${project.diffpatch_version}:all"
