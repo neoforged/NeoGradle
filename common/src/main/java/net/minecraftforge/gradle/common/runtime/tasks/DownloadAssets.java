@@ -1,8 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.minecraftforge.gradle.common.runtime.tasks.action.DownloadAssetAction;
 import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.gradle.common.util.Utils;
@@ -19,6 +17,7 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
@@ -45,14 +44,14 @@ public abstract class DownloadAssets extends DefaultRuntime implements Runtime {
         final VersionJson json = getVersionJson().get();
         final VersionJson.AssetIndex assetIndexData = json.getAssetIndex();
 
-        final DefaultWorkerExecutorHelper executorHelper = getProject().getObjects().newInstance(DefaultWorkerExecutorHelper.class, getWorkerExecutor());
+        final WorkQueue executor = getWorkerExecutor().noIsolation();
+        executor.submit(DownloadAssetAction.class, params -> {
+            params.getUrl().set(assetIndexData.getUrl().toString());
+            params.getSha1().set(assetIndexData.getSha1());
+            params.getOutputFile().set(getAssetIndexFile());
+        });
 
-        final DownloadAssetAction assetDownloadAction = createDownloadAction(assetIndexData);
-        assetDownloadAction.getOutputFile().set(getAssetIndexFile());
-
-        assetDownloadAction.execute(executorHelper);
-
-        executorHelper.await();
+        executor.await();
     }
 
     private void downloadAssets() {
@@ -66,22 +65,16 @@ public abstract class DownloadAssets extends DefaultRuntime implements Runtime {
                     .map(repo -> repo.endsWith("/") ? repo : repo + "/")
                     .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
 
-            final DownloadAssetAction assetDownloadAction = getProject().getObjects().newInstance(DownloadAssetAction.class, this);
-            assetDownloadAction.getOutputFile().fileProvider(assetFile);
-            assetDownloadAction.getUrl().set(assetUrl);
-            assetDownloadAction.getSha1().set(asset.getHash());
-
-            assetDownloadAction.execute(executorHelper);
+            executorHelper.submit(DownloadAssetAction.class, params -> {
+                params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
+                params.getShouldValidateHash().convention(true);
+                params.getOutputFile().fileProvider(assetFile);
+                params.getUrl().set(assetUrl);
+                params.getSha1().set(asset.getHash());
+            });
         });
 
         executorHelper.await();
-    }
-
-    private DownloadAssetAction createDownloadAction(VersionJson.Download download) {
-        final DownloadAssetAction action = getProject().getObjects().newInstance(DownloadAssetAction.class, this);
-        action.getUrl().set(download.getUrl().toString());
-        action.getSha1().set(download.getSha1());
-        return action;
     }
 
     @Inject

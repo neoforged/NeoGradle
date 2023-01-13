@@ -1,10 +1,10 @@
 package net.minecraftforge.gradle.common.util;
 
 import org.gradle.api.internal.plugins.ExtensionContainerInternal;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.ExtensionContainer;
 
-import org.gradle.api.logging.Logger;
-
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -25,7 +25,7 @@ public final class GradleInternalUtils {
             final ProgressLoggerWrapper wrapper = new ProgressLoggerWrapper(logger);
             wrapper.init(serviceOwner, name);
             return wrapper;
-        } catch (final ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        } catch (final ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException("Failed to get progress logger", e);
         }
     }
@@ -67,7 +67,7 @@ public final class GradleInternalUtils {
          * internal classes is not accessible
          */
         private void init(Object servicesOwner, String src) throws ClassNotFoundException,
-                NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+                NoSuchMethodException, NoSuchFieldException, InvocationTargetException, IllegalAccessException {
             // we are about to access an internal class. Use reflection here to provide
             // as much compatibility to different Gradle versions as possible
 
@@ -76,7 +76,14 @@ public final class GradleInternalUtils {
                     "org.gradle.internal.logging.progress.ProgressLoggerFactory");
 
             //get ProgressLoggerFactory service
-            Object serviceFactory = invoke(servicesOwner, "getServices");
+            Object serviceFactory;
+            try {
+                serviceFactory = invoke(servicesOwner, "getServices");
+            } catch (Throwable ignored) {
+                // Is there no `getServices` method? Then try a `services` field
+                serviceFactory = getFieldValue(servicesOwner, "services");
+            }
+
             Object progressLoggerFactory = invoke(serviceFactory, "get",
                     progressLoggerFactoryClass);
 
@@ -109,6 +116,19 @@ public final class GradleInternalUtils {
             Method m = findMethod(obj, method, argumentTypes);
             m.setAccessible(true);
             return m.invoke(obj, args);
+        }
+
+        /**
+         * Get the value of a field using reflection.
+         * @param obj the object whose field should be got
+         * @param name the name of the field to get
+         * @return the field's value
+         */
+        private static Object getFieldValue(Object obj, String name)
+                throws NoSuchFieldException, IllegalAccessException {
+            final Field f = obj.getClass().getField(name);
+            f.setAccessible(true);
+            return f.get(obj);
         }
 
         /**
