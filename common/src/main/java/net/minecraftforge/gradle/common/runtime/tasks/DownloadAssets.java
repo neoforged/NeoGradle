@@ -49,6 +49,7 @@ public abstract class DownloadAssets extends DefaultRuntime implements Runtime {
             params.getUrl().set(assetIndexData.getUrl().toString());
             params.getSha1().set(assetIndexData.getSha1());
             params.getOutputFile().set(getAssetIndexFile());
+            params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
         });
 
         executor.await();
