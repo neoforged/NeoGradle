@@ -6,6 +6,7 @@ import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.common.extensions.MappingsExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
+import net.minecraftforge.gradle.common.extensions.SourceSetProjectExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.minecraftforge.gradle.common.extensions.obfuscation.ObfuscationExtension;
 import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
@@ -26,6 +27,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
@@ -63,6 +65,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
         DependencyDeobfuscator.getInstance().apply(project);
 
         project.afterEvaluate(this::applyAfterEvaluate);
+
+        project.getExtensions().getByType(SourceSetContainer.class)
+                .configureEach(sourceSet -> sourceSet
+                        .getExtensions().create(SourceSetProjectExtension.NAME, SourceSetProjectExtension.class, project));
     }
 
     private void applyAfterEvaluate(final Project project) {
