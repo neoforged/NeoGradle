@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.util.workers;
 
+import org.gradle.api.Action;
 import org.gradle.api.provider.Property;
 import org.gradle.workers.WorkAction;
 import org.gradle.workers.WorkParameters;
@@ -53,6 +54,10 @@ public class DefaultWorkerExecutorHelper {
         jobs.put(id, job);
         workQueue.submit(DefaultWorkAction.class, parameters ->
                 parameters.getID().set(id));
+    }
+
+    public <T extends WorkParameters> void submit(Class<? extends WorkAction<T>> workActionClass, Action<? super T> parameterAction) {
+        workQueue.submit(workActionClass, parameterAction);
     }
 
     public void await() {
