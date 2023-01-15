@@ -1,8 +1,7 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
+import net.minecraftforge.gradle.base.util.ZipBuildingFileTreeVisitor;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
-import net.minecraftforge.gradle.common.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.Action;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -11,7 +10,15 @@ import org.gradle.api.logging.LogLevel;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;

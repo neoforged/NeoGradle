@@ -1,10 +1,10 @@
 package net.minecraftforge.gradle.mcp.util;
 
-import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.mcp.runtime.specification.McpRuntimeSpecification;
 import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;
@@ -130,7 +130,7 @@ public final class McpRuntimeUtils {
      * Non-Public API, Can be changed at any time.
      */
     public static TaskProvider<? extends SideAnnotationStripper> createSideAnnotationStripper(Specification spec, String namePreFix, List<File> files, Collection<String> data) {
-        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, String.format("apply%sSideAnnotationStripper", Utils.capitalize(namePreFix))), SideAnnotationStripper.class, task -> {
+        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, String.format("apply%sSideAnnotationStripper", StringUtils.capitalize(namePreFix))), SideAnnotationStripper.class, task -> {
             task.getAdditionalDataEntries().addAll(data);
             task.getDataFiles().setFrom(spec.getProject().files(files.toArray()));
         });

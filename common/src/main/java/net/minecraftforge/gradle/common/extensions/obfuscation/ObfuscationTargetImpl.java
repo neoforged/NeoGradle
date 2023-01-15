@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.extensions.obfuscation;
 
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.ObfuscationTarget;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 

@@ -1,16 +1,14 @@
 package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.util.ConfigurableObject;
-import net.minecraftforge.gradle.common.util.FileUtils;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.FileUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.ProjectState;
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 

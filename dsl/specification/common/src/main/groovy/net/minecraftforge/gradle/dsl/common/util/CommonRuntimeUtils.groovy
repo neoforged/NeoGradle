@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.dsl.common.util
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.base.util.NamingConstants
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime

@@ -3,11 +3,14 @@ package net.minecraftforge.gradle.mcp.runtime.extensions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.base.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.runtime.tasks.ListLibraries;
-import net.minecraftforge.gradle.common.util.FileUtils;
 import net.minecraftforge.gradle.common.util.VersionJson;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -18,9 +21,6 @@ import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
-import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
@@ -231,9 +231,9 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
             task.getOutput().set(new File(mcpDirectory, "raw.jar"));
         });
 
-        return new McpRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, gameArtifacts, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
+        return new McpRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
             configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, runtimeTask);
-        }), unpackedMcpZipDirectory, mcpConfig);
+        }), unpackedMcpZipDirectory, mcpConfig, createDownloadAssetsTasks(spec, data, mcpDirectory, versionJson), createExtractNativesTasks(spec, data, mcpDirectory, versionJson));
     }
 
     @Override

@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.naming.renamer;
 
-import net.minecraftforge.gradle.common.util.JavadocAdder;
+import net.minecraftforge.gradle.base.util.JavadocAdder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.tasks.Nested;
@@ -10,7 +10,15 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

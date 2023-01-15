@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.dsl.common.tasks.specifications
 
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gradle.dsl.common.tasks.WithProject
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -14,7 +15,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 
-interface ExecuteSpecification extends OutputSpecification, JavaVersionSpecification {
+interface ExecuteSpecification extends ProjectSpecification, OutputSpecification, JavaVersionSpecification {
 
     /**
      * Defines the jvm arguments in a list which are passed to the java executable.

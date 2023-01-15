@@ -1,14 +1,22 @@
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.util.AdaptingZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.base.util.AdaptingZipBuildingFileTreeVisitor;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskAction;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.function.BiConsumer;

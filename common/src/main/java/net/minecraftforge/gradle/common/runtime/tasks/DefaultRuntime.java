@@ -2,7 +2,7 @@ package net.minecraftforge.gradle.common.runtime.tasks;
 
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.MapProperty;

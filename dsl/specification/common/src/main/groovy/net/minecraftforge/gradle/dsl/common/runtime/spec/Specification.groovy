@@ -1,12 +1,12 @@
-package net.minecraftforge.gradle.dsl.common.runtime.spec;
+package net.minecraftforge.gradle.dsl.common.runtime.spec
 
-import com.google.common.collect.Multimap;
-import groovy.transform.CompileStatic;
-import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import org.gradle.api.Project;
-import org.gradle.api.provider.Provider;
-import org.jetbrains.annotations.NotNull;
+import com.google.common.collect.Multimap
+import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.base.util.DistributionType
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter
+import org.gradle.api.Project
+import org.gradle.api.provider.Provider
+import org.jetbrains.annotations.NotNull
 
 @CompileStatic
 interface Specification {

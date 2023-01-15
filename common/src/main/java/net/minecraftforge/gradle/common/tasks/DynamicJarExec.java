@@ -20,12 +20,18 @@
 
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.util.FileWrapper;
+import com.google.common.collect.ImmutableMap;
+import net.minecraftforge.gradle.base.util.FileWrapper;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.MapProperty;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;

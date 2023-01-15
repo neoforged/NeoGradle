@@ -124,7 +124,7 @@ public class VersionJson implements Serializable {
         return downloads;
     }
 
-    public Library[] getLibraries() {
+    public List<Library> getLibraries() {
         if (this._libraries == null) {
             this._libraries = new ArrayList<>();
             for (Library lib : libraries) {
@@ -134,7 +134,7 @@ public class VersionJson implements Serializable {
             this._libraries = ImmutableList.copyOf(this._libraries);
         }
 
-        return _libraries.toArray(new Library[0]);
+        return _libraries;
     }
 
     public static class Arguments implements Serializable {

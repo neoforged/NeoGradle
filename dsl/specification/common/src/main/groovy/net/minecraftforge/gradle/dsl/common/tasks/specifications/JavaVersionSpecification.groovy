@@ -11,7 +11,7 @@ import org.gradle.jvm.toolchain.JavaLauncher
 /**
  * Defines an object which has parameters related to java version management.
  */
-trait JavaVersionSpecification {
+trait JavaVersionSpecification implements ProjectSpecification {
     /**
      * The java version to use for this task.
      *

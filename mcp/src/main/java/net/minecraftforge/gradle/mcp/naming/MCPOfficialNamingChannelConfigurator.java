@@ -1,13 +1,14 @@
 package net.minecraftforge.gradle.mcp.naming;
 
+import net.minecraftforge.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileTypeRenamer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
-import net.minecraftforge.gradle.common.util.IMappingFileUtils;
-import net.minecraftforge.gradle.common.util.TransformerUtils;
+import net.minecraftforge.gradle.base.util.IMappingFileUtils;
+import net.minecraftforge.gradle.base.util.TransformerUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
@@ -60,9 +61,19 @@ public final class MCPOfficialNamingChannelConfigurator {
     private TaskProvider<? extends Runtime> adaptApplySourceMappingsTask(@NotNull final TaskBuildingContext context, @NotNull final NamingChannel namingChannel) {
         final TaskProvider<? extends Runtime> applySourceMappingsTask = namingChannel.getApplySourceMappingsTaskBuilder().get().build(context);
 
-        final Optional<McpRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
+        Optional<McpRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
                 .filter(McpRuntimeDefinition.class::isInstance)
                 .map(McpRuntimeDefinition.class::cast);
+
+        if (!runtimeDefinition.isPresent()) {
+            //Resolve delegation
+            runtimeDefinition = context.getRuntimeDefinition()
+                    .filter(IDelegatingRuntimeDefinition.class::isInstance)
+                    .map(IDelegatingRuntimeDefinition.class::cast)
+                    .map(IDelegatingRuntimeDefinition::getDelegate)
+                    .filter(McpRuntimeDefinition.class::isInstance)
+                    .map(McpRuntimeDefinition.class::cast);
+        }
 
         if (!runtimeDefinition.isPresent()) {
             throw new IllegalStateException("The runtime definition is not present.");
@@ -137,9 +148,19 @@ public final class MCPOfficialNamingChannelConfigurator {
     private TaskProvider<? extends Runtime> adaptUnapplyAccessTransformerMappingsTask(TaskBuildingContext context, NamingChannel namingChannel) {
         final TaskProvider<? extends Runtime> applySourceMappingsTask = namingChannel.getUnapplyAccessTransformerMappingsTaskBuilder().get().build(context);
 
-        final Optional<McpRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
+        Optional<McpRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
                 .filter(McpRuntimeDefinition.class::isInstance)
                 .map(McpRuntimeDefinition.class::cast);
+
+        if (!runtimeDefinition.isPresent()) {
+            //Resolve delegation
+            runtimeDefinition = context.getRuntimeDefinition()
+                    .filter(IDelegatingRuntimeDefinition.class::isInstance)
+                    .map(IDelegatingRuntimeDefinition.class::cast)
+                    .map(IDelegatingRuntimeDefinition::getDelegate)
+                    .filter(McpRuntimeDefinition.class::isInstance)
+                    .map(McpRuntimeDefinition.class::cast);
+        }
 
         if (!runtimeDefinition.isPresent()) {
             throw new IllegalStateException("The runtime definition is not present.");
@@ -178,9 +199,19 @@ public final class MCPOfficialNamingChannelConfigurator {
 
     @NotNull
     private static TaskProvider<? extends Runtime> createReverseMappingWritingTaskFor(@NotNull TaskBuildingContext context, String format) {
-        final Optional<McpRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
+        Optional<McpRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
                 .filter(McpRuntimeDefinition.class::isInstance)
                 .map(McpRuntimeDefinition.class::cast);
+
+        if (!runtimeDefinition.isPresent()) {
+            //Resolve delegation
+            runtimeDefinition = context.getRuntimeDefinition()
+                    .filter(IDelegatingRuntimeDefinition.class::isInstance)
+                    .map(IDelegatingRuntimeDefinition.class::cast)
+                    .map(IDelegatingRuntimeDefinition::getDelegate)
+                    .filter(McpRuntimeDefinition.class::isInstance)
+                    .map(McpRuntimeDefinition.class::cast);
+        }
 
         if (!runtimeDefinition.isPresent()) {
             throw new IllegalStateException("The runtime definition is not present.");

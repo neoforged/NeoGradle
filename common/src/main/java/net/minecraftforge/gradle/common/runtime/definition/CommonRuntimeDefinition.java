@@ -4,14 +4,18 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
+import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import net.minecraftforge.gradle.runs.run.RunImpl;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecification> implements Definition<S> {
 
@@ -47,8 +52,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @NotNull
     private final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer;
 
-    @NotNull
-    private final TaskProvider<DownloadAssets> assetsTaskProvider;
 
     @Nullable
     private Dependency replacedDependency = null;
@@ -60,7 +63,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
             @NotNull final TaskProvider<? extends ArtifactProvider> rawJarTask,
             @NotNull final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
             @NotNull final Configuration minecraftDependenciesConfiguration,
-            @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer, @NotNull TaskProvider<DownloadAssets> assetsTaskProvider) {
+            @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer) {
         this.specification = specification;
         this.taskOutputs = taskOutputs;
         this.sourceJarTask = sourceJarTask;
@@ -68,7 +71,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.gameArtifactProvidingTasks = gameArtifactProvidingTasks;
         this.minecraftDependenciesConfiguration = minecraftDependenciesConfiguration;
         this.associatedTaskConsumer = associatedTaskConsumer;
-        this.assetsTaskProvider = assetsTaskProvider;
     }
 
     @Override
@@ -133,7 +135,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
     @Override
     @NotNull
-    public final Map<String, String> getMappingVersionData() {
+    public Map<String, String> getMappingVersionData() {
         return mappingVersionData;
     }
 
@@ -147,19 +149,49 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.associatedTaskConsumer.accept(runtimeTask);
     }
 
-    public Map<String, Provider<String>> getTokenizedProperties() {
-        final ImmutableMap.Builder<String, Provider<String>> builder = ImmutableMap.builder();
-        builder.put("runtime_name", createProvider(specification.getName()));
-        builder.put("mc_version", createProvider(specification.getMinecraftVersion()));
-        return builder.build();
-    }
+    @NotNull
+    protected abstract TaskProvider<DownloadAssets> getAssetsTaskProvider();
 
     @NotNull
-    public TaskProvider<DownloadAssets> getAssetsTaskProvider() {
-        return assetsTaskProvider;
+    protected abstract TaskProvider<ExtractNatives> getNativesTaskProvider();
+
+    public final void configureRun(RunImpl run) {
+        final Map<String, String> interpolationData = buildRunInterpolationData();
+
+        run.overrideJvmArguments(interpolate(run.getJvmArguments(), interpolationData));
+        run.overrideProgramArguments(interpolate(run.getProgramArguments(), interpolationData));
+        run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), interpolationData));
+        run.overrideSystemProperties(interpolate(run.getSystemProperties(), interpolationData));
     }
 
-    protected <T> Provider<T> createProvider(T value) {
-        return getSpecification().getProject().getProviders().provider(() -> value);
+    protected Map<String, String> buildRunInterpolationData() {
+        final Map<String, String> interpolationData = Maps.newHashMap();
+
+        interpolationData.put("runtime_name", specification.getName());
+        interpolationData.put("mc_version", specification.getMinecraftVersion());
+        interpolationData.put("assets_root", getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("natives", getNativesTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+
+        return interpolationData;
+    }
+
+    protected ListProperty<String> interpolate(final ListProperty<String> input, final Map<String, String> values) {
+        final ListProperty<String> delegated = getSpecification().getProject().getObjects().listProperty(String.class);
+        delegated.set(input.map(list -> list.stream().map(s -> interpolate(s, values)).collect(Collectors.toList())));
+        return delegated;
+    }
+
+    protected MapProperty<String, String> interpolate(final MapProperty<String, String> input, final Map<String, String> values) {
+        final MapProperty<String, String> delegated = getSpecification().getProject().getObjects().mapProperty(String.class, String.class);
+        delegated.set(input.map(list -> list.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> interpolate(e.getValue(), values)))));
+        return delegated;
+    }
+
+    private static String interpolate(final String input, final Map<String, String> values) {
+        String result = input;
+        for (final Map.Entry<String, String> entry : values.entrySet()) {
+            result = result.replace("${" + entry.getKey() + "}", entry.getValue());
+        }
+        return result;
     }
 }

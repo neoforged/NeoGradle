@@ -1,14 +1,17 @@
 package net.minecraftforge.gradle.common.extensions.obfuscation;
 
 import com.google.common.collect.Maps;
+import net.minecraftforge.gradle.base.util.ConfigurableNamedDSLObjectContainer;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
-import net.minecraftforge.gradle.common.util.ConfigurableNamedDSLObjectContainer;
-import net.minecraftforge.gradle.common.util.ConfigurableObject;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer;
+import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
@@ -20,9 +23,6 @@ import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
-import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
@@ -159,8 +159,6 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
                 additionalRuntimeTasks,
                 runtimeDefinition
         );
-
-
 
         final TaskProvider<? extends WithOutput> obfuscator = mappingsExtension.getChannel().get().getUnapplyCompiledMappingsTaskBuilder().get().build(context);
         obfuscator.configure(task -> task.dependsOn(devArtifactProvider));

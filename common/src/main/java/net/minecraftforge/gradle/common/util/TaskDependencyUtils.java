@@ -1,5 +1,8 @@
 package net.minecraftforge.gradle.common.util;
 
+import net.minecraftforge.gradle.base.util.GradleInternalUtils;
+import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import net.minecraftforge.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
@@ -57,15 +60,21 @@ public final class TaskDependencyUtils {
         getDependencies(queue, tasks);
     }
 
-    public static Definition<?> realiseTaskAndExtractRuntimeDefinition(@NotNull Project project, TaskProvider<?> t) throws MultipleDefinitionsFoundException {
+    public static CommonRuntimeDefinition<?> realiseTaskAndExtractRuntimeDefinition(@NotNull Project project, TaskProvider<?> t) throws MultipleDefinitionsFoundException {
         return extractRuntimeDefinition(project, t.get());
     }
 
     @SuppressWarnings("unchecked")
-    public static Definition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
-        final Optional<List<? extends Definition<?>>> listCandidate = t.getTaskDependencies().getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
-                .findFirst()
-                .map(JavaCompile::getClasspath)
+    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
+        final Optional<JavaCompile> javaCompile;
+        if (t instanceof JavaCompile) {
+            javaCompile = Optional.of((JavaCompile) t);
+        } else {
+            javaCompile = getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
+                    .findFirst();
+        }
+
+        final Optional<List<? extends CommonRuntimeDefinition<?>>> listCandidate = javaCompile.map(JavaCompile::getClasspath)
                 .filter(Configuration.class::isInstance)
                 .map(Configuration.class::cast)
                 .map(Configuration::getAllDependencies)
@@ -78,10 +87,36 @@ public final class TaskDependencyUtils {
                 })
                 .map(stream -> stream.collect(Collectors.toList()));
 
-        final List<? extends Definition<?>> definitions = listCandidate.orElseThrow(() -> new IllegalStateException("Could not find runtime definition for task: " + t.getName()));
-        if (definitions.size() != 1)
-            throw new MultipleDefinitionsFoundException(definitions);
+        final List<? extends CommonRuntimeDefinition<?>> definitions = listCandidate.orElseThrow(() -> new IllegalStateException("Could not find runtime definition for task: " + t.getName()));
+        final List<CommonRuntimeDefinition<?>> undelegated = unwrapDelegation(project, definitions);
 
-        return definitions.get(0);
+        if (undelegated.size() != 1)
+            throw new MultipleDefinitionsFoundException(undelegated);
+
+        return undelegated.get(0);
+    }
+
+    @SuppressWarnings("SuspiciousMethodCalls")
+    private static List<CommonRuntimeDefinition<?>> unwrapDelegation(final Project project, final List<? extends CommonRuntimeDefinition<?>> input) {
+        final List<CommonRuntimeDefinition<?>> output = new LinkedList<>();
+
+        GradleInternalUtils.getExtensions(project.getExtensions())
+                .stream()
+                .filter(CommonRuntimeExtension.class::isInstance)
+                .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
+                .flatMap(extension -> extension.getRuntimes().get().values().stream())
+                .filter(IDelegatingRuntimeDefinition.class::isInstance)
+                .map(runtime -> (IDelegatingRuntimeDefinition<?>) runtime)
+                .filter(runtime -> input.contains(runtime.getDelegate()))
+                .map(runtime -> (CommonRuntimeDefinition<?>) runtime)
+                .forEach(output::add);
+
+        final List<CommonRuntimeDefinition<?>> noneDelegated = input.stream()
+                .filter(runtime -> output.stream()
+                        .filter(IDelegatingRuntimeDefinition.class::isInstance)
+                        .map(r -> (IDelegatingRuntimeDefinition<?>) r)
+                        .noneMatch(r -> r.getDelegate().equals(runtime))).collect(Collectors.toList());
+        output.addAll(noneDelegated);
+        return output.stream().distinct().collect(Collectors.toList());
     }
 }

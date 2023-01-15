@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.runs.run;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
-import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.runs.run.Run;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
@@ -11,8 +11,6 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.jvm.tasks.Jar;
 
 import javax.inject.Inject;
 
@@ -21,12 +19,22 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     private final Project project;
     private final String name;
 
+    private ListProperty<String> jvmArguments;
+    private MapProperty<String, String> environmentVariables;
+    private ListProperty<String> programArguments;
+    private MapProperty<String, String> systemProperties;
+
     @Inject
     public RunImpl(final Project project, final String name) {
         this.project = project;
         this.name = name;
 
         getWorkingDirectory().convention(project.getLayout().getProjectDirectory().dir("run"));
+
+        this.jvmArguments = this.project.getObjects().listProperty(String.class);
+        this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
+        this.programArguments = this.project.getObjects().listProperty(String.class);
+        this.systemProperties = this.project.getObjects().mapProperty(String.class, String.class);
     }
 
     @Override
@@ -39,7 +47,13 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     }
 
     @Override
-    public abstract MapProperty<String, String> getEnvironmentVariables();
+    public MapProperty<String, String> getEnvironmentVariables() {
+        return environmentVariables;
+    }
+
+    public void overrideEnvironmentVariables(MapProperty<String, String> environmentVariables) {
+        this.environmentVariables = environmentVariables;
+    }
 
     @Override
     public abstract Property<String> getMainClass();
@@ -48,16 +62,34 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     public abstract Property<Boolean> getShouldBuildAllProjects();
 
     @Override
-    public abstract ListProperty<String> getProgramArguments();
+    public ListProperty<String> getProgramArguments() {
+        return programArguments;
+    }
+
+    public void overrideProgramArguments(ListProperty<String> programArguments) {
+        this.programArguments = programArguments;
+    }
 
     @Override
-    public abstract ListProperty<String> getJvmArguments();
+    public ListProperty<String> getJvmArguments() {
+        return jvmArguments;
+    }
+
+    public void overrideJvmArguments(final ListProperty<String> args) {
+        this.jvmArguments = args;
+    }
 
     @Override
     public abstract Property<Boolean> getIsSingleInstance();
 
     @Override
-    public abstract MapProperty<String, String> getSystemProperties();
+    public MapProperty<String, String> getSystemProperties() {
+        return systemProperties;
+    }
+
+    public void overrideSystemProperties(MapProperty<String, String> systemProperties) {
+        this.systemProperties = systemProperties;
+    }
 
     @Override
     public abstract DirectoryProperty getWorkingDirectory();

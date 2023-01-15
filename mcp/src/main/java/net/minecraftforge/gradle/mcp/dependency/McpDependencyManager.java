@@ -1,16 +1,16 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
+import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import org.gradle.api.Project;
@@ -104,7 +104,7 @@ public final class McpDependencyManager {
             final String version = dependency.getVersion() == null ? runtimeExtension.getDefaultVersion().get() : dependency.getVersion();
 
             builder.withMcpVersion(version);
-            builder.withName(String.format("dependencyMcp%s%s", Utils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
+            builder.withName(String.format("dependencyMcp%s%s", StringUtils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
 
             builder.withPreTaskAdapter("decompile", createAccessTransformerAdapter(project));
         });

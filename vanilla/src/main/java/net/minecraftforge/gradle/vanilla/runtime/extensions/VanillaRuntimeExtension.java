@@ -13,8 +13,8 @@ import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.minecraftforge.gradle.vanilla.runtime.steps.ApplyAccessTransformerStep;
@@ -35,7 +35,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 @SuppressWarnings({"unused"}) // API Design
 public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<VanillaRuntimeSpecification, VanillaRuntimeSpecification.Builder, VanillaRuntimeDefinition> {
@@ -95,9 +94,9 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             task.getOutput().set(new File(runtimeWorkingDirectory, "raw.jar"));
         });
 
-        return new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, gameArtifacts, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
+        return new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
             configureCommonRuntimeTaskParameters(vanillaRuntimeTask, data, CommonRuntimeUtils.buildStepName(spec, vanillaRuntimeTask.getName()), spec, vanillaDirectory);
-        }));
+        }), createDownloadAssetsTasks(spec, data, vanillaDirectory, versionJson), createExtractNativesTasks(spec, data, vanillaDirectory, versionJson));
     }
 
     protected VanillaRuntimeSpecification.Builder createBuilder() {

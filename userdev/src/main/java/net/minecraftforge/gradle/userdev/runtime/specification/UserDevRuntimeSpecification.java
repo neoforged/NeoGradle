@@ -3,7 +3,7 @@ package net.minecraftforge.gradle.userdev.runtime.specification;
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.userdev.extension.UserDev;
 import net.minecraftforge.gradle.dsl.userdev.runtime.specification.UserDevSpecification;
 import org.gradle.api.Project;

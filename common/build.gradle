@@ -9,8 +9,12 @@ gradlePlugin.testSourceSets(sourceSets.test)
 dependencies {
     api gradleApi()
 
+    api project(':base')
+    api project(':runs')
+
     api project(':dsl-base')
     api project(':dsl-specification-common')
+    api project(':dsl-specification-runs')
 
     api "commons-io:commons-io:${project.commons_io_version}"
     api "com.google.code.gson:gson:${project.gson_version}"

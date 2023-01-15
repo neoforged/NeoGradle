@@ -1,15 +1,20 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import com.google.common.collect.Lists;
+import net.minecraftforge.gradle.base.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
-import net.minecraftforge.gradle.common.util.TransformerUtils;
-import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 import java.io.File;
 import java.nio.file.Files;

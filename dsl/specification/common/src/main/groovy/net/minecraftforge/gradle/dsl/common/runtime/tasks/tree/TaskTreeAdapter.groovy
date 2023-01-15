@@ -5,7 +5,7 @@ import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull

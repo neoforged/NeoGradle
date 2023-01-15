@@ -4,7 +4,10 @@ import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
+import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
 import net.minecraftforge.gradle.common.util.VersionJson;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.runtime.extensions.CommonRuntimes;
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification;
@@ -12,8 +15,6 @@ import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -147,6 +148,14 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             task.getVersionJson().set(versionJson);
 
             configureCommonRuntimeTaskParameters(task, data, "downloadAssets", specification, runtimeDirectory);
+        });
+    }
+
+    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final VersionJson versionJson) {
+        return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "extractNatives"), ExtractNatives.class, task -> {
+            task.getVersionJson().set(versionJson);
+
+            configureCommonRuntimeTaskParameters(task, data, "extractNatives", specification, runtimeDirectory);
         });
     }
 }

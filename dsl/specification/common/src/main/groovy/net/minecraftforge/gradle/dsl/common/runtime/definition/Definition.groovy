@@ -5,7 +5,7 @@ import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.tasks.TaskProvider

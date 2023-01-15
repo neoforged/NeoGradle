@@ -3,12 +3,11 @@ package net.minecraftforge.gradle.dsl.common.extensions.obfuscation
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
+import net.minecraftforge.gradle.dsl.base.util.DistributionType
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLElement
-import net.minecraftforge.gradle.dsl.common.util.DistributionType
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
-import org.gradle.internal.impldep.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop
 
 /**
  * Defines a target for obfuscation.

@@ -1,15 +1,13 @@
 package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
+import net.minecraftforge.gradle.base.util.ConfigurableNamedDSLObjectContainer;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.TransformerUtils;
 import net.minecraftforge.gradle.common.ide.IdeManager;
-import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryEntry;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.DependencyGenerationTask;
 import net.minecraftforge.gradle.common.tasks.RawAndSourceCombiner;
-import net.minecraftforge.gradle.common.util.ConfigurableNamedDSLObjectContainer;
-import net.minecraftforge.gradle.common.util.ConfigurableObject;
-import net.minecraftforge.gradle.common.util.TransformerUtils;
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
@@ -17,7 +15,6 @@ import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.De
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.Task;

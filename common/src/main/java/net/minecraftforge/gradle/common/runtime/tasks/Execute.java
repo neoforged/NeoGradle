@@ -1,10 +1,12 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
-import net.minecraftforge.gradle.common.util.TransformerUtils;
+import net.minecraftforge.gradle.base.util.TransformerUtils;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.TaskAction;
 
 import java.util.Map;
 import java.util.jar.Attributes;

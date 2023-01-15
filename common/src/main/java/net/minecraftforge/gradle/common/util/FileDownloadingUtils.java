@@ -1,8 +1,6 @@
 package net.minecraftforge.gradle.common.util;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import net.minecraftforge.gradle.base.util.HashFunction;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.Input;

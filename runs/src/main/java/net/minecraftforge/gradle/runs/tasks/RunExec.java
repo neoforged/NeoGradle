@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.runs.tasks;
 
 import net.minecraftforge.gradle.dsl.runs.run.Run;
+import net.minecraftforge.gradle.runs.run.RunImpl;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.JavaExec;
@@ -8,6 +9,8 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.work.DisableCachingByDefault;
+
+import java.util.Map;
 
 @DisableCachingByDefault(because = "This runs a game. It should not be cached.")
 public abstract class RunExec extends JavaExec {
@@ -27,7 +30,7 @@ public abstract class RunExec extends JavaExec {
 
     @Override
     public void exec() {
-        final Run run = getRun().get();
+        final RunImpl run = (RunImpl) getRun().get();
 
         setWorkingDir(run.getWorkingDirectory().get().getAsFile());
         args(run.getProgramArguments().get());

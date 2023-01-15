@@ -1,12 +1,10 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.common.runtime.tasks.action.DownloadAssetAction;
-import net.minecraftforge.gradle.common.util.TransformerUtils;
+import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.common.util.VersionJson;
-import net.minecraftforge.gradle.common.util.workers.DefaultWorkerExecutorHelper;
-import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -25,7 +23,7 @@ import java.io.File;
 import java.util.Map;
 
 @CacheableTask
-public abstract class DownloadAssets extends DefaultRuntime implements Runtime {
+public abstract class DownloadAssets extends DefaultRuntime {
 
     public DownloadAssets() {
         getAssetIndexFileName().convention("asset-index.json");
@@ -45,8 +43,9 @@ public abstract class DownloadAssets extends DefaultRuntime implements Runtime {
         final VersionJson.AssetIndex assetIndexData = json.getAssetIndex();
 
         final WorkQueue executor = getWorkerExecutor().noIsolation();
-        executor.submit(DownloadAssetAction.class, params -> {
+        executor.submit(DownloadFileAction.class, params -> {
             params.getUrl().set(assetIndexData.getUrl().toString());
+            params.getShouldValidateHash().set(true);
             params.getSha1().set(assetIndexData.getSha1());
             params.getOutputFile().set(getAssetIndexFile());
             params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
@@ -58,24 +57,23 @@ public abstract class DownloadAssets extends DefaultRuntime implements Runtime {
     private void downloadAssets() {
         final AssetIndex assetIndex = Utils.fromJson(getAssetIndexFile().getAsFile().get(), AssetIndex.class);
 
-        final DefaultWorkerExecutorHelper executorHelper = getProject().getObjects().newInstance(DefaultWorkerExecutorHelper.class, getWorkerExecutor());
-
+        final WorkQueue executor = getWorkerExecutor().noIsolation();
         assetIndex.getObjects().forEach((assetKey, asset) -> {
             final Provider<File> assetFile = getFileInOutputDirectory(asset.getPath());
             final Provider<String> assetUrl = getAssetRepository()
                     .map(repo -> repo.endsWith("/") ? repo : repo + "/")
                     .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
 
-            executorHelper.submit(DownloadAssetAction.class, params -> {
+            executor.submit(DownloadFileAction.class, params -> {
                 params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
-                params.getShouldValidateHash().convention(true);
+                params.getShouldValidateHash().set(true);
                 params.getOutputFile().fileProvider(assetFile);
                 params.getUrl().set(assetUrl);
                 params.getSha1().set(asset.getHash());
             });
         });
 
-        executorHelper.await();
+        executor.await();
     }
 
     @Inject

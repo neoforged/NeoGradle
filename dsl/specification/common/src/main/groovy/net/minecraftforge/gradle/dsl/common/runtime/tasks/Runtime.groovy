@@ -2,11 +2,11 @@ package net.minecraftforge.gradle.dsl.common.runtime.tasks
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gradle.dsl.base.util.DistributionType
 import net.minecraftforge.gradle.dsl.common.tasks.WithJavaVersion
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
 import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion
-import net.minecraftforge.gradle.dsl.common.util.DistributionType
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property

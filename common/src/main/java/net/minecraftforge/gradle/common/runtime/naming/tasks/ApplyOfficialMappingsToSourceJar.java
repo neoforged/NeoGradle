@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
+import net.minecraftforge.gradle.base.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
-import net.minecraftforge.gradle.common.util.TransformerUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;

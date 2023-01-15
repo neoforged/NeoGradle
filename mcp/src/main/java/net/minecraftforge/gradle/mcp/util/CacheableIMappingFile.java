@@ -1,7 +1,6 @@
 package net.minecraftforge.gradle.mcp.util;
 
-import net.minecraftforge.gradle.common.util.IMappingFileUtils;
-import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.minecraftforge.gradle.base.util.IMappingFileUtils;
 import net.minecraftforge.srgutils.IMappingFile;
 import net.minecraftforge.srgutils.IRenamer;
 

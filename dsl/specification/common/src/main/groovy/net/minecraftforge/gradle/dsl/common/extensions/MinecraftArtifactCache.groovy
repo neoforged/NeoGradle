@@ -4,9 +4,9 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
-import net.minecraftforge.gradle.dsl.common.util.DistributionType
-import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact
+import net.minecraftforge.gradle.dsl.base.util.DistributionType
+import net.minecraftforge.gradle.dsl.base.util.CacheFileSelector
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.TaskProvider

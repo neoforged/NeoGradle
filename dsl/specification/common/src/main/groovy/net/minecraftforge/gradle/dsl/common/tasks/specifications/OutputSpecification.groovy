@@ -10,7 +10,7 @@ import org.gradle.api.tasks.OutputFile
 /**
  * Defines an object which has parameters related to output management.
  */
-trait OutputSpecification {
+trait OutputSpecification implements ProjectSpecification {
 
 
     /**

@@ -12,5 +12,4 @@ dependencies {
     compileOnly project(':dsl-annotations')
     compileOnly project(':dsl-base')
     compileOnly project(':dsl-generator')
-    compileOnly project(':dsl-specification-common')
 }

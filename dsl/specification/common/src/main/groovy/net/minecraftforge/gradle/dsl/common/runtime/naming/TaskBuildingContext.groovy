@@ -3,18 +3,17 @@ package net.minecraftforge.gradle.dsl.common.runtime.naming
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 
-import javax.inject.Inject
 import java.util.function.Function
 
 /**

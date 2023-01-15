@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.common.extensions.repository;
 
 import groovy.lang.GroovyObjectSupport;
-import net.minecraftforge.gradle.common.util.ConfigurableObject;
-import net.minecraftforge.gradle.common.util.ResolvedDependencyUtils;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ResolvedDependencyUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryReference;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.DependencyArtifact;

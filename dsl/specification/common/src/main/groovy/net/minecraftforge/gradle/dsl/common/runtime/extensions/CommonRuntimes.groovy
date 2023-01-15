@@ -6,7 +6,7 @@ import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
-import net.minecraftforge.gradle.dsl.common.util.DistributionType
+import net.minecraftforge.gradle.dsl.base.util.DistributionType
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration

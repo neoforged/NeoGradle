@@ -3,8 +3,9 @@ plugins {
 }
 
 dependencies {
-    api project(':common')
     api project(':dsl-specification-runs')
+
+    api project(':base')
 
     api "com.google.code.gson:gson:${project.gson_version}"
 }

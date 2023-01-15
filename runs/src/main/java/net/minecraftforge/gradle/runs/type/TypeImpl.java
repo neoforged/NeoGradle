@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;

@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp.naming.tasks;
 
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar;
-import net.minecraftforge.gradle.common.util.TransformerUtils;
+import net.minecraftforge.gradle.base.util.TransformerUtils;
 import net.minecraftforge.gradle.mcp.naming.renamer.McpSourceRenamer;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;

@@ -22,18 +22,15 @@ package net.minecraftforge.gradle.common.util;
 
 import com.google.gson.*;
 import groovy.lang.Closure;
-import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
+import net.minecraftforge.gradle.base.util.HashFunction;
 import net.minecraftforge.gradle.common.util.VersionJson.Download;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.repositories.ArtifactRepository;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,7 +42,6 @@ import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -310,11 +306,6 @@ public class Utils {
 
             return IOUtils.toByteArray(zip.getInputStream(entry));
         }
-    }
-
-    @Nonnull
-    public static String capitalize(@Nonnull final String toCapitalize) {
-        return toCapitalize.length() > 1 ? toCapitalize.substring(0, 1).toUpperCase() + toCapitalize.substring(1) : toCapitalize;
     }
 
     public static ZipEntry getStableEntry(String name) {

@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.runs.type;
 
-import net.minecraftforge.gradle.common.util.ConfigurableNamedDSLObjectContainer;
+import net.minecraftforge.gradle.base.util.ConfigurableNamedDSLObjectContainer;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
 import org.gradle.api.Project;

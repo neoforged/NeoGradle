@@ -2,7 +2,7 @@ package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.common.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;

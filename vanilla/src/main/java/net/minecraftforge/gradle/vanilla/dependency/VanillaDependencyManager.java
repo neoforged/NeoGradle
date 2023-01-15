@@ -1,11 +1,11 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
-import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.gradle.api.Action;
@@ -106,7 +106,7 @@ public final class VanillaDependencyManager {
             builder.withForgeFlowerVersion(runtimeExtension.getForgeFlowerVersion());
             builder.withAccessTransformerApplierVersion(runtimeExtension.getAccessTransformerApplierVersion());
 
-            builder.withName(String.format("dependencyVanilla%s%s", Utils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
+            builder.withName(String.format("dependencyVanilla%s%s", StringUtils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
         });
     }
 
