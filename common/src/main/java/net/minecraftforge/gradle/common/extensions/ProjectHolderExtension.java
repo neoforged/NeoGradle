@@ -1,25 +1,21 @@
 package net.minecraftforge.gradle.common.extensions;
 
+import net.minecraftforge.gradle.dsl.common.extensions.ProjectHolder;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.SourceSet;
 
 import javax.inject.Inject;
 
-public final class SourceSetProjectExtension {
+public abstract class ProjectHolderExtension implements ProjectHolder {
     public static final String NAME = "projectHolder";
-
     private final Project project;
 
     @Inject
-    public SourceSetProjectExtension(Project project) {
+    public ProjectHolderExtension(Project project) {
         this.project = project;
     }
 
+    @Override
     public Project getProject() {
         return project;
-    }
-
-    public static Project get(SourceSet sourceSet) {
-        return sourceSet.getExtensions().getByType(SourceSetProjectExtension.class).getProject();
     }
 }
