@@ -67,6 +67,11 @@ subprojects { Project subproject ->
 
 
     subproject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
+
+    subproject.tasks.withType(GroovyCompile).configureEach {
+        options.incremental = true
+        groovyOptions.optimizationOptions.indy = true
+    }
 }
 
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
