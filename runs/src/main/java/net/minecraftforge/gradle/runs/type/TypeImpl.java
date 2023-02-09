@@ -10,6 +10,7 @@ import com.google.gson.JsonSerializer;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -60,6 +61,9 @@ public abstract class TypeImpl extends ConfigurableObject<Type> implements Type 
     public abstract MapProperty<String, String> getEnvironmentVariables();
 
     @Override
+    public abstract ConfigurableFileCollection getClasspath();
+
+    @Override
     public abstract MapProperty<String, String> getSystemProperties();
 
     @Override
@@ -71,6 +75,7 @@ public abstract class TypeImpl extends ConfigurableObject<Type> implements Type 
         other.getIsClient().set(getIsClient().get());
         other.getEnvironmentVariables().set(getEnvironmentVariables().get());
         other.getSystemProperties().set(getSystemProperties().get());
+        other.getClasspath().from(getClasspath());
     }
 
     public static final class Serializer implements JsonSerializer<Type>, JsonDeserializer<Type> {

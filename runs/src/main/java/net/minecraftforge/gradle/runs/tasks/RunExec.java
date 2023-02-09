@@ -43,6 +43,10 @@ public abstract class RunExec extends JavaExec {
                 .map(SourceSet::getRuntimeClasspath)
                 .forEach(this::classpath);
 
+        classpath(run.getClasspath());
+
+        run.getDependencies().get().getRuntime().get().forEach(runDependency -> classpath(runDependency.getDependency()));
+
         super.exec();
     }
 

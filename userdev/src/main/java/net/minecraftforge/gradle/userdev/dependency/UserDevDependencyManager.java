@@ -55,7 +55,8 @@ public final class UserDevDependencyManager {
                             runtimeDefinition.getMcpRuntimeDefinition().getRawJarTask(),
                             additionalDependenciesConfiguration,
                             builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
-                            runtimeDefinition::setReplacedDependency)
+                            runtimeDefinition::setReplacedDependency,
+                            () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getClientExtraJarProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider()))
             );
         }));
     }

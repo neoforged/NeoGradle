@@ -1,6 +1,5 @@
 package net.minecraftforge.gradle.common.runtime.definition;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
@@ -16,15 +15,18 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecification> implements Definition<S> {
 
@@ -150,18 +152,24 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     }
 
     @NotNull
-    protected abstract TaskProvider<DownloadAssets> getAssetsTaskProvider();
+    public abstract TaskProvider<DownloadAssets> getAssetsTaskProvider();
 
     @NotNull
-    protected abstract TaskProvider<ExtractNatives> getNativesTaskProvider();
+    public abstract TaskProvider<ExtractNatives> getNativesTaskProvider();
 
-    public final void configureRun(RunImpl run) {
-        final Map<String, String> interpolationData = buildRunInterpolationData();
+    public void configureRun(RunImpl run) {
+        final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
 
-        run.overrideJvmArguments(interpolate(run.getJvmArguments(), interpolationData));
-        run.overrideProgramArguments(interpolate(run.getProgramArguments(), interpolationData));
-        run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), interpolationData));
-        run.overrideSystemProperties(interpolate(run.getSystemProperties(), interpolationData));
+        final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
+        workingInterpolationData.put("source_roots",  Stream.concat(
+                run.getModSources().get().stream().map(source -> source.getOutput().getResourcesDir()),
+                run.getModSources().get().stream().map(source -> source.getOutput().getClassesDirs().getFiles()).flatMap(Collection::stream)
+        ).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
+
+        run.overrideJvmArguments(interpolate(run.getJvmArguments(), workingInterpolationData));
+        run.overrideProgramArguments(interpolate(run.getProgramArguments(), workingInterpolationData));
+        run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), workingInterpolationData));
+        run.overrideSystemProperties(interpolate(run.getSystemProperties(), workingInterpolationData));
     }
 
     protected Map<String, String> buildRunInterpolationData() {
@@ -170,6 +178,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         interpolationData.put("runtime_name", specification.getName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
         interpolationData.put("assets_root", getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("asset_index", getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         interpolationData.put("natives", getNativesTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
 
         return interpolationData;
@@ -190,7 +199,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     private static String interpolate(final String input, final Map<String, String> values) {
         String result = input;
         for (final Map.Entry<String, String> entry : values.entrySet()) {
-            result = result.replace("${" + entry.getKey() + "}", entry.getValue());
+            result = result.replace("{" + entry.getKey() + "}", entry.getValue());
         }
         return result;
     }

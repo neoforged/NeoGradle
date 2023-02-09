@@ -2,11 +2,14 @@ package net.minecraftforge.gradle.common.runtime.naming;
 
 import net.minecraftforge.gradle.base.util.GradleInternalUtils;
 import net.minecraftforge.gradle.base.util.MappingUtils;
+import net.minecraftforge.gradle.base.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
+import net.minecraftforge.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
+import net.minecraftforge.gradle.common.util.CacheableIMappingFile;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
@@ -15,11 +18,14 @@ import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerateDebuggingMappingsJarTaskBuilder;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.minecraftforge.srgutils.IMappingFile;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
 import org.gradle.api.provider.Provider;
@@ -61,6 +67,7 @@ public final class OfficialNamingChannelConfigurator {
             namingChannelProvider.getApplyCompiledMappingsTaskBuilder().set(this::buildApplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyAccessTransformerMappingsTaskBuilder().set(this::buildUnapplyAccessTransformerMappingsTask);
+            namingChannelProvider.getGenerateDebuggingMappingsJarTaskBuilder().set(this::buildGenerateDebuggingMappingsJarTask);
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> (Boolean) mappingsExtension.getExtensions().getByName("acceptMojangEula")));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
         });
@@ -161,6 +168,20 @@ public final class OfficialNamingChannelConfigurator {
         context.getInputTask().configure(task -> task.finalizedBy(ApplyTask));
 
         return ApplyTask;
+    }
+
+    private @NotNull TaskProvider<? extends Runtime> buildGenerateDebuggingMappingsJarTask(@NotNull final GenerationTaskBuildingContext context) {
+        final String generateTaskName = context.getTaskNameBuilder().apply("generateDebuggingMappingsJar");
+
+        return context.getProject().getTasks().register(generateTaskName, GenerateDebuggingMappings.class, task -> {
+            task.setGroup("mappings/official");
+            task.setDescription("Generates a jar containing the official mappings for debugging purposes");
+
+            task.getMappingsFile().convention(context.getClientMappings().flatMap(WithOutput::getOutput)
+                    .map(TransformerUtils.guard(file -> IMappingFile.load(file.getAsFile())))
+                    .map(CacheableIMappingFile::new));
+            task.dependsOn(context.getClientMappings());
+        });
     }
 
     private @NotNull Provider<String> getLicenseText(Project project) {

@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
+import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
@@ -53,8 +54,9 @@ public final class VanillaDependencyManager {
                                     runtimeDefinition.getRawJarTask(),
                                     runtimeDefinition.getMinecraftDependenciesConfiguration(),
                                     builder -> builder.setVersion(runtimeDefinition.getSpecification().getMinecraftVersion()),
-                                    runtimeDefinition::setReplacedDependency)
-                    );
+                                    runtimeDefinition::setReplacedDependency,
+                                    () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider())
+                    ));
                 });
             }
         });

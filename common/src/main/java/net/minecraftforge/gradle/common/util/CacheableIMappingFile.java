@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.mcp.util;
+package net.minecraftforge.gradle.common.util;
 
 import net.minecraftforge.gradle.base.util.IMappingFileUtils;
 import net.minecraftforge.srgutils.IMappingFile;

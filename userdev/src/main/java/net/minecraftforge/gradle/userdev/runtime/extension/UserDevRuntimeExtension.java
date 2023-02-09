@@ -7,8 +7,10 @@ import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.tasks.specifications.OutputSpecification;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
 import net.minecraftforge.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
@@ -24,6 +26,7 @@ import net.minecraftforge.gradle.userdev.runtime.specification.UserDevRuntimeSpe
 import net.minecraftforge.gradle.userdev.utils.UserDevConfigurationSpecUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -96,8 +99,9 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
             final TaskTreeAdapter resultingAdapter = optionalInjectionAdapter.map(inject -> inject.andThen(patchAdapter)).orElse(patchAdapter);
             final TaskTreeAdapter withForgeSourcesAdapter = userDevConfigurationSpec.getSourcesArtifactIdentifier().map(sources -> resultingAdapter.andThen(createInjectForgeSourcesAdapter(sources))).orElse(resultingAdapter);
+            final TaskTreeAdapter withForgeResourcesAdapter = userDevConfigurationSpec.getUniversalArtifactIdentifier().map(resources -> withForgeSourcesAdapter.andThen(createInjectResourcesAdapter(resources))).orElse(withForgeSourcesAdapter);
 
-            builder.withPostTaskAdapter("patch", withForgeSourcesAdapter);
+            builder.withPostTaskAdapter("patch", withForgeResourcesAdapter);
         });
 
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
@@ -105,7 +109,11 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final Types types = getProject().getExtensions().getByType(Types.class);
         userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
             try {
-                types.register(name, type::copyTo);
+                final NamedDomainObjectProvider<Type> typeProvider = types.register(name, type::copyTo);
+                typeProvider.configure(runType -> {
+                    runType.getClasspath().from(mcpRuntimeDefinition.getClientExtraJarProvider().map(OutputSpecification::getOutput));
+                });
+
             } catch (InvalidUserDataException baseNameExistException) {
                 final String newName = spec.getName() + StringUtils.capitalize(name);
                 try {
@@ -192,8 +200,34 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "injectForgesSources"), InjectCode.class, task -> {
                 task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
                 task.getInjectionDirectory().set(unzipForgeSources.flatMap(UnpackZip::getUnpackingTarget));
-                task.getInclusionFilter().set("net/**");
+                task.getInclusionFilter().add("net/**");
                 task.dependsOn(unzipForgeSources);
+            });
+        };
+    }
+
+    private TaskTreeAdapter createInjectResourcesAdapter(final String forgeUniversalCoordinate) {
+        return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
+            final TaskProvider<? extends DownloadArtifact> downloadForgeUniversal = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "downloadForgeUniversal"), DownloadArtifact.class, task -> {
+                task.getArtifactCoordinate().set(forgeUniversalCoordinate);
+            });
+
+            dependentTaskConfigurationHandler.accept(downloadForgeUniversal);
+
+            final TaskProvider<? extends UnpackZip> unzipForgeUniversal = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "unzipForgeUniversal"), UnpackZip.class, task -> {
+                task.getInputZip().set(downloadForgeUniversal.flatMap(DownloadArtifact::getOutput));
+                task.dependsOn(downloadForgeUniversal);
+            });
+
+            dependentTaskConfigurationHandler.accept(unzipForgeUniversal);
+
+            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "injectForgeResources"), InjectCode.class, task -> {
+                task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                task.getInjectionDirectory().set(unzipForgeUniversal.flatMap(UnpackZip::getUnpackingTarget));
+                task.getExclusionFilter().add("**/*.class");
+                task.getExclusionFilter().add("META-INF/**/*.DSA");
+                task.getExclusionFilter().add("**/*.SF");
+                task.dependsOn(unzipForgeUniversal);
             });
         };
     }

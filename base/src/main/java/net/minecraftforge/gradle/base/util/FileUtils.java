@@ -1,6 +1,8 @@
 package net.minecraftforge.gradle.base.util;
 
 import com.google.common.collect.Sets;
+import de.siegmar.fastcsv.writer.CsvWriter;
+import de.siegmar.fastcsv.writer.LineDelimiter;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.ArchiveOperations;
@@ -14,18 +16,25 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.*;
+import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public final class FileUtils {
 
     private static final int MAX_TRIES = 2;
+    private static final long ZIPTIME = 628041600000L;
+    private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
 
     private FileUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: FileUtils. This is a utility class");
@@ -184,5 +193,39 @@ public final class FileUtils {
         }
 
         loggerWrapper.completed();
+    }
+
+    public static void addCsvToZip(String name, List<String[]> mappings, ZipOutputStream out) throws IOException {
+        if (mappings.size() <= 1)
+            return;
+        out.putNextEntry(getStableEntry(name));
+        try (CsvWriter writer = CsvWriter.builder().lineDelimiter(LineDelimiter.LF).build(new UncloseableOutputStreamWriter(out))) {
+            mappings.forEach(writer::writeRow);
+        }
+        out.closeEntry();
+    }
+
+    private static class UncloseableOutputStreamWriter extends OutputStreamWriter {
+        private UncloseableOutputStreamWriter(OutputStream out) {
+            super(out);
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.flush();
+        }
+    }
+
+    public static ZipEntry getStableEntry(String name) {
+        return getStableEntry(name, ZIPTIME);
+    }
+
+    public static ZipEntry getStableEntry(String name, long time) {
+        TimeZone _default = TimeZone.getDefault();
+        TimeZone.setDefault(GMT);
+        ZipEntry ret = new ZipEntry(name);
+        ret.setTime(time);
+        TimeZone.setDefault(_default);
+        return ret;
     }
 }

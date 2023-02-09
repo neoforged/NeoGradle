@@ -1,22 +1,31 @@
 package net.minecraftforge.gradle.mcp.naming;
 
+import net.minecraftforge.gradle.base.util.MappingUtils;
 import net.minecraftforge.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileTypeRenamer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
+import net.minecraftforge.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.base.util.IMappingFileUtils;
 import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
+import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerateDebuggingMappingsJarTaskBuilder;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.mcp.naming.tasks.WriteIMappingsFile;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
-import net.minecraftforge.gradle.mcp.util.CacheableIMappingFile;
+import net.minecraftforge.gradle.common.util.CacheableIMappingFile;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
@@ -27,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class MCPOfficialNamingChannelConfigurator {
     private static final Logger LOGGER = LoggerFactory.getLogger(MCPOfficialNamingChannelConfigurator.class);
@@ -51,6 +61,7 @@ public final class MCPOfficialNamingChannelConfigurator {
             newOfficialProvider.getApplyCompiledMappingsTaskBuilder().convention(context -> this.adaptApplyCompiledMappingsTask(context, namingChannel));
             newOfficialProvider.getUnapplyCompiledMappingsTaskBuilder().convention(context -> this.adaptUnapplyCompiledMappingsTask(context, namingChannel));
             newOfficialProvider.getUnapplyAccessTransformerMappingsTaskBuilder().convention(context -> this.adaptUnapplyAccessTransformerMappingsTask(context, namingChannel));
+            newOfficialProvider.getGenerateDebuggingMappingsJarTaskBuilder().convention(this::buildGenerateDebuggingMappingsJarTask);
             newOfficialProvider.getHasAcceptedLicense().set(namingChannel.getHasAcceptedLicense());
             newOfficialProvider.getLicenseText().set(namingChannel.getLicenseText());
         });
@@ -240,6 +251,53 @@ public final class MCPOfficialNamingChannelConfigurator {
         context.addTask(reverseMappingsTask);
 
         return reverseMappingsTask;
+    }
+
+    private @NotNull TaskProvider<? extends Runtime> buildGenerateDebuggingMappingsJarTask(@NotNull final GenerationTaskBuildingContext context) {
+        Optional<McpRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
+                .filter(McpRuntimeDefinition.class::isInstance)
+                .map(McpRuntimeDefinition.class::cast);
+
+        if (!runtimeDefinition.isPresent()) {
+            //Resolve delegation
+            runtimeDefinition = context.getRuntimeDefinition()
+                    .filter(IDelegatingRuntimeDefinition.class::isInstance)
+                    .map(IDelegatingRuntimeDefinition.class::cast)
+                    .map(IDelegatingRuntimeDefinition::getDelegate)
+                    .filter(McpRuntimeDefinition.class::isInstance)
+                    .map(McpRuntimeDefinition.class::cast);
+        }
+
+        if (!runtimeDefinition.isPresent()) {
+            throw new IllegalStateException("The runtime definition is not present.");
+        }
+
+        final McpRuntimeDefinition mcpRuntimeDefinition = runtimeDefinition.get();
+        final String mappingsFilePath = mcpRuntimeDefinition.getMcpConfig().getData("mappings");
+        final File mappingsFile = new File(mcpRuntimeDefinition.getUnpackedMcpZipDirectory(), Objects.requireNonNull(mappingsFilePath));
+
+        final String generateTaskName = context.getTaskNameBuilder().apply("generateDebuggingMappingsJar");
+
+        final TaskProvider<GenerateDebuggingMappings> generateTask = context.getProject().getTasks().register(generateTaskName, GenerateDebuggingMappings.class, task -> {
+            task.setGroup("mappings/official");
+            task.setDescription("Generates a jar containing the mcp mappings for debugging purposes");
+
+            task.getMappingsFile().set(
+                    context.getClientMappings()
+                            .flatMap(WithOutput::getOutput)
+                            .map(TransformerUtils.guard(
+                                    clientMappingsFile -> {
+                                        final IMappingFile clientMappingFile = IMappingFileUtils.load(clientMappingsFile.getAsFile());
+                                        final IMappingFile mcpConfigMappings = IMappingFile.load(mappingsFile);
+                                        final IMappingFile reversedMcpConfigMappings = mcpConfigMappings.reverse();
+                                        final IMappingFile resultantFile = reversedMcpConfigMappings.chain(clientMappingFile.reverse());
+                                        return new CacheableIMappingFile(resultantFile);
+                                    }
+                            ))
+            );
+        });
+
+        return generateTask;
     }
 
 }

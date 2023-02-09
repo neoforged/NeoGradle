@@ -80,6 +80,8 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setVerbose(false);
         getOptions().setDeprecation(false);
         getOptions().setFork(true);
+        getOptions().setIncremental(true);
+        getOptions().getIncrementalAfterFailure().set(true);
 
         //Leave this as an anon class, so that gradle is aware of this. Lambdas can not be used during task tree analysis.
         //noinspection Convert2Lambda

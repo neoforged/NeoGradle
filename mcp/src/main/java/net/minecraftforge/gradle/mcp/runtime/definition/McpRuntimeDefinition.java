@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.mcp.runtime.definition;
 
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import net.minecraftforge.gradle.common.runtime.tasks.ClientExtraJar;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
@@ -10,6 +11,7 @@ import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.dsl.mcp.runtime.definition.McpDefinition;
 import net.minecraftforge.gradle.mcp.runtime.specification.McpRuntimeSpecification;
+import net.minecraftforge.gradle.runs.run.RunImpl;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -26,8 +28,11 @@ import java.util.function.Consumer;
 public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpecification> implements McpDefinition<McpRuntimeSpecification> {
     private final File unpackedMcpZipDirectory;
     private final McpConfigConfigurationSpecV2 mcpConfig;
+
+    private final TaskProvider<ClientExtraJar> clientExtraJarProvider;
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
+    private TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider;
 
     public McpRuntimeDefinition(@NotNull McpRuntimeSpecification specification,
                                 @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
@@ -38,11 +43,13 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
                                 @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
                                 @NotNull File unpackedMcpZipDirectory,
                                 @NotNull McpConfigConfigurationSpecV2 mcpConfig,
+                                @NotNull TaskProvider<ClientExtraJar> clientExtraJarProvider,
                                 @NotNull TaskProvider<DownloadAssets> assetsTaskProvider,
                                 @NotNull TaskProvider<ExtractNatives> nativesTaskProvider) {
         super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
         this.unpackedMcpZipDirectory = unpackedMcpZipDirectory;
         this.mcpConfig = mcpConfig;
+        this.clientExtraJarProvider = clientExtraJarProvider;
         this.assetsTaskProvider = assetsTaskProvider;
         this.nativesTaskProvider = nativesTaskProvider;
     }
@@ -80,6 +87,10 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
         return result;
     }
 
+    public TaskProvider<ClientExtraJar> getClientExtraJarProvider() {
+        return clientExtraJarProvider;
+    }
+
     @Override
     public @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
         return assetsTaskProvider;
@@ -88,6 +99,20 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
     @Override
     public @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
         return nativesTaskProvider;
+    }
+
+    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
+        return debuggingMappingsTaskProvider;
+    }
+
+    public void setDebuggingMappingsTaskProvider(TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider) {
+        this.debuggingMappingsTaskProvider = debuggingMappingsTaskProvider;
+    }
+
+    @Override
+    public void configureRun(RunImpl run) {
+        super.configureRun(run);
+        run.getClasspath().from(this.getDebuggingMappingsTaskProvider());
     }
 
     @Override

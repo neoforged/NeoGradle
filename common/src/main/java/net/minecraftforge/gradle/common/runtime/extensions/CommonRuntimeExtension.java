@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.common.runtime.extensions;
 import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.minecraftforge.gradle.common.runtime.tasks.ClientExtraJar;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
 import net.minecraftforge.gradle.common.util.VersionJson;
@@ -141,6 +142,14 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                 .flatMap(config -> config.getAllDependencies().stream())
                 .flatMap(dep -> getRuntimes().get().values().stream().filter(runtime -> runtime.getReplacedDependency().equals(dep)))
                 .collect(Collectors.toSet());
+    }
+
+    protected final TaskProvider<ClientExtraJar> createClientExtraJarTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final Map<GameArtifact, File> gameArtifacts) {
+        return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "clientExtraJar"), ClientExtraJar.class, task -> {
+            task.getOriginalClientJar().set(gameArtifacts.get(GameArtifact.CLIENT_JAR));
+
+            configureCommonRuntimeTaskParameters(task, data, "clientExtraJar", specification, runtimeDirectory);
+        });
     }
 
     protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final VersionJson versionJson) {

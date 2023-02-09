@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLElement
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -72,6 +73,16 @@ interface Type extends BaseDSLElement<Type>, NamedDSLElement {
      */
     @DSLProperty
     MapProperty<String, String> getSystemProperties();
+
+    /**
+     * Gives access to the classpath for this run type.
+     * Does not contain the full classpath since that is dependent on the actual run environment, but contains the additional classpath elements
+     * needed to run the game with this run type.
+     *
+     * @return The property which holds the classpath.
+     */
+    @DSLProperty
+    ConfigurableFileCollection getClasspath();
 
     /**
      * Copies this run type into a new instance.

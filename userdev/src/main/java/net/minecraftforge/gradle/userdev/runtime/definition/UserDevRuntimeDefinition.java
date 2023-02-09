@@ -2,12 +2,15 @@ package net.minecraftforge.gradle.userdev.runtime.definition;
 
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
+import net.minecraftforge.gradle.common.runtime.tasks.ClientExtraJar;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
+import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
+import net.minecraftforge.gradle.runs.run.RunImpl;
 import net.minecraftforge.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -61,19 +64,34 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         mcpRuntimeDefinition.setReplacedDependency(dependency);
     }
 
+    @NotNull
+    public TaskProvider<ClientExtraJar> getClientExtraJarProvider() {
+        return mcpRuntimeDefinition.getClientExtraJarProvider();
+    }
+
     @Override
-    protected @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
+    public @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
         return mcpRuntimeDefinition.getAssetsTaskProvider();
     }
 
     @Override
-    protected @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
+    public @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
         return mcpRuntimeDefinition.getNativesTaskProvider();
+    }
+
+    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
+        return mcpRuntimeDefinition.getDebuggingMappingsTaskProvider();
     }
 
     @Override
     public @NotNull Map<String, String> getMappingVersionData() {
         return mcpRuntimeDefinition.getMappingVersionData();
+    }
+
+    @Override
+    public void configureRun(RunImpl run) {
+        super.configureRun(run);
+        run.getClasspath().from(getDebuggingMappingsTaskProvider());
     }
 
     @Override

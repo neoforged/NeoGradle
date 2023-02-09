@@ -2,12 +2,11 @@ package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.base.util.FileUtils;
-import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.minecraftforge.gradle.base.util.ZipBuildingFileTreeVisitor;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.*;
-import org.gradle.api.provider.Property;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 
@@ -58,7 +57,7 @@ public abstract class InjectCode extends DefaultRuntime {
                         if (!pkg.startsWith("net/minecraft/") &&
                                 (!pkg.startsWith("com/mojang/") || getMinecraftVersion().get().compareTo(v1_14_4) <= 0)) //Add com/mojang package-infos in 1.15+, could probably get away without the version check
                             continue;
-                        zos.putNextEntry(Utils.getStableEntry(pkg + "/package-info.java"));
+                        zos.putNextEntry(FileUtils.getStableEntry(pkg + "/package-info.java"));
                         zos.write(packageInfoTemplateContent.replace("{PACKAGE}", pkg.replaceAll("/", ".")).getBytes(StandardCharsets.UTF_8));
                         zos.closeEntry();
                     }
@@ -79,12 +78,23 @@ public abstract class InjectCode extends DefaultRuntime {
 
     @Input
     @Optional
-    public abstract Property<String> getInclusionFilter();
+    public abstract ListProperty<String> getInclusionFilter();
+
+    @Input
+    @Optional
+    public abstract ListProperty<String> getExclusionFilter();
 
     private FileTree getFilteredInjectionDirectory() {
-        if (!getInclusionFilter().isPresent())
-            return getInjectionDirectory().getAsFileTree();
+        FileTree result = getInjectionDirectory().getAsFileTree();
 
-        return getInjectionDirectory().getAsFileTree().matching(pattern -> pattern.include(getInclusionFilter().get()));
+        if (getInclusionFilter().isPresent() && !getInclusionFilter().get().isEmpty()) {
+            result = result.matching(pattern -> pattern.include(getInclusionFilter().get()));
+        }
+
+        if (getExclusionFilter().isPresent() && !getExclusionFilter().get().isEmpty()) {
+            result = result.matching(pattern -> pattern.exclude(getExclusionFilter().get()));
+        }
+
+        return result;
     }
 }

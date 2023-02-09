@@ -11,6 +11,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -27,7 +28,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
 
     public DownloadAssets() {
         getAssetIndexFileName().convention("asset-index.json");
-        getAssetIndexFile().convention(getRegularFileInOutputDirectory(getAssetIndexFileName()));
+        getAssetIndexFile().convention(getRegularFileInOutputDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
         getVersionJson().convention(getVersionJsonFile().map(TransformerUtils.guard(file -> VersionJson.get(file.getAsFile()))));
         getAssetRepository().convention("https://resources.download.minecraft.net/");
     }
@@ -58,8 +59,9 @@ public abstract class DownloadAssets extends DefaultRuntime {
         final AssetIndex assetIndex = Utils.fromJson(getAssetIndexFile().getAsFile().get(), AssetIndex.class);
 
         final WorkQueue executor = getWorkerExecutor().noIsolation();
-        assetIndex.getObjects().forEach((assetKey, asset) -> {
-            final Provider<File> assetFile = getFileInOutputDirectory(asset.getPath());
+
+        assetIndex.getObjects().values().stream().distinct().forEach((asset) -> {
+            final Provider<File> assetFile = getFileInOutputDirectory(String.format("objects%s%s", File.separator, asset.getPath()));
             final Provider<String> assetUrl = getAssetRepository()
                     .map(repo -> repo.endsWith("/") ? repo : repo + "/")
                     .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
@@ -80,6 +82,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
     protected abstract WorkerExecutor getWorkerExecutor();
 
     @InputFile
+    @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getVersionJsonFile();
 
@@ -93,7 +96,6 @@ public abstract class DownloadAssets extends DefaultRuntime {
     public abstract Property<String> getAssetRepository();
 
     @OutputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getAssetIndexFile();
 
     private static class AssetIndex {
@@ -121,6 +123,21 @@ public abstract class DownloadAssets extends DefaultRuntime {
 
         public String getPath() {
             return hash.substring(0, 2) + '/' + hash;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Asset)) return false;
+
+            Asset asset = (Asset) o;
+
+            return getHash().equals(asset.getHash());
+        }
+
+        @Override
+        public int hashCode() {
+            return getHash().hashCode();
         }
     }
 }

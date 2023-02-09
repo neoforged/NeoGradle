@@ -46,19 +46,20 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
         this.project = project;
         this.getRepositoryDirectory().convention(project.getLayout().getBuildDirectory().dir("libs"));
         this.createRepositories();
-        this.getProject().afterEvaluate(p -> {
-            this.hasBeenRealized = true;
-            this.entryConfigurators.forEach(e -> e.accept(p));
-
-            if (p.getState().getFailure() == null) {
-                this.afterEntryCallbacks.forEach(e -> e.accept(p));
-            }
-        });
     }
 
     @Override
     public Project getProject() {
         return project;
+    }
+
+    public void onPreDefinitionBakes(final Project project) {
+        this.hasBeenRealized = true;
+        this.entryConfigurators.forEach(e -> e.accept(project));
+
+        if (project.getState().getFailure() == null) {
+            this.afterEntryCallbacks.forEach(e -> e.accept(project));
+        }
     }
 
     private void createRepositories() {

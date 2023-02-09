@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
+import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
@@ -58,8 +59,9 @@ public final class McpDependencyManager {
                                 runtimeDefinition.getRawJarTask(),
                                 runtimeDefinition.getMinecraftDependenciesConfiguration(),
                                 builder -> builder.setVersion(runtimeDefinition.getSpecification().getMcpVersion()),
-                                runtimeDefinition::setReplacedDependency)
-                );
+                                runtimeDefinition::setReplacedDependency,
+                                () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getClientExtraJarProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider())
+                ));
             });
         });
     }

@@ -20,10 +20,10 @@
 
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
+import net.minecraftforge.gradle.base.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.ISourceRenamer;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
-import net.minecraftforge.gradle.common.util.Utils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -54,7 +54,7 @@ public abstract class ApplyMappingsToSourceJar extends DefaultRuntime implements
                 final Enumeration<? extends ZipEntry> entries = zin.entries();
                 while(entries.hasMoreElements()) {
                     final ZipEntry entry = entries.nextElement();
-                    out.putNextEntry(Utils.getStableEntry(entry.getName()));
+                    out.putNextEntry(FileUtils.getStableEntry(entry.getName()));
                     if (!entry.getName().endsWith(".java")) {
                         IOUtils.copy(zin.getInputStream(entry), out);
                     } else {

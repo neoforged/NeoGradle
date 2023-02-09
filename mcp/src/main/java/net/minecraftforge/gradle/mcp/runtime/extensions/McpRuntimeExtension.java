@@ -14,6 +14,7 @@ import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
@@ -109,9 +110,9 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), InjectCode.class, task -> {
                     task.getInjectionSource().fileProvider(McpRuntimeUtils.getTaskInputFor(spec, tasks, step));
                     if (spec.getDistribution().equals(DistributionType.SERVER)) {
-                        task.getInclusionFilter().set("**/server/**");
+                        task.getInclusionFilter().add("**/server/**");
                     } else if (spec.getDistribution().equals(DistributionType.CLIENT)) {
-                        task.getInclusionFilter().set("**/client/**");
+                        task.getInclusionFilter().add("**/client/**");
                     }
                 });
             case "patch":
@@ -231,9 +232,12 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
             task.getOutput().set(new File(mcpDirectory, "raw.jar"));
         });
 
-        return new McpRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
+
+        final McpRuntimeDefinition definition = new McpRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
             configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, runtimeTask);
-        }), unpackedMcpZipDirectory, mcpConfig, createDownloadAssetsTasks(spec, data, mcpDirectory, versionJson), createExtractNativesTasks(spec, data, mcpDirectory, versionJson));
+        }), unpackedMcpZipDirectory, mcpConfig, createClientExtraJarTasks(spec, data, mcpDirectory, gameArtifacts), createDownloadAssetsTasks(spec, data, mcpDirectory, versionJson), createExtractNativesTasks(spec, data, mcpDirectory, versionJson));
+
+        return definition;
     }
 
     @Override
@@ -356,6 +360,15 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
             task.getInput().set(recompileTask.flatMap(WithOutput::getOutput));
             task.dependsOn(recompileTask);
         });
+
+        final GenerationTaskBuildingContext generationTaskBuildingContext = new GenerationTaskBuildingContext(
+                spec.getProject(), String.format("generateDebuggingMappingsFor%s", StringUtils.capitalize(spec.getName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), definition.getGameArtifactProvidingTasks(), definition
+        );
+
+        final TaskProvider<? extends Runtime> generateDebuggingMappingsTask = generationTaskBuildingContext.getNamingChannel().getGenerateDebuggingMappingsJarTaskBuilder().get().build(generationTaskBuildingContext);
+        generateDebuggingMappingsTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task));
+        taskOutputs.put(generateDebuggingMappingsTask.getName(), generateDebuggingMappingsTask);
+        definition.setDebuggingMappingsTaskProvider(generateDebuggingMappingsTask);
     }
 
     public abstract Property<DistributionType> getDefaultDistributionType();

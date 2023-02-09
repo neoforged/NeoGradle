@@ -13,4 +13,5 @@ dependencies {
     api "com.google.guava:guava:${project.guava_version}"
     api "commons-io:commons-io:${project.commons_io_version}"
     api "net.minecraftforge:srgutils:${project.srgutils_version}"
+    api "de.siegmar:fastcsv:${project.fastcsv_version}"
 }

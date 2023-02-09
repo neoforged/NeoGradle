@@ -21,6 +21,4 @@ class Constants {
     public static final String FORGEFLOWER_VERSION = "2.0.605.1";
     public static final String FORGEFLOWER_ARTIFACT_INTERPOLATION = "net.minecraftforge:forgeflower:%s";
     public static final String FORGEFLOWER = String.format(FORGEFLOWER_ARTIFACT_INTERPOLATION, FORGEFLOWER_VERSION);
-    public static final long ZIPTIME = 628041600000L;
-    public static final TimeZone GMT = TimeZone.getTimeZone("GMT");
 }

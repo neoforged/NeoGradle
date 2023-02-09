@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic;
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
 import org.gradle.api.provider.Property
+import org.gradle.internal.impldep.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -68,6 +69,24 @@ interface NamingChannel extends BaseDSLElement<NamingChannel> {
      */
     @DSLProperty
     Property<UnapplyMappingsToAccessTransformerTaskBuilder> getUnapplyAccessTransformerMappingsTaskBuilder();
+
+    /**
+     * The builder which can generate a task provider that creates the "mcp" mappings jar.
+     * This "mcp" mappings jar is used during "debugging", basically when the user is running the game in their IDE.
+     * The jar needs to contain two CSV files in the root of the jar:
+     * - methods.csv
+     * - fields.csv
+     *
+     * The CSV files need to be in the following format:
+     * - methods.csv: ""searge", "name", "side", "desc""
+     * - fields.csv: ""searge", "name", "side", "desc""
+     *
+     * See the following example of the legacy code that generated the file in FG5:
+     * https://github.com/MinecraftForge/ForgeGradle/blob/ce931cc5c05c935b7b48bce580334abca21840dd/src/mcp/java/net/minecraftforge/gradle/mcp/OfficialChannelProvider.java#L126
+     * @return The builder property.
+     */
+    @DSLProperty
+    Property<GenerateDebuggingMappingsJarTaskBuilder> getGenerateDebuggingMappingsJarTaskBuilder();
 
     /**
      * Returns the group prefix for the current channel that is prefixed to the deobfuscated dependency groups.

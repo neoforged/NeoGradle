@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.deobfuscation;
 
+import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.extensions.DeobfuscationExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
@@ -147,7 +148,8 @@ public final class DependencyDeobfuscator {
                             }
 
                             builder.setGroup("fg.deobf." + deobfuscatedMappingsPrefix + "." + resolvedDependency.getModuleGroup());
-                        });
+                        },
+                        Sets::newHashSet);
 
                 final DeobfuscatingTaskConfiguration configuration = new DeobfuscatingTaskConfiguration(context, result, resolvedDependency, file);
                 context.getProject().afterEvaluate(evaluatedProject -> bakeDependencyReplacement(evaluatedProject, configuration));

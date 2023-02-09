@@ -32,12 +32,14 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
     }
 
     @Override
-    protected @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
+    @NotNull
+    public TaskProvider<DownloadAssets> getAssetsTaskProvider() {
         return assetsTaskProvider;
     }
 
     @Override
-    protected @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
+    @NotNull
+    public TaskProvider<ExtractNatives> getNativesTaskProvider() {
         return nativesTaskProvider;
     }
 }

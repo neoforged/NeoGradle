@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.base.util;
 
+import org.gradle.api.internal.GeneratedSubclass;
 import org.gradle.api.internal.plugins.ExtensionContainerInternal;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.ExtensionContainer;
@@ -98,6 +99,21 @@ public final class GradleInternalUtils {
         }
 
         /**
+         * Looks up the reflection target class from a given class.
+         * Currently takes care of the decoration of Gradle's internal classes.
+         *
+         * @param cls The class to look up the target class for
+         * @return The target class
+         */
+        private static Class<?> getReflectionTarget(Class<?> cls) {
+            if (Arrays.asList(cls.getInterfaces()).contains(GeneratedSubclass.class)) {
+                return cls.getSuperclass();
+            }
+
+            return cls;
+        }
+
+        /**
          * Invoke a method using reflection
          * @param obj the object whose method should be invoked
          * @param method the name of the method to invoke
@@ -127,9 +143,19 @@ public final class GradleInternalUtils {
          */
         private static Object getFieldValue(Object obj, String name)
                 throws NoSuchFieldException, IllegalAccessException {
-            final Field f = obj.getClass().getField(name);
-            f.setAccessible(true);
-            return f.get(obj);
+            Class<?> clazz = getReflectionTarget(obj.getClass());
+            while (clazz != null) {
+                Field[] fields = clazz.getDeclaredFields();
+                for (Field field : fields) {
+                    if (field.getName().equals(name)) {
+                        field.setAccessible(true);
+                        return field.get(obj);
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+
+            throw new NoSuchFieldException("Field " + name + " on " + obj.getClass());
         }
 
         /**
@@ -143,7 +169,7 @@ public final class GradleInternalUtils {
          */
         private static Method findMethod(Object obj, String methodName,
                                          Class<?>[] argumentTypes) throws NoSuchMethodException {
-            Class<?> clazz = obj.getClass();
+            Class<?> clazz = getReflectionTarget(obj.getClass());
             while (clazz != null) {
                 Method[] methods = clazz.getDeclaredMethods();
                 for (Method method : methods) {

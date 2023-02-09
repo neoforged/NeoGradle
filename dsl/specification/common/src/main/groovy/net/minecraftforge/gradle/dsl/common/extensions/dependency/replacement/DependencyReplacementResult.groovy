@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull
 
 import java.util.function.Consumer
 import java.util.function.Function
+import java.util.function.Supplier
 
 /**
  * Defines a result of a dependency replacement.
@@ -27,6 +28,7 @@ final class DependencyReplacementResult {
     private final Collection<DependencyReplacementResult> additionalReplacements;
     private final Consumer<RepositoryReference.Builder<?, ?>> asDependencyBuilderConfigurator;
     private final Consumer<Dependency> onCreateReplacedDependencyCallback;
+    private final Supplier<Set<TaskProvider>> additionalIdePostSyncTasks;
 
     DependencyReplacementResult(
             Project project,
@@ -35,7 +37,8 @@ final class DependencyReplacementResult {
             TaskProvider<? extends WithOutput> rawJarTaskProvider,
             Configuration additionalDependenciesConfiguration,
             Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator,
-            Consumer<Dependency> onCreateReplacedDependencyCallback) {
+            Consumer<Dependency> onCreateReplacedDependencyCallback,
+            Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
         this.project = project;
         this.taskNameBuilder = taskNameBuilder;
         this.sourcesJarTaskProvider = sourcesJarTaskProvider;
@@ -44,6 +47,7 @@ final class DependencyReplacementResult {
         this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
         this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
         this.additionalReplacements = Collections.emptyList();
+        this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
 
         //TODO: Handle this:
         this.asDependencyBuilderConfigurator = builder -> { };
@@ -56,7 +60,8 @@ final class DependencyReplacementResult {
                                 Configuration additionalDependenciesConfiguration,
                                 Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator,
                                 Collection<DependencyReplacementResult> additionalReplacements,
-                                Consumer<RepositoryReference.Builder<?, ?>> asDependencyBuilderConfigurator) {
+                                Consumer<RepositoryReference.Builder<?, ?>> asDependencyBuilderConfigurator,
+                                Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
         this.project = project;
         this.taskNameBuilder = taskNameBuilder;
         this.sourcesJarTaskProvider = sourcesJarTaskProvider;
@@ -66,6 +71,7 @@ final class DependencyReplacementResult {
         this.additionalReplacements = additionalReplacements;
         this.asDependencyBuilderConfigurator = asDependencyBuilderConfigurator;
         this.onCreateReplacedDependencyCallback = dep -> { };
+        this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
     }
 
     /**
@@ -156,6 +162,11 @@ final class DependencyReplacementResult {
     @NotNull
     Consumer<Dependency> getOnCreateReplacedDependencyCallback() {
         return onCreateReplacedDependencyCallback;
+    }
+
+    @NotNull
+    Set<TaskProvider> getAdditionalIdePostSyncTasks() {
+        return additionalIdePostSyncTasks.get();
     }
 
     @Override

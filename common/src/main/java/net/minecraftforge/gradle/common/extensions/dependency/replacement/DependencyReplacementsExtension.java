@@ -32,6 +32,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public abstract class DependencyReplacementsExtension extends ConfigurableObject<DependencyReplacement> implements DependencyReplacement {
 
@@ -40,6 +41,8 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
     private final Set<Configuration> configuredConfigurations = Sets.newHashSet();
     private final ConfigurableNamedDSLObjectContainer.Simple<DependencyReplacementHandler> dependencyReplacementHandlers;
     private boolean registeredTaskToIde;
+    private boolean hasBeenBaked = false;
+    private final Set<Consumer<Project>> afterDefinitionBakeCallbacks = Sets.newHashSet();
 
     @SuppressWarnings("unchecked")
     @Inject
@@ -64,6 +67,13 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
     @Override
     public Project getProject() {
         return project;
+    }
+
+    public void onPostDefinitionBakes(final Project project) {
+        this.hasBeenBaked = true;
+        if (project.getState().getFailure() == null) {
+            this.afterDefinitionBakeCallbacks.forEach(e -> e.accept(project));
+        }
     }
 
     @Override
@@ -163,11 +173,26 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
                 configuration.getDependencies().add(replacedDependency);
                 result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
 
-                this.dependencyGenerator.configure(task -> task.dependsOn(rawAndSourceCombinerTask));
+                afterDefinitionBake(projectAfterBake -> {
+                    this.dependencyGenerator.configure(task -> {
+                        task.dependsOn(rawAndSourceCombinerTask);
+                        //noinspection Convert2MethodRef -> Gradle Groovy shit fails.
+                        result.getAdditionalIdePostSyncTasks().forEach(postSyncTask -> task.dependsOn(postSyncTask));
+                    });
+                });
             });
         } catch (XMLStreamException | IOException e) {
             throw new RuntimeException(String.format("Failed to create the dummy dependency for: %s", dependency), e);
         }
+    }
+
+    private void afterDefinitionBake(final Consumer<Project> callback) {
+        if (this.hasBeenBaked) {
+            callback.accept(this.project);
+            return;
+        }
+
+        this.afterDefinitionBakeCallbacks.add(callback);
     }
 
     @FunctionalInterface

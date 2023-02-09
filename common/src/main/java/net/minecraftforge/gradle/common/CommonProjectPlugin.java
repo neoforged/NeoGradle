@@ -30,6 +30,7 @@ import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.runs.run.Runs;
 import net.minecraftforge.gradle.runs.RunsPlugin;
 import net.minecraftforge.gradle.runs.run.RunImpl;
+import org.apache.ivy.Ivy;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
@@ -84,6 +85,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
     }
 
     private void applyAfterEvaluate(final Project project) {
+        final Repository<?,?,?,?,?> repositoryExtension = project.getExtensions().getByType(Repository.class);
+        if (repositoryExtension instanceof IvyDummyRepositoryExtension) {
+            final IvyDummyRepositoryExtension ivyDummyRepositoryExtension = (IvyDummyRepositoryExtension) repositoryExtension;
+            ivyDummyRepositoryExtension.onPreDefinitionBakes(project);
+        }
+
         GradleInternalUtils.getExtensions(project.getExtensions())
                 .stream()
                 .filter(CommonRuntimeExtension.class::isInstance)
@@ -104,5 +111,11 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 });
             }
         });
+
+        final DependencyReplacement dependencyReplacementExtension = project.getExtensions().getByType(DependencyReplacement.class);
+        if (dependencyReplacementExtension instanceof DependencyReplacementsExtension) {
+            final DependencyReplacementsExtension dependencyReplacementsExtension = (DependencyReplacementsExtension) dependencyReplacementExtension;
+            dependencyReplacementsExtension.onPostDefinitionBakes(project);
+        }
     }
 }

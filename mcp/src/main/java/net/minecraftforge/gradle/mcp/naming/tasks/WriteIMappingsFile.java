@@ -2,7 +2,7 @@ package net.minecraftforge.gradle.mcp.naming.tasks;
 
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.mcp.util.CacheableIMappingFile;
+import net.minecraftforge.gradle.common.util.CacheableIMappingFile;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;

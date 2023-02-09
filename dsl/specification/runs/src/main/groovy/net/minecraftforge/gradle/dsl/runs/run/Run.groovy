@@ -6,13 +6,17 @@ import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLElement
 import net.minecraftforge.gradle.dsl.runs.type.Type
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSet
@@ -50,7 +54,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return {@code true} if all the projects in the current Gradle project should be build ahead of running the game; otherwise, {@code false}.
      */
-    @Internal
+    @Input
     @DSLProperty
     Property<Boolean> getShouldBuildAllProjects();
 
@@ -78,7 +82,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return {@code true} if this run is a single instance run; otherwise, {@code false}.
      */
-    @Internal
+    @Input
     @DSLProperty
     Property<Boolean> getIsSingleInstance();
 
@@ -117,6 +121,27 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Internal
     @DSLProperty
     ListProperty<SourceSet> getModSources();
+
+    /**
+     * Gives access to the classpath for this run.
+     * Does not contain the full classpath since that is dependent on the actual run environment, but contains the additional classpath elements
+     * needed to run the game with this run.
+     *
+     * @return The property which holds the classpath.
+     */
+    @InputFiles
+    @Classpath
+    @DSLProperty
+    ConfigurableFileCollection getClasspath();
+
+    /**
+     * Defines the custom dependency handler for each run.
+     *
+     * @return The dependency handler for the run.
+     */
+    @Nested
+    @DSLProperty
+    Property<DependencyHandler> getDependencies();
 
     /**
      * Configures the run using the type with the same name.

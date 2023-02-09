@@ -23,12 +23,15 @@ import java.net.URL;
 public abstract class DownloadFileAction implements WorkAction<DownloadFileAction.Params> {
     private static final Logger LOGGER = Logging.getLogger(DownloadFileAction.class);
 
+    @Inject
+    public abstract BuildServiceRegistry getBuildServiceRegistry();
+
     @Override
     public void execute() {
         try {
             final Params params = getParameters();
             final File output = params.getOutputFile().get().getAsFile();
-            final GradleInternalUtils.ProgressLoggerWrapper progress = GradleInternalUtils.getProgressLogger(LOGGER, params.getBuildServiceRegistry(), "Downloading file: " + params.getUrl().get());
+            final GradleInternalUtils.ProgressLoggerWrapper progress = GradleInternalUtils.getProgressLogger(LOGGER, getBuildServiceRegistry(), "Downloading file: " + params.getUrl().get());
             progress.setDestFileName(params.getOutputFile().getAsFile().get().getName());
 
             if (params.getIsOffline().get()) {
@@ -43,7 +46,7 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
                 if (params.getShouldValidateHash().get()) {
                     final String hash = HashFunction.SHA1.hash(output);
                     if (!hash.equals(params.getSha1().get())) {
-                        throw new IllegalStateException("Cannot validate asset " + params.getUrl().get() + " as Gradle is running in offline mode and the file does not match the expected hash");
+                        throw new IllegalStateException(String.format("Cannot validate asset %s as Gradle is running in offline mode and the file does not match the expected hash. Expected: %s Actual: %s", params.getUrl().get(), params.getSha1().get(), hash));
                     }
                 }
 
@@ -66,7 +69,7 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
             if (params.getShouldValidateHash().get()) {
                 final String hash = HashFunction.SHA1.hash(output);
                 if (!hash.equals(params.getSha1().get())) {
-                    throw new IllegalStateException("Cannot validate asset " + params.getUrl().get() + " as Gradle is running in offline mode and the file does not match the expected hash");
+                    throw new IllegalStateException(String.format("Cannot validate asset %s as Gradle is running in offline mode and the file does not match the expected hash. Expected: %s Actual: %s", params.getUrl().get(), params.getSha1().get(), hash));
                 }
             }
         } catch (Exception e) {
@@ -121,7 +124,5 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
         RegularFileProperty getOutputFile();
         
         Property<Boolean> getIsOffline();
-        @Inject
-        BuildServiceRegistry getBuildServiceRegistry();
     }
 }

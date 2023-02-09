@@ -29,12 +29,15 @@ import java.util.function.Predicate;
 public abstract class ExtractFileAction implements WorkAction<ExtractFileAction.Params> {
     private static final Logger LOGGER = Logging.getLogger(ExtractFileAction.class);
 
+    @Inject
+    public abstract BuildServiceRegistry getBuildServiceRegistry();
+
     @Override
     public void execute() {
         try {
             final Params params = getParameters();
             final File output = params.getOutputDirectory().get().getAsFile();
-            final GradleInternalUtils.ProgressLoggerWrapper progress = GradleInternalUtils.getProgressLogger(LOGGER, params.getBuildServiceRegistry(), "Extracting file: " + params.getInputFile().get().getAsFile());
+            final GradleInternalUtils.ProgressLoggerWrapper progress = GradleInternalUtils.getProgressLogger(LOGGER, getBuildServiceRegistry(), "Extracting file: " + params.getInputFile().get().getAsFile());
             progress.setActionType("analyzed");
             progress.setDestFileName(output.getName());
 
@@ -61,9 +64,6 @@ public abstract class ExtractFileAction implements WorkAction<ExtractFileAction.
         Property<Function<String, String>> getRenamer();
         Property<Action<? super PatternFilterable>> getFilter();
         DirectoryProperty getOutputDirectory();
-        @SuppressWarnings("UnstableApiUsage")
-        @Inject
-        BuildServiceRegistry getBuildServiceRegistry();
         @Inject
         ArchiveOperations getArchiveOperations();
     }

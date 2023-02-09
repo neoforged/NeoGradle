@@ -24,7 +24,6 @@ import com.google.gson.*;
 import groovy.lang.Closure;
 import net.minecraftforge.gradle.base.util.HashFunction;
 import net.minecraftforge.gradle.common.util.VersionJson.Download;
-import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.Project;
@@ -306,19 +305,6 @@ public class Utils {
 
             return IOUtils.toByteArray(zip.getInputStream(entry));
         }
-    }
-
-    public static ZipEntry getStableEntry(String name) {
-        return getStableEntry(name, Constants.ZIPTIME);
-    }
-
-    public static ZipEntry getStableEntry(String name, long time) {
-        TimeZone _default = TimeZone.getDefault();
-        TimeZone.setDefault(Constants.GMT);
-        ZipEntry ret = new ZipEntry(name);
-        ret.setTime(time);
-        TimeZone.setDefault(_default);
-        return ret;
     }
 
     public static File getMCDir()

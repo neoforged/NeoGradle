@@ -2,10 +2,12 @@ package net.minecraftforge.gradle.runs.run;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.dsl.runs.run.DependencyHandler;
 import net.minecraftforge.gradle.dsl.runs.run.Run;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -35,6 +37,9 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
         this.programArguments = this.project.getObjects().listProperty(String.class);
         this.systemProperties = this.project.getObjects().mapProperty(String.class, String.class);
+
+        getShouldBuildAllProjects().convention(false);
+        getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project));
     }
 
     @Override
@@ -101,6 +106,12 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     public abstract ListProperty<SourceSet> getModSources();
 
     @Override
+    public abstract ConfigurableFileCollection getClasspath();
+
+    @Override
+    public abstract Property<DependencyHandler> getDependencies();
+
+    @Override
     @NotNull
     public final void configure() {
         configure(getName());
@@ -132,5 +143,6 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
         getIsSingleInstance().convention(spec.getIsSingleInstance());
         getSystemProperties().convention(spec.getSystemProperties());
         getIsClient().convention(spec.getIsClient());
+        getClasspath().from(spec.getClasspath());
     }
 }
