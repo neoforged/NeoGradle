@@ -72,9 +72,8 @@ public final class VanillaDependencyManager {
     }
 
     private boolean isSupportedSide(final Dependency dependency) {
-        return dependency.getName().equals("mcp_client") ||
-                dependency.getName().equals("mcp_server") ||
-                dependency.getName().equals("mcp_joined");
+        return dependency.getName().equals("client") ||
+                dependency.getName().equals("server");
     }
 
     private boolean hasMatchingArtifact(ExternalModuleDependency externalModuleDependency) {
@@ -102,7 +101,7 @@ public final class VanillaDependencyManager {
             final String version = dependency.getVersion() == null ? runtimeExtension.getVersion().get() : dependency.getVersion();
 
             builder.withName(dependency.getName());
-            builder.withDistributionType(DistributionType.valueOf(dependency.getName().replace("mcp_", "").toUpperCase(Locale.ROOT)));
+            builder.withDistributionType(DistributionType.valueOf(dependency.getName().toUpperCase(Locale.ROOT)));
             builder.withMinecraftVersion(version);
             builder.withFartVersion(runtimeExtension.getFartVersion());
             builder.withForgeFlowerVersion(runtimeExtension.getForgeFlowerVersion());

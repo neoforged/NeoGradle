@@ -28,9 +28,9 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        mcp {
+        vanilla {
             id = 'net.minecraftforge.gradle.vanilla'
-            implementationClass = 'net.minecraftforge.gradle.mcp.VanillaPlugin'
+            implementationClass = 'net.minecraftforge.gradle.vanilla.VanillaPlugin'
         }
     }
 }

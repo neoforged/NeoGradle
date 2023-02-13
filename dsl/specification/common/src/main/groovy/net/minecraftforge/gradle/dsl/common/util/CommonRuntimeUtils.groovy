@@ -99,7 +99,8 @@ final class CommonRuntimeUtils {
     static Map<String, Provider<String>> buildArguments(final Function<String, Optional<TaskProvider<? extends WithOutput>>> inputBuilder, final Function<String, Provider<String>> providerBuilder, Map<String, String> values, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         final Map<String, Provider<String>> arguments = new HashMap<>();
 
-        values.forEach((key, value) -> {
+        for (final String key in values.keySet()) {
+            final String value = values.get(key);
             if (value.startsWith("{") && value.endsWith("}")) {
                 Optional<TaskProvider<? extends WithOutput>> dependentTask;
                 if (!Objects.equals(key, "input") || !alternativeInputProvider.isPresent()) {
@@ -113,7 +114,7 @@ final class CommonRuntimeUtils {
             } else {
                 arguments.put(key, providerBuilder.apply(value));
             }
-        });
+        }
 
         return arguments;
     }

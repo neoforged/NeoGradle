@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.util.VersionJson;
+import net.minecraftforge.gradle.dsl.base.util.DistributionType;
+import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -13,8 +15,6 @@ import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.minecraftforge.gradle.vanilla.runtime.steps.ApplyAccessTransformerStep;
@@ -161,8 +161,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             }
         }
 
-        final TaskProvider<? extends WithOutput> sourcesTask = Iterators.getLast( definition.getTasks().values().iterator());
-        final TaskProvider<? extends WithOutput> rawTask =  definition.getTasks().get(stepData.getRawJarStep().getName());
+        final TaskProvider<? extends WithOutput> sourcesTask = Iterators.getLast(definition.getTasks().values().iterator());
+        final TaskProvider<? extends WithOutput> rawTask = definition.getTasks().get(stepData.getRawJarStep().getTaskName(definition));
 
         definition.getSourceJarTask().configure(task -> {
             task.getInput().set(sourcesTask.flatMap(WithOutput::getOutput));
