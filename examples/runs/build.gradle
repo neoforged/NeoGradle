@@ -16,4 +16,7 @@ runs {
     client {
         modSources = [sourceSets.main]
     }
+    server {
+        modSources = [sourceSets.main]
+    }
 }

@@ -99,9 +99,17 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         final Map<String, String> interpolationData = mcpRuntimeDefinition.buildRunInterpolationData();
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().isEmpty()) {
-            Configuration modulesCfg = getSpecification().getProject().getConfigurations().create(String.format("moduleResolverForgeUserDev%s", getSpecification().getName()));
-            modulesCfg.setCanBeResolved(true);
-            userdevConfiguration.getModules().forEach(m -> modulesCfg.getDependencies().add(getSpecification().getProject().getDependencies().create(m)));
+            final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getName());
+            final Configuration modulesCfg;
+            if (getSpecification().getProject().getConfigurations().getNames().contains(name)) {
+                modulesCfg = getSpecification().getProject().getConfigurations().getByName(name);
+            }
+            else {
+                modulesCfg = getSpecification().getProject().getConfigurations().create(name);
+                modulesCfg.setCanBeResolved(true);
+                userdevConfiguration.getModules().forEach(m -> modulesCfg.getDependencies().add(getSpecification().getProject().getDependencies().create(m)));
+            }
+
             interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
         }
 

@@ -47,7 +47,6 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion()));
         runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
         runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
-        runtimeTask.getOutput().set(runtimeTask.getOutputDirectory().map(dir -> dir.file("output.jar")));
     }
 
     public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, DistributionType distributionType, String minecraftVersion, Project project, File runtimeDirectory) {

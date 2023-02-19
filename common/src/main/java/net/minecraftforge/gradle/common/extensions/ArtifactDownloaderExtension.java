@@ -14,6 +14,8 @@ import org.gradle.internal.impldep.it.unimi.dsi.fastutil.objects.Object2ObjectSo
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 
@@ -49,7 +51,7 @@ public abstract class ArtifactDownloaderExtension extends ConfigurableObject<Art
     @NotNull
     public Provider<File> file(String notation) {
         return project.provider(() -> {
-            final SortedMap<String, ArtifactRepository> repositories = new Object2ObjectLinkedOpenHashMap<>(project.getRepositories().getAsMap());
+            final Map<String, ArtifactRepository> repositories = new LinkedHashMap<>(project.getRepositories().getAsMap());
             project.getRepositories().clear();
 
             try {
@@ -62,8 +64,6 @@ public abstract class ArtifactDownloaderExtension extends ConfigurableObject<Art
                         return result.iterator().next();
                     }
                 }
-
-
             }
             finally {
                 project.getRepositories().addAll(repositories.values());
