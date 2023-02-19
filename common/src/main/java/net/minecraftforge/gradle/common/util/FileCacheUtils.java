@@ -28,6 +28,7 @@ public final class FileCacheUtils {
                     action.run();
                 }
             });
+            task.getOutputFileName().set(selector.getCacheFileName());
             task.getOutput().fileValue(new File(outputDirectory, selector.getCacheFileName()));
             task.getFileCache().set(cacheDirectory);
             task.getSelector().set(selector);

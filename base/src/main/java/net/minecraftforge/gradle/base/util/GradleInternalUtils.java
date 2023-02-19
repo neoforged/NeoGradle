@@ -95,7 +95,6 @@ public final class GradleInternalUtils {
             //configure progress logger
             String desc = "Download " + src;
             invoke(progressLogger, "setDescription", desc);
-            logger.lifecycle(desc);
         }
 
         /**

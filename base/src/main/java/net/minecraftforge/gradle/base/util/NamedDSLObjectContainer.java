@@ -2,8 +2,8 @@ package net.minecraftforge.gradle.base.util;
 
 import groovy.lang.Closure;
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
+import net.minecraftforge.gradle.dsl.base.util.ConfigurableDSLElement;
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLElement;
-import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer;
 import org.gradle.api.Action;
 import org.gradle.api.DomainObjectCollection;
 import org.gradle.api.InvalidUserDataException;
@@ -18,10 +18,13 @@ import org.gradle.api.Rule;
 import org.gradle.api.UnknownDomainObjectException;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
+import org.gradle.util.Configurable;
+import org.gradle.util.ConfigureUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -29,18 +32,17 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
-public abstract class ConfigurableNamedDSLObjectContainer<TSelf extends NamedDSLObjectContainer<TSelf, TEntry>, TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> extends ConfigurableObject<TSelf> implements NamedDSLObjectContainer<TSelf, TEntry> {
+ public abstract class NamedDSLObjectContainer<TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> implements NamedDomainObjectContainer<TEntry> {
 
     private final Project project;
     private final NamedDomainObjectContainer<TEntry> delegate;
 
     @Inject
-    public ConfigurableNamedDSLObjectContainer(final Project project, final Class<TEntry> valueType, final NamedDomainObjectFactory<TEntry> factory) {
+    public NamedDSLObjectContainer(final Project project, final Class<TEntry> valueType, final NamedDomainObjectFactory<TEntry> factory) {
         this.delegate = project.getObjects().domainObjectContainer(valueType, factory);
         this.project = project;
     }
 
-    @Override
     public Project getProject() {
         return project;
     }
@@ -304,7 +306,13 @@ public abstract class ConfigurableNamedDSLObjectContainer<TSelf extends NamedDSL
         return this.delegate.findAll(spec);
     }
 
-    public Object methodMissing(String name, Object args) {
+     @SuppressWarnings("deprecation")
+     @Override
+     public NamedDSLObjectContainer<TEntry> configure(Closure configureClosure) {
+         return ConfigureUtil.configureSelf(configureClosure, this);
+     }
+
+     public Object methodMissing(String name, Object args) {
         Object[] params = (Object[])args;
         try {
             if (params.length == 0) {
@@ -314,7 +322,7 @@ public abstract class ConfigurableNamedDSLObjectContainer<TSelf extends NamedDSL
             } else if (params.length == 1 && params[0] instanceof Action) {
                 return this.delegate.getByName(name, (Action) params[0]);
             } else {
-                return super.invokeMethod(name, args);
+                throw new IllegalStateException("Cannot invoke method " + name + " with arguments " + Arrays.toString(params));
             }
         } catch (UnknownDomainObjectException var5) {
             if (params.length == 0) {
@@ -324,17 +332,9 @@ public abstract class ConfigurableNamedDSLObjectContainer<TSelf extends NamedDSL
             } else if (params.length == 1 && params[0] instanceof Action) {
                 return this.delegate.create(name, (Action) params[0]);
             } else {
-                return super.invokeMethod(name, args);
+                throw new IllegalStateException("Cannot invoke method " + name + " with arguments " + Arrays.toString(params));
             }
         }
 
-    }
-
-    public static abstract class Simple<TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> extends ConfigurableNamedDSLObjectContainer<Simple<TEntry>, TEntry> {
-
-        @Inject
-        public Simple(Project project, Class<TEntry> valueType, NamedDomainObjectFactory<TEntry> factory) {
-            super(project, valueType, factory);
-        }
     }
 }

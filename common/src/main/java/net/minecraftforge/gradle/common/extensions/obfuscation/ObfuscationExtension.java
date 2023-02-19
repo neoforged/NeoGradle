@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.common.extensions.obfuscation;
 
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.base.util.ConfigurableNamedDSLObjectContainer;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
@@ -10,7 +10,6 @@ import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
-import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -24,6 +23,7 @@ import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.UnknownTaskException;
@@ -49,7 +49,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
 
     private final Project project;
     private final Set<String> jarTasksWithObfuscation = new HashSet<>();
-    private final ConfigurableNamedDSLObjectContainer.Simple<ObfuscationTarget> manualObfuscationTargets;
+    private final NamedDomainObjectContainer<ObfuscationTarget> manualObfuscationTargets;
 
     @SuppressWarnings("unchecked")
     @Inject
@@ -57,7 +57,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
         this.project = project;
 
         this.manualObfuscationTargets = project.getObjects().newInstance(
-                ConfigurableNamedDSLObjectContainer.Simple.class,
+                NamedDSLObjectContainer.class,
                 getProject(),
                 ObfuscationTargetImpl.class,
                 (NamedDomainObjectFactory<ObfuscationTarget>) name -> project.getObjects().newInstance(
@@ -99,7 +99,7 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
 
     @NotNull
     @Override
-    public NamedDSLObjectContainer<?, ObfuscationTarget> getTargets() {
+    public NamedDomainObjectContainer<ObfuscationTarget> getTargets() {
         return manualObfuscationTargets;
     }
 

@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.runs.type;
 
-import net.minecraftforge.gradle.base.util.ConfigurableNamedDSLObjectContainer;
+import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
@@ -11,7 +11,7 @@ import org.gradle.api.Project;
 
 import javax.inject.Inject;
 
-public abstract class TypesImpl extends ConfigurableNamedDSLObjectContainer<Types, Type> implements Types {
+public abstract class TypesImpl extends NamedDSLObjectContainer<Type> implements Types {
 
     @Inject
     public TypesImpl(Project project) {

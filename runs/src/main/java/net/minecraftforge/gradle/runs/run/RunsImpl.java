@@ -1,17 +1,19 @@
 package net.minecraftforge.gradle.runs.run;
 
-import net.minecraftforge.gradle.base.util.ConfigurableNamedDSLObjectContainer;
+import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.dsl.runs.run.Run;
 import net.minecraftforge.gradle.dsl.runs.run.Runs;
 import net.minecraftforge.gradle.runs.tasks.RunExec;
 import org.gradle.api.Project;
+import org.gradle.api.internal.AbstractNamedDomainObjectContainer;
+import org.gradle.api.reflect.HasPublicType;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 
 import javax.inject.Inject;
 
-public abstract class RunsImpl extends ConfigurableNamedDSLObjectContainer<Runs, Run> implements Runs {
+public abstract class RunsImpl extends NamedDSLObjectContainer<Run> implements Runs {
 
     @Inject
     public RunsImpl(Project project) {
@@ -40,4 +42,6 @@ public abstract class RunsImpl extends ConfigurableNamedDSLObjectContainer<Runs,
 
         return "run" + StringUtils.capitalize(conventionTaskName);
     }
+
+
 }

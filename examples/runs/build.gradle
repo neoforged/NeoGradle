@@ -12,11 +12,19 @@ dependencies {
     implementation 'net.minecraftforge:forge:1.19.3-44.0.48'
 }
 
+sourceSets {
+    custom {
+        java {
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+}
+
 runs {
     client {
-        modSources = [sourceSets.main]
-    }
-    server {
         modSources = [sourceSets.main]
     }
 }

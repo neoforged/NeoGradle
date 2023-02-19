@@ -1,12 +1,11 @@
 package net.minecraftforge.gradle.dsl.common.extensions.obfuscation
 
-import groovy.transform.CompileStatic;
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
+import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
-import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.provider.Property;
-import org.jetbrains.annotations.NotNull;
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.provider.Property
+import org.jetbrains.annotations.NotNull
 
 /**
  * Defines a project component which manages the configuration of the obfuscation logic.
@@ -32,5 +31,5 @@ interface Obfuscation extends BaseDSLElement<Obfuscation> {
      */
     @NotNull
     @DSLProperty
-    NamedDSLObjectContainer<?, ObfuscationTarget> getTargets();
+    NamedDomainObjectContainer<ObfuscationTarget> getTargets();
 }

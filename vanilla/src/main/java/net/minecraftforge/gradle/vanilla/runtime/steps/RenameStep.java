@@ -43,7 +43,10 @@ public class RenameStep implements IStep {
         additionalTasks.forEach(additionalTaskConfigurator);
 
         namingTask.configure(
-                task -> task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, RenameConstants.DEFAULT_RENAME_VALUES, pipelineTasks, task, Optional.of(artifact)))
+                task -> {
+                    task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, RenameConstants.DEFAULT_RENAME_VALUES, pipelineTasks, task, Optional.of(artifact)));
+                    task.getOutput().set(task.getOutputDirectory().file("output.jar"));
+                }
         );
 
         return namingTask;

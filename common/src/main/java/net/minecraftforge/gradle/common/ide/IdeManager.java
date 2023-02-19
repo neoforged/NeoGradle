@@ -52,9 +52,6 @@ public final class IdeManager {
     }
 
     public void registerTaskToRun(Project project, TaskProvider<?> taskToRun) {
-
-        project.getLogger().lifecycle("Registering task to run after IDE sync: " + taskToRun.getName());
-
         final TaskProvider<? extends Task> idePostSyncTask;
         if (project.getTasks().findByName("idePostSync") == null) {
             idePostSyncTask = project.getTasks().register("idePostSync", IdePostSyncExecutionTask.class);
@@ -65,9 +62,6 @@ public final class IdeManager {
                     // Navigate via the extension properties...
                     // https://github.com/JetBrains/gradle-idea-ext-plugin/wiki
                     final TaskTriggersConfig taskTriggers = ((ExtensionAware) ideaExtension).getExtensions().getByType(TaskTriggersConfig.class);
-
-                    project.getLogger().lifecycle("Registering task to run after IDEA sync: " + idePostSyncTask.getName());
-                    // Automatically prepare a workspace after importing
                     taskTriggers.afterSync(idePostSyncTask);
                 }
 

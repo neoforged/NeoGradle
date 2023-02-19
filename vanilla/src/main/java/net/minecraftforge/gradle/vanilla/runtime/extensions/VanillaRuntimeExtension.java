@@ -114,6 +114,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                     project, NamingConstants.Task.CACHE_VERSION_EXTRACTED_BUNDLE, spec.getMinecraftVersion(), vanillaDirectory, artifactCacheExtension.getCacheDirectory(), CacheFileSelector.forVersionJar(spec.getMinecraftVersion(), DistributionType.SERVER.getName()), () -> {
                         final File cacheFile = new File(artifactCacheExtension.getCacheDirectory().get().getAsFile(), CacheFileSelector.forVersionJar(spec.getMinecraftVersion(), DistributionType.SERVER.getName()).getCacheFileName());
                         BundledServerUtils.extractBundledVersion(serverJarTask.get().getOutput().get().getAsFile(), cacheFile);
+
                     }
             );
 

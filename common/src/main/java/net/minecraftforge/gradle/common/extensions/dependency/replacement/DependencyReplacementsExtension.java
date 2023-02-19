@@ -1,21 +1,22 @@
 package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.ConfigurableNamedDSLObjectContainer;
+import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.base.util.TransformerUtils;
 import net.minecraftforge.gradle.common.ide.IdeManager;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.DependencyGenerationTask;
 import net.minecraftforge.gradle.common.tasks.RawAndSourceCombiner;
-import net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.NamedDomainObjectFactory;
+import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -39,7 +40,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
     private final Project project;
     private final TaskProvider<? extends DependencyGenerationTask> dependencyGenerator;
     private final Set<Configuration> configuredConfigurations = Sets.newHashSet();
-    private final ConfigurableNamedDSLObjectContainer.Simple<DependencyReplacementHandler> dependencyReplacementHandlers;
+    private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
     private boolean registeredTaskToIde;
     private boolean hasBeenBaked = false;
     private final Set<Consumer<Project>> afterDefinitionBakeCallbacks = Sets.newHashSet();
@@ -57,7 +58,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
 
         this.dependencyGenerator = this.project.getTasks().register("generateDependencies", DependencyGenerationTask.class);
         this.dependencyReplacementHandlers = this.project.getObjects().newInstance(
-                ConfigurableNamedDSLObjectContainer.Simple.class,
+                NamedDSLObjectContainer.class,
                 this.project,
                 DependencyReplacementHandler.class,
                 (NamedDomainObjectFactory<DependencyReplacementHandler>) name -> getProject().getObjects().newInstance(DependencyReplacementHandlerImpl.class, getProject(), name)
@@ -78,7 +79,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
 
     @Override
     @NotNull
-    public NamedDSLObjectContainer<?, DependencyReplacementHandler> getReplacementHandlers() {
+    public NamedDomainObjectContainer<DependencyReplacementHandler> getReplacementHandlers() {
         return this.dependencyReplacementHandlers;
     }
 
