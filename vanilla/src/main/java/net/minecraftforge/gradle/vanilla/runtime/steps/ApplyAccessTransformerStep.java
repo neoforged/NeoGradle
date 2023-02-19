@@ -3,11 +3,13 @@ package net.minecraftforge.gradle.vanilla.runtime.steps;
 import net.minecraftforge.gradle.base.util.StringUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
+import net.minecraftforge.gradle.common.runtime.tasks.NoopRuntime;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
+import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
@@ -27,8 +29,8 @@ public class ApplyAccessTransformerStep implements IStep {
         final AccessTransformers accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
         if (accessTransformerFiles.getFiles().isEmpty() && (!accessTransformerFiles.getEntries().isPresent() || accessTransformerFiles.getEntries().get().isEmpty())) {
-            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", net.minecraftforge.gradle.base.util.StringUtils.capitalize("user"))), DefaultRuntime.class, task -> {
-                task.getOutput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
+            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", net.minecraftforge.gradle.base.util.StringUtils.capitalize("user"))), NoopRuntime.class, task -> {
+                task.getInput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
                 task.dependsOn(inputProvidingTask);
             });
         }

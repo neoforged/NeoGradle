@@ -40,13 +40,14 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         this.getDefaultDistributionType().convention(DistributionType.JOINED);
     }
 
-    public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, Specification spec, File runtimeDirectory) {
-        mcpRuntimeTask.getData().set(data);
-        mcpRuntimeTask.getStepName().set(step);
-        mcpRuntimeTask.getDistribution().set(spec.getDistribution());
-        mcpRuntimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion()));
-        mcpRuntimeTask.getRuntimeDirectory().set(runtimeDirectory);
-        mcpRuntimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
+    public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, File> data, String step, Specification spec, File runtimeDirectory) {
+        runtimeTask.getData().set(data);
+        runtimeTask.getStepName().set(step);
+        runtimeTask.getDistribution().set(spec.getDistribution());
+        runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion()));
+        runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
+        runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
+        runtimeTask.getOutput().set(runtimeTask.getOutputDirectory().map(dir -> dir.file("output.jar")));
     }
 
     public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, DistributionType distributionType, String minecraftVersion, Project project, File runtimeDirectory) {
@@ -157,6 +158,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             task.getVersionJson().set(versionJson);
 
             configureCommonRuntimeTaskParameters(task, data, "downloadAssets", specification, runtimeDirectory);
+            task.getOutputDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("downloadAssets")));
         });
     }
 
@@ -165,6 +167,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             task.getVersionJson().set(versionJson);
 
             configureCommonRuntimeTaskParameters(task, data, "extractNatives", specification, runtimeDirectory);
+            task.getOutputDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("downloadAssets")));
         });
     }
 }

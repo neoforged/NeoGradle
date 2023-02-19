@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
+import com.google.common.collect.Maps;
 import net.minecraftforge.gradle.common.tasks.JavaRuntimeTask;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
@@ -29,8 +30,8 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProject().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))));
-        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().map(d::file)));
+        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProject().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))).orElse("output.jar"));
+        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.jar").map(d::file)));
 
         //Configure the default runtime data map:
         getRuntimeArguments().convention(getArguments().map(arguments -> {
@@ -44,6 +45,8 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
             data.forEach((key, value) -> result.put(key, unpackedMcpDirectory.file(value.getPath()).getAsFile()));
             return result;
         }));
+
+        getArguments().convention(Maps.newHashMap());
     }
 
     protected Provider<File> getFileInOutputDirectory(final String fileName) {

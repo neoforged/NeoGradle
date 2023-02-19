@@ -1,0 +1,22 @@
+plugins {
+    id 'net.minecraftforge.gradle.vanilla' version '6.0-SNAPSHOT'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    implementation 'net.minecraft:server:1.16.5'
+}
+
+runs {
+    client {
+        modSources = [sourceSets.main]
+    }
+    server {
+        modSources = [sourceSets.main]
+    }
+}

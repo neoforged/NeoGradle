@@ -1,9 +1,13 @@
 package net.minecraftforge.gradle.vanilla;
 
 import net.minecraftforge.gradle.common.CommonPlugin;
+import net.minecraftforge.gradle.dsl.common.tasks.specifications.OutputSpecification;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
+import net.minecraftforge.gradle.dsl.runs.type.Type;
+import net.minecraftforge.gradle.dsl.runs.type.Types;
 import net.minecraftforge.gradle.vanilla.dependency.VanillaDependencyManager;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
+import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -25,5 +29,6 @@ public class VanillaProjectPlugin implements Plugin<Project> {
                 m.artifact();
             });
         });
+
     }
 }

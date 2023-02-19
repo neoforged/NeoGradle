@@ -7,6 +7,7 @@ import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.common.extensions.MappingsExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
+import net.minecraftforge.gradle.base.extensions.ProjectEvaluationExtension;
 import net.minecraftforge.gradle.common.extensions.ProjectHolderExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.minecraftforge.gradle.common.extensions.obfuscation.ObfuscationExtension;
@@ -17,6 +18,7 @@ import net.minecraftforge.gradle.common.runtime.naming.OfficialNamingChannelConf
 import net.minecraftforge.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
@@ -30,7 +32,6 @@ import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.runs.run.Runs;
 import net.minecraftforge.gradle.runs.RunsPlugin;
 import net.minecraftforge.gradle.runs.run.RunImpl;
-import org.apache.ivy.Ivy;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
@@ -46,6 +47,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        //Apply the evaluation extension to monitor immediate execution of indirect tasks when evaluation already happened.
+        project.getExtensions().create(NamingConstants.Extension.EVALUATION, ProjectEvaluationExtension.class, project);
+
         project.getPluginManager().apply(JavaPlugin.class);
 
         // Apply both the idea and eclipse IDE plugins
@@ -99,16 +103,22 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().getByType(Runs.class).forEach(run -> {
             if (run instanceof RunImpl) {
-                final RunImpl runImpl = (RunImpl) run;
-                runImpl.getModSources().get().forEach(sourceSet -> {
-                    final TaskProvider<JavaCompile> compileTaskProvider = project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
-                    try {
-                        final CommonRuntimeDefinition<?> definition = TaskDependencyUtils.realiseTaskAndExtractRuntimeDefinition(project, compileTaskProvider);
-                        definition.configureRun(runImpl);
-                    } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
-                    }
-                });
+                if (run.getConfigureFromTypeWithName().get()) {
+                    run.configure();
+                }
+
+                if (run.getConfigureFromDependencies().get()) {
+                    final RunImpl runImpl = (RunImpl) run;
+                    runImpl.getModSources().get().forEach(sourceSet -> {
+                        final TaskProvider<JavaCompile> compileTaskProvider = project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
+                        try {
+                            final CommonRuntimeDefinition<?> definition = TaskDependencyUtils.realiseTaskAndExtractRuntimeDefinition(project, compileTaskProvider);
+                            definition.configureRun(runImpl);
+                        } catch (MultipleDefinitionsFoundException e) {
+                            throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
+                        }
+                    });
+                }
             }
         });
 

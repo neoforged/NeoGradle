@@ -41,6 +41,7 @@ public class VersionJson implements Serializable {
             .registerTypeAdapter(VersionJson.Argument.class, new VersionJson.Argument.Deserializer())
             .setPrettyPrinting().create();
 
+
     public static VersionJson get(Path path) throws FileNotFoundException {
         return get(path.toFile());
     }
@@ -66,6 +67,10 @@ public class VersionJson implements Serializable {
 
     private List<LibraryDownload> _natives = null;
     private List<Library> _libraries = null;
+
+    private String mainClass;
+
+    private String type;
 
     public List<LibraryDownload> getNatives() {
 
@@ -106,9 +111,8 @@ public class VersionJson implements Serializable {
                 }).collect(Collectors.toList());
     }
 
-    @Nullable
     public Arguments getArguments() {
-        return arguments;
+        return arguments == null ? new Arguments() : arguments;
     }
 
     public AssetIndex getAssetIndex() {
@@ -137,10 +141,26 @@ public class VersionJson implements Serializable {
         return _libraries;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public String getMainClass() {
+        return mainClass;
+    }
+
     public static class Arguments implements Serializable {
-        public Argument[] game;
+        private Argument[] game;
         @Nullable
-        public Argument[] jvm;
+        private Argument[] jvm;
+
+        public Argument[] getGame() {
+            return game;
+        }
+
+        public Argument[] getJvm() {
+            return jvm == null ? new Argument[0] : jvm;
+        }
     }
 
     public static class Argument extends RuledObject implements Serializable {

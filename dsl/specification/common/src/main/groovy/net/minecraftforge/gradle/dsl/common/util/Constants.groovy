@@ -18,7 +18,7 @@ class Constants {
     public static final String SIDESTRIPPER = "net.minecraftforge:mergetool:1.1.5:fatjar";
     public static final String INSTALLERTOOLS = "net.minecraftforge:installertools:1.3.2:fatjar";
     public static final String JARCOMPATIBILITYCHECKER = "net.minecraftforge:JarCompatibilityChecker:0.1.+:all";
-    public static final String FORGEFLOWER_VERSION = "2.0.605.1";
+    public static final String FORGEFLOWER_VERSION = "2.0.627.0";
     public static final String FORGEFLOWER_ARTIFACT_INTERPOLATION = "net.minecraftforge:forgeflower:%s";
     public static final String FORGEFLOWER = String.format(FORGEFLOWER_ARTIFACT_INTERPOLATION, FORGEFLOWER_VERSION);
 }

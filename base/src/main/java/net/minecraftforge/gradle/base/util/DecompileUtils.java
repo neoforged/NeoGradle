@@ -7,7 +7,7 @@ import java.util.List;
 
 public final class DecompileUtils {
 
-    public static final List<String> DEFAULT_JVM_ARGS = ImmutableList.of("-Xmx4g");
+    public static final List<String> DEFAULT_JVM_ARGS = ImmutableList.of("-Xmx8g");
     public static final List<String> DEFAULT_PROGRAMM_ARGS = ImmutableList.<String>builder()
             .add(
                     "-din=1",

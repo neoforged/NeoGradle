@@ -108,20 +108,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         final Types types = getProject().getExtensions().getByType(Types.class);
         userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
-            try {
-                final NamedDomainObjectProvider<Type> typeProvider = types.register(name, type::copyTo);
-                typeProvider.configure(runType -> {
-                    runType.getClasspath().from(mcpRuntimeDefinition.getClientExtraJarProvider().map(OutputSpecification::getOutput));
-                });
-
-            } catch (InvalidUserDataException baseNameExistException) {
-                final String newName = spec.getName() + StringUtils.capitalize(name);
-                try {
-                    types.register(newName, type::copyTo);
-                } catch (InvalidUserDataException ignored) {
-                    //Noop there is already a spec with this name. A bit weird as we guard for that case, but just to be sure.
-                }
-            }
+            final NamedDomainObjectProvider<Type> typeProvider = types.registerWithPotentialPrefix(spec.getName(), name, type::copyTo);
+            typeProvider.configure(runType -> {
+                runType.getClasspath().from(mcpRuntimeDefinition.getClientExtraJarProvider().map(OutputSpecification::getOutput));
+            });
         });
 
         return new UserDevRuntimeDefinition(

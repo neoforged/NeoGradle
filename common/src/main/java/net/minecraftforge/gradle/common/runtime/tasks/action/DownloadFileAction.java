@@ -31,6 +31,16 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
         try {
             final Params params = getParameters();
             final File output = params.getOutputFile().get().getAsFile();
+
+            if (output.exists()) {
+                if (params.getShouldValidateHash().get()) {
+                    final String hash = HashFunction.SHA1.hash(output);
+                    if (hash.equals(params.getSha1().get())) {
+                        return;
+                    }
+                }
+            }
+
             final GradleInternalUtils.ProgressLoggerWrapper progress = GradleInternalUtils.getProgressLogger(LOGGER, getBuildServiceRegistry(), "Downloading file: " + params.getUrl().get());
             progress.setDestFileName(params.getOutputFile().getAsFile().get().getName());
 
@@ -122,7 +132,6 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
         Property<String> getSha1();
         Property<Boolean> getShouldValidateHash();
         RegularFileProperty getOutputFile();
-        
         Property<Boolean> getIsOffline();
     }
 }

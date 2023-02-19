@@ -6,8 +6,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.base.util.GameArtifactUtils;
+import net.minecraftforge.gradle.base.util.HashFunction;
 import net.minecraftforge.gradle.base.util.UrlConstants;
-import net.minecraftforge.gradle.common.tasks.FileCacheProviding;
+import net.minecraftforge.gradle.common.util.FileCacheUtils;
 import net.minecraftforge.gradle.common.util.FileDownloadingUtils;
 import net.minecraftforge.gradle.dsl.base.util.CacheFileSelector;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
@@ -15,9 +16,7 @@ import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +73,8 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
         this.project = project;
         this.cacheFiles = new ConcurrentHashMap<>();
 
-        this.getCacheDirectory().fileProvider(project.provider(() -> new File(project.getGradle().getGradleHomeDir(), "caches/minecraft")));
+        //TODO: Move this to gradle user home.
+        this.getCacheDirectory().fileProvider(project.provider(() -> new File(project.getGradle().getGradleUserHomeDir(), "caches/minecraft")));
         this.getCacheDirectory().finalizeValueOnRead();
     }
 
@@ -112,31 +112,14 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
         return tasks.computeIfAbsent(key, k -> {
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
-            GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, gameVersion, outputDirectory, CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
-            GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> results.put(GameArtifact.VERSION_MANIFEST, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, gameVersion, outputDirectory, CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, gameVersion, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, gameVersion, outputDirectory, CacheFileSelector.forVersionJar(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.SERVER))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, gameVersion, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.CLIENT))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, this.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, gameVersion, outputDirectory, CacheFileSelector.forVersionMappings(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.SERVER))));
+            GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
+            GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> results.put(GameArtifact.VERSION_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
+            GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT))));
+            GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.SERVER))));
+            GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.CLIENT))));
+            GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.SERVER))));
 
             return results;
-        });
-    }
-
-    @SuppressWarnings("Convert2Lambda") // Task actions can not be lambdas.
-    @NotNull
-    private TaskProvider<FileCacheProviding> createFileCacheEntryProvidingTask(final Project project, final String name, final String gameVersion, final File outputDirectory, final CacheFileSelector selector, final Runnable action) {
-        return project.getTasks().register(String.format("%s%s", name, gameVersion), FileCacheProviding.class, task -> {
-            task.doFirst(new Action<Task>() {
-                @Override
-                public void execute(Task task) {
-                    action.run();
-                }
-            });
-            task.getOutput().fileValue(new File(outputDirectory, selector.getCacheFileName()));
-            task.getFileCache().set(getCacheDirectory());
-            task.getSelector().set(selector);
-            task.setDescription("Retrieves: " + selector.getCacheFileName() + " from the central cache.");
         });
     }
 
@@ -231,9 +214,18 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
             String url = artifactInfo.get("url").getAsString();
             String hash = artifactInfo.get("sha1").getAsString();
             String version = json.getAsJsonObject().get("id").getAsString();
+
             final FileDownloadingUtils.DownloadInfo info = new FileDownloadingUtils.DownloadInfo(url, hash, "jar", version, artifact);
 
             final File cacheFile = new File(cacheDirectory, cacheFileSelector.getCacheFileName());
+
+            if (cacheFile.exists()) {
+                final String fileHash = HashFunction.SHA1.hash(cacheFile);
+                if (fileHash.equals(hash)) {
+                    return cacheFile;
+                }
+            }
+
             FileDownloadingUtils.downloadTo(project, info, cacheFile);
             return cacheFile;
         } catch (IOException e) {

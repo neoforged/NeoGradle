@@ -21,6 +21,7 @@ trait OutputSpecification implements ProjectSpecification {
      */
     @DSLProperty
     @OutputFile
+    @Optional
     abstract RegularFileProperty getOutput();
 
     /**

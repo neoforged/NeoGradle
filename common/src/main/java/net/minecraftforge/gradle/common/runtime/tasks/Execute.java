@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
+import com.google.common.collect.ImmutableMap;
 import net.minecraftforge.gradle.base.util.TransformerUtils;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -7,6 +8,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.internal.impldep.com.beust.jcommander.internal.Maps;
 
 import java.util.Map;
 import java.util.jar.Attributes;
@@ -18,7 +20,7 @@ public abstract class Execute extends DefaultRuntime implements net.minecraftfor
     public Execute() {
         super();
 
-        getLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("log", getProject().provider(() -> "log.log"))));
+        getLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("log", getProject().provider(() -> "log.log"))).orElse("log.log"));
         getLogFile().convention(getOutputDirectory().flatMap(d -> getLogFileName().map(d::file)));
 
         getConsoleLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("console.log", getProject().provider(() -> "console.log"))));

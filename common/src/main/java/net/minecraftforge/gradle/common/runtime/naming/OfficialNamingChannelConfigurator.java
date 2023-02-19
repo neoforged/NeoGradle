@@ -18,7 +18,6 @@ import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerateDebuggingMappingsJarTaskBuilder;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
@@ -142,10 +141,10 @@ public final class OfficialNamingChannelConfigurator {
         return unapplyTask;
     }
 
-    private @NotNull TaskProvider<? extends WithOutput> buildApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
+    private @NotNull TaskProvider<? extends Runtime> buildApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
         final String ApplyTaskName = CommonRuntimeUtils.buildTaskName(context.getInputTask(), "deobfuscate");
 
-        final TaskProvider<ApplyOfficialMappingsToCompiledJar> ApplyTask = context.getProject().getTasks().register(ApplyTaskName, ApplyOfficialMappingsToCompiledJar.class, task -> {
+        final TaskProvider<ApplyOfficialMappingsToCompiledJar> applyTask = context.getProject().getTasks().register(ApplyTaskName, ApplyOfficialMappingsToCompiledJar.class, task -> {
             task.setGroup("mappings/official");
             task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
 
@@ -163,11 +162,13 @@ public final class OfficialNamingChannelConfigurator {
 
             task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
             task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName))));
+
+            task.dependsOn(context.getInputTask());
         });
 
-        context.getInputTask().configure(task -> task.finalizedBy(ApplyTask));
+        context.getInputTask().configure(task -> task.finalizedBy(applyTask));
 
-        return ApplyTask;
+        return applyTask;
     }
 
     private @NotNull TaskProvider<? extends Runtime> buildGenerateDebuggingMappingsJarTask(@NotNull final GenerationTaskBuildingContext context) {

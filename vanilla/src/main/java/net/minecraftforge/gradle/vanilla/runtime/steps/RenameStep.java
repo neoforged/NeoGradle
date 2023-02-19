@@ -2,6 +2,8 @@ package net.minecraftforge.gradle.vanilla.runtime.steps;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.base.util.DecompileUtils;
+import net.minecraftforge.gradle.base.util.RenameConstants;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
@@ -16,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -29,13 +32,19 @@ public class RenameStep implements IStep {
         mappingVersionData.put(NamingConstants.Version.MINECRAFT_VERSION, definition.getSpecification().getMinecraftVersion());
         mappingVersionData.putAll(mappingsExtension.getVersion().get());
 
+        final TaskProvider<? extends WithOutput> artifact = definition.getGameArtifactProvidingTasks().get(definition.getSpecification().getDistribution().getGameArtifact());
+
         final Set<TaskProvider<? extends Runtime>> additionalTasks = Sets.newHashSet();
         final TaskBuildingContext context = new TaskBuildingContext(
-                definition.getSpecification().getProject(), "mapGame", taskName -> CommonRuntimeUtils.buildTaskName(definition.getSpecification(), taskName), inputProvidingTask, definition.getGameArtifactProvidingTasks(), mappingVersionData, additionalTasks, definition
+                definition.getSpecification().getProject(), "mapGame", taskName -> CommonRuntimeUtils.buildTaskName(definition.getSpecification(), taskName), artifact, definition.getGameArtifactProvidingTasks(), mappingVersionData, additionalTasks, definition
         );
 
-        final TaskProvider<? extends Runtime> namingTask = context.getNamingChannel().getApplySourceMappingsTaskBuilder().get().build(context);
+        final TaskProvider<? extends Runtime> namingTask = context.getNamingChannel().getApplyCompiledMappingsTaskBuilder().get().build(context);
         additionalTasks.forEach(additionalTaskConfigurator);
+
+        namingTask.configure(
+                task -> task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, RenameConstants.DEFAULT_RENAME_VALUES, pipelineTasks, task, Optional.of(artifact)))
+        );
 
         return namingTask;
     }

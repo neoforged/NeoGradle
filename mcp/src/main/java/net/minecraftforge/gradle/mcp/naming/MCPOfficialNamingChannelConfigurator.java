@@ -122,8 +122,8 @@ public final class MCPOfficialNamingChannelConfigurator {
     }
 
     @NotNull
-    private TaskProvider<? extends WithOutput> adaptApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context, @NotNull final NamingChannel namingChannel) {
-        final TaskProvider<? extends WithOutput> applyCompiledMappingsTask = namingChannel.getApplyCompiledMappingsTaskBuilder().get().build(context);
+    private TaskProvider<? extends Runtime> adaptApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context, @NotNull final NamingChannel namingChannel) {
+        final TaskProvider<? extends Runtime> applyCompiledMappingsTask = namingChannel.getApplyCompiledMappingsTaskBuilder().get().build(context);
 
         final TaskProvider<? extends Runtime> reverseMappingsTask = createReverseMappingWritingTaskFor(context, "reverseMappingsForApplyToCompiledFor%s");
 

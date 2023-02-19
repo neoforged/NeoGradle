@@ -6,6 +6,8 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
+import java.nio.file.StandardCopyOption;
+
 @CacheableTask
 public abstract class ArtifactFromOutput extends ForgeGradleBase implements WithOutput {
 
@@ -16,7 +18,7 @@ public abstract class ArtifactFromOutput extends ForgeGradleBase implements With
 
     @TaskAction
     public void doCopy() throws Exception {
-        FileUtils.copyFile(getInput().getAsFile().get(), getOutput().getAsFile().get());
+        FileUtils.copyFile(getInput().getAsFile().get(), getOutput().getAsFile().get(), true);
     }
 
     @InputFile

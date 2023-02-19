@@ -185,21 +185,32 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     }
 
     protected ListProperty<String> interpolate(final ListProperty<String> input, final Map<String, String> values) {
+        return interpolate(input, values, "");
+    }
+
+    protected ListProperty<String> interpolate(final ListProperty<String> input, final Map<String, String> values, String patternPrefix) {
         final ListProperty<String> delegated = getSpecification().getProject().getObjects().listProperty(String.class);
-        delegated.set(input.map(list -> list.stream().map(s -> interpolate(s, values)).collect(Collectors.toList())));
+        delegated.set(input.map(list -> list.stream().map(s -> interpolate(s, values, patternPrefix)).collect(Collectors.toList())));
         return delegated;
     }
 
     protected MapProperty<String, String> interpolate(final MapProperty<String, String> input, final Map<String, String> values) {
+        return interpolate(input, values, "");
+    }
+
+    protected MapProperty<String, String> interpolate(final MapProperty<String, String> input, final Map<String, String> values, String patternPrefix) {
         final MapProperty<String, String> delegated = getSpecification().getProject().getObjects().mapProperty(String.class, String.class);
-        delegated.set(input.map(list -> list.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> interpolate(e.getValue(), values)))));
+        delegated.set(input.map(list -> list.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> interpolate(e.getValue(), values, patternPrefix)))));
         return delegated;
     }
 
-    private static String interpolate(final String input, final Map<String, String> values) {
+    private static String interpolate(final String input, final Map<String, String> values, String patternPrefix) {
+        if (input == null)
+            throw new IllegalArgumentException("Input cannot be null");
+
         String result = input;
         for (final Map.Entry<String, String> entry : values.entrySet()) {
-            result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+            result = result.replace(patternPrefix + "{" + entry.getKey() + "}", entry.getValue());
         }
         return result;
     }

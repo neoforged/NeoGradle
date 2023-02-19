@@ -32,6 +32,9 @@ public abstract class ExtractFileAction implements WorkAction<ExtractFileAction.
     @Inject
     public abstract BuildServiceRegistry getBuildServiceRegistry();
 
+    @Inject
+    public abstract ArchiveOperations getArchiveOperations();
+
     @Override
     public void execute() {
         try {
@@ -42,7 +45,7 @@ public abstract class ExtractFileAction implements WorkAction<ExtractFileAction.
             progress.setDestFileName(output.getName());
 
             FileUtils.extractZip(
-                    params.getArchiveOperations(),
+                    getArchiveOperations(),
                     params.getInputFile().get().getAsFile(),
                     params.getOutputDirectory().get().getAsFile(),
                     params.getShouldOverride().get(),
@@ -64,7 +67,5 @@ public abstract class ExtractFileAction implements WorkAction<ExtractFileAction.
         Property<Function<String, String>> getRenamer();
         Property<Action<? super PatternFilterable>> getFilter();
         DirectoryProperty getOutputDirectory();
-        @Inject
-        ArchiveOperations getArchiveOperations();
     }
 }

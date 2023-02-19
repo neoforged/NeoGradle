@@ -1,6 +1,5 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
-import com.google.common.collect.ImmutableMap;
 import net.minecraftforge.gradle.base.util.DecompileUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
@@ -14,14 +13,11 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 public class DecompileStep implements IStep {
-
-
 
     @Override
     public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull File workingDirectory, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {

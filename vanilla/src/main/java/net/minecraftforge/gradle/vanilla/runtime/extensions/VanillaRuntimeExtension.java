@@ -3,9 +3,13 @@ package net.minecraftforge.gradle.vanilla.runtime.extensions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.minecraftforge.gradle.common.util.BundledServerUtils;
+import net.minecraftforge.gradle.common.util.FileCacheUtils;
 import net.minecraftforge.gradle.common.util.VersionJson;
+import net.minecraftforge.gradle.dsl.base.util.CacheFileSelector;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -18,10 +22,12 @@ import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.minecraftforge.gradle.vanilla.runtime.steps.ApplyAccessTransformerStep;
+import net.minecraftforge.gradle.vanilla.runtime.steps.CleanManifestStep;
 import net.minecraftforge.gradle.vanilla.runtime.steps.CollectLibraryInformationStep;
 import net.minecraftforge.gradle.vanilla.runtime.steps.DecompileStep;
 import net.minecraftforge.gradle.vanilla.runtime.steps.IStep;
 import net.minecraftforge.gradle.vanilla.runtime.steps.RenameStep;
+import net.minecraftforge.gradle.vanilla.util.ServerLaunchInformation;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Property;
@@ -34,6 +40,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings({"unused"}) // API Design
@@ -54,6 +61,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         if (this.runtimes.containsKey(spec.getName()))
             throw new IllegalArgumentException("Cannot register runtime with name '" + spec.getName() + "' because it already exists");
 
+        final Project project = spec.getProject();
         final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
         final Mappings mappingsExtension = minecraftExtension.getMappings();
         final MinecraftArtifactCache artifactCacheExtension = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
@@ -61,6 +69,14 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
         final Map<GameArtifact, File> gameArtifacts = artifactCacheExtension.cacheGameVersion(spec.getMinecraftVersion(), spec.getDistribution());
+        if (gameArtifacts.containsKey(GameArtifact.SERVER_JAR)) {
+            final File serverJar = gameArtifacts.get(GameArtifact.SERVER_JAR);
+            if (BundledServerUtils.isBundledServer(serverJar)) {
+                final File vanillaServerJar = new File(minecraftCache, String.format("minecraft_server.%s.jar", spec.getMinecraftVersion()));
+                BundledServerUtils.extractBundledVersion(serverJar, vanillaServerJar);
+                gameArtifacts.put(GameArtifact.SERVER_JAR, vanillaServerJar);
+            }
+        }
 
         final VersionJson versionJson;
         try {
@@ -72,10 +88,16 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final Configuration minecraftDependenciesConfiguration = spec.getProject().getConfigurations().detachedConfiguration();
         minecraftDependenciesConfiguration.setCanBeResolved(true);
         minecraftDependenciesConfiguration.setCanBeConsumed(false);
-        for (VersionJson.Library library : versionJson.getLibraries()) {
-            minecraftDependenciesConfiguration.getDependencies().add(
-                    spec.getProject().getDependencies().create(library.getName())
-            );
+        if (spec.getDistribution().isClient() || !BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
+            for (VersionJson.Library library : versionJson.getLibraries()) {
+                minecraftDependenciesConfiguration.getDependencies().add(
+                        spec.getProject().getDependencies().create(library.getName())
+                );
+            }
+        } else {
+            BundledServerUtils.getBundledDependencies(gameArtifacts.get(GameArtifact.SERVER_JAR)).forEach(
+                    dependency -> minecraftDependenciesConfiguration.getDependencies().add(
+                            spec.getProject().getDependencies().create(dependency)));
         }
 
         final File vanillaDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("vanilla/%s", spec.getName())).get().getAsFile();
@@ -86,6 +108,18 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         final Map<String, File> data = Collections.emptyMap();
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec, vanillaDirectory);
+        if (gameArtifactTasks.containsKey(GameArtifact.SERVER_JAR) && BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
+            final TaskProvider<? extends WithOutput> serverJarTask = gameArtifactTasks.get(GameArtifact.SERVER_JAR);
+            final TaskProvider<? extends WithOutput> extractedBundleTask = FileCacheUtils.createFileCacheEntryProvidingTask(
+                    project, NamingConstants.Task.CACHE_VERSION_EXTRACTED_BUNDLE, spec.getMinecraftVersion(), vanillaDirectory, artifactCacheExtension.getCacheDirectory(), CacheFileSelector.forVersionJar(spec.getMinecraftVersion(), DistributionType.SERVER.getName()), () -> {
+                        final File cacheFile = new File(artifactCacheExtension.getCacheDirectory().get().getAsFile(), CacheFileSelector.forVersionJar(spec.getMinecraftVersion(), DistributionType.SERVER.getName()).getCacheFileName());
+                        BundledServerUtils.extractBundledVersion(serverJarTask.get().getOutput().get().getAsFile(), cacheFile);
+                    }
+            );
+
+            extractedBundleTask.configure(task -> task.dependsOn(serverJarTask));
+            gameArtifactTasks.put(GameArtifact.SERVER_JAR, extractedBundleTask);
+        }
 
         final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getName(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(runtimeWorkingDirectory, "sources.jar"));
@@ -94,9 +128,11 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             task.getOutput().set(new File(runtimeWorkingDirectory, "raw.jar"));
         });
 
+        final Optional<ServerLaunchInformation> launchInformation = spec.getDistribution().isClient() ? Optional.empty() : Optional.of(ServerLaunchInformation.from(gameArtifacts.get(GameArtifact.SERVER_JAR)));
+
         return new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
             configureCommonRuntimeTaskParameters(vanillaRuntimeTask, data, CommonRuntimeUtils.buildStepName(spec, vanillaRuntimeTask.getName()), spec, vanillaDirectory);
-        }), createDownloadAssetsTasks(spec, data, vanillaDirectory, versionJson), createExtractNativesTasks(spec, data, vanillaDirectory, versionJson));
+        }), versionJson, createDownloadAssetsTasks(spec, data, runtimeWorkingDirectory, versionJson), createExtractNativesTasks(spec, data, runtimeWorkingDirectory, versionJson), launchInformation);
     }
 
     protected VanillaRuntimeSpecification.Builder createBuilder() {
@@ -159,6 +195,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
                 definition.getTasks().put(task.getName(), task);
             }
+
+            currentInput = task;
         }
 
         final TaskProvider<? extends WithOutput> sourcesTask = Iterators.getLast(definition.getTasks().values().iterator());
@@ -175,12 +213,14 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     }
 
     private StepData buildSteps() {
-        final IStep rawJarStep = new ApplyAccessTransformerStep();
+        final IStep rawJarStep = new CleanManifestStep();
+
         final IStep sourcesStep = new DecompileStep();
 
         final List<IStep> steps = ImmutableList.<IStep>builder()
                 .add(new CollectLibraryInformationStep())
                 .add(new RenameStep())
+                .add(new ApplyAccessTransformerStep())
                 .add(rawJarStep)
                 .add(sourcesStep)
                 .build();

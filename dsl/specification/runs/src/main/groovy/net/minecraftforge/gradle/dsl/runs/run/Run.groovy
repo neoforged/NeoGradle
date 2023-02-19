@@ -1,5 +1,6 @@
-package net.minecraftforge.gradle.dsl.runs.run;
+package net.minecraftforge.gradle.dsl.runs.run
 
+import groovy.cli.Option;
 import groovy.transform.CompileStatic;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
@@ -17,6 +18,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSet
@@ -142,6 +144,37 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Nested
     @DSLProperty
     Property<DependencyHandler> getDependencies();
+
+    /**
+     * Indicates if this run should automatically be configured.
+     *
+     * @return The property which indicates if this run should automatically be configured.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    Property<Boolean> getConfigureAutomatically();
+
+    /**
+     * Indicates if this run should automatically be configured by the type of the same name.
+     *
+     * @return The property which indicates if this run should automatically be configured by the type of the same name.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    Property<Boolean> getConfigureFromTypeWithName();
+
+    /**
+     * Indicates if this run should automatically be configured by its dependent runtimes.
+     *
+     * @return The property which indicates if this run should automatically be configured by its dependent runtimes.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    Property<Boolean> getConfigureFromDependencies();
+
 
     /**
      * Configures the run using the type with the same name.

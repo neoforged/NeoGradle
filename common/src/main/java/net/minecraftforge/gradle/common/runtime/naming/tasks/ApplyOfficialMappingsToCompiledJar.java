@@ -1,6 +1,8 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
+import net.minecraftforge.gradle.base.util.RenameConstants;
+import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.tasks.JavaToolExecutingTask;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -18,15 +20,18 @@ import org.gradle.api.tasks.PathSensitivity;
 import java.io.File;
 
 @CacheableTask
-public abstract class ApplyOfficialMappingsToCompiledJar extends JavaToolExecutingTask implements WithOutput {
+public abstract class ApplyOfficialMappingsToCompiledJar extends Execute implements WithOutput {
 
     public ApplyOfficialMappingsToCompiledJar() {
-        getExecutingArtifact().set(Constants.SPECIALSOURCE);
-        getProgramArguments().set(Lists.newArrayList("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}", "--live"));
+        getExecutingArtifact().set(Constants.FART);
+        getProgramArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_PROGRAMM_ARGS));
+        getJvmArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_JVM_ARGS));
         getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
 
         getArguments().put("input", getInput().getAsFile().map(File::getAbsolutePath));
         getArguments().put("mappings", getMappings().getAsFile().map(File::getAbsolutePath));
+
+        getOutput().convention(getOutputDirectory().map(d -> d.file("output.jar")));
     }
 
     @Override

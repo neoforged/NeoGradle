@@ -44,7 +44,7 @@ public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<Ivy
     @Inject
     public IvyDummyRepositoryExtension(Project project) {
         this.project = project;
-        this.getRepositoryDirectory().convention(project.getLayout().getBuildDirectory().dir("libs"));
+        this.getRepositoryDirectory().convention(project.getLayout().getProjectDirectory().dir(".gradle/repositories"));
         this.createRepositories();
     }
 

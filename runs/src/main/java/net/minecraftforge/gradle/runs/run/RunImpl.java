@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.runs.run;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ProjectUtils;
 import net.minecraftforge.gradle.dsl.runs.run.DependencyHandler;
 import net.minecraftforge.gradle.dsl.runs.run.Run;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
@@ -9,6 +10,7 @@ import net.minecraftforge.gradle.dsl.runs.type.Types;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.internal.project.ProjectHierarchyUtils;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -38,8 +40,14 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
         this.programArguments = this.project.getObjects().listProperty(String.class);
         this.systemProperties = this.project.getObjects().mapProperty(String.class, String.class);
 
+        getIsSingleInstance().convention(true);
+        getIsClient().convention(true);
         getShouldBuildAllProjects().convention(false);
         getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project));
+
+        getConfigureAutomatically().convention(true);
+        getConfigureFromTypeWithName().convention(getConfigureAutomatically());
+        getConfigureFromDependencies().convention(getConfigureAutomatically());
     }
 
     @Override
@@ -112,6 +120,15 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     public abstract Property<DependencyHandler> getDependencies();
 
     @Override
+    public abstract Property<Boolean> getConfigureAutomatically();
+
+    @Override
+    public abstract Property<Boolean> getConfigureFromTypeWithName();
+
+    @Override
+    public abstract Property<Boolean> getConfigureFromDependencies();
+
+    @Override
     @NotNull
     public final void configure() {
         configure(getName());
@@ -120,16 +137,18 @@ public abstract class RunImpl extends ConfigurableObject<Run> implements Run {
     @Override
     @NotNull
     public final void configure(final String name) {
-        getProject().afterEvaluate(evaluatedProject -> {
+        ProjectUtils.afterEvaluate(getProject(), () -> {
             final Types types = getProject().getExtensions().getByType(Types.class);
-            configureInternally(types.getByName(name));
+            if (types.getNames().contains(name)) {
+                configureInternally(types.getByName(name));
+            }
         });
     }
 
     @Override
     @NotNull
     public final void configure(final Type type) {
-        getProject().afterEvaluate(evaluatedProject -> {
+        ProjectUtils.afterEvaluate(getProject(), () -> {
             configureInternally(type);
         });
     }

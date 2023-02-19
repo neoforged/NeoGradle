@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.dsl.common.runtime.naming
 
-import groovy.transform.CompileStatic;
+import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -18,5 +19,5 @@ interface ApplyMappingsToCompiledJarTaskBuilder {
      * @param context The context.
      * @return The task provider.
      */
-    @NotNull TaskProvider<? extends WithOutput> build(TaskBuildingContext context);
+    @NotNull TaskProvider<? extends Runtime> build(TaskBuildingContext context);
 }
