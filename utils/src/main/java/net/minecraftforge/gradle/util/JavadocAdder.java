@@ -28,9 +28,13 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+/**
+ * Custom utility class which can inject javadoc into a string.
+ */
 public final class JavadocAdder
 {
     public static final String NEWLINE = System.getProperty("line.separator");
+
     private JavadocAdder() { /* no constructing */ }
 
     /**
@@ -67,17 +71,14 @@ public final class JavadocAdder
 
             builder.append(indent);
             builder.append(" */");
-            //builder.append(Constants.NEWLINE);
 
         }
-        // one line
         else
         {
             builder.append(indent);
             builder.append("/** ");
             builder.append(javadoc);
             builder.append(" */");
-            //builder.append(Constants.NEWLINE);
         }
 
         return builder.toString().replace(indent, indent);

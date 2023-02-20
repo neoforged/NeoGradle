@@ -20,14 +20,15 @@ public final class FileWrapper implements Serializable {
         this.file = file;
     }
 
+    /**
+     * Returns the file that this wrapper internally holds.
+     *
+     * @return The file.
+     */
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public File getFile() {
         return this.file;
-    }
-
-    public File file() {
-        return file;
     }
 
     @Override

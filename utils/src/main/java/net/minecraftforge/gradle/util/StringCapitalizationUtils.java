@@ -2,10 +2,13 @@ package net.minecraftforge.gradle.util;
 
 import javax.annotation.Nonnull;
 
-public final class StringUtils {
+/**
+ * Util class for handling string capitalization
+ */
+public final class StringCapitalizationUtils {
 
-    private StringUtils() {
-        throw new IllegalStateException("Can not instantiate an instance of: StringUtils. This is a utility class");
+    private StringCapitalizationUtils() {
+        throw new IllegalStateException("Can not instantiate an instance of: StringCapitalizationUtils. This is a utility class");
     }
 
     @Nonnull

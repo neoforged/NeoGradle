@@ -114,6 +114,13 @@ public final class TransformerUtils {
         };
     }
 
+    /**
+     * Creates a transformer which will execute a callback on the input before passing it back as a result.
+     * The consumer can not throw an exception.
+     *
+     * @param peakConsumer The callback to execute on the input
+     * @param <V> The type of the output of the transformer
+     */
     public static <V> Transformer<V, V> peak(Consumer<V> peakConsumer) {
         return t -> {
             peakConsumer.accept(t);
@@ -121,6 +128,13 @@ public final class TransformerUtils {
         };
     }
 
+    /**
+     * Creates a transformer which will execute a callback on the input before passing it back as a result.
+     * The consumer can throw an exception.
+     *
+     * @param peakConsumer The callback to execute on the input
+     * @param <V> The type of the output of the transformer
+     */
     public static <V> ThrowingTransformer<V, V> peakWithThrow(ThrowingConsumer<V> peakConsumer) {
         return t -> {
             peakConsumer.apply(t);

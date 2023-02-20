@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.runs.run;
 
 import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
-import net.minecraftforge.gradle.util.StringUtils;
+import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.dsl.runs.run.Run;
 import net.minecraftforge.gradle.dsl.runs.run.Runs;
 import net.minecraftforge.gradle.runs.tasks.RunExec;
@@ -38,7 +38,7 @@ public abstract class RunsImpl extends NamedDSLObjectContainer<Run> implements R
             return conventionTaskName;
         }
 
-        return "run" + StringUtils.capitalize(conventionTaskName);
+        return "run" + StringCapitalizationUtils.capitalize(conventionTaskName);
     }
 
 

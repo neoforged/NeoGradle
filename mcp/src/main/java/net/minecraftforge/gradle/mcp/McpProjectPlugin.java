@@ -29,6 +29,7 @@ import net.minecraftforge.gradle.mcp.naming.MCPNamingChannelConfigurator;
 import net.minecraftforge.gradle.mcp.naming.MCPOfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import net.minecraftforge.gradle.runs.RunsPlugin;
+import net.minecraftforge.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -53,7 +54,7 @@ public class McpProjectPlugin implements Plugin<Project> {
 
         //Add Known repos
         project.getRepositories().maven(e -> {
-            e.setUrl(Constants.FORGE_MAVEN);
+            e.setUrl(UrlConstants.FORGE_MAVEN);
             e.metadataSources(m -> {
                 m.mavenPom();
                 m.artifact();

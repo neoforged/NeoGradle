@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.runs.type;
 
 import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
-import net.minecraftforge.gradle.util.StringUtils;
+import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
 import org.gradle.api.Action;
@@ -22,7 +22,7 @@ public abstract class TypesImpl extends NamedDSLObjectContainer<Type> implements
     public NamedDomainObjectProvider<Type> registerWithPotentialPrefix(String prefix, String name, Action<? super Type> configurationAction) {
         String nameToRegister = name;
         if (getNames().contains(nameToRegister)) {
-            nameToRegister = prefix + StringUtils.capitalize(name);
+            nameToRegister = prefix + StringCapitalizationUtils.capitalize(name);
         }
 
         if (getNames().contains(nameToRegister)) {

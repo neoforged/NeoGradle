@@ -58,10 +58,21 @@ public enum HashFunction {
         this.pad = String.format(Locale.ROOT, "%0" + length + "d", 0);
     }
 
+    /**
+     * The file extension of this hash function.
+     *
+     * @return The file extension.
+     */
     public String getExtension() {
         return this.name().toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * Retrieves the internal {@link MessageDigest} instance of this hash function.
+     * Throws a {@link RuntimeException} if the algorithm is not supported by the JRE.
+     *
+     * @return The {@link MessageDigest} instance.
+     */
     public MessageDigest get() {
         try {
             return MessageDigest.getInstance(algo);
@@ -70,14 +81,35 @@ public enum HashFunction {
         }
     }
 
+    /**
+     * Hashes the given file.
+     *
+     * @param file The file to hash.
+     * @return The hash of the file.
+     * @throws IOException If an I/O error occurs.
+     */
     public String hash(File file) throws IOException {
         return hash(file.toPath());
     }
 
+    /**
+     * Hashes the given file.
+     *
+     * @param file The file to hash.
+     * @return The hash of the file.
+     * @throws IOException If an I/O error occurs.
+     */
     public String hash(Path file) throws IOException {
         return hash(Files.readAllBytes(file));
     }
 
+    /**
+     * Hashes the given files.
+     *
+     * @param files The files to hash.
+     * @return The hash of the files.
+     * @throws IOException If an I/O error occurs.
+     */
     public String hash(Iterable<File> files) throws IOException {
         MessageDigest hash = get();
 
@@ -89,18 +121,43 @@ public enum HashFunction {
         return pad(new BigInteger(1, hash.digest()).toString(16));
     }
 
+    /**
+     * Hashes the given string.
+     *
+     * @param data The string to hash.
+     * @return The hash of the string.
+     */
     public String hash(@Nullable String data) {
         return hash(data == null ? new byte[0] : data.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Hashes the given stream.
+     *
+     * @param stream The stream to hash.
+     * @return The hash of the stream.
+     * @throws IOException If an I/O error occurs.
+     */
     public String hash(InputStream stream) throws IOException {
         return hash(IOUtils.toByteArray(stream));
     }
 
+    /**
+     * Hashes the given bytes.
+     *
+     * @param data The bytes to hash.
+     * @return The hash of the bytes.
+     */
     public String hash(byte[] data) {
         return pad(new BigInteger(1, get().digest(data)).toString(16));
     }
 
+    /**
+     * Pads the hash with leading zeroes, so that it matches the length of the hash function.
+     *
+     * @param hash The hash to pad.
+     * @return The padded hash.
+     */
     public String pad(String hash) {
         return (pad + hash).substring(hash.length());
     }

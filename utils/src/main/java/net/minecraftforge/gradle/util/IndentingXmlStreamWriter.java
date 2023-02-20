@@ -28,6 +28,14 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+/**
+ * A simple XMLStreamWriter that indents the output.
+ *
+ * <p>It is not a full implementation, but it is sufficient for the purposes of
+ * this project.</p>
+ *
+ * This comes from VanillaGradle, as FG6+ uses its logic to generate the Ivy XML metadata.
+ */
 public class IndentingXmlStreamWriter implements XMLStreamWriter {
 
     private final XMLStreamWriter backing;

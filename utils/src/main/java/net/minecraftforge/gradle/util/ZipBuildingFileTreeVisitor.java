@@ -8,6 +8,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * A {@link FileVisitor} that builds a zip file
+ * Simply copying all visited files to the given {@link ZipOutputStream} as individual entries
+ */
 public class ZipBuildingFileTreeVisitor implements FileVisitor {
 
     protected final ZipOutputStream outputZipStream;

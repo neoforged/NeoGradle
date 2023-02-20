@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
-import net.minecraftforge.gradle.util.StringUtils;
+import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.runtime.tasks.NoopRuntime;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
@@ -27,7 +27,7 @@ public class ApplyAccessTransformerStep implements IStep {
         final AccessTransformers accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
         if (accessTransformerFiles.getFiles().isEmpty() && (!accessTransformerFiles.getEntries().isPresent() || accessTransformerFiles.getEntries().get().isEmpty())) {
-            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringUtils.capitalize("user"))), NoopRuntime.class, task -> {
+            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize("user"))), NoopRuntime.class, task -> {
                 task.getInput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
                 task.dependsOn(inputProvidingTask);
             });
@@ -59,6 +59,6 @@ public class ApplyAccessTransformerStep implements IStep {
 
     @Override
     public String getTaskName(VanillaRuntimeDefinition definition) {
-        return CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringUtils.capitalize("user")));
+        return CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize("user")));
     }
 }

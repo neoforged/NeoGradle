@@ -5,6 +5,7 @@ import net.minecraftforge.gradle.dsl.common.tasks.specifications.OutputSpecifica
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
+import net.minecraftforge.gradle.util.UrlConstants;
 import net.minecraftforge.gradle.vanilla.dependency.VanillaDependencyManager;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.gradle.api.NamedDomainObjectProvider;
@@ -23,7 +24,7 @@ public class VanillaProjectPlugin implements Plugin<Project> {
 
         //Add Known repos, -> The default tools come from this repo.
         project.getRepositories().maven(e -> {
-            e.setUrl(Constants.FORGE_MAVEN);
+            e.setUrl(UrlConstants.FORGE_MAVEN);
             e.metadataSources(m -> {
                 m.mavenPom();
                 m.artifact();

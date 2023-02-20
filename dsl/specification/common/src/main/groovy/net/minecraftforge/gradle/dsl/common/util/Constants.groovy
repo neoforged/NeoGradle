@@ -4,8 +4,7 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 class Constants {
-    public static final String FORGE_MAVEN = "https://maven.minecraftforge.net/";
-    public static final String MOJANG_MAVEN = "https://libraries.minecraft.net/";
+
     public static final String BINPATCHER =  "net.minecraftforge:binarypatcher:1.+:fatjar";
     public static final String ACCESSTRANSFORMER_VERSION = "8.0.+";
     public static final String ACCESSTRANSFORMER_VERSION_INTERPOLATION = "net.minecraftforge:accesstransformers:%s:fatjar";

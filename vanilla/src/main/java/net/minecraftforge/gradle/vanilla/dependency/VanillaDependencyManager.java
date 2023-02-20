@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.util.StringUtils;
+import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
@@ -107,7 +107,7 @@ public final class VanillaDependencyManager {
             builder.withForgeFlowerVersion(runtimeExtension.getForgeFlowerVersion());
             builder.withAccessTransformerApplierVersion(runtimeExtension.getAccessTransformerApplierVersion());
 
-            builder.withName(String.format("dependencyVanilla%s%s", StringUtils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
+            builder.withName(String.format("dependencyVanilla%s%s", StringCapitalizationUtils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
         });
     }
 

@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.util.StringUtils;
+import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
@@ -106,7 +106,7 @@ public final class McpDependencyManager {
             final String version = dependency.getVersion() == null ? runtimeExtension.getDefaultVersion().get() : dependency.getVersion();
 
             builder.withMcpVersion(version);
-            builder.withName(String.format("dependencyMcp%s%s", StringUtils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
+            builder.withName(String.format("dependencyMcp%s%s", StringCapitalizationUtils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
 
             builder.withPreTaskAdapter("decompile", createAccessTransformerAdapter(project));
         });

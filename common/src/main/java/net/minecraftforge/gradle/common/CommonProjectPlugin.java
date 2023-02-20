@@ -32,6 +32,7 @@ import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.runs.run.Runs;
 import net.minecraftforge.gradle.runs.RunsPlugin;
 import net.minecraftforge.gradle.runs.run.RunImpl;
+import net.minecraftforge.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
@@ -75,7 +76,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getTasks().create("handleNamingLicense", DisplayMappingsLicenseTask.class);
 
         project.getRepositories().maven(e -> {
-            e.setUrl(Constants.MOJANG_MAVEN);
+            e.setUrl(UrlConstants.MOJANG_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::artifact);
         });
 
