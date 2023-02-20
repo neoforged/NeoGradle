@@ -2,22 +2,13 @@
 package net.minecraftforge.gradle.dsl.generator.transform
 
 import groovy.transform.CompileStatic
-import groovy.transform.Trait
 import groovyjarjarasm.asm.Opcodes
 import org.codehaus.groovy.ast.*
-import org.codehaus.groovy.ast.expr.Expression
-import org.codehaus.groovy.ast.expr.VariableExpression
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.AbstractASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
-import org.codehaus.groovy.transform.sc.StaticCompileTransformation
 import org.gradle.api.tasks.Internal
-
-import java.util.stream.Collectors
-import java.util.stream.Stream
 
 @CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)

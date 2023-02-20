@@ -1,13 +1,10 @@
 package net.minecraftforge.gradle.dsl.generator.transform
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-import groovy.transform.Trait
 import groovyjarjarasm.asm.Opcodes
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.VariableExpression
-import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
@@ -21,7 +18,6 @@ import java.util.stream.Stream
 @CompileStatic
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class BouncerMethodTransformer extends AbstractASTTransformation implements Opcodes {
-    private static final ClassNode TRAIT = ClassHelper.make(Trait)
     private static final ClassNode CSTATIC = ClassHelper.make(CompileStatic)
     @Override
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {

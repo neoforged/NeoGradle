@@ -38,6 +38,9 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
 
     public static final ClassNode RAW_GENERIC_CLOSURE = GenericsUtils.makeClassSafe(Closure)
 
+    /**
+     * A list of property handlers which will be called in the order they're defined here.
+     */
     private static final List<PropertyHandler> HANDLERS = [
             new MapPropertyHandler(),
             new CollectionPropertyHandler(ListProperty, SetProperty),
@@ -45,7 +48,7 @@ class DSLPropertyTransformer extends AbstractASTTransformation {
             new FilePropertyHandler(),
             new DirectoryPropertyHandler(),
             new NamedDomainObjectContainerHandler(),
-            new DefaultPropertyHandler(),
+            new DefaultPropertyHandler(), // This needs to be last, as fallback
     ] as List<PropertyHandler>
 
     private static final Set<ClassNode> NON_CONFIGURABLE_TYPES = new HashSet<>([

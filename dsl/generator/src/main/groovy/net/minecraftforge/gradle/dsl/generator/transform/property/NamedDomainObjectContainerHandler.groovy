@@ -14,15 +14,13 @@ import org.gradle.api.NamedDomainObjectContainer
 @CompileStatic
 class NamedDomainObjectContainerHandler implements PropertyHandler, Opcodes {
     private static final ClassNode PROPERTY_TYPE = ClassHelper.make(NamedDomainObjectContainer)
-    private static final ClassNode PROPERTY_TYPE_CUSTOM = ClassHelper.make('net.minecraftforge.gradle.dsl.base.util.NamedDSLObjectContainer')
 
     @Override
     boolean handle(MethodNode methodNode, AnnotationNode annotation, String propertyName, DSLPropertyTransformer.Utils utils) {
-        boolean isCustom = GeneralUtils.isOrImplements(methodNode.returnType, PROPERTY_TYPE_CUSTOM)
-        if (!(GeneralUtils.isOrImplements(methodNode.returnType, PROPERTY_TYPE) || isCustom)) return false
+        if (!GeneralUtils.isOrImplements(methodNode.returnType, PROPERTY_TYPE)) return false
 
         final singularName = Unpluralizer.unpluralize(propertyName)
-        final type = (isCustom ? methodNode.returnType.genericsTypes[1] : methodNode.returnType.genericsTypes[0]).type
+        final type = methodNode.returnType.genericsTypes[0].type
 
         final actionClazzType = GenericsUtils.makeClassSafeWithGenerics(Action, type)
 

@@ -15,12 +15,12 @@ import java.lang.annotation.Target
  *
  * Example:
  * <pre>
- *     {@code
- *      interface MyExtensionProperties {
- *          @ProjectGetter Project getProject()
- *          @DSLProperty RegularFileProperty getInput()
- *      }
- *     }
+ * {@code
+ * interface MyExtensionProperties {
+ *     @ProjectGetter Project getProject()
+ *     @DSLProperty RegularFileProperty getInput()
+ * }
+ * }
  * </pre>
  */
 @Documented
