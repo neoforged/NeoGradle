@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.gradle.api.Transformer;

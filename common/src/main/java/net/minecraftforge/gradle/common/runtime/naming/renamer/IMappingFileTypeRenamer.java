@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.naming.renamer;
 
-import net.minecraftforge.gradle.base.util.IMappingFileUtils;
+import net.minecraftforge.gradle.util.IMappingFileUtils;
 import net.minecraftforge.srgutils.IMappingFile;
 
 import java.io.ByteArrayInputStream;

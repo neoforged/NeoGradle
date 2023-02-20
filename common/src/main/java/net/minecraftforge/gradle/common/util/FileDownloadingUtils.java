@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.util;
 
-import net.minecraftforge.gradle.base.util.HashFunction;
+import net.minecraftforge.gradle.util.HashFunction;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.Input;
@@ -28,7 +28,7 @@ public final class FileDownloadingUtils {
     public static void downloadTo(Project project, DownloadInfo info, File file) throws IOException {
         // Check if file exists in local installer cache
         if (info.type.equals("jar") && info.side.equals("client")) {
-            File localPath = new File(Utils.getMCDir() + File.separator + "versions" + File.separator + info.version + File.separator + info.version + ".jar");
+            File localPath = new File(getMCDir() + File.separator + "versions" + File.separator + info.version + File.separator + info.version + ".jar");
             if (localPath.exists() && HashFunction.SHA1.hash(localPath).equalsIgnoreCase(info.hash)) {
                 org.apache.commons.io.FileUtils.copyFile(localPath, file);
                 return;
@@ -39,6 +39,19 @@ public final class FileDownloadingUtils {
             FileUtils.copyURLToFile(new URL(info.url), file);
         } else if (!file.exists()) {
             throw new RuntimeException("Could not find the file: " + file + " and we are offline.");
+        }
+    }
+
+    public static File getMCDir()
+    {
+        switch (VersionJson.OS.getCurrent()) {
+            case OSX:
+                return new File(System.getProperty("user.home") + "/Library/Application Support/minecraft");
+            case WINDOWS:
+                return new File(System.getenv("APPDATA") + "\\.minecraft");
+            case LINUX:
+            default:
+                return new File(System.getProperty("user.home") + "/.minecraft");
         }
     }
 

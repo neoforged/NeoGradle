@@ -1,9 +1,9 @@
 package net.minecraftforge.gradle.common.runtime.tasks.action;
 
-import net.minecraftforge.gradle.base.util.FileUtils;
-import net.minecraftforge.gradle.base.util.GradleInternalUtils;
-import net.minecraftforge.gradle.base.util.HashFunction;
-import net.minecraftforge.gradle.base.util.UrlUtils;
+import net.minecraftforge.gradle.util.FileUtils;
+import net.minecraftforge.gradle.util.GradleInternalUtils;
+import net.minecraftforge.gradle.util.HashFunction;
+import net.minecraftforge.gradle.util.UrlUtils;
 import org.apache.ivy.core.settings.TimeoutConstraint;
 import org.apache.ivy.util.CopyProgressEvent;
 import org.apache.ivy.util.CopyProgressListener;

@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.naming.renamer;
 
-import net.minecraftforge.gradle.base.util.JavadocAdder;
+import net.minecraftforge.gradle.util.JavadocAdder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.tasks.Nested;

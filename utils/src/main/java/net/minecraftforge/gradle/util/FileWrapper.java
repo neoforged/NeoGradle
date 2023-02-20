@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.PathSensitive;
@@ -8,6 +8,10 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * A serializable wrapper for a file.
+ * Useful for passing files to tasks that are not serializable.
+ */
 public final class FileWrapper implements Serializable {
     private static final long serialVersionUID = 5391682724482743076L;
     private final File file;

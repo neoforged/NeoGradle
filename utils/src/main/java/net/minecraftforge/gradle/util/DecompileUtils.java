@@ -1,13 +1,23 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.List;
 
+/**
+ * A utility class for decompilation invocation of ForgeFlower.
+ */
 public final class DecompileUtils {
 
-    public static final List<String> DEFAULT_JVM_ARGS = ImmutableList.of("-Xmx8g");
+    /**
+     * The default JVM arguments for the decompiler.
+     */
+    public static final List<String> DEFAULT_JVM_ARGS = ImmutableList.of("-Xmx4g");
+
+    /**
+     * The default program arguments for the decompiler.
+     */
     public static final List<String> DEFAULT_PROGRAMM_ARGS = ImmutableList.<String>builder()
             .add(
                     "-din=1",
@@ -28,6 +38,9 @@ public final class DecompileUtils {
                     "{output}"
             ).build();
 
+    /**
+     * The default values for the decompiler.
+     */
     public static final ImmutableMap<String, String> DEFAULT_DECOMPILE_VALUES = ImmutableMap.<String, String>builder()
             .put("libraries", "{librariesOutput}")
             .put("input", "{renameOutput}")

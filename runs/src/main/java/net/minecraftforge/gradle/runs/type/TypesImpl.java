@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.runs.type;
 
 import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
-import net.minecraftforge.gradle.base.util.StringUtils;
+import net.minecraftforge.gradle.util.StringUtils;
 import net.minecraftforge.gradle.dsl.runs.type.Type;
 import net.minecraftforge.gradle.dsl.runs.type.Types;
 import org.gradle.api.Action;

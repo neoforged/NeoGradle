@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

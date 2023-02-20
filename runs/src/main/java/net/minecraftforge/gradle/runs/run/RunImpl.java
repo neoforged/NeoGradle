@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.runs.run;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.util.ConfigurableObject;
 import net.minecraftforge.gradle.base.util.ProjectUtils;
 import net.minecraftforge.gradle.dsl.runs.run.DependencyHandler;
 import net.minecraftforge.gradle.dsl.runs.run.Run;
@@ -10,7 +10,6 @@ import net.minecraftforge.gradle.dsl.runs.type.Types;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.internal.project.ProjectHierarchyUtils;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;

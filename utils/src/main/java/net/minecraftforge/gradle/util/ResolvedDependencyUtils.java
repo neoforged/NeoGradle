@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.jetbrains.annotations.Nullable;

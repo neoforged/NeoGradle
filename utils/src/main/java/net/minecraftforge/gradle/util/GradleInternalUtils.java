@@ -1,26 +1,71 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
+import groovy.lang.Closure;
 import org.gradle.api.internal.GeneratedSubclass;
 import org.gradle.api.internal.plugins.ExtensionContainerInternal;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.ExtensionContainer;
+import org.gradle.util.internal.ConfigureUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
+/**
+ * Utility class for internal gradle classes.
+ */
 public final class GradleInternalUtils {
 
     private GradleInternalUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: GradleInternalUtils. This is a utility class");
     }
 
+    /**
+     * Gets the extensions from the given container.
+     *
+     * @param container the container
+     * @return the extensions
+     */
     public static Collection<Object> getExtensions(final ExtensionContainer container) {
         return ((ExtensionContainerInternal) container).getAsMap().values();
     }
 
+    /**
+     * Configures the given delegate using the given closure.
+     * Considering the given delegate as the this-variable in the closure.
+     *
+     * @param closure The closure to configure the delegate with.
+     * @param t The delegate to configure.
+     * @return The configured delegate.
+     * @param <T> The type of the delegate.
+     */
+    public static <T> T configureSelf(Closure<?> closure, T t) {
+        return ConfigureUtil.configureSelf(closure, t);
+    }
+
+    /**
+     * Configures the given delegate using the given properties map.
+     *
+     * @param properties The properties map to configure the delegate with
+     * @param delegate The delegate to configure
+     * @return The configured delegate
+     * @param <T> The type of the delegate
+     */
+    public static <T> T configureByMap(Map<?, ?> properties, T delegate) {
+        return ConfigureUtil.configureByMap(properties, delegate);
+    }
+
+    /**
+     * Creates a new progress logger that wraps the given logger and can be used to log progression of an action.
+     *
+     * @param logger The logger to write to
+     * @param serviceOwner The service owner
+     * @param name The name of the action
+     * @return The progress logger
+     */
     public static ProgressLoggerWrapper getProgressLogger(final Logger logger, final Object serviceOwner, final String name) {
         try {
             final ProgressLoggerWrapper wrapper = new ProgressLoggerWrapper(logger);
@@ -140,6 +185,7 @@ public final class GradleInternalUtils {
          * @param name the name of the field to get
          * @return the field's value
          */
+        @SuppressWarnings("SameParameterValue")
         private static Object getFieldValue(Object obj, String name)
                 throws NoSuchFieldException, IllegalAccessException {
             Class<?> clazz = getReflectionTarget(obj.getClass());
@@ -303,7 +349,7 @@ public final class GradleInternalUtils {
                         sb.append(destFileName);
                         sb.append(" > ");
                     }
-                    sb.append(toLengthText(processedBytes));
+                    sb.append(toCountText(processedBytes));
                     if (size != null) {
                         sb.append("/");
                         sb.append(size);

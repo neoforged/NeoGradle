@@ -1,13 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.tasks.action;
 
-import net.minecraftforge.gradle.base.util.FileUtils;
-import net.minecraftforge.gradle.base.util.GradleInternalUtils;
-import net.minecraftforge.gradle.base.util.HashFunction;
-import net.minecraftforge.gradle.base.util.UrlUtils;
-import org.apache.ivy.core.settings.TimeoutConstraint;
-import org.apache.ivy.util.CopyProgressEvent;
-import org.apache.ivy.util.CopyProgressListener;
-import org.apache.ivy.util.FileUtil;
+import net.minecraftforge.gradle.util.FileUtils;
+import net.minecraftforge.gradle.util.GradleInternalUtils;
 import org.gradle.api.Action;
 import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.DirectoryProperty;
@@ -22,9 +16,7 @@ import org.gradle.workers.WorkParameters;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.net.URL;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 public abstract class ExtractFileAction implements WorkAction<ExtractFileAction.Params> {
     private static final Logger LOGGER = Logging.getLogger(ExtractFileAction.class);

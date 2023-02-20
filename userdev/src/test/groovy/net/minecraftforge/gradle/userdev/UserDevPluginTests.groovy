@@ -1,7 +1,6 @@
 package net.minecraftforge.gradle.userdev
 
 import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
-import net.minecraftforge.gradle.common.util.Utils
 
 class UserDevPluginTests extends ForgeGradleTestSpecification {
 

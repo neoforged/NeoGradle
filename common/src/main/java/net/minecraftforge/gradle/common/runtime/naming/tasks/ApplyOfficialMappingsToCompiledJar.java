@@ -1,9 +1,8 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
-import net.minecraftforge.gradle.base.util.RenameConstants;
+import net.minecraftforge.gradle.util.RenameConstants;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
-import net.minecraftforge.gradle.common.tasks.JavaToolExecutingTask;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;

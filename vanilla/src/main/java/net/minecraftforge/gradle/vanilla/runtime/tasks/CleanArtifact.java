@@ -1,8 +1,7 @@
 package net.minecraftforge.gradle.vanilla.runtime.tasks;
 
-import net.minecraftforge.gradle.base.util.AdaptingZipBuildingFileTreeVisitor;
-import net.minecraftforge.gradle.base.util.DelegatingFileTreeVisitor;
-import net.minecraftforge.gradle.base.util.ZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.util.DelegatingFileTreeVisitor;
+import net.minecraftforge.gradle.util.ZipBuildingFileTreeVisitor;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RegularFileProperty;
@@ -15,8 +14,6 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.function.BiConsumer;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask

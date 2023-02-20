@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.minecraftforge.gradle.common.runtime.tasks.action.ExtractFileAction;
 import net.minecraftforge.gradle.common.util.VersionJson;

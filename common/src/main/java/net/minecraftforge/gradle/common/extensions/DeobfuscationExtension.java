@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.extensions;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.Deobfuscation;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.Project;

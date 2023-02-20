@@ -1,16 +1,14 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import com.google.common.collect.Sets;
 import de.siegmar.fastcsv.writer.CsvWriter;
 import de.siegmar.fastcsv.writer.LineDelimiter;
 import org.gradle.api.Action;
-import org.gradle.api.Project;
 import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.FileVisitor;
 import org.gradle.api.tasks.util.PatternFilterable;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,7 +16,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.file.*;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -29,17 +31,37 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
+/**
+ * A utility class for file operations.
+ */
 public final class FileUtils {
 
+    /**
+     * The maximum number of tries that the system will try to atomically move a file.
+     */
     private static final int MAX_TRIES = 2;
+
+    /**
+     * The constant time of a zip entry in milliseconds.
+     */
     private static final long ZIPTIME = 628041600000L;
+
+    /**
+     * The GMT time zone.
+     */
     private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
 
     private FileUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: FileUtils. This is a utility class");
     }
 
+    /**
+     * Reads all bytes from a file with the given path.
+     * Catching all exceptions and rethrowing them as a {@link RuntimeException}.
+     *
+     * @param path the path to the file
+     * @return the bytes of the file
+     */
     public static byte[] readAllBytes(Path path) {
         try {
             return Files.readAllBytes(path);
@@ -48,6 +70,13 @@ public final class FileUtils {
         }
     }
 
+    /**
+     * Reads all lines from a file with the given path.
+     * Catching all exceptions and rethrowing them as a {@link RuntimeException}.
+     *
+     * @param path the path to the file
+     * @return the lines of the file
+     */
     public static Stream<String> readAllLines(Path path) {
         try {
             return Files.lines(path);
@@ -56,6 +85,13 @@ public final class FileUtils {
         }
     }
 
+    /**
+     * Unzips the given zip file to the given directory.
+     * Catching all exceptions and rethrowing them as a {@link RuntimeException}.
+     *
+     * @param zipFile The zip file to unzip
+     * @param dir The directory to unzip to
+     */
     public static void unzip(File zipFile, File dir) {
         // create output directory if it doesn't exist
         if(!dir.exists()) dir.mkdirs();
@@ -92,25 +128,30 @@ public final class FileUtils {
             zis.closeEntry();
             zis.close();
             fis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to unzip file!", e);
         }
-
     }
 
-    @NotNull
-    public static String buildFileNameForTask(Project project, String taskName) {
-        if (project.getPath().length() > 1) {
-            return project.getPath().substring(1).replace(':', '_') + '_' + taskName;
-        }
-
-        return taskName;
-    }
-
+    /**
+     * Creates a path targeting a temporary file with the given key.
+     *
+     * @param parent The parent directory of the temporary file
+     * @param key The key of the temporary file
+     * @return The path to the temporary file
+     * @throws IOException If an I/O error occurs
+     */
     public static Path temporaryPath(Path parent, String key) throws IOException {
         return Files.createTempFile(parent, "." + key, "");
     }
 
+    /**
+     * Atomically moves the given source file to the given destination file.
+     *
+     * @param source The source file
+     * @param destination The destination file
+     * @throws IOException If an I/O error occurs
+     */
     @SuppressWarnings("BusyWait")
     public static void atomicMove(Path source, Path destination) throws IOException {
         try {
@@ -136,6 +177,14 @@ public final class FileUtils {
         }
     }
 
+    /**
+     * Atomically moves the given source file to the given destination file.
+     * If the atomic move is not supported, the file will be moved normally.
+     *
+     * @param source The source file
+     * @param destination The destination file
+     * @throws IOException If an I/O error occurs
+     */
     private static void atomicMoveIfPossible(final Path source, final Path destination) throws IOException {
         try {
             Files.move(source, destination, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
@@ -144,10 +193,29 @@ public final class FileUtils {
         }
     }
 
+    /**
+     * Gets the size in bytes of the file.
+     *
+     * @param asFile The file to get the size of
+     * @return The size in bytes of the file
+     */
     public static int getFileSize(File asFile) {
         return readAllBytes(asFile.toPath()).length;
     }
 
+    /**
+     * Performs a complex zip extraction from the input zip file to the output directory.
+     *
+     * @param archiveOperations The archive operations
+     * @param input The input zip file
+     * @param output The output directory
+     * @param overrideExisting Whether to override existing files
+     * @param clean Whether to clean the output directory
+     * @param filter The filter to apply to the zip file
+     * @param renamer The renamer to apply to the zip file
+     * @param loggerWrapper The progress logger wrapper
+     * @throws IOException If an I/O error occurs
+     */
     public static void extractZip(final ArchiveOperations archiveOperations, final File input, final File output, final boolean overrideExisting, final boolean clean, final Action<? super PatternFilterable> filter, final Function<String, String> renamer, final GradleInternalUtils.ProgressLoggerWrapper loggerWrapper) throws IOException {
         final FileTree tree = archiveOperations.zipTree(input);
         final FileTree filtered = tree.matching(filter);
@@ -195,6 +263,15 @@ public final class FileUtils {
         loggerWrapper.completed();
     }
 
+    /**
+     * Creates a csv file with the given lines in a zip file via the given zip output stream.
+     * If no lines are supplied, the csv file will not be created.
+     *
+     * @param name The name of the csv file
+     * @param mappings The lines of the csv file
+     * @param out The zip output stream
+     * @throws IOException If an I/O error occurs
+     */
     public static void addCsvToZip(String name, List<String[]> mappings, ZipOutputStream out) throws IOException {
         if (mappings.size() <= 1)
             return;
@@ -205,6 +282,9 @@ public final class FileUtils {
         out.closeEntry();
     }
 
+    /**
+     * An output stream writer that does not close the underlying output stream when it is closed.
+     */
     private static class UncloseableOutputStreamWriter extends OutputStreamWriter {
         private UncloseableOutputStreamWriter(OutputStream out) {
             super(out);
@@ -216,10 +296,23 @@ public final class FileUtils {
         }
     }
 
+    /**
+     * Creates a stable timed zip entry, with the default time.
+     *
+     * @param name The relative name of the entry
+     * @return The zip entry
+     */
     public static ZipEntry getStableEntry(String name) {
         return getStableEntry(name, ZIPTIME);
     }
 
+    /**
+     * Creates a stable timed zip entry.
+     *
+     * @param name The relative name of the entry
+     * @param time The time of the entry
+     * @return The zip entry
+     */
     public static ZipEntry getStableEntry(String name, long time) {
         TimeZone _default = TimeZone.getDefault();
         TimeZone.setDefault(GMT);

@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.base.util.AdaptingZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.util.AdaptingZipBuildingFileTreeVisitor;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace;
 import org.gradle.api.DefaultTask;

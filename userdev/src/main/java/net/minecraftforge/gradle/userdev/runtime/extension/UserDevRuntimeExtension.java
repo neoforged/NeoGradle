@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.userdev.runtime.extension;
 
-import net.minecraftforge.gradle.base.util.FileUtils;
+import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
@@ -24,8 +24,6 @@ import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.minecraftforge.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.minecraftforge.gradle.userdev.utils.UserDevConfigurationSpecUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;

@@ -1,14 +1,13 @@
-//file:noinspection GrDeprecatedAPIUsage
 package net.minecraftforge.gradle.dsl.base.util
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gradle.dsl.annotations.BouncerMethod
 import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
+import net.minecraftforge.gradle.util.GradleInternalUtils
 import org.gradle.api.Action
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.Internal
 import org.gradle.util.Configurable
-import org.gradle.util.ConfigureUtil
 import org.jetbrains.annotations.NotNull
 
 import java.util.function.Consumer
@@ -42,7 +41,7 @@ trait ConfigurableDSLElement<T extends ConfigurableDSLElement<T>> implements Con
     @SuppressWarnings("deprecation") //Use internal variant if ever removed.
     @BouncerMethod(returnType = Object.class)
     default T configure(Closure closure) {
-        return ConfigureUtil.configureSelf(closure, getThis());
+        return GradleInternalUtils.configureSelf(closure, getThis());
     }
 
     /**
@@ -75,6 +74,6 @@ trait ConfigurableDSLElement<T extends ConfigurableDSLElement<T>> implements Con
     @SuppressWarnings("deprecation") //Use internal variant if ever removed.
     @NotNull
     default T configure(final Map<String, Object> source) {
-        return ConfigureUtil.configureByMap(source, getThis());
+        return GradleInternalUtils.configureByMap(source, getThis());
     }
 }

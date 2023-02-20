@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.StringUtils;
+import net.minecraftforge.gradle.util.StringUtils;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;

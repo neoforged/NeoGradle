@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.StringUtils;
+import net.minecraftforge.gradle.util.StringUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;

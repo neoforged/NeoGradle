@@ -2,8 +2,8 @@ package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.ConfigurableObject;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.ide.IdeManager;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.DependencyGenerationTask;
@@ -16,7 +16,6 @@ import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntr
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.NamedDomainObjectFactory;
-import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;

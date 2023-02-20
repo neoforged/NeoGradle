@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.dsl.common.tasks.Execute;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;

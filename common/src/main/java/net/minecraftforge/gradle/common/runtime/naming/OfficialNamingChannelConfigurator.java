@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.common.runtime.naming;
 
-import net.minecraftforge.gradle.base.util.GradleInternalUtils;
+import net.minecraftforge.gradle.util.GradleInternalUtils;
 import net.minecraftforge.gradle.base.util.MappingUtils;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;

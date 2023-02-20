@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.util;
 
-import net.minecraftforge.gradle.base.util.StringUtils;
+import net.minecraftforge.gradle.util.StringUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;

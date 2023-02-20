@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.base.util.FileUtils;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.FileUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.RegularFileProperty;

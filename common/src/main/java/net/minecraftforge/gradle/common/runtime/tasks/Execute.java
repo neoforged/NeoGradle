@@ -1,14 +1,12 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
-import com.google.common.collect.ImmutableMap;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.internal.impldep.com.beust.jcommander.internal.Maps;
 
 import java.util.Map;
 import java.util.jar.Attributes;

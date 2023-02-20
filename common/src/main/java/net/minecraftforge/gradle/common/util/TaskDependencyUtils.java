@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.util;
 
-import net.minecraftforge.gradle.base.util.GradleInternalUtils;
+import net.minecraftforge.gradle.util.GradleInternalUtils;
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;

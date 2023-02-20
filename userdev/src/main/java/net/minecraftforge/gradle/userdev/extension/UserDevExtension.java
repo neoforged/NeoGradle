@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.userdev.extension;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.userdev.extension.UserDev;
 import org.gradle.api.Project;
 

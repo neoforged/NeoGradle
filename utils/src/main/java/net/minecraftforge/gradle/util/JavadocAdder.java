@@ -18,7 +18,7 @@
  * USA
  */
 
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;

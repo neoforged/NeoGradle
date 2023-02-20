@@ -18,7 +18,7 @@
  * USA
  */
 
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import java.io.File;
 import java.io.IOException;

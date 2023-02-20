@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
-import net.minecraftforge.gradle.base.util.DecompileUtils;
+import net.minecraftforge.gradle.util.DecompileUtils;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;

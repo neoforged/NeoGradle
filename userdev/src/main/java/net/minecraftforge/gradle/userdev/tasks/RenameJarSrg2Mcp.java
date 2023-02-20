@@ -21,7 +21,6 @@
 package net.minecraftforge.gradle.userdev.tasks;
 
 import net.minecraftforge.gradle.common.tasks.JarExec;
-import net.minecraftforge.gradle.common.util.Utils;
 
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.RegularFileProperty;

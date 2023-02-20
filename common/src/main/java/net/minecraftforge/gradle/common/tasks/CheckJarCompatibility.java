@@ -21,7 +21,6 @@
 package net.minecraftforge.gradle.common.tasks;
 
 import com.google.common.collect.ImmutableMap;
-import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;

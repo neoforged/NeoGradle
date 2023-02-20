@@ -3,7 +3,7 @@ package net.minecraftforge.gradle.mcp.runtime.extensions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.FileUtils;
+import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.runtime.tasks.ListLibraries;

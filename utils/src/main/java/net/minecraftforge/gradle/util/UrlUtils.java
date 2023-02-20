@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

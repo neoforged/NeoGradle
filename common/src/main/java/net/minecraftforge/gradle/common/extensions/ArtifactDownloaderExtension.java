@@ -1,23 +1,19 @@
 package net.minecraftforge.gradle.common.extensions;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
-import org.apache.ivy.plugins.repository.Repository;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.artifacts.repositories.ArtifactRepository;
 import org.gradle.api.provider.Provider;
-import org.gradle.internal.impldep.it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import org.gradle.internal.impldep.it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
 
 import javax.inject.Inject;
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 
 /**
  * Extension which handles multiple downloads of artifacts, including generating them if needed.

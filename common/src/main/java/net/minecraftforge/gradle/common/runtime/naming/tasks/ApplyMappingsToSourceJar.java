@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
-import net.minecraftforge.gradle.base.util.FileUtils;
+import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.ISourceRenamer;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;

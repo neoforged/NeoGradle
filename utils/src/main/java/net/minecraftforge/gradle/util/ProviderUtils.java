@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import org.gradle.api.NamedDomainObjectCollection;
 import org.gradle.api.Project;

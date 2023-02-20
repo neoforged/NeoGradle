@@ -1,6 +1,5 @@
 package net.minecraftforge.gradle.mcp.naming;
 
-import net.minecraftforge.gradle.base.util.MappingUtils;
 import net.minecraftforge.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.minecraftforge.gradle.common.runtime.naming.renamer.IMappingFileTypeRenamer;
@@ -9,20 +8,14 @@ import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappin
 import net.minecraftforge.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
-import net.minecraftforge.gradle.base.util.IMappingFileUtils;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
-import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
-import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
+import net.minecraftforge.gradle.util.IMappingFileUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
-import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerateDebuggingMappingsJarTaskBuilder;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
-import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.mcp.naming.tasks.WriteIMappingsFile;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.common.util.CacheableIMappingFile;
@@ -36,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public final class MCPOfficialNamingChannelConfigurator {
     private static final Logger LOGGER = LoggerFactory.getLogger(MCPOfficialNamingChannelConfigurator.class);

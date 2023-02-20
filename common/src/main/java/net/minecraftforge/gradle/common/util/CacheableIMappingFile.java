@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.util;
 
-import net.minecraftforge.gradle.base.util.IMappingFileUtils;
+import net.minecraftforge.gradle.util.IMappingFileUtils;
 import net.minecraftforge.srgutils.IMappingFile;
 import net.minecraftforge.srgutils.IRenamer;
 

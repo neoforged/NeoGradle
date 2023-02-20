@@ -20,8 +20,6 @@
 
 package net.minecraftforge.gradle.common.tasks;
 
-import net.minecraftforge.gradle.common.util.Utils;
-
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;

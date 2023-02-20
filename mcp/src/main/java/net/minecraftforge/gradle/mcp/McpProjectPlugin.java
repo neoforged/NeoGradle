@@ -21,7 +21,6 @@
 package net.minecraftforge.gradle.mcp;
 
 import net.minecraftforge.gradle.common.CommonPlugin;
-import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
 import net.minecraftforge.gradle.mcp.dependency.McpDependencyManager;

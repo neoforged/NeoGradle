@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
-import net.minecraftforge.gradle.base.util.FileUtils;
+import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;

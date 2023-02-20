@@ -1,9 +1,9 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
-import net.minecraftforge.gradle.base.util.FileUtils;
+import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.dsl.common.util.CacheableMinecraftVersion;
-import net.minecraftforge.gradle.base.util.ZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.util.ZipBuildingFileTreeVisitor;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.*;
 import org.gradle.api.provider.ListProperty;

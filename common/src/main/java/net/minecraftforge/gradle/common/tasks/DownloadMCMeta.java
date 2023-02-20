@@ -22,8 +22,8 @@ package net.minecraftforge.gradle.common.tasks;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraftforge.gradle.base.util.ManifestJson;
-import net.minecraftforge.gradle.base.util.UrlConstants;
+import net.minecraftforge.gradle.util.ManifestJson;
+import net.minecraftforge.gradle.util.UrlConstants;
 import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;

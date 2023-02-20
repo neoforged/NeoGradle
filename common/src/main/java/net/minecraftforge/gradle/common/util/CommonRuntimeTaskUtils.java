@@ -2,7 +2,6 @@ package net.minecraftforge.gradle.common.util;
 
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
-import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
@@ -49,7 +48,7 @@ public final class CommonRuntimeTaskUtils {
             generateAccessTransformerRemapTask(definition, gameArtifactTaskProviderMap, versionData, dependentTaskConfigurationHandler, fileRemapTasks, generator);
         }
 
-        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", net.minecraftforge.gradle.base.util.StringUtils.capitalize(namePreFix))), AccessTransformer.class, task -> {
+        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", net.minecraftforge.gradle.util.StringUtils.capitalize(namePreFix))), AccessTransformer.class, task -> {
             for (TaskProvider<? extends WithOutput> fileRemapTask : fileRemapTasks) {
                 task.getTransformers().from(fileRemapTask.flatMap(WithOutput::getOutput));
                 task.dependsOn(fileRemapTask);

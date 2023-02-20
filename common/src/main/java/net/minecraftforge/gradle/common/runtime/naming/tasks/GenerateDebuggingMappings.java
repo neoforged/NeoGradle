@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
-import net.minecraftforge.gradle.base.util.FileUtils;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.FileUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.common.util.CacheableIMappingFile;
 import net.minecraftforge.gradle.dsl.base.util.DistributionType;

@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.FileVisitor;

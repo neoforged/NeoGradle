@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
-import net.minecraftforge.gradle.base.util.ZipBuildingFileTreeVisitor;
+import net.minecraftforge.gradle.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.CacheableTask;

@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import net.minecraftforge.srgutils.IMappingFile;
 
@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static net.minecraftforge.gradle.base.util.IMappingFileUtils.Element.CLASS;
-import static net.minecraftforge.gradle.base.util.IMappingFileUtils.Element.FIELD;
-import static net.minecraftforge.gradle.base.util.IMappingFileUtils.Element.METHOD;
-import static net.minecraftforge.gradle.base.util.IMappingFileUtils.Element.PARAMETER;
+import static net.minecraftforge.gradle.util.IMappingFileUtils.Element.CLASS;
+import static net.minecraftforge.gradle.util.IMappingFileUtils.Element.FIELD;
+import static net.minecraftforge.gradle.util.IMappingFileUtils.Element.METHOD;
+import static net.minecraftforge.gradle.util.IMappingFileUtils.Element.PARAMETER;
 
 
 public final class IMappingFileUtils {

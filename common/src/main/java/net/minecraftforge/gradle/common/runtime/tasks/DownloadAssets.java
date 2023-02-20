@@ -1,9 +1,9 @@
 package net.minecraftforge.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.action.DownloadFileAction;
-import net.minecraftforge.gradle.common.util.Utils;
+import net.minecraftforge.gradle.common.util.SerializationUtils;
 import net.minecraftforge.gradle.common.util.VersionJson;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -56,7 +56,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
     }
 
     private void downloadAssets() {
-        final AssetIndex assetIndex = Utils.fromJson(getAssetIndexFile().getAsFile().get(), AssetIndex.class);
+        final AssetIndex assetIndex = SerializationUtils.fromJson(getAssetIndexFile().getAsFile().get(), AssetIndex.class);
 
         final WorkQueue executor = getWorkerExecutor().noIsolation();
 

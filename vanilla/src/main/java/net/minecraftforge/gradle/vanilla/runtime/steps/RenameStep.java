@@ -2,8 +2,7 @@ package net.minecraftforge.gradle.vanilla.runtime.steps;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.DecompileUtils;
-import net.minecraftforge.gradle.base.util.RenameConstants;
+import net.minecraftforge.gradle.util.RenameConstants;
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
@@ -11,7 +10,6 @@ import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.Constants;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;

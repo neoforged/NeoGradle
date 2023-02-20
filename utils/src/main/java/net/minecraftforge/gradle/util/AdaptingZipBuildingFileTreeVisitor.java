@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.base.util;
+package net.minecraftforge.gradle.util;
 
 import org.gradle.api.file.FileVisitDetails;
 
@@ -8,6 +8,9 @@ import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * A {@link ZipBuildingFileTreeVisitor} that allows to adapt the file content before writing it to the zip.
+ */
 public class AdaptingZipBuildingFileTreeVisitor extends ZipBuildingFileTreeVisitor {
 
     private final BiConsumer<FileVisitDetails, OutputStream> fileAdapter;

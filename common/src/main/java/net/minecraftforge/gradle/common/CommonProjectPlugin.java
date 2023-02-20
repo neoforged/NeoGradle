@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common;
 
-import net.minecraftforge.gradle.base.util.GradleInternalUtils;
+import net.minecraftforge.gradle.util.GradleInternalUtils;
 import net.minecraftforge.gradle.common.deobfuscation.DependencyDeobfuscator;
 import net.minecraftforge.gradle.common.extensions.AccessTransformersExtension;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;

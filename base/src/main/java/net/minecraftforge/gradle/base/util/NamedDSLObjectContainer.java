@@ -2,7 +2,6 @@ package net.minecraftforge.gradle.base.util;
 
 import groovy.lang.Closure;
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
-import net.minecraftforge.gradle.dsl.base.util.ConfigurableDSLElement;
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLElement;
 import org.gradle.api.Action;
 import org.gradle.api.DomainObjectCollection;
@@ -18,7 +17,6 @@ import org.gradle.api.Rule;
 import org.gradle.api.UnknownDomainObjectException;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
-import org.gradle.util.Configurable;
 import org.gradle.util.ConfigureUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

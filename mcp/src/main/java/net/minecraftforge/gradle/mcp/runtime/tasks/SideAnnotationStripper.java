@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import com.google.common.collect.Lists;
-import net.minecraftforge.gradle.base.util.TransformerUtils;
+import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;

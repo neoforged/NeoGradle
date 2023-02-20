@@ -1,13 +1,11 @@
 package net.minecraftforge.gradle.runs.run;
 
 import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
-import net.minecraftforge.gradle.base.util.StringUtils;
+import net.minecraftforge.gradle.util.StringUtils;
 import net.minecraftforge.gradle.dsl.runs.run.Run;
 import net.minecraftforge.gradle.dsl.runs.run.Runs;
 import net.minecraftforge.gradle.runs.tasks.RunExec;
 import org.gradle.api.Project;
-import org.gradle.api.internal.AbstractNamedDomainObjectContainer;
-import org.gradle.api.reflect.HasPublicType;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 

@@ -24,7 +24,7 @@
  */
 package net.minecraftforge.gradle.common.extensions.repository;
 
-import net.minecraftforge.gradle.base.util.IndentingXmlStreamWriter;
+import net.minecraftforge.gradle.util.IndentingXmlStreamWriter;
 
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLOutputFactory;
