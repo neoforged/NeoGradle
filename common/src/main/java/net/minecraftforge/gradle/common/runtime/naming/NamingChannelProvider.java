@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.common.runtime.naming;
 
-import net.minecraftforge.gradle.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.Project;

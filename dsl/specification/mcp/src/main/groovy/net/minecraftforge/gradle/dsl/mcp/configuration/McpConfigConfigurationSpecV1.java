@@ -24,6 +24,7 @@ import com.google.gson.*;
 
 import net.minecraftforge.gradle.dsl.common.configuration.VersionedConfiguration;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
+import net.minecraftforge.gradle.util.UrlConstants;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
@@ -194,7 +195,7 @@ public class McpConfigConfigurationSpecV1 extends VersionedConfiguration {
         @Input
         @Optional
         public String getRepo() {
-            return repo == null ? Constants.MOJANG_MAVEN : repo;
+            return repo == null ? UrlConstants.MOJANG_MAVEN : repo;
         }
         public void setRepo(String value) {
             this.repo = value;

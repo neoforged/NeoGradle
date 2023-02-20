@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import org.gradle.api.Action;

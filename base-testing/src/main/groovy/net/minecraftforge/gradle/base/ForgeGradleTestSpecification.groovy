@@ -17,7 +17,7 @@ import java.nio.file.Paths
 
 abstract class ForgeGradleTestSpecification extends Specification {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final boolean DEBUG_PROJECT_DIR = false;
 
     public TestInfo state
@@ -73,6 +73,7 @@ abstract class ForgeGradleTestSpecification extends Specification {
                 .withPluginClasspath()
                 .withProjectDir(testProjectDir)
                 .withDebug(DEBUG)
+                .withGradleVersion("8.0")
                 .forwardStdOutput(new LoggerWriter(logger, LoggerWriter.Level.INFO))
                 .forwardStdError(new LoggerWriter(logger, LoggerWriter.Level.ERROR))
 

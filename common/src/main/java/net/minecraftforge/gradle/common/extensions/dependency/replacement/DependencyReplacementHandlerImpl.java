@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
-import net.minecraftforge.gradle.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import org.gradle.api.Project;

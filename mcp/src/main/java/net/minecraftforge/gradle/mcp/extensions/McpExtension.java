@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.mcp.extensions;
 
-import net.minecraftforge.gradle.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;

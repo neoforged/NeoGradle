@@ -1,7 +1,9 @@
 package net.minecraftforge.gradle.runs.run;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
-import net.minecraftforge.gradle.util.ConfigurableObject;
+
+
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.base.util.ProjectUtils;
 import net.minecraftforge.gradle.dsl.runs.run.DependencyHandler;
 import net.minecraftforge.gradle.dsl.runs.run.Run;

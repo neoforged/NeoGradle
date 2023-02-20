@@ -2,7 +2,7 @@ package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
-import net.minecraftforge.gradle.util.ConfigurableObject;
+import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.ide.IdeManager;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
