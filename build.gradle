@@ -1,3 +1,5 @@
+import org.gradle.plugins.ide.eclipse.model.internal.FileReferenceFactory
+
 plugins {
     id 'eclipse'
     id 'maven-publish'
@@ -5,87 +7,201 @@ plugins {
     id 'net.minecraftforge.gradleutils' version '[2.0.10,)'
 }
 
+//HARDCODED VERSION FOR NOW!
 version = "6.0-SNAPSHOT"
 
-changelog {
-    fromTag '5.0'
-    disableAutomaticPublicationRegistration()
-}
-
-subprojects { Project subproject ->
-    subproject.apply plugin: 'net.minecraftforge.gradleutils'
-
-    subproject.apply plugin: 'java-library'
-    subproject.apply plugin: 'maven-publish'
-
-    subproject.apply plugin: 'eclipse'
-    subproject.apply plugin: 'idea'
-
-    subproject.version = subproject.rootProject.version
-    subproject.group = 'net.minecraftforge.gradle'
-    subproject.archivesBaseName = "fg-${subproject.name.toLowerCase()}"
-
-    subproject.java.toolchain.languageVersion = JavaLanguageVersion.of(subproject.java_version)
-    subproject.java.withSourcesJar()
-
-    subproject.configurations.all { Configuration configuration ->
-        configuration.exclude group: 'org.ow2.asm'
-    }
-
-    subproject.repositories.mavenLocal()
-    subproject.repositories.maven { MavenArtifactRepository repository ->
-        repository.name 'MinecraftForge'
-        repository.url = 'https://maven.minecraftforge.net/'
-    }
-
-    //TODO: Rehost the idea repositories on FORGEMAVEN!
-    subproject.repositories.maven { MavenArtifactRepository repository ->
-        repository.name 'Sponge'
-        repository.url = 'https://repo.spongepowered.org/repository/maven-public/'
-    }
-
-    subproject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
-
-    subproject.afterEvaluate { Project evaledSubProject ->
-        if (evaledSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
-            subproject.gradlePlugin.automatedPublishing = true
-
-            subproject.publishing.publications {
-                pluginMaven(MavenPublication) { MavenPublication publication ->
-                    project.changelog.publish(publication)
-                }
-            }
-        } else {
-            subproject.publishing.publications {
-                maven(MavenPublication) { MavenPublication publication ->
-                    project.changelog.publish(publication)
-                    from components.java
-                }
-            }
-        }
-    }
-
-
-    subproject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
-
-    subproject.tasks.withType(GroovyCompile).configureEach {
-        options.incremental = true
-        groovyOptions.optimizationOptions.indy = true
-    }
-}
-
+//We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
     wrapperTask.gradleVersion = project.gradle_version
     wrapperTask.distributionType = Wrapper.DistributionType.ALL
 }
 
-tasks.create('info') {
-    group = 'forgegradle'
+//Create an info task that prints out some useful information about the project.
+tasks.register('info') {
+    group = 'reporting'
     description = 'Prints out some useful information about the project.'
     doLast {
         logger.lifecycle("Version: $version")
         logger.lifecycle("Java:    ${System.getProperty('java.version')}")
         logger.lifecycle("JVM:     ${System.getProperty('java.vm.version')} (${System.getProperty('java.vendor')})")
         logger.lifecycle("Arch:    ${System.getProperty('os.arch')}")
+    }
+}
+
+changelog {
+    fromTag '5.0'
+    disableAutomaticPublicationRegistration()
+}
+
+///First setup all the subprojects
+///Configure them in such a way that we can run test and have all the plugins applied.
+subprojects.forEach { subProject ->
+    //All base plugins.
+    subProject.apply plugin: 'net.minecraftforge.gradleutils'
+    subProject.apply plugin: 'java-library'
+    subProject.apply plugin: 'maven-publish'
+    subProject.apply plugin: 'eclipse'
+    subProject.apply plugin: 'idea'
+
+    //General project metadata. Everything has the same version and group.
+    subProject.version = subProject.rootProject.version
+    subProject.group = 'net.minecraftforge.gradle'
+    subProject.archivesBaseName = "fg-${subProject.name.toLowerCase()}"
+
+    //Setup the java toolchain
+    subProject.java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_version)
+    subProject.java.withSourcesJar()
+
+    //We exclude ASM from all subprojects, it is handled by Gradle itself.
+    subProject.configurations.configureEach { Configuration configuration ->
+        configuration.exclude group: 'org.ow2.asm'
+    }
+
+    //Wire up our custom repositories.
+    subProject.repositories.mavenLocal()
+    subProject.repositories.maven { MavenArtifactRepository repository ->
+        repository.name 'MinecraftForge'
+        repository.url = 'https://maven.minecraftforge.net/'
+    }
+
+    //Temporary additional repository for the idea submodules.
+    //TODO: Rehost the idea repositories on FORGEMAVEN!
+    subProject.repositories.maven { MavenArtifactRepository repository ->
+        repository.name 'Sponge'
+        repository.url = 'https://repo.spongepowered.org/repository/maven-public/'
+    }
+
+    //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
+    subProject.dependencies.api subProject.dependencies.gradleApi()
+    subProject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
+    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
+    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-params:${project.junit_version}"
+    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
+    subProject.dependencies.testImplementation "org.junit.platform:junit-platform-engine:${project.junit_platform_version}"
+    subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
+    subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
+    subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
+
+    //Setup the test task to use JUnit 5 and its platform.
+    subProject.tasks.withType(Test).configureEach { testTask ->
+        testTask.useJUnitPlatform()
+    }
+
+    //Make groovy incremental and use indy (Should allow for faster compilation, and makes its code more readable)
+    subProject.tasks.withType(GroovyCompile).configureEach {
+        options.incremental = true
+        groovyOptions.optimizationOptions.indy = true
+    }
+
+    subProject.publishing.publications { PublicationContainer publications ->
+        publications.create('maven', MavenPublication) { MavenPublication publication ->
+            project.changelog.publish(publication)
+        }
+    }
+
+    subProject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
+}
+
+//Configure all the subprojects that are plugins
+subprojects.forEach { subProject ->
+    subProject.afterEvaluate { Project evalSubProject ->
+        if (!evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
+            return;
+        }
+
+        //Custom source set.
+        evalSubProject.sourceSets.register('functionalTest') { SourceSet sourceSet ->
+            sourceSet.java.srcDir evalSubProject.file('src/functionalTest/java')
+            sourceSet.resources.srcDir evalSubProject.file('src/functionalTest/resources')
+        }
+
+        //And handle the dependency configurations for them.
+        evalSubProject.gradlePlugin.testSourceSets(evalSubProject.sourceSets.functionalTest)
+        evalSubProject.configurations.functionalTestImplementation.extendsFrom(evalSubProject.configurations.testImplementation)
+
+        //All dependencies needed to run the functional tests.
+        evalSubProject.dependencies.functionalTestImplementation project(':base-testing')
+        evalSubProject.dependencies.functionalTestImplementation subProject.dependencies.gradleTestKit()
+        evalSubProject.dependencies.functionalTestImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+        evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
+            spec.exclude group: 'org.codehaus.groovy'
+        }
+
+        //Configure the plugin metadata, so we can publish it.
+        evalSubProject.gradlePlugin.plugins { org.gradle.api.NamedDomainObjectContainer<PluginDeclaration> plugins ->
+            plugins.register(evalSubProject.name.toLowerCase()) {
+
+                //Determine the class name and package of the plugin.
+                File pluginFile = evalSubProject.fileTree('src/main/java') {
+                    include { it.file.name.toLowerCase() == "${evalSubProject.getName()}plugin.java" }
+                }.find() as File
+
+                //We need to handle the case of a fresh new project, no files exist yet, so the pluginFile object will be null.
+                def pluginClassName = "unknown";
+                if (pluginFile != null) {
+                    pluginClassName = evalSubProject.file('src/main/java/').toPath().relativize(pluginFile.toPath()).toString().replace('/', '.').replace('\\', '.').replace(".java", "")
+                }
+
+                //Setup the plugin id.
+                id = 'net.minecraftforge.gradle.' + evalSubProject.name.toLowerCase()
+                //And the implementation class.
+                implementationClass = pluginClassName
+            }
+        }
+
+        //Run task which will run the functional tests.
+        evalSubProject.tasks.register('functionalTest', Test) {
+            group 'verification'
+
+            testClassesDirs = evalSubProject.sourceSets.functionalTest.output.classesDirs
+            classpath = evalSubProject.sourceSets.functionalTest.runtimeClasspath
+        }
+
+        //Wire them up so they run as part of the check task (and as such through build, but not through test!)
+        evalSubProject.tasks.named('check') {
+            // Run the functional tests as part of `check`
+            dependsOn evalSubProject.tasks.functionalTest
+        }
+
+        //Setup plugin publishing
+        evalSubProject.gradlePlugin.automatedPublishing = true
+
+        //Handle the idea plugin
+        evalSubProject.idea { ideaSpec ->
+            ideaSpec.module { ideaModule ->
+                ideaModule.getTestSources().from(evalSubProject.sourceSets.functionalTest.java)
+                ideaModule.getTestSources().from(evalSubProject.sourceSets.functionalTest.resources)
+            }
+        }
+
+        //Handle eclipse
+        //Gradle doesn't add it's own source when doing the API. So lets hack it in!
+        evalSubProject.extensions.eclipse.classpath.file.whenMerged { Classpath cp ->
+            def gradleSrc = gradle.gradleHomeDir.absolutePath.replace(File.separator, '/') + '/src/'
+            cp.entries.each { entry ->
+                if ((entry in AbstractLibrary) && entry.library.file.name.startsWith('gradle-')) {
+                    def type = (entry.library.file.name =~ "^gradle(-(.*))?-(${gradle.gradleVersion})")[0][2 as String]
+                    if (type == 'api') type = 'core-api' //Gradle name is different for cores
+                    if (type == '') type = 'core'
+                    entry.sourcePath = new FileReferenceFactory().fromPath(gradleSrc + type)
+                }
+            }
+        }
+    }
+}
+
+//Configure all the subprojects which are not plugins
+subprojects.forEach { subProject ->
+    subProject.afterEvaluate { Project evalSubProject ->
+        if (evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
+            return;
+        }
+
+        evalSubProject.publishing.publications { PublicationContainer publications ->
+            publications.named('maven', MavenPublication) { publication ->
+                SoftwareComponent component = evalSubProject.components.java
+                publication.from component
+            }
+        }
     }
 }

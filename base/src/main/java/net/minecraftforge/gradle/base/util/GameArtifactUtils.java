@@ -10,8 +10,8 @@ public final class GameArtifactUtils {
         throw new IllegalStateException("Can not instantiate an instance of: GameArtifactUtils. This is a utility class");
     }
 
-    public static void doWhenRequired(final GameArtifact artifact, final DistributionType side, final Runnable runnable) {
-        if (artifact.isRequiredForSide(side)) {
+    public static void doWhenRequired(final GameArtifact artifact, final DistributionType type, final Runnable runnable) {
+        if (artifact.isRequiredForDistribution(type)) {
             runnable.run();
         }
     }

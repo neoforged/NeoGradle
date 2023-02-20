@@ -1,12 +1,9 @@
 plugins {
     id 'groovy'
-    id 'maven-publish'
 }
 
 dependencies {
     api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
-    api gradleApi()
-
     api "com.google.code.gson:gson:${project.gson_version}"
 
     compileOnly project(':dsl-annotations')

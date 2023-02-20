@@ -1,20 +1,11 @@
 plugins {
+    id 'groovy'
     id 'java-gradle-plugin'
 }
 
 dependencies {
     api project(':dsl-specification-runs')
-
     api project(':base')
 
     api "com.google.code.gson:gson:${project.gson_version}"
-}
-
-gradlePlugin {
-    plugins {
-        runs {
-            id = 'net.minecraftforge.gradle.runs'
-            implementationClass = 'net.minecraftforge.gradle.runs.RunsPlugin'
-        }
-    }
 }

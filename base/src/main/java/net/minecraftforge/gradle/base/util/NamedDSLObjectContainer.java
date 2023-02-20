@@ -30,7 +30,15 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
- public abstract class NamedDSLObjectContainer<TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> implements NamedDomainObjectContainer<TEntry> {
+/**
+ * A named domain object container that is also a DSL object.
+ *
+ * @param <TEntry> The type of the entries in the container.
+ * @implNote This is a delegate class for {@link NamedDomainObjectContainer}.
+ * @implNote This class is not intended to be extended by clients.
+ * @implNote There is no unit test for this class, we assume that the delegate class is tested by gradle.
+ */
+public abstract class NamedDSLObjectContainer<TEntry extends BaseDSLElement<TEntry> & NamedDSLElement> implements NamedDomainObjectContainer<TEntry> {
 
     private final Project project;
     private final NamedDomainObjectContainer<TEntry> delegate;
@@ -304,19 +312,19 @@ import java.util.SortedSet;
         return this.delegate.findAll(spec);
     }
 
-     @SuppressWarnings("deprecation")
-     @Override
-     public NamedDSLObjectContainer<TEntry> configure(Closure configureClosure) {
-         return ConfigureUtil.configureSelf(configureClosure, this);
-     }
+    @SuppressWarnings("deprecation")
+    @Override
+    public NamedDSLObjectContainer<TEntry> configure(Closure configureClosure) {
+        return ConfigureUtil.configureSelf(configureClosure, this);
+    }
 
-     public Object methodMissing(String name, Object args) {
-        Object[] params = (Object[])args;
+    public Object methodMissing(String name, Object args) {
+        Object[] params = (Object[]) args;
         try {
             if (params.length == 0) {
                 return this.delegate.getByName(name);
             } else if (params.length == 1 && params[0] instanceof Closure) {
-                return this.delegate.getByName(name, (Closure)params[0]);
+                return this.delegate.getByName(name, (Closure) params[0]);
             } else if (params.length == 1 && params[0] instanceof Action) {
                 return this.delegate.getByName(name, (Action) params[0]);
             } else {
@@ -326,7 +334,7 @@ import java.util.SortedSet;
             if (params.length == 0) {
                 return this.delegate.create(name);
             } else if (params.length == 1 && params[0] instanceof Closure) {
-                return this.delegate.create(name, (Closure)params[0]);
+                return this.delegate.create(name, (Closure) params[0]);
             } else if (params.length == 1 && params[0] instanceof Action) {
                 return this.delegate.create(name, (Action) params[0]);
             } else {

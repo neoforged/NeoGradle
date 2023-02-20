@@ -7,12 +7,12 @@ import java.util.function.Predicate
 
 @CompileStatic
 enum GameArtifact {
-    LAUNCHER_MANIFEST((String version) -> CacheFileSelector.launcherMetadata(), (side) -> true),
-    VERSION_MANIFEST(CacheFileSelector.&forVersionJson, (DistributionType side) -> true),
-    CLIENT_JAR((String version) -> CacheFileSelector.forVersionJar(version, "client"), (side) -> side != DistributionType.SERVER),
-    SERVER_JAR((String version) -> CacheFileSelector.forVersionJar(version, "server"), (side) -> side != DistributionType.CLIENT),
-    CLIENT_MAPPINGS((String version) -> CacheFileSelector.forVersionMappings(version, "client"), (side) -> true),
-    SERVER_MAPPINGS((String version) -> CacheFileSelector.forVersionMappings(version, "server"), (side) -> true);
+    LAUNCHER_MANIFEST((String version) -> CacheFileSelector.launcherMetadata(), (type) -> true),
+    VERSION_MANIFEST((String version) -> CacheFileSelector.forVersionJson(version), (type) -> true),
+    CLIENT_JAR((String version) -> CacheFileSelector.forVersionJar(version, "client"), (type) -> type != DistributionType.SERVER),
+    SERVER_JAR((String version) -> CacheFileSelector.forVersionJar(version, "server"), (type) -> type != DistributionType.CLIENT),
+    CLIENT_MAPPINGS((String version) -> CacheFileSelector.forVersionMappings(version, "client"), (type) -> true),
+    SERVER_MAPPINGS((String version) -> CacheFileSelector.forVersionMappings(version, "server"), (type) -> true);
 
     private final Function<String, CacheFileSelector> selectorBuilder;
     private final Predicate<DistributionType> isRequiredForSide;
@@ -26,7 +26,7 @@ enum GameArtifact {
         return selectorBuilder.apply(minecraftVersion);
     }
 
-    boolean isRequiredForSide(final DistributionType side) {
+    boolean isRequiredForDistribution(final DistributionType side) {
         return isRequiredForSide.test(side);
     }
 }

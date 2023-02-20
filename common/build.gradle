@@ -1,14 +1,9 @@
-import org.gradle.plugins.ide.eclipse.model.internal.FileReferenceFactory
 plugins {
     id 'groovy'
     id 'java-gradle-plugin'
 }
 
-gradlePlugin.testSourceSets(sourceSets.test)
-
 dependencies {
-    api gradleApi()
-
     api project(':base')
     api project(':runs')
 
@@ -32,39 +27,5 @@ dependencies {
 
     // IDE support
     api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
-
-    testImplementation gradleTestKit()
-    testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
-
-    testImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") {
-        exclude group: 'org.codehaus.groovy'
-    }
-
-    testImplementation project(':base-testing')
 }
 
-gradlePlugin {
-    plugins {
-        common {
-            id = 'net.minecraftforge.gradle.common'
-            implementationClass = 'net.minecraftforge.gradle.common.CommonPlugin'
-        }
-    }
-}
-
-//Gradle doesn't add it's own source when doing the API. So lets hack it in!
-project.extensions.eclipse.classpath.file.whenMerged { Classpath cp ->
-    def gradleSrc = gradle.gradleHomeDir.absolutePath.replace(File.separator, '/') + '/src/'
-    cp.entries.each { entry ->
-        if ((entry in AbstractLibrary) && entry.library.file.name.startsWith('gradle-')) {
-            def type = (entry.library.file.name =~ "^gradle(-(.*))?-(${gradle.gradleVersion})")[0][2]
-            if (type == 'api') type = 'core-api' //Gradle name is different for cores
-            if (type == '') type = 'core'
-            entry.sourcePath = new FileReferenceFactory().fromPath(gradleSrc + type)
-        }
-    }
-}
-
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-}

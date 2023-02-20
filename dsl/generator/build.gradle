@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
-    api gradleApi()
 
     api project(':dsl-annotations')
 }

@@ -3,59 +3,10 @@ plugins {
     id 'java-gradle-plugin'
 }
 
-sourceSets {
-    functionalTest {}
-}
-
-gradlePlugin.testSourceSets(sourceSets.functionalTest, sourceSets.test)
-configurations.functionalTestImplementation.extendsFrom(configurations.testImplementation)
-
-
 dependencies {
     api project(':common')
     api project(':mcp')
     api project(':dsl-specification-userdev')
-
-    testImplementation gradleTestKit()
-    testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
-
-    testImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") {
-        exclude group: 'org.codehaus.groovy'
-    }
-
-    testImplementation project(':base-testing')
-    functionalTestImplementation project(':base-testing')
 }
 
-gradlePlugin {
-    plugins {
-        userdev {
-            id = 'net.minecraftforge.gradle'
-            implementationClass = 'net.minecraftforge.gradle.userdev.UserDevPlugin'
-        }
-    }
-}
 
-// Add a task to run the functional tests
-tasks.register('functionalTest', Test) {
-    group 'verification'
-
-    testClassesDirs = sourceSets.functionalTest.output.classesDirs
-    classpath = sourceSets.functionalTest.runtimeClasspath
-}
-
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-}
-
-tasks.named('check') {
-    // Run the functional tests as part of `check`
-    dependsOn tasks.functionalTest
-}
-
-idea {
-    module {
-        testSourceDirs += project.sourceSets.functionalTest.java.srcDirs
-        testSourceDirs += project.sourceSets.functionalTest.resources.srcDirs
-    }
-}
