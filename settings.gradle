@@ -16,6 +16,7 @@ include 'dsl-specification-mcp'
 include 'dsl-specification-runs'
 include 'dsl-specification-vanilla'
 include 'dsl-specification-userdev'
+include 'base-functional-testing'
 include 'base-testing'
 include 'base'
 include 'common'
@@ -33,5 +34,3 @@ project(':dsl-specification-runs').projectDir = new File(rootDir, 'dsl/specifica
 project(':dsl-specification-vanilla').projectDir = new File(rootDir, 'dsl/specification/vanilla')
 project(':dsl-specification-userdev').projectDir = new File(rootDir, 'dsl/specification/userdev')
 project(':dsl-base').projectDir = new File(rootDir, 'dsl/base')
-
-//includeBuild'dsl-test'; project(':dsl-test').projectDir = new File(rootDir, 'dsl/test')

@@ -27,5 +27,7 @@ dependencies {
 
     // IDE support
     api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
+
+    testImplementation project(':base-testing')
 }
 

@@ -43,6 +43,7 @@ public abstract class NamingChannelProvider extends ConfigurableObject<NamingCha
         this.name = name;
 
         getMinecraftVersionExtractor().convention(project.getProviders().provider(() -> data -> data.get(NamingConstants.Version.VERSION)));
+        getDeobfuscationGroupSupplier().convention("");
     }
 
     @Override

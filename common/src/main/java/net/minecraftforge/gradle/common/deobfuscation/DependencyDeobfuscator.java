@@ -5,6 +5,7 @@ import net.minecraftforge.gradle.common.extensions.DeobfuscationExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.util.DecompileUtils;
@@ -29,14 +30,36 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Function;
+import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
+/**
+ * The logical handler for deobfuscating dependencies.
+ * Handles the creation of the deobfuscation tasks and the replacement of the dependencies.
+ * <p>
+ * Relies on the {@link DependencyReplacement} extension to determine which dependencies to deobfuscate.
+ * <p>
+ * Since this is a singleton class, it is not recommended to create an instance of this class.
+ * Instead, use the {@link #getInstance()} method to get the singleton instance.
+ *
+ * @implNote Since this is a singleton it is not allowed to store any state in this class!
+ * @see DependencyReplacement
+ * @see DependencyReplacer
+ * @see DependencyReplacement
+ * @see DependencyReplacementResult
+ * @see Context
+ */
 public final class DependencyDeobfuscator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyDeobfuscator.class);
     private static final DependencyDeobfuscator INSTANCE = new DependencyDeobfuscator();
 
+    /**
+     * Gets the singleton instance of the dependency deobfuscator.
+     *
+     * @return The singleton instance of the dependency deobfuscator.
+     */
     public static DependencyDeobfuscator getInstance() {
         return INSTANCE;
     }
@@ -44,53 +67,76 @@ public final class DependencyDeobfuscator {
     private DependencyDeobfuscator() {
     }
 
+    /**
+     * Applies the deobfuscation handler to the given project.
+     *
+     * @param project The project to apply the deobfuscation handler to.
+     */
     public void apply(final Project project) {
+        //Get the replacement handler.
         final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
 
+        //Register our replacement handler.
         dependencyReplacer.getReplacementHandlers().create("obfuscatedDependencies", handler -> {
             handler.getReplacer().set(context -> {
+                //We only want to replace external dependencies.
                 if (!(context.getDependency() instanceof ExternalModuleDependency)) {
                     return Optional.empty();
                 }
 
+                //We only want to replace dependencies that actually exist.
                 final Configuration resolver = context.getProject().getConfigurations().detachedConfiguration(context.getDependency());
                 if (resolver.getResolvedConfiguration().getLenientConfiguration().getFiles().isEmpty()) {
+                    //No files, so we can't replace it. -> Might be a resolution failure!
                     return Optional.empty();
                 }
 
+                //We only want to replace dependencies that have a single resolved dependency.
                 final Set<ResolvedDependency> dependencies = resolver.getResolvedConfiguration().getLenientConfiguration().getFirstLevelModuleDependencies();
                 if (dependencies.size() == 0) {
+                    //No dependencies, so we can't replace it. -> Might be a resolution failure!
                     return Optional.empty();
                 }
                 if (dependencies.size() != 1) {
+                    //More than one dependency, so we can't replace it.
                     LOGGER.warn("Dependency resolution for: " + context.getDependency() + " resulted in more then one resolved dependency. Skipping deobfuscation!");
                     return Optional.empty();
                 }
 
+                //Handle replacement of the resolved dependency.
                 return determineReplacementOptions(context, dependencies.iterator().next());
             });
         });
     }
 
     private Optional<DependencyReplacementResult> determineReplacementOptions(final Context context, final ResolvedDependency resolvedDependency) {
+        //Get all the artifacts that need to be processed.
         final Set<ResolvedArtifact> artifacts = resolvedDependency.getModuleArtifacts();
         if (artifacts.size() == 0) {
+            //No artifacts found, so we can't replace it. -> Might be a resolution failure!
             return Optional.empty();
         }
 
         if (artifacts.size() != 1) {
+            //More than one artifact, so we can't replace it.
             LOGGER.warn("Dependency resolution for: " + resolvedDependency.getName() + " resulted in more then one file. Can not deobfuscate!");
             return Optional.empty();
         }
 
+        //Grab the one artifact, and its file.
         final ResolvedArtifact artifact = artifacts.iterator().next();
         final File file = artifact.getFile();
 
+        //Check if the artifact is obfuscated.
+        //The try-with-resources catches any IOExceptions that might occur, in turn validating that we are talking about an actual jar file.
         try (final JarInputStream jarStream = new JarInputStream(Files.newInputStream(file.toPath()))) {
             Manifest mf = jarStream.getManifest();
-            final boolean isObfuscated = mf != null && mf.getMainAttributes().containsKey("Obfuscated") && Boolean.parseBoolean(mf.getMainAttributes().getValue("Obfuscated"));
-            final boolean obfuscatedByForgeGradle = mf != null && mf.getMainAttributes().containsKey("Obfuscated-By") && mf.getMainAttributes().getValue("Obfuscated-By").equals("ForgeGradle");
+            //Check if we have a valid manifest.
+            final boolean isObfuscated = mf != null && mf.getMainAttributes().containsKey(new Attributes.Name("Obfuscated")) && Boolean.parseBoolean(mf.getMainAttributes().getValue("Obfuscated"));
+            final boolean obfuscatedByForgeGradle = mf != null && mf.getMainAttributes().containsKey(new Attributes.Name("Obfuscated-By")) && mf.getMainAttributes().getValue("Obfuscated-By").equals("ForgeGradle");
+
             if (isObfuscated && obfuscatedByForgeGradle) {
+                //We have an obfuscated artifact, so we need to deobfuscate it.
                 final Set<ResolvedDependency> children = resolvedDependency.getChildren();
                 final Map<ResolvedDependency, Optional<DependencyReplacementResult>> childResults = children.stream()
                         .collect(Collectors.toMap(
@@ -159,6 +205,7 @@ public final class DependencyDeobfuscator {
                 return Optional.empty();
             }
         } catch (IOException e) {
+            //Failed to read the jar file, so we can't replace it.
             LOGGER.warn("Failed to read manifest for deobfuscation detection!", e);
             return Optional.empty();
         }

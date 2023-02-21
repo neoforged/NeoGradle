@@ -1,13 +1,15 @@
-plugins {
-    id 'groovy'
-}
-
 dependencies {
-    api gradleTestKit()
-    api "com.google.guava:guava:${project.guava_version}"
-    api "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+    api project(':dsl-base')
+    api project(':utils')
 
-    api ("org.spockframework:spock-core:${project.spock_version}-groovy-${project.spock_groovy_version}") {
-        exclude group: 'org.codehaus.groovy'
-    }
+    api "com.google.code.gson:gson:${project.gson_version}"
+    api "com.google.guava:guava:${project.guava_version}"
+    api "commons-io:commons-io:${project.commons_io_version}"
+    api "net.minecraftforge:srgutils:${project.srgutils_version}"
+    api "de.siegmar:fastcsv:${project.fastcsv_version}"
+
+    api "com.google.jimfs:jimfs:${project.jimfs_version}"
+
+    api "org.mockito:mockito-core:${project.mockito_version}"
+    api "org.mockito:mockito-inline:${project.mockito_version}"
 }

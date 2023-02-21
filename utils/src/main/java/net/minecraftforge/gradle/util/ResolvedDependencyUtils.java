@@ -20,6 +20,9 @@ public final class ResolvedDependencyUtils {
      */
     @Nullable
     public static String getClassifier(final ResolvedDependency resolvedDependency) {
+        if (resolvedDependency.getModuleArtifacts().isEmpty())
+            return null;
+
         return resolvedDependency.getModuleArtifacts().iterator().next().getClassifier();
     }
 
@@ -31,6 +34,9 @@ public final class ResolvedDependencyUtils {
      */
     @Nullable
     public static String getExtension(final ResolvedDependency resolvedDependency) {
+        if (resolvedDependency.getModuleArtifacts().isEmpty())
+            return null;
+
         return resolvedDependency.getModuleArtifacts().iterator().next().getExtension();
     }
 }

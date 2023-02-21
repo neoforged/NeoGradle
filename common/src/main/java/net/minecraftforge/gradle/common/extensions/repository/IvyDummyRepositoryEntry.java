@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
+import net.minecraftforge.gradle.util.ModuleDependencyUtils;
+import net.minecraftforge.gradle.util.ResolvedDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
@@ -288,12 +290,8 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
             setGroup(dependency.getGroup());
             setName(dependency.getName());
             setVersion(dependency.getVersion());
-
-            if (!dependency.getArtifacts().isEmpty()) {
-                final DependencyArtifact artifact = dependency.getArtifacts().iterator().next();
-                setClassifier(artifact.getClassifier());
-                setExtension(artifact.getExtension());
-            }
+            setClassifier(ModuleDependencyUtils.getClassifier(dependency));
+            setExtension(ModuleDependencyUtils.getExtension(dependency));
             return this;
         }
 
@@ -302,12 +300,8 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
             setGroup(resolvedDependency.getModuleGroup());
             setName(resolvedDependency.getModuleName());
             setVersion(resolvedDependency.getModuleVersion());
-
-            if (resolvedDependency.getModuleArtifacts().size() > 0) {
-                final ResolvedArtifact artifact = resolvedDependency.getModuleArtifacts().iterator().next();
-                setClassifier(artifact.getClassifier());
-                setExtension(artifact.getExtension());
-            }
+            setClassifier(ResolvedDependencyUtils.getClassifier(resolvedDependency));
+            setExtension(ResolvedDependencyUtils.getExtension(resolvedDependency));
             return this;
         }
 

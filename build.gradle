@@ -82,6 +82,11 @@ subprojects.forEach { subProject ->
     subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
 
+    //Exclude duplicates.
+    subProject.tasks.withType(Jar).configureEach { jarTask ->
+        jarTask.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+
     //Setup the test task to use JUnit 5 and its platform.
     subProject.tasks.withType(Test).configureEach { testTask ->
         testTask.useJUnitPlatform()
@@ -120,7 +125,7 @@ subprojects.forEach { subProject ->
         evalSubProject.configurations.functionalTestImplementation.extendsFrom(evalSubProject.configurations.testImplementation)
 
         //All dependencies needed to run the functional tests.
-        evalSubProject.dependencies.functionalTestImplementation project(':base-testing')
+        evalSubProject.dependencies.functionalTestImplementation project(':base-functional-testing')
         evalSubProject.dependencies.functionalTestImplementation subProject.dependencies.gradleTestKit()
         evalSubProject.dependencies.functionalTestImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
