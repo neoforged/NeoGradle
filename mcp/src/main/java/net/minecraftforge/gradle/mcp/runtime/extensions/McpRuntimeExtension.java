@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.mcp.runtime.extensions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.util.CopyingFileTreeVisitor;
 import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
@@ -39,6 +40,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -212,7 +214,9 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
 
         stepsMcpDirectory.mkdirs();
 
-        FileUtils.unzip(mcpZipFile, unpackedMcpZipDirectory);
+        final FileTree mcpZipFileTree = spec.getProject().zipTree(mcpZipFile);
+        final CopyingFileTreeVisitor unpackingVisitor = new CopyingFileTreeVisitor(unpackedMcpZipDirectory);
+        mcpZipFileTree.visit(unpackingVisitor);
 
         final File mcpConfigFile = new File(unpackedMcpZipDirectory, "config.json");
         final McpConfigConfigurationSpecV2 mcpConfig = McpConfigConfigurationSpecV2.get(mcpConfigFile);
@@ -231,7 +235,6 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getName(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(mcpDirectory, "raw.jar"));
         });
-
 
         final McpRuntimeDefinition definition = new McpRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
             configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, runtimeTask);

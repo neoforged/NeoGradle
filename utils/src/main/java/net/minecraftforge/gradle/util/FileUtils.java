@@ -86,54 +86,6 @@ public final class FileUtils {
     }
 
     /**
-     * Unzips the given zip file to the given directory.
-     * Catching all exceptions and rethrowing them as a {@link RuntimeException}.
-     *
-     * @param zipFile The zip file to unzip
-     * @param dir The directory to unzip to
-     */
-    public static void unzip(File zipFile, File dir) {
-        // create output directory if it doesn't exist
-        if(!dir.exists()) dir.mkdirs();
-        FileInputStream fis;
-        //buffer for read and write data to file
-        byte[] buffer = new byte[1024];
-        try {
-            fis = new FileInputStream(zipFile);
-            ZipInputStream zis = new ZipInputStream(fis);
-            ZipEntry ze = zis.getNextEntry();
-            while(ze != null){
-                String fileName = ze.getName();
-                File newFile = new File(dir.getAbsolutePath() + File.separator + fileName);
-                if (ze.isDirectory())
-                {
-                    newFile.mkdirs();
-                }
-                else
-                {
-                    new File(newFile.getParent()).mkdirs();
-                    newFile.createNewFile();
-                    FileOutputStream fos = new FileOutputStream(newFile);
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
-                    fos.close();
-                    zis.closeEntry();
-                }
-
-                ze = zis.getNextEntry();
-            }
-            //close last ZipEntry
-            zis.closeEntry();
-            zis.close();
-            fis.close();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to unzip file!", e);
-        }
-    }
-
-    /**
      * Creates a path targeting a temporary file with the given key.
      *
      * @param parent The parent directory of the temporary file
@@ -215,7 +167,9 @@ public final class FileUtils {
      * @param renamer The renamer to apply to the zip file
      * @param loggerWrapper The progress logger wrapper
      * @throws IOException If an I/O error occurs
+     * @implNote This method does not use the {@link CopyingFileTreeVisitor} since it has some special functions.
      */
+    //TODO: In the future expand this method to use the CopyingFileTreeVisitor instead of a custom implementation.
     public static void extractZip(final ArchiveOperations archiveOperations, final File input, final File output, final boolean overrideExisting, final boolean clean, final Action<? super PatternFilterable> filter, final Function<String, String> renamer, final GradleInternalUtils.ProgressLoggerWrapper loggerWrapper) throws IOException {
         final FileTree tree = archiveOperations.zipTree(input);
         final FileTree filtered = tree.matching(filter);

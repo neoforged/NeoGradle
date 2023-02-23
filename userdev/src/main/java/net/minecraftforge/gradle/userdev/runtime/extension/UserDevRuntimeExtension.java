@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.userdev.runtime.extension;
 
+import net.minecraftforge.gradle.util.CopyingFileTreeVisitor;
 import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
@@ -29,6 +30,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +63,9 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         unpackedForgeDirectory.mkdirs();
 
-        FileUtils.unzip(userDevJar, unpackedForgeDirectory);
+        final FileTree userDevJarZipTree = spec.getProject().zipTree(userDevJar);
+        final CopyingFileTreeVisitor unpackingVisitor = new CopyingFileTreeVisitor(unpackedForgeDirectory);
+        userDevJarZipTree.visit(unpackingVisitor);
 
         final File userDevConfigFile = new File(unpackedForgeDirectory, "config.json");
         final UserDevConfigurationSpecV2 userDevConfigurationSpec = UserDevConfigurationSpecUtils.get(getProject(), userDevConfigFile);
