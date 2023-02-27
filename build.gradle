@@ -105,6 +105,15 @@ subprojects.forEach { subProject ->
     }
 
     subProject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
+    //noinspection ConfigurationAvoidance Due to how the eclipse plugin creates this task, tasks.named throws
+    subProject.tasks.findByName('eclipseJdt')?.configure {
+        doFirst {
+            it.getJdt().file.withProperties { properties ->
+                // Eclipse's view of projects treat circular dependencies (which we don't actually have but w/e) as errors by default
+                properties['org.eclipse.jdt.core.circularClasspath'] = 'warning'
+            }
+        }
+    }
 }
 
 //Configure all the subprojects that are plugins
@@ -176,20 +185,6 @@ subprojects.forEach { subProject ->
             ideaSpec.module { ideaModule ->
                 ideaModule.getTestSources().from(evalSubProject.sourceSets.functionalTest.java)
                 ideaModule.getTestSources().from(evalSubProject.sourceSets.functionalTest.resources)
-            }
-        }
-
-        //Handle eclipse
-        //Gradle doesn't add it's own source when doing the API. So lets hack it in!
-        evalSubProject.extensions.eclipse.classpath.file.whenMerged { Classpath cp ->
-            def gradleSrc = gradle.gradleHomeDir.absolutePath.replace(File.separator, '/') + '/src/'
-            cp.entries.each { entry ->
-                if ((entry in AbstractLibrary) && entry.library.file.name.startsWith('gradle-')) {
-                    def type = (entry.library.file.name =~ "^gradle(-(.*))?-(${gradle.gradleVersion})")[0][2 as String]
-                    if (type == 'api') type = 'core-api' //Gradle name is different for cores
-                    if (type == '') type = 'core'
-                    entry.sourcePath = new FileReferenceFactory().fromPath(gradleSrc + type)
-                }
             }
         }
     }
