@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.util;
 
 import org.gradle.api.artifacts.ModuleDependency;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -27,6 +28,18 @@ public final class ModuleDependencyUtils {
     }
 
     /**
+     * Gets the classifier of the first artifact of the given {@link ModuleDependency}
+     *
+     * @param moduleDependency The {@link ModuleDependency} to get the classifier from
+     * @return The classifier of the first artifact of the given {@link ModuleDependency}, might be empty if none is found.
+     */
+    @NotNull
+    public static String getClassifierOrEmpty(final ModuleDependency moduleDependency) {
+        final String artifactClassifier = getClassifier(moduleDependency);
+        return artifactClassifier == null ? "" : artifactClassifier;
+    }
+
+    /**
      * Gets the extension of the first artifact of the given {@link ModuleDependency}
      *
      * @param moduleDependency The {@link ModuleDependency} to get the extension from
@@ -38,5 +51,17 @@ public final class ModuleDependencyUtils {
             return null;
 
         return moduleDependency.getArtifacts().iterator().next().getExtension();
+    }
+
+    /**
+     * Gets the extension of the first artifact of the given {@link ModuleDependency}
+     *
+     * @param moduleDependency The {@link ModuleDependency} to get the extension from
+     * @return The extension of the first artifact of the given {@link ModuleDependency}, might be empty if not found
+     */
+    @NotNull
+    public static String getExtensionOrEmpty(final ModuleDependency moduleDependency) {
+        final String artifactExtension = getExtension(moduleDependency);
+        return artifactExtension == null ? "" : artifactExtension;
     }
 }

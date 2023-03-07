@@ -290,8 +290,8 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
             setGroup(dependency.getGroup());
             setName(dependency.getName());
             setVersion(dependency.getVersion());
-            setClassifier(ModuleDependencyUtils.getClassifier(dependency));
-            setExtension(ModuleDependencyUtils.getExtension(dependency));
+            setClassifier(ModuleDependencyUtils.getClassifierOrEmpty(dependency));
+            setExtension(ModuleDependencyUtils.getExtensionOrEmpty(dependency));
             return this;
         }
 
@@ -300,8 +300,8 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
             setGroup(resolvedDependency.getModuleGroup());
             setName(resolvedDependency.getModuleName());
             setVersion(resolvedDependency.getModuleVersion());
-            setClassifier(ResolvedDependencyUtils.getClassifier(resolvedDependency));
-            setExtension(ResolvedDependencyUtils.getExtension(resolvedDependency));
+            setClassifier(ResolvedDependencyUtils.getClassifierOrEmpty(resolvedDependency));
+            setExtension(ResolvedDependencyUtils.getExtensionOrEmpty(resolvedDependency));
             return this;
         }
 

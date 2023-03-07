@@ -63,13 +63,7 @@ subprojects.forEach { subProject ->
         repository.name 'MinecraftForge'
         repository.url = 'https://maven.minecraftforge.net/'
     }
-
-    //Temporary additional repository for the idea submodules.
-    //TODO: Rehost the idea repositories on FORGEMAVEN!
-    subProject.repositories.maven { MavenArtifactRepository repository ->
-        repository.name 'Sponge'
-        repository.url = 'https://repo.spongepowered.org/repository/maven-public/'
-    }
+    subProject.repositories.gradlePluginPortal()
 
     //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
     subProject.dependencies.api subProject.dependencies.gradleApi()
@@ -146,9 +140,9 @@ subprojects.forEach { subProject ->
             plugins.register(evalSubProject.name.toLowerCase()) {
 
                 //Determine the class name and package of the plugin.
-                File pluginFile = evalSubProject.fileTree('src/main/java') {
-                    include { it.file.name.toLowerCase() == "${evalSubProject.getName()}plugin.java" }
-                }.find() as File
+                def pluginFile = evalSubProject.fileTree('src/main/java')
+                        .filter { it.name.toLowerCase() == "${evalSubProject.getName()}plugin.java".toLowerCase() }
+                        .first()
 
                 //We need to handle the case of a fresh new project, no files exist yet, so the pluginFile object will be null.
                 def pluginClassName = "unknown";

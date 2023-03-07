@@ -61,7 +61,6 @@ public final class UserDevDependencyManager {
         }));
     }
 
-
     private boolean isNotAMatchingDependency(final Dependency dependencyToCheck) {
         if (dependencyToCheck instanceof ExternalModuleDependency) {
             final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependencyToCheck;

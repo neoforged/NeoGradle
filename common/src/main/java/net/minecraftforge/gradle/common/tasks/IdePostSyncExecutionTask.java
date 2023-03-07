@@ -1,4 +1,4 @@
-package net.minecraftforge.gradle.common.ide.task;
+package net.minecraftforge.gradle.common.tasks;
 
 import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 

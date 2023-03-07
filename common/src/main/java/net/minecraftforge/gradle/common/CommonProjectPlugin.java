@@ -1,5 +1,7 @@
 package net.minecraftforge.gradle.common;
 
+import net.minecraftforge.gradle.common.extensions.IdeManagementExtension;
+import net.minecraftforge.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
 import net.minecraftforge.gradle.util.GradleInternalUtils;
 import net.minecraftforge.gradle.common.deobfuscation.DependencyDeobfuscator;
 import net.minecraftforge.gradle.common.extensions.AccessTransformersExtension;
@@ -61,10 +63,11 @@ public class CommonProjectPlugin implements Plugin<Project> {
         // Setup runs
         project.getPluginManager().apply(RunsPlugin.class);
 
+        project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
-        project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project);
+        project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create(Obfuscation.class, "obfuscation", ObfuscationExtension.class, project);
 

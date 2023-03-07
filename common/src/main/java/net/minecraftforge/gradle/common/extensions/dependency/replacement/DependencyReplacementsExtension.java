@@ -3,8 +3,9 @@ package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
 import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gradle.common.extensions.dependency.creation.DependencyCreator;
 import net.minecraftforge.gradle.util.TransformerUtils;
-import net.minecraftforge.gradle.common.ide.IdeManager;
+import net.minecraftforge.gradle.common.extensions.IdeManagementExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.DependencyGenerationTask;
 import net.minecraftforge.gradle.common.tasks.RawAndSourceCombiner;
@@ -26,6 +27,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
@@ -34,9 +36,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
+/**
+ * Defines the implementation of the @{link DependencyReplacement} extension.
+ * <p>
+ * Uses the configuration system to handle dependency replacement.
+ */
 public abstract class DependencyReplacementsExtension extends ConfigurableObject<DependencyReplacement> implements DependencyReplacement {
 
     private final Project project;
+    private final DependencyCreator dependencyCreator;
     private final TaskProvider<? extends DependencyGenerationTask> dependencyGenerator;
     private final Set<Configuration> configuredConfigurations = Sets.newHashSet();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
@@ -46,20 +54,29 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
 
     @SuppressWarnings("unchecked")
     @Inject
-    public DependencyReplacementsExtension(Project project) {
+    public DependencyReplacementsExtension(Project project, DependencyCreator dependencyCreator) {
         this.project = project;
+        this.dependencyCreator = dependencyCreator;
+
+        //Wire up a replacement handler to each configuration for when a dependency is added.
         this.project.getConfigurations().configureEach(configuration -> configuration.getDependencies().whenObjectAdded(dependency -> {
+            //We only support module based dependencies.
             if (dependency instanceof ModuleDependency) {
                 final ModuleDependency moduleDependency = (ModuleDependency) dependency;
+                //Try replacing the dependency.
                 handleDependency(configuration, moduleDependency);
             }
         }));
 
+        //This is the root task that gets wired up to every configuration which has its dependency replaced.
         this.dependencyGenerator = this.project.getTasks().register("generateDependencies", DependencyGenerationTask.class);
+
+        //Collection holder of all custom dependency replacement handlers.
         this.dependencyReplacementHandlers = this.project.getObjects().newInstance(
                 NamedDSLObjectContainer.class,
                 this.project,
                 DependencyReplacementHandler.class,
+                //We use the projects object manager to handle the dependency replacement handler creation, so that properties are wired up correctly.
                 (NamedDomainObjectFactory<DependencyReplacementHandler>) name -> getProject().getObjects().newInstance(DependencyReplacementHandlerImpl.class, getProject(), name)
         );
     }
@@ -69,6 +86,23 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
         return project;
     }
 
+    /**
+     * Indicates if the dependency replacement extension has been baked.
+     *
+     * @return true if the extension has been baked, false otherwise.
+     * @implNote In the future, this should use the planned runtime lifecycle management instead of a direct callback.
+     */
+    @VisibleForTesting
+    boolean hasBeenBaked() {
+        return hasBeenBaked;
+    }
+
+    /**
+     * Invoked by the runtime system to indicate that the project has the definitions baked.
+     *
+     * @param project The project that has the definitions baked.
+     * @implNote In the future, this should use the planned runtime lifecycle management instead of a direct callback.
+     */
     public void onPostDefinitionBakes(final Project project) {
         this.hasBeenBaked = true;
         if (project.getState().getFailure() == null) {
@@ -82,37 +116,89 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
         return this.dependencyReplacementHandlers;
     }
 
+    /**
+     * Handle the dependency replacement for the given dependency.
+     *
+     * @param configuration The configuration that the dependency is being added to.
+     * @param dependency The dependency that is being added.
+     * @implNote Currently short circuits on the first replacement handler that returns a replacement, might want to change this in the future.
+     */
+    @VisibleForTesting
     @SuppressWarnings("OptionalGetWithoutIsPresent") //Two lines above the get....
-    private void handleDependency(final Configuration configuration, final ModuleDependency dependency) {
+    void handleDependency(final Configuration configuration, final ModuleDependency dependency) {
         Set<DependencyReplacementHandler> replacementHandlers = getReplacementHandlers();
         replacementHandlers.stream()
                 .map(handler -> handler.getReplacer().get() .get(new DependencyReplacementContext(project, configuration, dependency)))
                 .filter(Optional::isPresent)
                 .findFirst()
                 .map(Optional::get)
-                .ifPresent(result -> handleDependencyReplacement(configuration, dependency, result));
+                .ifPresent(result -> handleDependencyReplacement(configuration, dependency, result, this::handleDependencyReplacementForIde, this::handleDependencyReplacementForGradle));
     }
 
-    private void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result) {
+    /**
+     * All callbacks that should be invoked when baking of runtimes completes.
+     *
+     * @return The set of callbacks.
+     */
+    @VisibleForTesting
+    @NotNull
+    Set<Consumer<Project>> getAfterDefinitionBakeCallbacks() {
+        return afterDefinitionBakeCallbacks;
+    }
+
+    /**
+     * A set of all configurations which have at least one dependency replaced and as such are configured to run the relevant
+     * generation tasks to provide the dependencies.
+     *
+     * @return The set of configurations.
+     */
+    @VisibleForTesting
+    @NotNull
+    Set<Configuration> getConfiguredConfigurations() {
+        return configuredConfigurations;
+    }
+
+    /**
+     * Handle the dependency replacement for the given dependency.
+     *
+     * @param configuration The configuration to handle the replacement in.
+     * @param dependency The dependency to replace.
+     * @param result The replacement result from one of the handlers.
+     * @param ideReplacer The replacer to use when the IDE is importing the project.
+     * @param gradleReplacer The replacer to use when the project is being built by Gradle.
+     * @implNote This method is responsible for removing the dependency from the configuration and adding the dependency provider task to the configuration.
+     * @implNote Currently the gradle importer is always used, the ide replacer is however only invoked when an IDE is detected.
+     */
+    @VisibleForTesting
+    void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result, DependencyReplacer ideReplacer, DependencyReplacer gradleReplacer) {
         configuration.getDependencies().remove(dependency);
 
         registerDependencyProviderTaskIfNecessaryTo(configuration);
 
-        if (IdeManager.getInstance().isIdeImportInProgress()) {
-            handleDependencyReplacementForIde(configuration, dependency, result);
+        final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
+
+        if (ideManagementExtension.isIdeImportInProgress()) {
+            ideReplacer.handle(configuration, dependency, result);
         }
 
-        handleDependencyReplacementForGradle(configuration, dependency, result);
+        gradleReplacer.handle(configuration, dependency, result);
     }
 
-    private void registerDependencyProviderTaskIfNecessaryTo(Configuration configuration) {
+    /**
+     * Registers the dependency provider task to the given configuration if it has not already been registered.
+     * 
+     * @param configuration The configuration to register the task to.
+     */
+    @VisibleForTesting
+    void registerDependencyProviderTaskIfNecessaryTo(Configuration configuration) {
         if (!this.configuredConfigurations.contains(configuration)) {
             this.configuredConfigurations.add(configuration);
-            configuration.getDependencies().add(this.project.getDependencies().create(this.project.files(this.dependencyGenerator.get())));
+            configuration.getDependencies().add(this.dependencyCreator.from(this.dependencyGenerator.get()));
         }
 
         if (!registeredTaskToIde) {
-            IdeManager.getInstance().registerTaskToRun(project, dependencyGenerator);
+            final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
+            ideManagementExtension.registerTaskToRun(dependencyGenerator);
             registeredTaskToIde = true;
         }
     }
@@ -147,7 +233,8 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
         }));
     }
 
-    private void createDependencyReplacementResult(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result, final TaskProviderGenerator generator) {
+    @VisibleForTesting
+    void createDependencyReplacementResult(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result, final TaskProviderGenerator generator) {
         if (!(dependency instanceof ExternalModuleDependency)) {
             return;
         }
@@ -157,36 +244,44 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
         final Repository<?,?,?,?,?> extension = project.getExtensions().getByType(Repository.class);
         final Provider<Directory> repoBaseDir = extension.getRepositoryDirectory();
         try {
-            extension.withDependency(builder -> {
-                builder.from(externalModuleDependency);
-                result.getDependencyMetadataConfigurator().accept(builder);
-
-                result.getAdditionalDependenciesConfiguration().getDependencies()
-                        .stream()
-                        .filter(ExternalModuleDependency.class::isInstance)
-                        .map(ExternalModuleDependency.class::cast)
-                        .forEach(additionalDependency -> builder.withDependency(depBuilder -> depBuilder.from(additionalDependency)));
-            }, entry -> {
-                final TaskProvider<? extends Task> rawAndSourceCombinerTask = generator.generate(repoBaseDir, entry);
-
-                final Dependency replacedDependency = entry.toGradle(project);
-                configuration.getDependencies().add(replacedDependency);
-                result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
-
-                afterDefinitionBake(projectAfterBake -> {
-                    this.dependencyGenerator.configure(task -> {
-                        task.dependsOn(rawAndSourceCombinerTask);
-                        //noinspection Convert2MethodRef -> Gradle Groovy shit fails.
-                        result.getAdditionalIdePostSyncTasks().forEach(postSyncTask -> task.dependsOn(postSyncTask));
-                    });
-                });
-            });
+            extension.withDependency(
+                    builder -> configureRepositoryEntry(result, externalModuleDependency, builder),
+                    entry -> processRepositoryEntry(configuration, result, generator, repoBaseDir, entry)
+            );
         } catch (XMLStreamException | IOException e) {
             throw new RuntimeException(String.format("Failed to create the dummy dependency for: %s", dependency), e);
         }
     }
 
-    private void afterDefinitionBake(final Consumer<Project> callback) {
+    private void processRepositoryEntry(Configuration configuration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
+        final TaskProvider<? extends Task> rawAndSourceCombinerTask = generator.generate(repoBaseDir, entry);
+
+        final Dependency replacedDependency = entry.toGradle(project);
+        configuration.getDependencies().add(replacedDependency);
+        result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
+
+        afterDefinitionBake(projectAfterBake -> {
+            this.dependencyGenerator.configure(task -> {
+                task.dependsOn(rawAndSourceCombinerTask);
+                //noinspection Convert2MethodRef -> Gradle Groovy shit fails.
+                result.getAdditionalIdePostSyncTasks().forEach(postSyncTask -> task.dependsOn(postSyncTask));
+            });
+        });
+    }
+
+    private void configureRepositoryEntry(DependencyReplacementResult result, ExternalModuleDependency externalModuleDependency, RepositoryEntry.Builder<?, ?, ?> builder) {
+        builder.from(externalModuleDependency);
+        result.getDependencyMetadataConfigurator().accept(builder);
+
+        result.getAdditionalDependenciesConfiguration().getDependencies()
+                .stream()
+                .filter(ExternalModuleDependency.class::isInstance)
+                .map(ExternalModuleDependency.class::cast)
+                .forEach(additionalDependency -> builder.withDependency(depBuilder -> depBuilder.from(additionalDependency)));
+    }
+
+    @VisibleForTesting
+    void afterDefinitionBake(final Consumer<Project> callback) {
         if (this.hasBeenBaked) {
             callback.accept(this.project);
             return;
@@ -195,10 +290,16 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
         this.afterDefinitionBakeCallbacks.add(callback);
     }
 
+    @VisibleForTesting
     @FunctionalInterface
-    private interface TaskProviderGenerator {
+    interface TaskProviderGenerator {
 
         TaskProvider<? extends Task> generate(final Provider<Directory> repoBaseDir, final RepositoryEntry<?,?> entry);
     }
 
+    @VisibleForTesting
+    @FunctionalInterface
+    interface DependencyReplacer {
+        void handle(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result);
+    }
 }

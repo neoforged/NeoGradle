@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.util;
 
 import org.gradle.api.artifacts.ResolvedDependency;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -27,6 +28,18 @@ public final class ResolvedDependencyUtils {
     }
 
     /**
+     * Gets the classifier of the first artifact of the given {@link ResolvedDependency}
+     *
+     * @param resolvedDependency The {@link ResolvedDependency} to get the classifier from
+     * @return The classifier of the first artifact of the given {@link ResolvedDependency}, might be empty if not found
+     */
+    @NotNull
+    public static String getClassifierOrEmpty(final ResolvedDependency resolvedDependency) {
+        final String artifactClassifier = getClassifier(resolvedDependency);
+        return artifactClassifier == null ? "" : artifactClassifier;
+    }
+
+    /**
      * Gets the extension of the first artifact of the given {@link ResolvedDependency}
      *
      * @param resolvedDependency The {@link ResolvedDependency} to get the extension from
@@ -38,5 +51,17 @@ public final class ResolvedDependencyUtils {
             return null;
 
         return resolvedDependency.getModuleArtifacts().iterator().next().getExtension();
+    }
+
+    /**
+     * Gets the extension of the first artifact of the given {@link ResolvedDependency}
+     *
+     * @param resolvedDependency The {@link ResolvedDependency} to get the extension from
+     * @return The extension of the first artifact of the given {@link ResolvedDependency}, might be empty if not found
+     */
+    @NotNull
+    public static String getExtensionOrEmpty(final ResolvedDependency resolvedDependency) {
+        final String artifactExtension = getExtension(resolvedDependency);
+        return artifactExtension == null ? "" : artifactExtension;
     }
 }
