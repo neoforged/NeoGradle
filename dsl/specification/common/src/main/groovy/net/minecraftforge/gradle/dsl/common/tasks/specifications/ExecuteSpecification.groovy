@@ -1,7 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.tasks.specifications
 
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty
-import net.minecraftforge.gradle.dsl.common.tasks.WithProject
+import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty

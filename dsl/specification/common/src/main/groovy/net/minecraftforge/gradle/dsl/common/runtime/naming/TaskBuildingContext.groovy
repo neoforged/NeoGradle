@@ -2,7 +2,7 @@
 package net.minecraftforge.gradle.dsl.common.runtime.naming
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
+import net.minecraftforge.gdi.annotations.ProjectGetter
 import net.minecraftforge.gradle.dsl.base.util.GameArtifact
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition

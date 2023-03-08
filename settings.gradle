@@ -1,3 +1,5 @@
+import java.util.stream.Stream
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -8,14 +10,6 @@ pluginManagement {
 rootProject.name = 'ForgeGradle'
 
 include 'utils'
-include 'dsl-generator'
-include 'dsl-annotations'
-include 'dsl-base'
-include 'dsl-specification-common'
-include 'dsl-specification-mcp'
-include 'dsl-specification-runs'
-include 'dsl-specification-vanilla'
-include 'dsl-specification-userdev'
 include 'base-functional-testing'
 include 'base-testing'
 include 'base'
@@ -26,11 +20,14 @@ include 'runs'
 //include 'patcher'
 include 'userdev'
 
-project(':dsl-generator').projectDir = new File(rootDir, 'dsl/generator')
-project(':dsl-annotations').projectDir = new File(rootDir, 'dsl/annotations')
-project(':dsl-specification-common').projectDir = new File(rootDir, 'dsl/specification/common')
-project(':dsl-specification-mcp').projectDir = new File(rootDir, 'dsl/specification/mcp')
-project(':dsl-specification-runs').projectDir = new File(rootDir, 'dsl/specification/runs')
-project(':dsl-specification-vanilla').projectDir = new File(rootDir, 'dsl/specification/vanilla')
-project(':dsl-specification-userdev').projectDir = new File(rootDir, 'dsl/specification/userdev')
-project(':dsl-base').projectDir = new File(rootDir, 'dsl/base')
+subProject 'dsl-base'
+subProject 'dsl-specification-mcp'
+subProject 'dsl-specification-runs'
+subProject 'dsl-specification-common'
+subProject 'dsl-specification-vanilla'
+subProject 'dsl-specification-userdev'
+
+void subProject(final String name) {
+    include name
+    project(":$name").projectDir = new File(rootDir, "${String.join('/', name.split('-'))}")
+}

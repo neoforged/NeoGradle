@@ -6,6 +6,5 @@ dependencies {
     api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
 
     api project(':utils')
-    api project(':dsl-annotations')
-    api project(':dsl-generator')
+    api "net.minecraftforge:groovydslimprover:${project.gdi_version}"
 }

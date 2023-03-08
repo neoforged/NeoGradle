@@ -1,9 +1,8 @@
 package net.minecraftforge.gradle.dsl.base.util
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
+import net.minecraftforge.gdi.annotations.ProjectGetter
 import org.gradle.api.Project
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
 /**

@@ -1,13 +1,11 @@
 package net.minecraftforge.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.DefaultMethods;
+import net.minecraftforge.gdi.annotations.DefaultMethods;
 import org.gradle.api.Task;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.Provider;
-
-import java.io.File;
+import org.gradle.api.provider.Provider
 
 /**
  * Defines a task which has a workspace associated with it.

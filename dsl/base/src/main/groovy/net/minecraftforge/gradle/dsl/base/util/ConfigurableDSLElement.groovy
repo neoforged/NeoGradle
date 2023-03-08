@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.dsl.base.util
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.BouncerMethod
-import net.minecraftforge.gradle.dsl.annotations.DefaultMethods
+import net.minecraftforge.gdi.annotations.BouncerMethod
+import net.minecraftforge.gdi.annotations.DefaultMethods
 import net.minecraftforge.gradle.util.GradleInternalUtils
 import org.gradle.api.Action
 import org.gradle.api.plugins.ExtensionAware

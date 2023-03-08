@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.dsl.runs.run
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.ClosureEquivalent
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gdi.annotations.ClosureEquivalent
+import net.minecraftforge.gdi.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import org.gradle.api.Action
 import org.gradle.api.artifacts.Dependency

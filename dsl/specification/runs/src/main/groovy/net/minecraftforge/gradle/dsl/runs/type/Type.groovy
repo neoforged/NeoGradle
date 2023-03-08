@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.dsl.runs.type
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gdi.annotations.DSLProperty
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import net.minecraftforge.gradle.dsl.base.util.NamedDSLElement
 import org.gradle.api.file.ConfigurableFileCollection

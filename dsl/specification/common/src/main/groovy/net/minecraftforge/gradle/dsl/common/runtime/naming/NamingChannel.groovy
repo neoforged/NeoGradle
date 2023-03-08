@@ -1,10 +1,9 @@
 package net.minecraftforge.gradle.dsl.common.runtime.naming;
 
 import groovy.transform.CompileStatic;
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
+import net.minecraftforge.gdi.annotations.DSLProperty;
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
 import org.gradle.api.provider.Property
-import org.gradle.internal.impldep.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop
 import org.jetbrains.annotations.NotNull;
 
 /**

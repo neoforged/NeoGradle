@@ -9,9 +9,8 @@ dependencies {
     api "com.google.guava:guava:${project.guava_version}"
     api "com.google.code.gson:gson:${project.gson_version}"
 
-    compileOnly project(':dsl-annotations')
     compileOnly project(':dsl-base')
-    compileOnly project(':dsl-generator')
+    api "net.minecraftforge:groovydslimprover:${project.gdi_version}"
 
     compileOnly project(':dsl-specification-runs')
 }

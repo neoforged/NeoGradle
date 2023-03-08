@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
+import net.minecraftforge.gdi.annotations.DSLProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 

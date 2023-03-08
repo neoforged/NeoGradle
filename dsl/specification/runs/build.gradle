@@ -6,7 +6,6 @@ dependencies {
     api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
     api "com.google.code.gson:gson:${project.gson_version}"
 
-    compileOnly project(':dsl-annotations')
     compileOnly project(':dsl-base')
-    compileOnly project(':dsl-generator')
+    api "net.minecraftforge:groovydslimprover:${project.gdi_version}"
 }

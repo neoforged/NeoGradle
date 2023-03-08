@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.dsl.common.tasks.specifications
 
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty
+import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal

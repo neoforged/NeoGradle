@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty
-import net.minecraftforge.gradle.dsl.annotations.ProjectGetter
+import net.minecraftforge.gdi.annotations.DSLProperty
+import net.minecraftforge.gdi.annotations.ProjectGetter
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel
 import org.gradle.api.Project

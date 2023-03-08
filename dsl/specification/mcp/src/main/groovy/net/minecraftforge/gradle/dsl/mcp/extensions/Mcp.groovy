@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.dsl.mcp.extensions
 
 import groovy.transform.CompileStatic;
-import net.minecraftforge.gradle.dsl.annotations.DSLProperty;
+import net.minecraftforge.gdi.annotations.DSLProperty;
 import net.minecraftforge.gradle.dsl.base.BaseDSLElement;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import org.gradle.api.provider.Property;
