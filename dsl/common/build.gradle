@@ -1,0 +1,12 @@
+plugins {
+    id 'groovy'
+}
+
+dependencies {
+    api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
+    api "commons-io:commons-io:${project.commons_io_version}"
+    api "org.apache.maven:maven-artifact:${project.maven_artifact_version}"
+    api "com.google.guava:guava:${project.guava_version}"
+    api "com.google.code.gson:gson:${project.gson_version}"
+    api "net.minecraftforge:groovydslimprover:${project.groovy_dsl_improver_version}"
+}

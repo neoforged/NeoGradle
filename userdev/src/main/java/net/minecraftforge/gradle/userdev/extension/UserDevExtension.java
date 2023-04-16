@@ -1,12 +1,12 @@
 package net.minecraftforge.gradle.userdev.extension;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.dsl.userdev.extension.UserDev;
 import org.gradle.api.Project;
 
 import javax.inject.Inject;
 
-public abstract class UserDevExtension extends ConfigurableObject<UserDev> implements UserDev {
+public abstract class UserDevExtension implements UserDev, ConfigurableDSLElement<UserDev> {
 
     private final Project project;
 

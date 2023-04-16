@@ -1,7 +1,7 @@
 package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import org.gradle.api.Action;
@@ -20,7 +20,7 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public abstract class IvyDummyRepositoryExtension extends ConfigurableObject<IvyDummyRepositoryExtension> implements Repository<IvyDummyRepositoryExtension, IvyDummyRepositoryEntry, IvyDummyRepositoryEntry.Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder>
+public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElement<IvyDummyRepositoryExtension>, Repository<IvyDummyRepositoryExtension, IvyDummyRepositoryEntry, IvyDummyRepositoryEntry.Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder>
 {
     /**
      * A version for stored metadata.

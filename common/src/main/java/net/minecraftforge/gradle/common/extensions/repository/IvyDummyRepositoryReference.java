@@ -1,7 +1,8 @@
 package net.minecraftforge.gradle.common.extensions.repository;
 
 import groovy.lang.GroovyObjectSupport;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.minecraftforge.gdi.ProjectAssociatedDSLElement;
 import net.minecraftforge.gradle.util.ResolvedDependencyUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryReference;
 import org.gradle.api.Project;
@@ -14,7 +15,7 @@ import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.Objects;
 
-public abstract class IvyDummyRepositoryReference extends ConfigurableObject<IvyDummyRepositoryReference> implements RepositoryReference, Serializable {
+public abstract class IvyDummyRepositoryReference implements ConfigurableDSLElement<IvyDummyRepositoryReference>, RepositoryReference, Serializable, ProjectAssociatedDSLElement {
     private static final long serialVersionUID = 8472300128115908221L;
 
     private transient final Project project;

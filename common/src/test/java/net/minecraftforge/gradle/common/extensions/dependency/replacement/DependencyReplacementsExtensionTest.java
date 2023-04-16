@@ -456,8 +456,8 @@ public class DependencyReplacementsExtensionTest {
                 configuration,
                 mock(ProjectDependency.class),
                 mock(DependencyReplacementResult.class),
-                gradleReplacementHandler,
-                mock(DependencyReplacementsExtension.DependencyReplacer.class)
+                mock(DependencyReplacementsExtension.DependencyReplacer.class),
+                gradleReplacementHandler
         );
 
         verify(gradleReplacementHandler).handle(any(), any(), any());
@@ -498,8 +498,8 @@ public class DependencyReplacementsExtensionTest {
                 configuration,
                 mock(ProjectDependency.class),
                 mock(DependencyReplacementResult.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class),
-                ideReplacementHandler
+                ideReplacementHandler,
+                mock(DependencyReplacementsExtension.DependencyReplacer.class)
         );
 
         verify(ideReplacementHandler).handle(any(), any(), any());
@@ -540,8 +540,8 @@ public class DependencyReplacementsExtensionTest {
                 configuration,
                 mock(ProjectDependency.class),
                 mock(DependencyReplacementResult.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class),
-                ideReplacementHandler
+                ideReplacementHandler,
+                mock(DependencyReplacementsExtension.DependencyReplacer.class)
         );
 
         verify(ideReplacementHandler, never()).handle(any(), any(), any());

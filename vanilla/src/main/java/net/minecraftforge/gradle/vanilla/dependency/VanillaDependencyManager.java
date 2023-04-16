@@ -1,12 +1,12 @@
 package net.minecraftforge.gradle.vanilla.dependency;
 
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.minecraftforge.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.gradle.api.Action;

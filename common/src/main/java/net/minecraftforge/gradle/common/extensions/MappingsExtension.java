@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.common.extensions;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import groovy.lang.MissingMethodException;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import org.gradle.api.Project;
@@ -12,7 +13,7 @@ import javax.inject.Inject;
 /**
  * Defines a holder for mapping artifact specification.
  */
-public abstract class MappingsExtension extends ConfigurableObject<Mappings> implements Mappings {
+public abstract class MappingsExtension implements ConfigurableDSLElement<Mappings>, Mappings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingsExtension.class);
 
@@ -41,6 +42,6 @@ public abstract class MappingsExtension extends ConfigurableObject<Mappings> imp
             return getMinecraft().getNamingChannelProviders().named(name);
         }
 
-        return super.invokeMethod(name, args);
+        throw new MissingMethodException(name, this.getClass(), new Object[] {args});
     }
 }

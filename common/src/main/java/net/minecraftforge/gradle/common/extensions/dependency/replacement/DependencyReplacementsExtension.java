@@ -1,8 +1,7 @@
 package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.common.extensions.dependency.creation.DependencyCreator;
 import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.extensions.IdeManagementExtension;
@@ -41,7 +40,7 @@ import java.util.function.Consumer;
  * <p>
  * Uses the configuration system to handle dependency replacement.
  */
-public abstract class DependencyReplacementsExtension extends ConfigurableObject<DependencyReplacement> implements DependencyReplacement {
+public abstract class DependencyReplacementsExtension implements ConfigurableDSLElement<DependencyReplacement>, DependencyReplacement {
 
     private final Project project;
     private final DependencyCreator dependencyCreator;
@@ -72,13 +71,7 @@ public abstract class DependencyReplacementsExtension extends ConfigurableObject
         this.dependencyGenerator = this.project.getTasks().register("generateDependencies", DependencyGenerationTask.class);
 
         //Collection holder of all custom dependency replacement handlers.
-        this.dependencyReplacementHandlers = this.project.getObjects().newInstance(
-                NamedDSLObjectContainer.class,
-                this.project,
-                DependencyReplacementHandler.class,
-                //We use the projects object manager to handle the dependency replacement handler creation, so that properties are wired up correctly.
-                (NamedDomainObjectFactory<DependencyReplacementHandler>) name -> getProject().getObjects().newInstance(DependencyReplacementHandlerImpl.class, getProject(), name)
-        );
+        this.dependencyReplacementHandlers = this.project.getObjects().domainObjectContainer(DependencyReplacementHandler.class, name -> this.project.getObjects().newInstance(DependencyReplacementHandlerImpl.class, this.project, name));
     }
 
     @Override

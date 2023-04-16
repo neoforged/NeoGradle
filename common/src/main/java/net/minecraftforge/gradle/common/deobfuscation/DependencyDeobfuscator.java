@@ -8,6 +8,7 @@ import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.util.DecompileUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -17,7 +18,6 @@ import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.De
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.*;

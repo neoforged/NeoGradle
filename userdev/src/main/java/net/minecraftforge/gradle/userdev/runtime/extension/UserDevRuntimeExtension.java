@@ -1,18 +1,17 @@
 package net.minecraftforge.gradle.userdev.runtime.extension;
 
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.util.CopyingFileTreeVisitor;
-import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.tasks.specifications.OutputSpecification;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.runs.type.Type;
-import net.minecraftforge.gradle.dsl.runs.type.Types;
+import net.minecraftforge.gradle.dsl.common.runs.type.Type;
+import net.minecraftforge.gradle.dsl.common.runs.type.Types;
 import net.minecraftforge.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;

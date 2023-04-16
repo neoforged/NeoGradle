@@ -5,11 +5,11 @@ import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefiniti
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
 import net.minecraftforge.gradle.common.util.VersionJson;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.runs.run.RunImpl;
+import net.minecraftforge.gradle.common.runs.run.RunImpl;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.minecraftforge.gradle.vanilla.util.InterpolationConstants;
 import net.minecraftforge.gradle.vanilla.util.ServerLaunchInformation;
@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 /**
  * Represents a configured and registered runtime for vanilla.
  */
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<VanillaRuntimeSpecification> {
 
     private final VersionJson versionJson;
@@ -33,7 +34,17 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
     private final Optional<ServerLaunchInformation> serverLaunchInformation;
 
-    public VanillaRuntimeDefinition(@NotNull VanillaRuntimeSpecification specification, @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs, @NotNull TaskProvider<? extends ArtifactProvider> sourceJarTask, @NotNull TaskProvider<? extends ArtifactProvider> rawJarTask, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks, @NotNull Configuration minecraftDependenciesConfiguration, @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer, VersionJson versionJson, TaskProvider<DownloadAssets> assetsTaskProvider, TaskProvider<ExtractNatives> nativesTaskProvider, Optional<ServerLaunchInformation> serverLaunchInformation) {
+    public VanillaRuntimeDefinition(@NotNull VanillaRuntimeSpecification specification,
+                                    @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
+                                    @NotNull TaskProvider<? extends ArtifactProvider> sourceJarTask,
+                                    @NotNull TaskProvider<? extends ArtifactProvider> rawJarTask,
+                                    @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
+                                    @NotNull Configuration minecraftDependenciesConfiguration,
+                                    @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
+                                    VersionJson versionJson,
+                                    TaskProvider<DownloadAssets> assetsTaskProvider,
+                                    TaskProvider<ExtractNatives> nativesTaskProvider,
+                                    Optional<ServerLaunchInformation> serverLaunchInformation) {
         super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
         this.versionJson = versionJson;
         this.assetsTaskProvider = assetsTaskProvider;

@@ -4,7 +4,7 @@ import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV1;
 import net.minecraftforge.gradle.mcp.runtime.specification.McpRuntimeSpecification;
 import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;

@@ -4,18 +4,17 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
-import net.minecraftforge.gradle.base.util.GameArtifactUtils;
-import net.minecraftforge.gradle.util.HashFunction;
-import net.minecraftforge.gradle.util.UrlConstants;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.common.util.FileCacheUtils;
 import net.minecraftforge.gradle.common.util.FileDownloadingUtils;
-import net.minecraftforge.gradle.dsl.base.util.CacheFileSelector;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
+import net.minecraftforge.gradle.util.HashFunction;
+import net.minecraftforge.gradle.util.UrlConstants;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.TaskProvider;
@@ -34,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static net.minecraftforge.gradle.common.util.FileDownloadingUtils.downloadThrowing;
 
-public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject<MinecraftArtifactCache> implements MinecraftArtifactCache {
+public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSLElement<MinecraftArtifactCache>, MinecraftArtifactCache {
 
     private final Project project;
     private final Map<CacheFileSelector, File> cacheFiles;
@@ -95,12 +94,13 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
     public final Map<GameArtifact, File> cacheGameVersion(final String gameVersion, DistributionType side) {
         final Map<GameArtifact, File> result = new EnumMap<>(GameArtifact.class);
 
-        GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> result.put(GameArtifact.LAUNCHER_MANIFEST, this.cacheLauncherMetadata()));
-        GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> result.put(GameArtifact.VERSION_MANIFEST, this.cacheVersionManifest(gameVersion)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> result.put(GameArtifact.CLIENT_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> result.put(GameArtifact.SERVER_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.SERVER)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.CLIENT)));
-        GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.SERVER)));
+        GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.LAUNCHER_MANIFEST, this.cacheLauncherMetadata()));
+        GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.LAUNCHER_MANIFEST, this.cacheLauncherMetadata()));
+        GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.VERSION_MANIFEST, this.cacheVersionManifest(gameVersion)));
+        GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT)));
+        GameArtifact.SERVER_JAR.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.SERVER)));
+        GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.CLIENT)));
+        GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.SERVER)));
 
         return result;
     }
@@ -112,12 +112,12 @@ public abstract class MinecraftArtifactCacheExtension extends ConfigurableObject
         return tasks.computeIfAbsent(key, k -> {
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
-            GameArtifactUtils.doWhenRequired(GameArtifact.LAUNCHER_MANIFEST, side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
-            GameArtifactUtils.doWhenRequired(GameArtifact.VERSION_MANIFEST, side, () -> results.put(GameArtifact.VERSION_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_JAR, side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_JAR, side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.SERVER))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.CLIENT_MAPPINGS, side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.CLIENT))));
-            GameArtifactUtils.doWhenRequired(GameArtifact.SERVER_MAPPINGS, side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.SERVER))));
+            GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
+            GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
+            GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT))));
+            GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.SERVER))));
+            GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.CLIENT))));
+            GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.SERVER))));
 
             return results;
         });

@@ -20,8 +20,8 @@
 
 package net.minecraftforge.gradle.common.runtime.naming;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.Project;
 
@@ -32,7 +32,7 @@ import javax.inject.Inject;
  * The providers job is, knowing how to construct taskOutputs that can remap certain jar types,
  * like source, compiled or javadoc jar.
  */
-public abstract class NamingChannelProvider extends ConfigurableObject<NamingChannel> implements NamingChannel {
+public abstract class NamingChannelProvider implements NamingChannel, ConfigurableDSLElement<NamingChannel> {
 
     private final Project project;
     private final String name;

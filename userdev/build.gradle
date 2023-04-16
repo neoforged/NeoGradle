@@ -6,7 +6,7 @@ plugins {
 dependencies {
     api project(':common')
     api project(':mcp')
-    api project(':dsl-specification-userdev')
+    api project(':dsl-userdev')
 }
 
 

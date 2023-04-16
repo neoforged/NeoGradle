@@ -3,7 +3,7 @@ package net.minecraftforge.gradle.common.tasks;
 import net.minecraftforge.gradle.dsl.common.tasks.ForgeGradleBase;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.tasks.WithWorkspace;
-import net.minecraftforge.gradle.dsl.base.util.CacheFileSelector;
+import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;

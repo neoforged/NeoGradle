@@ -2,9 +2,9 @@ package net.minecraftforge.gradle.userdev.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraftforge.gradle.dsl.runs.type.Type;
+import net.minecraftforge.gradle.dsl.common.runs.type.Type;
 import net.minecraftforge.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
-import net.minecraftforge.gradle.runs.type.TypeImpl;
+import net.minecraftforge.gradle.common.runs.type.TypeImpl;
 import org.gradle.api.Project;
 
 import java.io.File;

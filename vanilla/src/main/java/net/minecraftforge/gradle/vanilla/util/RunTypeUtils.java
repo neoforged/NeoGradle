@@ -1,7 +1,5 @@
 package net.minecraftforge.gradle.vanilla.util;
 
-import net.minecraftforge.gradle.dsl.runs.type.Type;
-
 public final class RunTypeUtils {
 
     private RunTypeUtils() {

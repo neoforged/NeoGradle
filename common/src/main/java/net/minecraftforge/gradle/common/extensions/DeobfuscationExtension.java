@@ -1,11 +1,11 @@
 package net.minecraftforge.gradle.common.extensions;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.dsl.common.extensions.Deobfuscation;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
 import org.gradle.api.Project;
 
-public abstract class DeobfuscationExtension extends ConfigurableObject<Deobfuscation> implements Deobfuscation {
+public abstract class DeobfuscationExtension implements ConfigurableDSLElement<Deobfuscation>, Deobfuscation {
 
     private final Project project;
 

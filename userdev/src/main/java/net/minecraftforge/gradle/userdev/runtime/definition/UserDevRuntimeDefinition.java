@@ -10,7 +10,7 @@ import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
-import net.minecraftforge.gradle.runs.run.RunImpl;
+import net.minecraftforge.gradle.common.runs.run.RunImpl;
 import net.minecraftforge.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;

@@ -4,14 +4,14 @@ import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefiniti
 import net.minecraftforge.gradle.common.runtime.tasks.ClientExtraJar;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV2;
 import net.minecraftforge.gradle.dsl.mcp.runtime.definition.McpDefinition;
 import net.minecraftforge.gradle.mcp.runtime.specification.McpRuntimeSpecification;
-import net.minecraftforge.gradle.runs.run.RunImpl;
+import net.minecraftforge.gradle.common.runs.run.RunImpl;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;

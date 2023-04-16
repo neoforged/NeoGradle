@@ -1,7 +1,9 @@
 package net.minecraftforge.gradle.common.runtime.naming;
 
+import net.minecraftforge.gradle.common.util.MappingUtils;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.util.GradleInternalUtils;
-import net.minecraftforge.gradle.base.util.MappingUtils;
 import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
@@ -12,9 +14,7 @@ import net.minecraftforge.gradle.common.runtime.naming.tasks.UnapplyOfficialMapp
 import net.minecraftforge.gradle.common.util.CacheableIMappingFile;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;

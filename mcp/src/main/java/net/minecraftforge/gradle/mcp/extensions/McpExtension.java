@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.mcp.extensions;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.mcp.extensions.Mcp;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
@@ -28,7 +28,7 @@ import org.gradle.api.Project;
 
 import javax.inject.Inject;
 
-public abstract class McpExtension extends ConfigurableObject<Mcp> implements Mcp {
+public abstract class McpExtension implements Mcp, ConfigurableDSLElement<Mcp> {
 
     protected final Project project;
 

@@ -1,26 +1,29 @@
 package net.minecraftforge.gradle.common;
 
 import net.minecraftforge.gradle.common.extensions.IdeManagementExtension;
+import net.minecraftforge.gradle.common.extensions.ProjectEvaluationExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
-import net.minecraftforge.gradle.util.GradleInternalUtils;
 import net.minecraftforge.gradle.common.deobfuscation.DependencyDeobfuscator;
 import net.minecraftforge.gradle.common.extensions.AccessTransformersExtension;
 import net.minecraftforge.gradle.common.extensions.ArtifactDownloaderExtension;
 import net.minecraftforge.gradle.common.extensions.MappingsExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftArtifactCacheExtension;
 import net.minecraftforge.gradle.common.extensions.MinecraftExtension;
-import net.minecraftforge.gradle.base.extensions.ProjectEvaluationExtension;
 import net.minecraftforge.gradle.common.extensions.ProjectHolderExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.minecraftforge.gradle.common.extensions.obfuscation.ObfuscationExtension;
 import net.minecraftforge.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
+import net.minecraftforge.gradle.common.runs.run.RunsImpl;
+import net.minecraftforge.gradle.common.runs.type.TypesImpl;
 import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.minecraftforge.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
+import net.minecraftforge.gradle.common.util.constants.RunsConstants;
+import net.minecraftforge.gradle.dsl.common.runs.type.Types;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
@@ -30,10 +33,9 @@ import net.minecraftforge.gradle.dsl.common.extensions.ProjectHolder;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
-import net.minecraftforge.gradle.dsl.common.util.Constants;
-import net.minecraftforge.gradle.dsl.runs.run.Runs;
-import net.minecraftforge.gradle.runs.RunsPlugin;
-import net.minecraftforge.gradle.runs.run.RunImpl;
+import net.minecraftforge.gradle.dsl.common.runs.run.Runs;
+import net.minecraftforge.gradle.common.runs.run.RunImpl;
+import net.minecraftforge.gradle.util.GradleInternalUtils;
 import net.minecraftforge.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -60,8 +62,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
 
-        // Setup runs
-        project.getPluginManager().apply(RunsPlugin.class);
+        //TODO: Setup runs
 
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
@@ -90,6 +91,28 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().getByType(SourceSetContainer.class)
                 .configureEach(sourceSet -> sourceSet
                         .getExtensions().create(ProjectHolder.class, ProjectHolderExtension.NAME, ProjectHolderExtension.class, project));
+
+        project.getExtensions().add(
+                Types.class,
+                RunsConstants.Extensions.RUN_TYPES,
+                project.getObjects().newInstance(TypesImpl.class, project)
+        );
+        project.getExtensions().add(
+                Runs.class,
+                RunsConstants.Extensions.RUNS,
+                project.getObjects().newInstance(RunsImpl.class, project)
+        );
+
+        project.afterEvaluate(p -> {
+            final Types types = p.getExtensions().getByType(Types.class);
+
+            p.getExtensions().getByType(Runs.class)
+                    .matching(run -> run instanceof RunImpl)
+                    .forEach(run -> {
+                        final RunImpl impl = (RunImpl) run;
+                        types.matching(type -> type.getName().equals(run.getName())).forEach(impl::configureInternally);
+                    });
+        });
     }
 
     private void applyAfterEvaluate(final Project project) {

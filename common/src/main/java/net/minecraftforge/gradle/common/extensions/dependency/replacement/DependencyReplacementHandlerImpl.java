@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.extensions.dependency.replacement;
 
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import org.gradle.api.Project;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
-public abstract class DependencyReplacementHandlerImpl extends ConfigurableObject<DependencyReplacementHandler> implements DependencyReplacementHandler {
+public abstract class DependencyReplacementHandlerImpl implements ConfigurableDSLElement<DependencyReplacementHandler>, DependencyReplacementHandler {
 
     private final Project project;
     private final String name;

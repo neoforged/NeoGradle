@@ -1,10 +1,10 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.util.FileUtils;
 import net.minecraftforge.gradle.util.TransformerUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
 import net.minecraftforge.gradle.common.util.CacheableIMappingFile;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.gradle.api.provider.Property;

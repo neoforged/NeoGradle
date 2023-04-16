@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.mcp.dependency;
 
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
@@ -11,7 +12,6 @@ import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
 import org.gradle.api.Project;

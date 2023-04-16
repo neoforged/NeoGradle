@@ -1,9 +1,6 @@
 package net.minecraftforge.gradle.common.deobfuscation;
 
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.file.FileTestingUtils;
-import net.minecraftforge.gradle.base.file.TestFileTarget;
-import net.minecraftforge.gradle.base.tasks.TaskMockingUtils;
 import net.minecraftforge.gradle.common.dummy.DummyRepositoryDependency;
 import net.minecraftforge.gradle.common.dummy.DummyRepositoryEntry;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
@@ -13,6 +10,9 @@ import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.De
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
+import net.minecraftforge.trainingwheels.base.file.FileTestingUtils;
+import net.minecraftforge.trainingwheels.base.file.PathFile;
+import net.minecraftforge.trainingwheels.gradle.base.task.TaskMockingUtils;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -424,7 +424,7 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("does-not-exist");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("does-not-exist");
 
         when(project.getExtensions()).thenReturn(extensionContainer);
         when(extensionContainer.getByType(DependencyReplacement.class)).thenReturn(dependencyReplacement);
@@ -436,7 +436,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
 
         when(handlers.create(ArgumentMatchers.eq("obfuscatedDependencies"), any(Action.class)))
                 .thenAnswer(invocation -> {
@@ -485,9 +485,9 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("not-a-jar");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("not-a-jar");
 
-        Files.write(target.getPath(), "not a jar".getBytes(StandardCharsets.UTF_8));
+        Files.write(target.toPath(), "not a jar".getBytes(StandardCharsets.UTF_8));
 
         when(project.getExtensions()).thenReturn(extensionContainer);
         when(extensionContainer.getByType(DependencyReplacement.class)).thenReturn(dependencyReplacement);
@@ -499,7 +499,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
 
         when(handlers.create(ArgumentMatchers.eq("obfuscatedDependencies"), any(Action.class)))
                 .thenAnswer(invocation -> {
@@ -548,9 +548,9 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("some.jar");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("some.jar");
 
-        final ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(target.getPath()));
+        final ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(target.toPath()));
         zip.flush();
         zip.close();
 
@@ -564,7 +564,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
 
         when(handlers.create(ArgumentMatchers.eq("obfuscatedDependencies"), any(Action.class)))
                 .thenAnswer(invocation -> {
@@ -613,7 +613,7 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("some.jar");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("some.jar");
 
         when(project.getExtensions()).thenReturn(extensionContainer);
         when(extensionContainer.getByType(DependencyReplacement.class)).thenReturn(dependencyReplacement);
@@ -625,7 +625,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
 
         when(handlers.create(ArgumentMatchers.eq("obfuscatedDependencies"), any(Action.class)))
                 .thenAnswer(invocation -> {
@@ -676,7 +676,7 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("some.jar");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("some.jar");
         final TaskContainer taskContainer = mock(TaskContainer.class);
         final List<Task> tasks = new ArrayList<>();
         final Mappings mappings = mock(Mappings.class);
@@ -707,7 +707,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
         when(resolvedDependency.getChildren()).thenReturn(Collections.emptySet());
         when(resolvedDependency.getName()).thenReturn("Dummy");
         when(resolvedDependency.getModuleGroup()).thenReturn("group");
@@ -821,7 +821,7 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("some.jar");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("some.jar");
         final TaskContainer taskContainer = mock(TaskContainer.class);
         final List<Task> tasks = new ArrayList<>();
         final Mappings mappings = mock(Mappings.class);
@@ -851,7 +851,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
         when(resolvedDependency.getChildren()).thenReturn(Collections.emptySet());
         when(resolvedDependency.getName()).thenReturn("Dummy");
         when(resolvedDependency.getModuleGroup()).thenReturn("group");
@@ -964,14 +964,14 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("some.jar");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("some.jar");
         final TaskContainer taskContainer = mock(TaskContainer.class);
         final List<Task> tasks = new ArrayList<>();
         final Mappings mappings = mock(Mappings.class);
         final Property<NamingChannel> namingChannelProperty = mock(Property.class);
         final NamingChannel namingChannel = mock(NamingChannel.class);
         final Property<String> deobfuscationGroupSupplier = mock(Property.class);
-        final TestFileTarget dependentTarget = FileTestingUtils.newSimpleTestFileTarget("dependent.jar");
+        final PathFile dependentTarget = FileTestingUtils.newSimpleTestFile("dependent.jar");
         final ResolvedDependency dependency = mock(ResolvedDependency.class);
         final ResolvedArtifact dependencyArtifact = mock(ResolvedArtifact.class);
 
@@ -997,7 +997,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
         when(resolvedDependency.getChildren()).thenReturn(Collections.singleton(dependency));
         when(resolvedDependency.getName()).thenReturn("Dummy");
         when(resolvedDependency.getModuleGroup()).thenReturn("group");
@@ -1012,7 +1012,7 @@ public class DependencyDeobfuscatorTest {
         when(deobfuscationGroupSupplier.get()).thenReturn("");
 
         when(dependency.getModuleArtifacts()).thenReturn(Collections.singleton(dependencyArtifact));
-        when(dependencyArtifact.getFile()).thenReturn(dependentTarget.getFile());
+        when(dependencyArtifact.getFile()).thenReturn(dependentTarget);
         when(dependency.getChildren()).thenReturn(Collections.emptySet());
         when(dependency.getName()).thenReturn("Dependency");
         when(dependency.getModuleGroup()).thenReturn("dependent_group");
@@ -1131,14 +1131,14 @@ public class DependencyDeobfuscatorTest {
         final LenientConfiguration lenientConfiguration = mock();
         final ResolvedDependency resolvedDependency = mock(ResolvedDependency.class);
         final ResolvedArtifact resolvedArtifact = mock(ResolvedArtifact.class);
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("some.jar");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("some.jar");
         final TaskContainer taskContainer = mock(TaskContainer.class);
         final List<Task> tasks = new ArrayList<>();
         final Mappings mappings = mock(Mappings.class);
         final Property<NamingChannel> namingChannelProperty = mock(Property.class);
         final NamingChannel namingChannel = mock(NamingChannel.class);
         final Property<String> deobfuscationGroupSupplier = mock(Property.class);
-        final TestFileTarget dependentTarget = FileTestingUtils.newSimpleTestFileTarget("dependent.jar");
+        final PathFile dependentTarget = FileTestingUtils.newSimpleTestFile("dependent.jar");
         final ResolvedDependency dependency = mock(ResolvedDependency.class);
         final ResolvedArtifact dependencyArtifact = mock(ResolvedArtifact.class);
 
@@ -1164,7 +1164,7 @@ public class DependencyDeobfuscatorTest {
         when(lenientConfiguration.getFiles()).thenReturn(Collections.singleton(mock(File.class)));
         when(lenientConfiguration.getFirstLevelModuleDependencies()).thenReturn(Collections.singleton(resolvedDependency));
         when(resolvedDependency.getModuleArtifacts()).thenReturn(Collections.singleton(resolvedArtifact));
-        when(resolvedArtifact.getFile()).thenReturn(target.getFile());
+        when(resolvedArtifact.getFile()).thenReturn(target);
         when(resolvedDependency.getChildren()).thenReturn(Collections.singleton(dependency));
         when(resolvedDependency.getName()).thenReturn("Dummy");
         when(resolvedDependency.getModuleGroup()).thenReturn("group");
@@ -1179,7 +1179,7 @@ public class DependencyDeobfuscatorTest {
         when(deobfuscationGroupSupplier.get()).thenReturn("");
 
         when(dependency.getModuleArtifacts()).thenReturn(Collections.singleton(dependencyArtifact));
-        when(dependencyArtifact.getFile()).thenReturn(dependentTarget.getFile());
+        when(dependencyArtifact.getFile()).thenReturn(dependentTarget);
         when(dependency.getChildren()).thenReturn(Collections.emptySet());
         when(dependency.getName()).thenReturn("Dependency");
         when(dependency.getModuleGroup()).thenReturn("dependent_group");
@@ -1320,8 +1320,8 @@ public class DependencyDeobfuscatorTest {
         assertTrue(replacementResult.getAdditionalIdePostSyncTasks().isEmpty());
     }
 
-    private static void createSimpleJar(TestFileTarget target) throws IOException {
-        final ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(target.getPath()));
+    private static void createSimpleJar(PathFile target) throws IOException {
+        final ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(target.toPath()));
         final ZipEntry manifest = new ZipEntry("META-INF/MANIFEST.MF");
         zip.putNextEntry(manifest);
         zip.write("Manifest-Version: 1.0".getBytes(StandardCharsets.UTF_8));
@@ -1330,8 +1330,8 @@ public class DependencyDeobfuscatorTest {
         zip.close();
     }
 
-    private static void createValidDeobfuscatableJar(TestFileTarget target) throws IOException {
-        final ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(target.getPath()));
+    private static void createValidDeobfuscatableJar(PathFile target) throws IOException {
+        final ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(target.toPath()));
         final ZipEntry manifest = new ZipEntry("META-INF/MANIFEST.MF");
         zip.putNextEntry(manifest);
         zip.write("Manifest-Version: 1.0\n".getBytes(StandardCharsets.UTF_8));

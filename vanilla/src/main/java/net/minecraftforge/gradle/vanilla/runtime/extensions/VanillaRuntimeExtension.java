@@ -6,10 +6,10 @@ import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtensio
 import net.minecraftforge.gradle.common.util.BundledServerUtils;
 import net.minecraftforge.gradle.common.util.FileCacheUtils;
 import net.minecraftforge.gradle.common.util.VersionJson;
-import net.minecraftforge.gradle.dsl.base.util.CacheFileSelector;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;

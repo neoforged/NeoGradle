@@ -4,12 +4,8 @@ plugins {
 }
 
 dependencies {
-    api project(':base')
-    api project(':runs')
-
-    api project(':dsl-base')
-    api project(':dsl-specification-common')
-    api project(':dsl-specification-runs')
+    api project(':utils')
+    api project(':dsl-common')
 
     api "commons-io:commons-io:${project.commons_io_version}"
     api "com.google.code.gson:gson:${project.gson_version}"
@@ -27,7 +23,5 @@ dependencies {
 
     // IDE support
     api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
-
-    testImplementation project(':base-testing')
 }
 

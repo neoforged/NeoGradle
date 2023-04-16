@@ -2,15 +2,14 @@ package net.minecraftforge.gradle.common.extensions.repository;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.minecraftforge.gdi.ProjectAssociatedDSLElement;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.minecraftforge.gradle.util.ModuleDependencyUtils;
 import net.minecraftforge.gradle.util.ResolvedDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ModuleDependency;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 
@@ -29,7 +28,7 @@ import java.util.function.Consumer;
 /**
  * An entry which can potentially be requested by IDEs which interface with gradle.
  */
-public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDummyRepositoryEntry> implements RepositoryEntry<IvyDummyRepositoryEntry, IvyDummyRepositoryReference>, Serializable {
+public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<IvyDummyRepositoryEntry>, RepositoryEntry<IvyDummyRepositoryEntry, IvyDummyRepositoryReference>, Serializable, ProjectAssociatedDSLElement {
 
     private static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
     private static final long serialVersionUID = 4025734172533096653L;
@@ -67,6 +66,7 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
         return project;
     }
 
+    @SuppressWarnings("ConstantValue") //Group is not null under certain conditions, however for all practical uses it is not null.
     @Override
     public String getFullGroup() {
         if (getGroup() == null) {
@@ -192,7 +192,7 @@ public abstract class IvyDummyRepositoryEntry extends ConfigurableObject<IvyDumm
         return builder.toString();
     }
 
-    public static abstract class Builder extends ConfigurableObject<Builder> implements RepositoryEntry.Builder<Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder> {
+    public static abstract class Builder implements ConfigurableDSLElement<Builder>, RepositoryEntry.Builder<Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder> {
         private final Project project;
         private String group;
         private String name;

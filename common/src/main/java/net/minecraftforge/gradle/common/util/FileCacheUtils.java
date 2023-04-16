@@ -1,12 +1,11 @@
 package net.minecraftforge.gradle.common.util;
 
 import net.minecraftforge.gradle.common.tasks.FileCacheProviding;
-import net.minecraftforge.gradle.dsl.base.util.CacheFileSelector;
+import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 

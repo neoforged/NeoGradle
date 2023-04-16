@@ -10,22 +10,15 @@ pluginManagement {
 rootProject.name = 'ForgeGradle'
 
 include 'utils'
-include 'base-functional-testing'
-include 'base-testing'
-include 'base'
 include 'common'
 include 'vanilla'
 include 'mcp'
-include 'runs'
-//include 'patcher'
 include 'userdev'
 
-subProject 'dsl-base'
-subProject 'dsl-specification-mcp'
-subProject 'dsl-specification-runs'
-subProject 'dsl-specification-common'
-subProject 'dsl-specification-vanilla'
-subProject 'dsl-specification-userdev'
+subProject 'dsl-common'
+subProject 'dsl-mcp'
+subProject 'dsl-vanilla'
+subProject 'dsl-userdev'
 
 void subProject(final String name) {
     include name

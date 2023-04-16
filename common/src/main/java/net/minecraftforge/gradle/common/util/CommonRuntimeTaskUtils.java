@@ -2,7 +2,6 @@ package net.minecraftforge.gradle.common.util;
 
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
@@ -10,6 +9,7 @@ import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.tasks.TaskProvider;

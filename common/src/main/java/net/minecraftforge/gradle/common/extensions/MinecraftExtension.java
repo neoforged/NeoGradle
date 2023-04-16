@@ -20,8 +20,8 @@
 
 package net.minecraftforge.gradle.common.extensions;
 
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.common.runtime.naming.NamingChannelProvider;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
 import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.Deobfuscation;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
-public abstract class MinecraftExtension extends ConfigurableObject<Minecraft> implements Minecraft {
+public abstract class MinecraftExtension implements ConfigurableDSLElement<Minecraft>, Minecraft {
 
     private final Project project;
     private final AccessTransformers accessTransformers;

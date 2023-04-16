@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
-import static net.minecraftforge.gradle.dsl.base.util.NamingConstants.Version.VERSION;
+import static net.minecraftforge.gradle.dsl.common.util.NamingConstants.Version.VERSION;
 
 public final class MCPNamingChannelConfigurator {
     private static final MCPNamingChannelConfigurator INSTANCE = new MCPNamingChannelConfigurator();

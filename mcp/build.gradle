@@ -4,11 +4,7 @@ plugins {
 }
 
 dependencies {
-    api project(':base-functional-testing')
     api project(':common')
-    api project(':runs')
-
-    api project(':dsl-base')
-    api project(':dsl-specification-common')
-    api project(':dsl-specification-mcp')
+    api project(':dsl-common')
+    api project(':dsl-mcp')
 }

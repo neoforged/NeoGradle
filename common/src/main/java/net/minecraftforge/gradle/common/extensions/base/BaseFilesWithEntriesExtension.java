@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.common.extensions.base;
 
-import net.minecraftforge.gradle.dsl.base.BaseDSLElementWithFilesAndEntries;
+import net.minecraftforge.gdi.BaseDSLElementWithFilesAndEntries;
 import org.gradle.api.Project;
 
 import javax.inject.Inject;

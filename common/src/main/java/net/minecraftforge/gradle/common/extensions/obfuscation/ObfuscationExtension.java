@@ -1,16 +1,15 @@
 package net.minecraftforge.gradle.common.extensions.obfuscation;
 
 import com.google.common.collect.Maps;
-import net.minecraftforge.gradle.base.util.ConfigurableObject;
-import net.minecraftforge.gradle.base.util.NamedDSLObjectContainer;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
-import net.minecraftforge.gradle.dsl.base.util.DistributionType;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
-import net.minecraftforge.gradle.dsl.base.util.NamingConstants;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.extensions.obfuscation.Obfuscation;
@@ -43,7 +42,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscation> implements Obfuscation {
+public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obfuscation>, Obfuscation {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObfuscationExtension.class);
 
@@ -56,11 +55,9 @@ public abstract class ObfuscationExtension extends ConfigurableObject<Obfuscatio
     public ObfuscationExtension(Project project) {
         this.project = project;
 
-        this.manualObfuscationTargets = project.getObjects().newInstance(
-                NamedDSLObjectContainer.class,
-                getProject(),
-                ObfuscationTargetImpl.class,
-                (NamedDomainObjectFactory<ObfuscationTarget>) name -> project.getObjects().newInstance(
+        this.manualObfuscationTargets = project.getObjects().domainObjectContainer(
+                ObfuscationTarget.class,
+                name -> project.getObjects().newInstance(
                         ObfuscationTargetImpl.class,
                         getProject(),
                         name

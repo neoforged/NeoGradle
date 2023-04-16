@@ -68,6 +68,10 @@ subprojects.forEach { subProject ->
     //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
     subProject.dependencies.api subProject.dependencies.gradleApi()
     subProject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
+    subProject.dependencies.api "net.minecraftforge:groovydslimprover:${project.groovy_dsl_improver_version}"
+    subProject.dependencies.api "net.minecraftforge:groovydslimprover:${project.groovy_dsl_improver_version}:base"
+    subProject.dependencies.api "net.minecraftforge:groovydslimprover:${project.groovy_dsl_improver_version}:runtime"
+
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-params:${project.junit_version}"
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
@@ -75,6 +79,8 @@ subprojects.forEach { subProject ->
     subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
+    subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Gradle-Base:${project.trainingwheels_version}"
 
     //Exclude duplicates.
     subProject.tasks.withType(Jar).configureEach { jarTask ->
@@ -128,12 +134,12 @@ subprojects.forEach { subProject ->
         evalSubProject.configurations.functionalTestImplementation.extendsFrom(evalSubProject.configurations.testImplementation)
 
         //All dependencies needed to run the functional tests.
-        evalSubProject.dependencies.functionalTestImplementation project(':base-functional-testing')
         evalSubProject.dependencies.functionalTestImplementation subProject.dependencies.gradleTestKit()
         evalSubProject.dependencies.functionalTestImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
             spec.exclude group: 'org.codehaus.groovy'
         }
+        evalSubProject.dependencies.functionalTestImplementation "net.minecraftforge:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
 
         //Configure the plugin metadata, so we can publish it.
         evalSubProject.gradlePlugin.plugins { org.gradle.api.NamedDomainObjectContainer<PluginDeclaration> plugins ->

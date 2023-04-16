@@ -1,10 +1,10 @@
 package net.minecraftforge.gradle.vanilla.runtime.steps;
 
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.util.StringCapitalizationUtils;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.runtime.tasks.NoopRuntime;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
-import net.minecraftforge.gradle.dsl.base.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.extensions.AccessTransformers;
 import net.minecraftforge.gradle.dsl.common.extensions.Minecraft;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;

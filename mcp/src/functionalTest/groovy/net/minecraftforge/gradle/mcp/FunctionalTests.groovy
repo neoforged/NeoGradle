@@ -1,9 +1,9 @@
 package net.minecraftforge.gradle.mcp
 
-import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
+import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
-class FunctionalTests extends ForgeGradleTestSpecification {
+class FunctionalTests extends SimpleTestSpecification {
 
     protected File codeFile
 
