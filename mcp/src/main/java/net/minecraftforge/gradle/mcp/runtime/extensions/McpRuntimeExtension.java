@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.mcp.runtime.extensions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.util.CopyingFileTreeVisitor;
@@ -183,7 +184,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         final Mappings mappingsExtension = minecraftExtension.getMappings();
         final MinecraftArtifactCache artifactCacheExtension = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
         final Dependency mcpConfigDependency = spec.getProject().getDependencies().create("de.oceanlabs.mcp:mcp_config:" + spec.getMcpVersion() + "@zip");
-        final Configuration mcpDownloadConfiguration = spec.getProject().getConfigurations().detachedConfiguration(mcpConfigDependency);
+        final Configuration mcpDownloadConfiguration = ConfigurationUtils.temporaryConfiguration(spec.getProject(), mcpConfigDependency);
         final ResolvedConfiguration resolvedConfiguration = mcpDownloadConfiguration.getResolvedConfiguration();
         final File mcpZipFile = resolvedConfiguration.getFiles().iterator().next();
 

@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.userdev.runtime.extension;
 
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.util.CopyingFileTreeVisitor;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
@@ -53,7 +54,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final McpRuntimeExtension mcpRuntimeExtension = getProject().getExtensions().getByType(McpRuntimeExtension.class);
 
         final Dependency userDevDependency = getProject().getDependencies().create(String.format("net.minecraftforge:forge:%s:userdev", spec.getForgeVersion()));
-        final Configuration userDevConfiguration = getProject().getConfigurations().detachedConfiguration(userDevDependency);
+        final Configuration userDevConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), userDevDependency);
         final ResolvedConfiguration resolvedUserDevConfiguration = userDevConfiguration.getResolvedConfiguration();
         final File userDevJar = resolvedUserDevConfiguration.getFiles().iterator().next();
 
@@ -69,7 +70,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final File userDevConfigFile = new File(unpackedForgeDirectory, "config.json");
         final UserDevConfigurationSpecV2 userDevConfigurationSpec = UserDevConfigurationSpecUtils.get(getProject(), userDevConfigFile);
 
-        final Configuration userDevAdditionalDependenciesConfiguration = getProject().getConfigurations().detachedConfiguration();
+        final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
         for (String dependencyCoordinate : userDevConfigurationSpec.getAdditionalDependencies()) {
             userDevAdditionalDependenciesConfiguration.getDependencies().add(getProject().getDependencies().create(dependencyCoordinate));
         }

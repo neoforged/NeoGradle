@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.userdev.dependency;
 
 import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -45,7 +46,7 @@ public final class UserDevDependencyManager {
             final Set<Dependency> additionalDependencies = Sets.newHashSet();
             additionalDependencies.addAll(runtimeDefinition.getMcpRuntimeDefinition().getMinecraftDependenciesConfiguration().getDependencies());
             additionalDependencies.addAll(runtimeDefinition.getAdditionalUserDevDependencies().getDependencies());
-            final Configuration additionalDependenciesConfiguration = project.getConfigurations().detachedConfiguration(additionalDependencies.toArray(new Dependency[0]));
+            final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(project, additionalDependencies.toArray(new Dependency[0]));
 
             return Optional.of(
                     new DependencyReplacementResult(

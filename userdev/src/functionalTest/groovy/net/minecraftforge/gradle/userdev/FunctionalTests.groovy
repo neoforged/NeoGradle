@@ -1,9 +1,9 @@
 package net.minecraftforge.gradle.userdev
 
-import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
+import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
-class FunctionalTests extends ForgeGradleTestSpecification {
+class FunctionalTests extends SimpleTestSpecification {
 
     protected File codeFile
 
@@ -18,7 +18,7 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'test-project'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
             
             java {
@@ -46,7 +46,7 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
             
             java {
@@ -83,7 +83,7 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
             
             java {
@@ -127,7 +127,7 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
             
             java {
@@ -239,10 +239,10 @@ class FunctionalTests extends ForgeGradleTestSpecification {
         """
 
         when:
-        def result = runTask(':runClient')
+        def result = runTask(':build')
 
         then:
-        result.task(":runClient").outcome == TaskOutcome.SUCCESS
+        result.task(":build").outcome == TaskOutcome.SUCCESS
 
     }
 }

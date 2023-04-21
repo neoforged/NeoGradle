@@ -5,6 +5,11 @@ import org.gradle.testkit.runner.TaskOutcome
 
 class FunctionalTests extends SimpleTestSpecification {
 
+    static {
+        DEBUG = false
+        DEBUG_PROJECT_DIR = false
+    }
+
     protected File codeFile
 
     @Override
@@ -46,6 +51,7 @@ class FunctionalTests extends SimpleTestSpecification {
     }
 
     def "a mod with mcp as dependency and official mappings can compile through gradle"() {
+
         given:
         settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
         buildFile << """

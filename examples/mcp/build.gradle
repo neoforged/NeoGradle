@@ -1,0 +1,17 @@
+plugins {
+    id 'net.minecraftforge.gradle.mcp'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+mcp {
+    mcpConfigVersion = '1.19-20220627.091056'
+}
+
+dependencies {
+    implementation 'net.minecraft:mcp_client'
+}

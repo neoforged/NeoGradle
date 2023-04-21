@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.common.extensions;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.ArtifactDownloader;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -37,7 +38,7 @@ public abstract class ArtifactDownloaderExtension implements ConfigurableDSLElem
     @NotNull
     public Provider<String> version(String notation) {
         return project.provider(() -> {
-            final Configuration dummyConfiguration = project.getConfigurations().detachedConfiguration(project.getDependencies().create(notation));
+            final Configuration dummyConfiguration = ConfigurationUtils.temporaryConfiguration(project, project.getDependencies().create(notation));
             final ResolvedConfiguration resolvedConfiguration = dummyConfiguration.getResolvedConfiguration();
             return resolvedConfiguration.getResolvedArtifacts().iterator().next().getModuleVersion().getId().getVersion();
         });
@@ -53,7 +54,7 @@ public abstract class ArtifactDownloaderExtension implements ConfigurableDSLElem
             try {
                 for (final ArtifactRepository repository : repositories.values()) {
                     project.getRepositories().add(repository);
-                    final Configuration dummyConfiguration = project.getConfigurations().detachedConfiguration(project.getDependencies().create(notation));
+                    final Configuration dummyConfiguration = ConfigurationUtils.temporaryConfiguration(project, project.getDependencies().create(notation));
                     final ResolvedConfiguration resolvedConfiguration = dummyConfiguration.getResolvedConfiguration();
                     final Set<File> result = resolvedConfiguration.getLenientConfiguration().getFiles();
                     if (result.size() >= 1) {

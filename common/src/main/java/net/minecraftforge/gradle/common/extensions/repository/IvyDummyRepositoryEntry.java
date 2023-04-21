@@ -291,7 +291,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
             setName(dependency.getName());
             setVersion(dependency.getVersion());
             setClassifier(ModuleDependencyUtils.getClassifierOrEmpty(dependency));
-            setExtension(ModuleDependencyUtils.getExtensionOrEmpty(dependency));
+            setExtension(ModuleDependencyUtils.getExtensionOrJar(dependency));
             return this;
         }
 
@@ -301,7 +301,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
             setName(resolvedDependency.getModuleName());
             setVersion(resolvedDependency.getModuleVersion());
             setClassifier(ResolvedDependencyUtils.getClassifierOrEmpty(resolvedDependency));
-            setExtension(ResolvedDependencyUtils.getExtensionOrEmpty(resolvedDependency));
+            setExtension(ResolvedDependencyUtils.getExtensionOrJar(resolvedDependency));
             return this;
         }
 

@@ -12,7 +12,7 @@ import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,7 +45,7 @@ public class ZipBuildingFileTreeVisitorTest {
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
         when(relativePath.getPathString()).thenReturn("some/path");
 
-        doThrow(new IOException("duplicate entry: some/path/")).
+        doAnswer((a) -> { throw new IOException("duplicate entry: some/path/"); }).
                 when(target).putNextEntry(any());
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);
@@ -61,7 +61,7 @@ public class ZipBuildingFileTreeVisitorTest {
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
         when(relativePath.getPathString()).thenReturn("some/path");
 
-        doThrow(new IOException("some other exception")).
+        doAnswer((a) -> { throw new IOException("some other exception"); }).
                 when(target).putNextEntry(any());
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);
@@ -77,7 +77,7 @@ public class ZipBuildingFileTreeVisitorTest {
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
         when(relativePath.getPathString()).thenReturn("some/path");
 
-        doThrow(new IOException("some other exception")).
+        doAnswer((a) -> { throw new IOException("some other exception"); }).
                 when(target).putNextEntry(any());
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);
@@ -93,7 +93,7 @@ public class ZipBuildingFileTreeVisitorTest {
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
         when(relativePath.getPathString()).thenReturn("some/path");
 
-        doThrow(new IOException("some other exception")).
+        doAnswer((a) -> { throw new IOException("some other exception"); }).
                 when(target).closeEntry();
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);
@@ -107,6 +107,7 @@ public class ZipBuildingFileTreeVisitorTest {
         final RelativePath relativePath = mock(RelativePath.class);
 
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
+        when(relativePath.getPathString()).thenReturn("some/path");
         when(relativePath.getPathString()).thenReturn("some/path");
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);
@@ -126,7 +127,7 @@ public class ZipBuildingFileTreeVisitorTest {
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
         when(relativePath.getPathString()).thenReturn("some/path");
 
-        doThrow(new IOException("some other exception")).
+        doAnswer((a) -> { throw new IOException("some other exception"); }).
                 when(target).putNextEntry(any());
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);
@@ -142,7 +143,7 @@ public class ZipBuildingFileTreeVisitorTest {
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
         when(relativePath.getPathString()).thenReturn("some/path");
 
-        doThrow(new IOException("some other exception")).
+        doAnswer((a) -> { throw new IOException("some other exception"); }).
                 when(fileVisitDetails).copyTo(ArgumentMatchers.<OutputStream>any());
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);
@@ -158,7 +159,7 @@ public class ZipBuildingFileTreeVisitorTest {
         when(fileVisitDetails.getRelativePath()).thenReturn(relativePath);
         when(relativePath.getPathString()).thenReturn("some/path");
 
-        doThrow(new IOException("some other exception")).
+        doAnswer((a) -> { throw new IOException("some other exception"); }).
                 when(target).closeEntry();
 
         final ZipBuildingFileTreeVisitor visitor = createVisitor(target);

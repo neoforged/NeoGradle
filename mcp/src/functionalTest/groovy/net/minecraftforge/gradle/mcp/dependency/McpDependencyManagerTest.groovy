@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.mcp.dependency
 
-import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
+import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
 
-class McpDependencyManagerTest extends ForgeGradleTestSpecification {
+class McpDependencyManagerTest extends SimpleTestSpecification {
 
     def "adding a dependency to something other then mcp minecraft works"() {
         given:

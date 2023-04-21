@@ -1,6 +1,6 @@
 package net.minecraftforge.gradle.mcp.deobfuscation
 
-import net.minecraftforge.gradle.base.BuilderBasedTestSpecification
+import net.minecraftforge.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 
 class ObfuscationAndDeobfuscationTestSpecification extends BuilderBasedTestSpecification {
 

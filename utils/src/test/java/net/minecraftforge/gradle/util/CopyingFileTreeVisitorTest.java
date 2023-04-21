@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.util;
 
 import com.google.common.io.ByteStreams;
-import net.minecraftforge.gradle.base.file.FileTestingUtils;
-import net.minecraftforge.gradle.base.file.TestFileTarget;
+import net.minecraftforge.trainingwheels.base.file.FileTestingUtils;
+import net.minecraftforge.trainingwheels.base.file.PathFile;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RelativePath;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ public class CopyingFileTreeVisitorTest {
 
     @Test
     public void visitingADirectoryCreatesADirectoryInTheTarget() throws IOException {
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("directory");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("directory");
         final FileVisitDetails details = mock(FileVisitDetails.class);
         final RelativePath relativePath = mock(RelativePath.class);
 
@@ -36,21 +36,21 @@ public class CopyingFileTreeVisitorTest {
         when(relativePath.getPathString()).thenReturn("directory");
         when(details.isDirectory()).thenReturn(true);
 
-        Files.createDirectory(target.getPath());
+        Files.createDirectory(target.toPath());
 
-        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.getPath());
+        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.toPath());
 
         visitor.visitDir(details);
 
-        final Path targetPath = target.getPath().resolve("directory");
-        assertTrue(Files.exists(targetPath));
-        assertTrue(Files.isDirectory(targetPath));
+        final Path tartoPath = target.toPath().resolve("directory");
+        assertTrue(Files.exists(tartoPath));
+        assertTrue(Files.isDirectory(tartoPath));
     }
 
     @Test
     public void visitingAFileCreatesAFileInTheTarget() throws IOException {
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("directory");
-        final TestFileTarget source = FileTestingUtils.newSimpleTestFileTarget("file.txt");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("directory");
+        final PathFile source = FileTestingUtils.newSimpleTestFile("file.txt");
         final FileVisitDetails details = mock(FileVisitDetails.class);
         final RelativePath relativePath = mock(RelativePath.class);
 
@@ -59,31 +59,31 @@ public class CopyingFileTreeVisitorTest {
         when(details.isDirectory()).thenReturn(true);
         doAnswer(invocation -> {
             final File file = invocation.getArgument(0);
-            Files.copy(source.getPath(), file.toPath());
+            Files.copy(source.toPath(), file.toPath());
             return null;
         }).when(details).copyTo(ArgumentMatchers.<File>any());
         doAnswer(invocation -> {
             final OutputStream outputStream = invocation.getArgument(0);
-            final InputStream inputStream = Files.newInputStream(source.getPath());
+            final InputStream inputStream = Files.newInputStream(source.toPath());
             ByteStreams.copy(inputStream, outputStream);
             return null;
         }).when(details).copyTo(ArgumentMatchers.<OutputStream>any());
 
-        Files.createFile(source.getPath());
+        Files.createFile(source.toPath());
 
-        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.getPath());
+        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.toPath());
 
         visitor.visitFile(details);
 
-        final Path targetPath = target.getPath().resolve("file.txt");
-        assertTrue(Files.exists(targetPath));
-        assertTrue(Files.isRegularFile(targetPath));
+        final Path tartoPath = target.toPath().resolve("file.txt");
+        assertTrue(Files.exists(tartoPath));
+        assertTrue(Files.isRegularFile(tartoPath));
     }
 
     @Test
     public void visitingAFileCreatesAFileInTheTargetAndCopiesItsContent() throws IOException {
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("directory");
-        final TestFileTarget source = FileTestingUtils.newSimpleTestFileTarget("file.txt");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("directory");
+        final PathFile source = FileTestingUtils.newSimpleTestFile("file.txt");
         final FileVisitDetails details = mock(FileVisitDetails.class);
         final RelativePath relativePath = mock(RelativePath.class);
 
@@ -92,75 +92,75 @@ public class CopyingFileTreeVisitorTest {
         when(details.isDirectory()).thenReturn(true);
         doAnswer(invocation -> {
             final File file = invocation.getArgument(0);
-            Files.copy(source.getPath(), file.toPath());
+            Files.copy(source.toPath(), file.toPath());
             return null;
         }).when(details).copyTo(ArgumentMatchers.<File>any());
         doAnswer(invocation -> {
             final OutputStream outputStream = invocation.getArgument(0);
-            final InputStream inputStream = Files.newInputStream(source.getPath());
+            final InputStream inputStream = Files.newInputStream(source.toPath());
             ByteStreams.copy(inputStream, outputStream);
             return null;
         }).when(details).copyTo(ArgumentMatchers.<OutputStream>any());
 
         final byte[] content = "Hello World!".getBytes();
-        Files.createFile(source.getPath());
-        Files.write(source.getPath(), content);
+        Files.createFile(source.toPath());
+        Files.write(source.toPath(), content);
 
-        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.getPath());
+        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.toPath());
 
         visitor.visitFile(details);
 
-        final Path targetPath = target.getPath().resolve("file.txt");
-        assertTrue(Files.exists(targetPath));
-        assertTrue(Files.isRegularFile(targetPath));
-        assertArrayEquals(content, Files.readAllBytes(targetPath));
+        final Path tartoPath = target.toPath().resolve("file.txt");
+        assertTrue(Files.exists(tartoPath));
+        assertTrue(Files.isRegularFile(tartoPath));
+        assertArrayEquals(content, Files.readAllBytes(tartoPath));
     }
 
     @Test
     public void tryingToUseAFileAsATargetThrowsARuntimeException() throws IOException {
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("file.txt");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("file.txt");
 
-        Files.createFile(target.getPath());
+        Files.createFile(target.toPath());
 
-        assertThrows(RuntimeException.class, () -> new CopyingFileTreeVisitor(target.getPath()));
+        assertThrows(RuntimeException.class, () -> new CopyingFileTreeVisitor(target.toPath()));
     }
 
     @Test
     public void passingANotExistingDirectoryCreatesIt() throws IOException  {
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("directory");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("directory");
 
-        assertFalse(Files.exists(target.getPath()));
+        assertFalse(Files.exists(target.toPath()));
 
-        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.getPath());
+        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.toPath());
 
-        final Path targetPath = target.getPath();
+        final Path tartoPath = target.toPath();
 
-        assertTrue(Files.exists(targetPath));
-        assertTrue(Files.isDirectory(targetPath));
+        assertTrue(Files.exists(tartoPath));
+        assertTrue(Files.isDirectory(tartoPath));
     }
 
     @Test
     public void passingInADirectoryWithContentDeletesTheContent() throws IOException {
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("directory");
-        final Path file = target.getPath().resolve("test.txt");
+        final PathFile target = FileTestingUtils.newSimpleTestFile("directory");
+        final Path file = target.toPath().resolve("test.txt");
 
-        Files.createDirectories(target.getPath());
+        Files.createDirectories(target.toPath());
         Files.createFile(file);
 
         assertTrue(Files.exists(file));
 
-        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.getPath());
+        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.toPath());
 
-        assertTrue(Files.exists(target.getPath()));
-        assertTrue(Files.isDirectory(target.getPath()));
+        assertTrue(Files.exists(target.toPath()));
+        assertTrue(Files.isDirectory(target.toPath()));
         assertFalse(Files.exists(file));
     }
 
     @Test
     public void passingInAFileUsesItsPath() throws IOException {
-        final TestFileTarget target = FileTestingUtils.newSimpleTestFileTarget("file.txt");
-        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target.getFile());
+        final PathFile target = FileTestingUtils.newSimpleTestFile("file.txt");
+        final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(target);
 
-        assertEquals(target.getPath(), visitor.getDirectory());
+        assertEquals(target.toPath(), visitor.getDirectory());
     }
 }

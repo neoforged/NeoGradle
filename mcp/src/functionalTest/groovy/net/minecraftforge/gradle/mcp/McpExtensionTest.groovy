@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.mcp
 
-import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
+import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
 
-class McpExtensionTest extends ForgeGradleTestSpecification {
+class McpExtensionTest extends SimpleTestSpecification {
 
     def "mcp extension test has convention for default artifact based on version"() {
         given:

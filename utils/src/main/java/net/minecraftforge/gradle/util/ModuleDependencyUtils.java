@@ -60,8 +60,8 @@ public final class ModuleDependencyUtils {
      * @return The extension of the first artifact of the given {@link ModuleDependency}, might be empty if not found
      */
     @NotNull
-    public static String getExtensionOrEmpty(final ModuleDependency moduleDependency) {
+    public static String getExtensionOrJar(final ModuleDependency moduleDependency) {
         final String artifactExtension = getExtension(moduleDependency);
-        return artifactExtension == null ? "" : artifactExtension;
+        return artifactExtension == null ? "jar" : artifactExtension;
     }
 }

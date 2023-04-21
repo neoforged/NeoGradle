@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.userdev
 
-import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
+import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
 
-class UserDevPluginTests extends ForgeGradleTestSpecification {
+class UserDevPluginTests extends SimpleTestSpecification {
 
 
     def "applying userdev plugin succeeds"() {
@@ -10,7 +10,7 @@ class UserDevPluginTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'test-project'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
         """
 
@@ -26,7 +26,7 @@ class UserDevPluginTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'test-project'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
             
             println project.plugins
@@ -45,7 +45,7 @@ class UserDevPluginTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'test-project'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
             
             println project.userDev.class.toString()
@@ -63,7 +63,7 @@ class UserDevPluginTests extends ForgeGradleTestSpecification {
         settingsFile << "rootProject.name = 'test-project'"
         buildFile << """
             plugins {
-                id 'net.minecraftforge.gradle'
+                id 'net.minecraftforge.gradle.userdev'
             }
             
             println project.userDevRuntime.class.toString()

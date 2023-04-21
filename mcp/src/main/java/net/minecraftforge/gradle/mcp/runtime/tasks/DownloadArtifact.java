@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.mcp.runtime.tasks;
 
 import net.minecraftforge.gradle.common.runtime.tasks.DefaultRuntime;
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -28,7 +29,7 @@ public abstract class DownloadArtifact extends DefaultRuntime {
 
         final Artifact artifact = getArtifact().get();
         final Dependency dependency = artifact.toDependency(getProject());
-        final Configuration dummy = getProject().getConfigurations().detachedConfiguration(dependency);
+        final Configuration dummy = ConfigurationUtils.temporaryConfiguration(getProject(), dependency);
         dummy.setTransitive(false);
         final ResolvedConfiguration resolved = dummy.getResolvedConfiguration();
         final File resolvedArtifact = resolved.getFiles().iterator().next();

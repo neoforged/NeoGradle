@@ -15,7 +15,6 @@ import net.minecraftforge.gradle.dsl.common.extensions.repository.Repository;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -44,8 +43,10 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
     private final Project project;
     private final DependencyCreator dependencyCreator;
+
     private final TaskProvider<? extends DependencyGenerationTask> dependencyGenerator;
     private final Set<Configuration> configuredConfigurations = Sets.newHashSet();
+    private final Set<Dependency> replacedDependencies = Sets.newHashSet();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
     private boolean registeredTaskToIde;
     private boolean hasBeenBaked = false;
@@ -59,6 +60,11 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
         //Wire up a replacement handler to each configuration for when a dependency is added.
         this.project.getConfigurations().configureEach(configuration -> configuration.getDependencies().whenObjectAdded(dependency -> {
+            //Do not handle the same dependency twice.
+            if (replacedDependencies.contains(dependency)) {
+                return;
+            }
+
             //We only support module based dependencies.
             if (dependency instanceof ModuleDependency) {
                 final ModuleDependency moduleDependency = (ModuleDependency) dependency;
@@ -250,16 +256,21 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         final TaskProvider<? extends Task> rawAndSourceCombinerTask = generator.generate(repoBaseDir, entry);
 
         final Dependency replacedDependency = entry.toGradle(project);
-        configuration.getDependencies().add(replacedDependency);
-        result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
+        if (replacedDependencies.add(replacedDependency)) {
+            configuration.getDependencies().add(replacedDependency);
+            result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
 
-        afterDefinitionBake(projectAfterBake -> {
-            this.dependencyGenerator.configure(task -> {
-                task.dependsOn(rawAndSourceCombinerTask);
-                //noinspection Convert2MethodRef -> Gradle Groovy shit fails.
-                result.getAdditionalIdePostSyncTasks().forEach(postSyncTask -> task.dependsOn(postSyncTask));
+            afterDefinitionBake(projectAfterBake -> {
+                this.dependencyGenerator.configure(task -> {
+                    task.dependsOn(rawAndSourceCombinerTask);
+                });
+
+                final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
+                if (ideManagementExtension.isIdeImportInProgress()) {
+                    result.getAdditionalIdePostSyncTasks().forEach(ideManagementExtension::registerTaskToRun);
+                }
             });
-        });
+        }
     }
 
     private void configureRepositoryEntry(DependencyReplacementResult result, ExternalModuleDependency externalModuleDependency, RepositoryEntry.Builder<?, ?, ?> builder) {

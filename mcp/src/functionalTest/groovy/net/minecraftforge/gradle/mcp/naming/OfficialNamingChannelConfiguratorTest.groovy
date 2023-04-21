@@ -1,8 +1,8 @@
 package net.minecraftforge.gradle.mcp.naming
 
-import net.minecraftforge.gradle.base.ForgeGradleTestSpecification
+import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
 
-class OfficialNamingChannelConfiguratorTest extends ForgeGradleTestSpecification {
+class OfficialNamingChannelConfiguratorTest extends SimpleTestSpecification {
 
     def "registers the naming official naming channel as the default"() {
         given:

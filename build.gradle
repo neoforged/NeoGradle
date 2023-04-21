@@ -72,6 +72,7 @@ subprojects.forEach { subProject ->
     subProject.dependencies.api "net.minecraftforge:groovydslimprover:${project.groovy_dsl_improver_version}:base"
     subProject.dependencies.api "net.minecraftforge:groovydslimprover:${project.groovy_dsl_improver_version}:runtime"
 
+    subProject.dependencies.testImplementation subProject.dependencies.gradleTestKit()
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-params:${project.junit_version}"
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
@@ -81,6 +82,7 @@ subprojects.forEach { subProject ->
     subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
     subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Base:${project.trainingwheels_version}"
     subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Gradle-Base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
 
     //Exclude duplicates.
     subProject.tasks.withType(Jar).configureEach { jarTask ->

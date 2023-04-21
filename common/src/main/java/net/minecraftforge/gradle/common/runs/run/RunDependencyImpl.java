@@ -1,5 +1,6 @@
 package net.minecraftforge.gradle.common.runs.run;
 
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.dsl.common.runs.run.RunDependency;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -16,7 +17,7 @@ public abstract class RunDependencyImpl implements RunDependency {
     public RunDependencyImpl(Project project, Dependency dependency) {
         getIdentity().convention(dependency.toString());
         getDependency().from(project.provider(() -> {
-            final Configuration configuration = project.getConfigurations().detachedConfiguration(dependency);
+            final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project, dependency);
             final ResolvedConfiguration resolvedConfiguration = configuration.getResolvedConfiguration();
             final ConfigurableFileCollection files = project.files();
             return files.from(resolvedConfiguration.getFiles());

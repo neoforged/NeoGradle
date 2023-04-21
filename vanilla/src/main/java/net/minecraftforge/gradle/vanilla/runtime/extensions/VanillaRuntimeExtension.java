@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.util.BundledServerUtils;
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.common.util.FileCacheUtils;
 import net.minecraftforge.gradle.common.util.VersionJson;
 import net.minecraftforge.gradle.dsl.common.util.CacheFileSelector;
@@ -85,9 +86,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
         }
 
-        final Configuration minecraftDependenciesConfiguration = spec.getProject().getConfigurations().detachedConfiguration();
-        minecraftDependenciesConfiguration.setCanBeResolved(true);
-        minecraftDependenciesConfiguration.setCanBeConsumed(false);
+        final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
         if (spec.getDistribution().isClient() || !BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
             for (VersionJson.Library library : versionJson.getLibraries()) {
                 minecraftDependenciesConfiguration.getDependencies().add(

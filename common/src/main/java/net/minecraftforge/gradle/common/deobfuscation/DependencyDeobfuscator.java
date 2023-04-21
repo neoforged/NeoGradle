@@ -5,6 +5,7 @@ import net.minecraftforge.gradle.common.extensions.DeobfuscationExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -85,7 +86,7 @@ public final class DependencyDeobfuscator {
                 }
 
                 //We only want to replace dependencies that actually exist.
-                final Configuration resolver = context.getProject().getConfigurations().detachedConfiguration(context.getDependency());
+                final Configuration resolver = ConfigurationUtils.temporaryConfiguration(context.getProject(), context.getDependency());
                 if (resolver.getResolvedConfiguration().getLenientConfiguration().getFiles().isEmpty()) {
                     //No files, so we can't replace it. -> Might be a resolution failure!
                     return Optional.empty();
@@ -162,7 +163,7 @@ public final class DependencyDeobfuscator {
                         name -> CommonRuntimeUtils.buildTaskName(name, resolvedDependency),
                         sourcesProvider,
                         rawProvider,
-                        context.getProject().getConfigurations().detachedConfiguration(),
+                        ConfigurationUtils.temporaryConfiguration(context.getProject()),
                         builder -> {
                             children.forEach(childDependency -> {
                                 if (!childResults.containsKey(childDependency) || !childResults.get(childDependency).isPresent()) {
@@ -321,7 +322,7 @@ public final class DependencyDeobfuscator {
     }
 
     private void createSourcesProvidingTask(final Project project, final DeobfuscatingTaskConfiguration deobfuscatingTaskConfiguration) {
-        final Configuration sourcesConfiguration = project.getConfigurations().detachedConfiguration(project.getDependencies().create(this.createSourcesDependencyIdentifier(deobfuscatingTaskConfiguration.resolvedDependency().getModuleArtifacts().iterator().next())));
+        final Configuration sourcesConfiguration = ConfigurationUtils.temporaryConfiguration(project, project.getDependencies().create(this.createSourcesDependencyIdentifier(deobfuscatingTaskConfiguration.resolvedDependency().getModuleArtifacts().iterator().next())));
         final Optional<File> sourcesFileCandidate = getFileFrom(sourcesConfiguration.getResolvedConfiguration());
 
         final CommonRuntimeExtension<?,?,?> commonRuntimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);

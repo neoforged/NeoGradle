@@ -26,12 +26,10 @@ public class ZipBuildingFileTreeVisitor implements FileVisitor {
             final ZipEntry directoryEntry = new ZipEntry(fileVisitDetails.getRelativePath().getPathString() + "/");
             outputZipStream.putNextEntry(directoryEntry);
             outputZipStream.closeEntry();
-        } catch (ZipException zip) {
+        } catch (IOException zip) {
             if (!zip.getMessage().equals("duplicate entry: " + fileVisitDetails.getRelativePath().getPathString() + "/")) {
                 throw new RuntimeException("Could not create zip directory: " + fileVisitDetails.getRelativePath().getPathString(), zip);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create zip directory: " + fileVisitDetails.getRelativePath().getPathString(), e);
         }
     }
 
