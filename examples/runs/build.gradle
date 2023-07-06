@@ -17,3 +17,10 @@ runs {
         modSources.add(project.getSourceSets().main)
     }
 }
+
+minecraft {
+    mappings {
+        channel = namingChannelProviders.named('official')
+        version.put "minecraft", "1.19.3"
+    }
+}

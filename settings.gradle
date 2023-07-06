@@ -14,6 +14,7 @@ include 'common'
 include 'vanilla'
 include 'mcp'
 include 'userdev'
+include 'legacy'
 
 subProject 'dsl-common'
 subProject 'dsl-mcp'
