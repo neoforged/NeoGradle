@@ -3,12 +3,12 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.minecraftforge.gradleutils' version '[2.0.10,)'
+    id 'net.minecraftforge.gradleutils' version '[2.0.13,)'
     id 'com.github.ben-manes.versions' version '0.46.0'
 }
 
 version = gradleutils.getTagOffsetBranchVersion('FG_6.0')
-logger.lifecycle('Version: ' + version + ' Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+group = "net.neoforged"
 
 changelog {
     fromTag '6.0'
@@ -52,7 +52,7 @@ tasks.named('sourcesJar', Jar).configure {
 
 repositories {
     mavenLocal()
-    maven { url = 'https://maven.minecraftforge.net/' }
+    maven { url = 'https://maven.neoforged.net/releases' }
 }
 
 license {
@@ -112,15 +112,15 @@ project.extensions.eclipse.classpath.file.whenMerged { Classpath cp ->
 gradlePlugin {
     plugins {
         mcp {
-            id = 'net.minecraftforge.gradle.mcp'
+            id = 'net.neoforged.gradle.mcp'
             implementationClass = 'net.minecraftforge.gradle.mcp.MCPPlugin'
         }
         patcher {
-            id = 'net.minecraftforge.gradle.patcher'
+            id = 'net.neoforged.gradle.patcher'
             implementationClass = 'net.minecraftforge.gradle.patcher.PatcherPlugin'
         }
         userdev {
-            id = 'net.minecraftforge.gradle'
+            id = 'net.neoforged.gradle'
             implementationClass = 'net.minecraftforge.gradle.userdev.UserDevPlugin'
         }
     }
