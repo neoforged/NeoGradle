@@ -10,7 +10,6 @@ import net.minecraftforge.gradle.common.util.MavenArtifactDownloader;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.apache.tools.ant.types.FileList;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,7 +47,7 @@ class ListLibrariesFunction implements MCPFunction {
             throw new IllegalArgumentException("Invalid MCP Config: Listing bundle libraries is only supported for MCPConfig spec 3 or higher, found spec: " + this.spec);
         }
 
-        try (FileSystem bundleFs = bundle == null ? null : FileSystems.newFileSystem(bundle.toPath(), null)) {
+        try (FileSystem bundleFs = bundle == null ? null : FileSystems.newFileSystem(bundle.toPath(), (ClassLoader)null)) {
             Set<String> artifacts;
             if (bundleFs == null) {
                 artifacts = listDownloadJsonLibraries(environment, output);
