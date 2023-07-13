@@ -7,8 +7,9 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.46.0'
 }
 
-version = gradleutils.getTagOffsetBranchVersion('FG_6.0')
 group = "net.neoforged"
+version = gradleutils.getTagOffsetBranchVersion('FG_6.0')
+logger.lifecycle('Version: ' + version)
 
 changelog {
     fromTag '6.0'

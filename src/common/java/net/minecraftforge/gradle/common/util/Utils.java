@@ -421,7 +421,7 @@ public class Utils {
         // Skip our "Fake" Repos that actually do provide the de-obfuscated Artifacts
         if (repository instanceof GradleRepositoryAdapter) return;
 
-        // Exclude Artifacts that are being de-obfuscated via ForgeGradle (_mapped_ in version)
+        // Exclude Artifacts that are being de-obfuscated via NeoGradle (_mapped_ in version)
         repository.content(rcd -> rcd.excludeVersionByRegex(".*", ".*", ".*_mapped_.*"));
     }
 

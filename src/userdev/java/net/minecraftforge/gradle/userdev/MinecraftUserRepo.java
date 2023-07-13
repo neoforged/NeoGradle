@@ -283,11 +283,11 @@ public class MinecraftUserRepo extends BaseRepo {
      *
      * <p>Fortunately, the solution is fairly simply. We can move the entire
      * dependency creation/resolution block to an earlier point in
-     * ForgeGradle's execution. Since the client {@code data}/{@code extra}/libraries only
+     * NeoGradle's execution. Since the client {@code data}/{@code extra}/libraries only
      * depend on the MCP config file, we can do this during plugin
      * initialization.</p>
      *
-     * <p>This has the added benefit of speeding up ForgeGradle - this block of
+     * <p>This has the added benefit of speeding up NeoGradle - this block of
      * code will only be executed once, instead of during every call to
      * {@code compileJava}.</p>
      */

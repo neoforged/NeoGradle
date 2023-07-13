@@ -24,6 +24,7 @@ import javax.net.ssl.SSLException;
  * @see #checkEnvironment(Project)
  */
 public class EnvironmentChecks {
+    // TODO: Rename these system properties and marker when we can break compatibility
     public static final String ENABLE_CERTIFICATE_CHECK_VARIABLE = "net.minecraftforge.gradle.check.certs";
     public static final String ENABLE_GRADLE_CHECK_VARIABLE = "net.minecraftforge.gradle.check.gradle";
     public static final String ENABLE_JAVA_CHECK_VARIABLE = "net.minecraftforge.gradle.check.java";
@@ -39,7 +40,7 @@ public class EnvironmentChecks {
 
     public static void checkGradleRange(@Nullable GradleVersion minVersionInclusive, @Nullable GradleVersion maxVersionExclusive) {
         checkRange("Gradle", GradleVersion.current(), minVersionInclusive, maxVersionExclusive,
-                "\nNote: Upgrade your gradle version first before trying to switch to FG6.", "");
+                "\nNote: Upgrade your gradle version first before trying to switch to NG6.", "");
     }
 
     private static <T> void checkRange(String name, Comparable<T> current, @Nullable T minVersionInclusive, @Nullable T maxVersionExclusive, String additionalMin, String additionalMax) {
@@ -58,8 +59,8 @@ public class EnvironmentChecks {
      * Current environment checks:
      * <ul>
      *     <li>Java version is <em>1.8.0_101</em> or above (first JDK version to include Let's Encrypt certificates)</li>
-     *     <li>Gradle version is <em>8.1</em> or above (minimum version required by ForgeGradle)</li>
-     *     <li>Gradle version is below <em>9.0</em> (ForgeGradle 6 only supports the Gradle 8.x series)</li>
+     *     <li>Gradle version is <em>8.1</em> or above (minimum version required by NeoGradle)</li>
+     *     <li>Gradle version is below <em>9.0</em> (NeoGradle 6 only supports the Gradle 8.x series)</li>
      *     <li>Certificates for {@link Utils#FORGE_MAVEN} and {@link Utils#MOJANG_MAVEN} are valid (required repositories)</li>
      * </ul>
      *
