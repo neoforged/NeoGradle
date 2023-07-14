@@ -24,6 +24,8 @@
  */
 package net.minecraftforge.gradle.common.extensions.repository;
 
+import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.minecraftforge.gradle.util.IndentingXmlStreamWriter;
 
 import javax.xml.XMLConstants;
@@ -64,7 +66,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer = new IndentingXmlStreamWriter(IvyModuleWriter.OUTPUT_FACTORY.createXMLStreamWriter(this.output), INDENT);
     }
 
-    public void write(final IvyDummyRepositoryEntry descriptor) throws XMLStreamException {
+    public void write(final RepositoryEntry<?,?> descriptor) throws XMLStreamException {
         this.writer.writeStartDocument("UTF-8", "1.0");
         this.writer.writeStartElement("ivy-module");
         this.writer.writeNamespace("xsi", IvyModuleWriter.XSI);
@@ -79,7 +81,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer.writeEndDocument();
     }
 
-    private void writeInfo(final IvyDummyRepositoryEntry entry) throws XMLStreamException {
+    private void writeInfo(final RepositoryEntry<?,?> entry) throws XMLStreamException {
         this.writer.writeStartElement("info");
         // Common attributes
         this.writer.writeAttribute("organisation", entry.getFullGroup());
@@ -88,6 +90,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer.writeAttribute("status", "release"); // gradle wants release... we must please the gradle...
 
         // License
+        // TODO: deal with custom projects?
         this.writer.writeEmptyElement("license");
         this.writer.writeAttribute("name", "Minecraft EULA");
         this.writer.writeAttribute("url", "https://www.minecraft.net/en-us/eula");
@@ -97,17 +100,17 @@ public final class IvyModuleWriter implements AutoCloseable {
     }
 
 
-    private void writeDependencies(final Collection<IvyDummyRepositoryReference> dependencies) throws XMLStreamException {
+    private void writeDependencies(final Collection<? extends RepositoryReference> dependencies) throws XMLStreamException {
         this.writer.writeStartElement("dependencies");
 
-        for (final IvyDummyRepositoryReference extra : dependencies) {
+        for (final RepositoryReference extra : dependencies) {
             this.writeDependency(extra);
         }
 
         this.writer.writeEndElement();
     }
 
-    private void writeDependency(final IvyDummyRepositoryReference dep) throws XMLStreamException {
+    private void writeDependency(final RepositoryReference dep) throws XMLStreamException {
         boolean hasClassifier = dep.getClassifier() != null;
 
         if (hasClassifier) {
@@ -116,7 +119,12 @@ public final class IvyModuleWriter implements AutoCloseable {
             this.writer.writeEmptyElement("dependency");
         }
 
-        this.writer.writeAttribute("org", dep.getGroup());
+        if (dep instanceof RepositoryEntry) {
+            final RepositoryEntry<?,?> entry = (RepositoryEntry<?,?>) dep;
+            this.writer.writeAttribute("org", entry.getFullGroup());
+        } else {
+            this.writer.writeAttribute("org", dep.getGroup());
+        }
         this.writer.writeAttribute("name", dep.getName());
         this.writer.writeAttribute("rev", dep.getVersion());
         this.writer.writeAttribute("transitive", "false");

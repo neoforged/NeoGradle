@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
+import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.tasks.JavaToolExecutingTask;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
@@ -18,7 +19,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import java.io.File;
 
 @CacheableTask
-public abstract class UnapplyOfficialMappingsToCompiledJar extends JavaToolExecutingTask implements WithOutput {
+public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
 
     public UnapplyOfficialMappingsToCompiledJar() {
         getExecutingArtifact().set(Constants.SPECIALSOURCE);

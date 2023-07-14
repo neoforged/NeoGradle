@@ -124,4 +124,10 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
 
         return interpolationData;
     }
+
+    @NotNull
+    @Override
+    public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
+        return getTask("listLibraries");
+    }
 }

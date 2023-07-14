@@ -1,16 +1,22 @@
 package net.minecraftforge.gradle.common.runtime.definition;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
+import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.common.runs.run.RunImpl;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.ListProperty;
@@ -24,6 +30,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,9 +61,11 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @NotNull
     private final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer;
 
-
     @Nullable
     private Dependency replacedDependency = null;
+
+    @NotNull
+    protected final TaskProvider<? extends ArtifactFromOutput> runtimeMappedRawJarTaskProvider;
 
     protected CommonRuntimeDefinition(
             @NotNull final S specification,
@@ -73,6 +82,16 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.gameArtifactProvidingTasks = gameArtifactProvidingTasks;
         this.minecraftDependenciesConfiguration = minecraftDependenciesConfiguration;
         this.associatedTaskConsumer = associatedTaskConsumer;
+
+        if (this instanceof IDelegatingRuntimeDefinition) {
+            //For now we assume that when delegating, the runtime will be mapped
+            this.runtimeMappedRawJarTaskProvider = null;
+        } else {
+            this.runtimeMappedRawJarTaskProvider = this.specification.getProject().getTasks().register(
+                    CommonRuntimeUtils.buildTaskName(specification, "provideObfuscated"),
+                    ArtifactFromOutput.class
+            );
+        }
     }
 
     @Override
@@ -157,6 +176,12 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @NotNull
     public abstract TaskProvider<ExtractNatives> getNativesTaskProvider();
 
+    @Override
+    @NotNull
+    public TaskProvider<? extends WithOutput> getRuntimeMappedRawJarTaskProvider() {
+        return runtimeMappedRawJarTaskProvider;
+    }
+
     public void configureRun(RunImpl run) {
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
 
@@ -182,6 +207,46 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         interpolationData.put("natives", getNativesTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
 
         return interpolationData;
+    }
+
+    public void onBake(final NamingChannel namingChannel, final File runtimeDirectory) {
+        final Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks = Sets.newHashSet();
+
+        final TaskBuildingContext context = new TaskBuildingContext(
+                specification.getProject(),
+                CommonRuntimeUtils.buildTaskName(this, "obfuscate"),
+                task -> String.format("obfuscate%s", StringUtils.capitalize(task)),
+                rawJarTask,
+                gameArtifactProvidingTasks,
+                mappingVersionData,
+                additionalRuntimeTasks,
+                this
+        );
+
+        final TaskProvider<? extends Runtime> out = namingChannel.getUnapplyCompiledMappingsTaskBuilder().get().build(context);
+        out.configure(task -> {
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(
+                    task,
+                    Maps.newHashMap(),
+                    "obfuscate",
+                    specification,
+                    runtimeDirectory
+            );
+        });
+
+        additionalRuntimeTasks.forEach(task -> task.configure(runtime -> {
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(
+                    runtime,
+                    Maps.newHashMap(),
+                    "obfuscate",
+                    specification,
+                    runtimeDirectory
+            );
+        }));
+
+        this.runtimeMappedRawJarTaskProvider.configure(provider -> {
+            provider.getInput().set(out.flatMap(WithOutput::getOutput));
+        });
     }
 
     protected ListProperty<String> interpolate(final ListProperty<String> input, final Map<String, String> values) {

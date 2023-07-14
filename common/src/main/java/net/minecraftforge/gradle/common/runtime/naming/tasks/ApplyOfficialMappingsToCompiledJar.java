@@ -22,6 +22,8 @@ import java.io.File;
 public abstract class ApplyOfficialMappingsToCompiledJar extends Execute implements WithOutput {
 
     public ApplyOfficialMappingsToCompiledJar() {
+        super();
+
         getExecutingArtifact().set(Constants.FART);
         getProgramArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_PROGRAMM_ARGS));
         getJvmArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_JVM_ARGS));
@@ -29,6 +31,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
 
         getArguments().put("input", getInput().getAsFile().map(File::getAbsolutePath));
         getArguments().put("mappings", getMappings().getAsFile().map(File::getAbsolutePath));
+        getArguments().put("libraries", getLibraries().getAsFile().map(File::getAbsolutePath));
 
         getOutput().convention(getOutputDirectory().map(d -> d.file("output.jar")));
     }
@@ -48,4 +51,8 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getInput();
+
+    @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract RegularFileProperty getLibraries();
 }

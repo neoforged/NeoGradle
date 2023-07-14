@@ -95,6 +95,17 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
+    public @NotNull TaskProvider<? extends WithOutput> getRuntimeMappedRawJarTaskProvider() {
+        return mcpRuntimeDefinition.getRuntimeMappedRawJarTaskProvider();
+    }
+
+    @NotNull
+    @Override
+    public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
+        return mcpRuntimeDefinition.getListLibrariesTaskProvider();
+    }
+
+    @Override
     protected Map<String, String> buildRunInterpolationData() {
         final Map<String, String> interpolationData = mcpRuntimeDefinition.buildRunInterpolationData();
 

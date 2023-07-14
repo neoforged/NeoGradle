@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.common.dummy;
 import com.google.common.collect.ImmutableSet;
 import net.minecraftforge.gradle.common.deobfuscation.DependencyDeobfuscatorTest;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.minecraftforge.gradle.util.ModuleDependencyUtils;
 import net.minecraftforge.gradle.util.ResolvedDependencyUtils;
 import org.gradle.api.Project;
@@ -35,13 +36,13 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
     private String version;
     private String classifier;
     private String extension;
-    private Set<DummyRepositoryDependency> dependencies = new HashSet<>();
+    private Set<RepositoryReference> dependencies = new HashSet<>();
 
     public DummyRepositoryEntry(Project project) {
         this.project = project;
     }
 
-    public DummyRepositoryEntry(Project project, String group, String name, String version, String classifier, String extension, Set<DummyRepositoryDependency> dependencies) {
+    public DummyRepositoryEntry(Project project, String group, String name, String version, String classifier, String extension, Set<RepositoryReference> dependencies) {
         this.project = project;
         this.group = group;
         this.name = name;
@@ -146,7 +147,7 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
 
     @NotNull
     @Override
-    public ImmutableSet<DummyRepositoryDependency> getDependencies() {
+    public ImmutableSet<? extends RepositoryReference> getDependencies() {
         return ImmutableSet.copyOf(dependencies);
     }
 
@@ -225,6 +226,15 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
     @Override
     public DummyRepositoryEntry withDependency(@NotNull Consumer<DummyRepositoryDependency> consumer) {
         final DummyRepositoryDependency dependency = new DummyRepositoryDependency(project);
+        consumer.accept(dependency);
+        this.dependencies.add(dependency);
+        return this;
+    }
+
+    @NotNull
+    @Override
+    public DummyRepositoryEntry withProcessedDependency(@NotNull Consumer<DummyRepositoryEntry> consumer) {
+        final DummyRepositoryEntry dependency = new DummyRepositoryEntry(project);
         consumer.accept(dependency);
         this.dependencies.add(dependency);
         return this;

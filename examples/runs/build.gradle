@@ -8,6 +8,13 @@ java {
     }
 }
 
+minecraft {
+    mappings {
+        channel = namingChannelProviders.named('official')
+        version.put "minecraft", "1.19.3"
+    }
+}
+
 dependencies {
     implementation 'net.minecraftforge:forge:1.19.3-44.0.48'
 }
@@ -15,12 +22,5 @@ dependencies {
 runs {
     client {
         modSources.add(project.getSourceSets().main)
-    }
-}
-
-minecraft {
-    mappings {
-        channel = namingChannelProviders.named('official')
-        version.put "minecraft", "1.19.3"
     }
 }

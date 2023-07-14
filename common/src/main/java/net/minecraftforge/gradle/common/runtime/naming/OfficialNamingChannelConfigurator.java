@@ -27,6 +27,9 @@ import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.srgutils.IMappingFile;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.reflect.TypeOf;
 import org.gradle.api.tasks.TaskProvider;
@@ -54,11 +57,14 @@ public final class OfficialNamingChannelConfigurator {
     private OfficialNamingChannelConfigurator() {
     }
 
+    @SuppressWarnings("unchecked")
     public void configure(final Project project) {
         final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
 
         final Mappings mappingsExtension = minecraftExtension.getMappings();
-        mappingsExtension.getExtensions().add(TypeOf.typeOf(Boolean.class), "acceptMojangEula", false);
+        final Property<Boolean> hasAcceptedLicenseProperty = project.getObjects().property(Boolean.class);
+        mappingsExtension.getExtensions().add(TypeOf.typeOf(Property.class), "acceptMojangEula", hasAcceptedLicenseProperty);
+        hasAcceptedLicenseProperty.convention(false);
 
         minecraftExtension.getNamingChannelProviders().register("official", namingChannelProvider -> {
             namingChannelProvider.getMinecraftVersionExtractor().set(this::extractMinecraftVersion);
@@ -67,7 +73,7 @@ public final class OfficialNamingChannelConfigurator {
             namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyAccessTransformerMappingsTaskBuilder().set(this::buildUnapplyAccessTransformerMappingsTask);
             namingChannelProvider.getGenerateDebuggingMappingsJarTaskBuilder().set(this::buildGenerateDebuggingMappingsJarTask);
-            namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> (Boolean) mappingsExtension.getExtensions().getByName("acceptMojangEula")));
+            namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> ((Property<Boolean>) mappingsExtension.getExtensions().getByName("acceptMojangEula")).get()));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
         });
         minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannelProviders().named("official"));
@@ -113,7 +119,7 @@ public final class OfficialNamingChannelConfigurator {
         });
     }
 
-    private @NotNull TaskProvider<? extends WithOutput> buildUnapplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
+    private @NotNull TaskProvider<? extends Runtime> buildUnapplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
         final String unapplyTaskName = CommonRuntimeUtils.buildTaskName(context.getInputTask(), "obfuscate");
 
         final TaskProvider<UnapplyOfficialMappingsToCompiledJar> unapplyTask = context.getProject().getTasks().register(unapplyTaskName, UnapplyOfficialMappingsToCompiledJar.class, task -> {
@@ -133,7 +139,7 @@ public final class OfficialNamingChannelConfigurator {
             }
 
             task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
-            task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName))));
+            task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName).orElse(context.getInputTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getName)))));
         });
 
         context.getInputTask().configure(task -> task.finalizedBy(unapplyTask));
@@ -143,6 +149,15 @@ public final class OfficialNamingChannelConfigurator {
 
     private @NotNull TaskProvider<? extends Runtime> buildApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
         final String ApplyTaskName = CommonRuntimeUtils.buildTaskName(context.getInputTask(), "deobfuscate");
+
+        if (!context.getRuntimeDefinition().isPresent())
+            throw new IllegalArgumentException("Cannot apply compiled mappings without a runtime definition");
+
+        final TaskProvider<? extends WithOutput> librariesTask = context.getLibrariesTask();
+
+        if (librariesTask == null) {
+            throw new IllegalArgumentException("Cannot apply compiled mappings without a libraries task");
+        }
 
         final TaskProvider<ApplyOfficialMappingsToCompiledJar> applyTask = context.getProject().getTasks().register(ApplyTaskName, ApplyOfficialMappingsToCompiledJar.class, task -> {
             task.setGroup("mappings/official");
@@ -161,9 +176,11 @@ public final class OfficialNamingChannelConfigurator {
             }
 
             task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
-            task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName))));
+            task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName).orElse(context.getInputTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getName)))));
+            task.getLibraries().set(librariesTask.flatMap(WithOutput::getOutput));
 
             task.dependsOn(context.getInputTask());
+            task.dependsOn(librariesTask);
         });
 
         context.getInputTask().configure(task -> task.finalizedBy(applyTask));

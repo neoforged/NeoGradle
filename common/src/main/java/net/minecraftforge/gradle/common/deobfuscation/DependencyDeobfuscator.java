@@ -1,35 +1,55 @@
 package net.minecraftforge.gradle.common.deobfuscation;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gradle.common.extensions.DeobfuscationExtension;
+import net.minecraftforge.gradle.common.extensions.ForcedDependencyDeobfuscationExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.minecraftforge.gradle.common.runtime.tasks.CollectDependencyLibraries;
 import net.minecraftforge.gradle.common.runtime.tasks.Execute;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.util.ConfigurationUtils;
-import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
-import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
-import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
-import net.minecraftforge.gradle.util.DecompileUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.Mappings;
 import net.minecraftforge.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.Context;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
+import net.minecraftforge.gradle.dsl.common.runtime.definition.Definition;
 import net.minecraftforge.gradle.dsl.common.runtime.naming.TaskBuildingContext;
+import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.Constants;
+import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
+import net.minecraftforge.gradle.dsl.common.util.ModuleReference;
+import net.minecraftforge.gradle.util.DecompileUtils;
+import net.minecraftforge.gradle.util.ResolvedDependencyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.*;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.LenientConfiguration;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
@@ -41,39 +61,31 @@ import java.util.stream.Collectors;
  * Handles the creation of the deobfuscation tasks and the replacement of the dependencies.
  * <p>
  * Relies on the {@link DependencyReplacement} extension to determine which dependencies to deobfuscate.
- * <p>
- * Since this is a singleton class, it is not recommended to create an instance of this class.
- * Instead, use the {@link #getInstance()} method to get the singleton instance.
  *
- * @implNote Since this is a singleton it is not allowed to store any state in this class!
  * @see DependencyReplacement
  * @see DependencyReplacer
  * @see DependencyReplacement
  * @see DependencyReplacementResult
  * @see Context
  */
-public final class DependencyDeobfuscator {
+public abstract class DependencyDeobfuscator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyDeobfuscator.class);
-    private static final DependencyDeobfuscator INSTANCE = new DependencyDeobfuscator();
 
-    /**
-     * Gets the singleton instance of the dependency deobfuscator.
-     *
-     * @return The singleton instance of the dependency deobfuscator.
-     */
-    public static DependencyDeobfuscator getInstance() {
-        return INSTANCE;
-    }
+    private final Project project;
 
-    private DependencyDeobfuscator() {
+    private final Map<ModuleReference, Optional<DependencyReplacementResult>> setupReferences = Maps.newHashMap();
+
+    @Inject
+    public DependencyDeobfuscator(Project project) {
+        this.project = project;
+
+        this.apply();
     }
 
     /**
      * Applies the deobfuscation handler to the given project.
-     *
-     * @param project The project to apply the deobfuscation handler to.
      */
-    public void apply(final Project project) {
+    private void apply() {
         //Get the replacement handler.
         final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
 
@@ -86,7 +98,7 @@ public final class DependencyDeobfuscator {
                 }
 
                 //We only want to replace dependencies that actually exist.
-                final Configuration resolver = ConfigurationUtils.temporaryConfiguration(context.getProject(), context.getDependency());
+                final Configuration resolver = ConfigurationUtils.temporaryConfiguration(project, context.getDependency());
                 if (resolver.getResolvedConfiguration().getLenientConfiguration().getFiles().isEmpty()) {
                     //No files, so we can't replace it. -> Might be a resolution failure!
                     return Optional.empty();
@@ -104,13 +116,15 @@ public final class DependencyDeobfuscator {
                     return Optional.empty();
                 }
 
+                final ForcedDependencyDeobfuscationExtension forcedDependencyDeobfuscationExtension = project.getExtensions().getByType(ForcedDependencyDeobfuscationExtension.class);
+                final ResolvedDependency resolvedDependency = dependencies.iterator().next();
                 //Handle replacement of the resolved dependency.
-                return determineReplacementOptions(context, dependencies.iterator().next());
+                return determineCachedReplacementOptions(context.getConfiguration(), forcedDependencyDeobfuscationExtension.shouldDeobfuscate(context.getDependency()), resolvedDependency);
             });
         });
     }
 
-    private Optional<DependencyReplacementResult> determineReplacementOptions(final Context context, final ResolvedDependency resolvedDependency) {
+    private Optional<DependencyReplacementResult> determineCachedReplacementOptions(final Configuration configuration, final boolean forceDeobfuscation, final ResolvedDependency resolvedDependency) {
         //Get all the artifacts that need to be processed.
         final Set<ResolvedArtifact> artifacts = resolvedDependency.getModuleArtifacts();
         if (artifacts.size() == 0) {
@@ -124,9 +138,24 @@ public final class DependencyDeobfuscator {
             return Optional.empty();
         }
 
-        //Grab the one artifact, and its file.
         final ResolvedArtifact artifact = artifacts.iterator().next();
+        final ModuleReference reference = new ModuleReference(resolvedDependency.getModuleGroup(), resolvedDependency.getModuleName(), resolvedDependency.getModuleVersion(), artifact.getExtension(), artifact.getClassifier());
+
+        //Check if we have already setup this reference.
+        if (setupReferences.containsKey(reference)) {
+            //We have already setup this reference, so we can skip it.
+            return setupReferences.get(reference);
+        }
+
+        final Optional<DependencyReplacementResult> result = determineReplacementOptions(project, configuration, forceDeobfuscation, resolvedDependency, artifact);
+        setupReferences.put(reference, result);
+        return result;
+    }
+
+    private Optional<DependencyReplacementResult> determineReplacementOptions(final Project project, final Configuration configuration, boolean forceDeobfuscation, final ResolvedDependency resolvedDependency, ResolvedArtifact artifact) {
+        //Grab the one artifact, and its file.
         final File file = artifact.getFile();
+
 
         //Check if the artifact is obfuscated.
         //The try-with-resources catches any IOExceptions that might occur, in turn validating that we are talking about an actual jar file.
@@ -136,80 +165,79 @@ public final class DependencyDeobfuscator {
             final boolean isObfuscated = mf != null && mf.getMainAttributes().containsKey(new Attributes.Name("Obfuscated")) && Boolean.parseBoolean(mf.getMainAttributes().getValue("Obfuscated"));
             final boolean obfuscatedByForgeGradle = mf != null && mf.getMainAttributes().containsKey(new Attributes.Name("Obfuscated-By")) && mf.getMainAttributes().getValue("Obfuscated-By").equals("ForgeGradle");
 
-            if (isObfuscated && obfuscatedByForgeGradle) {
-                //We have an obfuscated artifact, so we need to deobfuscate it.
-                final Set<ResolvedDependency> children = resolvedDependency.getChildren();
-                final Map<ResolvedDependency, Optional<DependencyReplacementResult>> childResults = children.stream()
-                        .collect(Collectors.toMap(
-                                Function.identity(),
-                                child -> determineReplacementOptions(context, child)
-                        ));
-
-                final Collection<DependencyReplacementResult> dependentResults = childResults.values().stream()
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .collect(Collectors.toList());
-
-                final TaskProvider<ArtifactFromOutput> rawProvider = context.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName("deobfuscateRawFrom", resolvedDependency), ArtifactFromOutput.class, task -> {
-                    task.getOutputFileName().set(file.getName());
-                });
-
-                final TaskProvider<ArtifactFromOutput> sourcesProvider = context.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName("deobfuscateSourcesFrom", resolvedDependency), ArtifactFromOutput.class, task -> {
-                    task.getOutputFileName().set(file.getName().replace(".jar", "-sources.jar"));
-                });
-
-                final DependencyReplacementResult result = new DependencyReplacementResult(
-                        context.getProject(),
-                        name -> CommonRuntimeUtils.buildTaskName(name, resolvedDependency),
-                        sourcesProvider,
-                        rawProvider,
-                        ConfigurationUtils.temporaryConfiguration(context.getProject()),
-                        builder -> {
-                            children.forEach(childDependency -> {
-                                if (!childResults.containsKey(childDependency) || !childResults.get(childDependency).isPresent()) {
-                                    builder.withDependency(depBuilder -> depBuilder.from(childDependency));
-                                } else {
-                                    final DependencyReplacementResult childResult = childResults.get(childDependency).get();
-                                    builder.withDependency(depBuilder -> {
-                                        childResult.getDependencyBuilderConfigurator().accept(depBuilder);
-                                    });
-                                }
-                            });
-                            builder.from(resolvedDependency);
-
-                            final Mappings mappings = context.getProject().getExtensions().getByType(Mappings.class);
-                            String deobfuscatedMappingsPrefix = mappings.getChannel().get().getDeobfuscationGroupSupplier().get();
-                            if (deobfuscatedMappingsPrefix.trim().isEmpty()) {
-                                deobfuscatedMappingsPrefix = mappings.getChannel().get().getName();
-                            }
-                            builder.setGroup("fg.deobf." + deobfuscatedMappingsPrefix + "." + resolvedDependency.getModuleGroup());
-                        },
-                        dependentResults,
-                        builder -> {
-                            builder.from(resolvedDependency);
-
-                            final Mappings mappings = context.getProject().getExtensions().getByType(Mappings.class);
-                            String deobfuscatedMappingsPrefix = mappings.getChannel().get().getDeobfuscationGroupSupplier().get();
-                            if (deobfuscatedMappingsPrefix.trim().isEmpty()) {
-                                deobfuscatedMappingsPrefix = mappings.getChannel().get().getName();
-                            }
-
-                            builder.setGroup("fg.deobf." + deobfuscatedMappingsPrefix + "." + resolvedDependency.getModuleGroup());
-                        },
-                        Sets::newHashSet);
-
-                final DeobfuscatingTaskConfiguration configuration = new DeobfuscatingTaskConfiguration(context, result, resolvedDependency, file);
-                context.getProject().afterEvaluate(evaluatedProject -> bakeDependencyReplacement(evaluatedProject, configuration));
-
-                return Optional.of(result);
+            if ((isObfuscated && obfuscatedByForgeGradle) || forceDeobfuscation) {
+                return createDeobfuscationDependencyReplacementResult(project, configuration, forceDeobfuscation, resolvedDependency, file);
             } else {
                 return Optional.empty();
             }
         } catch (IOException e) {
             //Failed to read the jar file, so we can't replace it.
             LOGGER.warn("Failed to read manifest for deobfuscation detection!", e);
+
+            if (forceDeobfuscation) {
+                return createDeobfuscationDependencyReplacementResult(project, configuration, true, resolvedDependency, file);
+            }
+
             return Optional.empty();
         }
+    }
+
+    @NotNull
+    private Optional<DependencyReplacementResult> createDeobfuscationDependencyReplacementResult(final Project project, final Configuration configuration, final boolean forceDeobfuscation, ResolvedDependency resolvedDependency, File file) {
+        //We have an obfuscated artifact, so we need to deobfuscate it.
+        final Set<ResolvedDependency> children = resolvedDependency.getChildren();
+        final Map<ResolvedDependency, Optional<DependencyReplacementResult>> childResults = children.stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        child -> determineCachedReplacementOptions(configuration, forceDeobfuscation, child)
+                ));
+
+        final Collection<DependencyReplacementResult> dependentResults = childResults.values().stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        final TaskProvider<ArtifactFromOutput> rawProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("deobfuscateRawFrom", resolvedDependency), ArtifactFromOutput.class, task -> {
+            task.getOutputFileName().set(file.getName());
+        });
+
+        final TaskProvider<ArtifactFromOutput> sourcesProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("deobfuscateSourcesFrom", resolvedDependency), ArtifactFromOutput.class, task -> {
+            task.getOutputFileName().set(file.getName().replace(".jar", "-sources.jar"));
+        });
+
+        final DependencyReplacementResult result = new DependencyReplacementResult(
+                project,
+                name -> name,
+                sourcesProvider,
+                rawProvider,
+                ConfigurationUtils.temporaryConfiguration(project),
+                builder -> {
+                    children.forEach(childDependency -> {
+                        if (!childResults.containsKey(childDependency) || !childResults.get(childDependency).isPresent()) {
+                            builder.withDependency(depBuilder -> depBuilder.from(childDependency));
+                        } else {
+                            final DependencyReplacementResult childResult = childResults.get(childDependency).get();
+                            builder.withProcessedDependency(b -> {
+                                childResult.getDependencyMetadataConfigurator().accept(b);
+                            });
+                        }
+                    });
+                    builder.from(resolvedDependency);
+
+                    final Mappings mappings = project.getExtensions().getByType(Mappings.class);
+                    String deobfuscatedMappingsPrefix = mappings.getChannel().get().getDeobfuscationGroupSupplier().get();
+                    if (deobfuscatedMappingsPrefix.trim().isEmpty()) {
+                        deobfuscatedMappingsPrefix = mappings.getChannel().get().getName();
+                    }
+                    builder.setGroup("fg.deobf." + deobfuscatedMappingsPrefix + "." + resolvedDependency.getModuleGroup());
+                },
+                dependentResults,
+                Sets::newHashSet);
+
+        final DeobfuscatingTaskConfiguration taskConfig = new DeobfuscatingTaskConfiguration(configuration, result, resolvedDependency, file, childResults);
+        project.afterEvaluate(evaluatedProject -> bakeDependencyReplacement(evaluatedProject, taskConfig));
+
+        return Optional.of(result);
     }
 
 
@@ -279,12 +307,12 @@ public final class DependencyDeobfuscator {
 
         final File runtimeWorkingDirectory = project.getLayout().getBuildDirectory().dir("dependencies").map(dir -> dir.dir("raw")).get().getAsFile();
 
-        final String postFix = deobfuscatingTaskConfiguration.resolvedDependency().getName();
+        final String postFix = deobfuscatingTaskConfiguration.getResolvedDependency().getName();
 
-        final Set<? extends Definition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.context().getConfiguration());
+        final Set<? extends Definition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.getConfiguration());
         Definition<?> runtimeDefinition;
         if (runtimeDefinitions.size() != 1) {
-            LOGGER.warn("Found {} runtime definitions for configuration {}!", runtimeDefinitions.size(), deobfuscatingTaskConfiguration.context().getConfiguration());
+            LOGGER.warn("Found {} runtime definitions for configuration {}!", runtimeDefinitions.size(), deobfuscatingTaskConfiguration.getConfiguration());
             LOGGER.warn("Raw jar deobfuscation might not deobfuscate to the correct version!");
         }
         runtimeDefinition = runtimeDefinitions.iterator().next();
@@ -293,11 +321,31 @@ public final class DependencyDeobfuscator {
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = artifactCache.cacheGameVersionTasks(project, new File(runtimeWorkingDirectory, "cache"), runtimeDefinition.getSpecification().getMinecraftVersion(), runtimeDefinition.getSpecification().getDistribution());
 
         final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
-            task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).orElseThrow(() -> new IllegalStateException("Failed to get file from resolved dependency!")));
-            task.getOutput().fileValue(new File(runtimeWorkingDirectory,  deobfuscatingTaskConfiguration.resolvedDependency().getName() + "-sources.jar"));
+            task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.getResolvedDependency()).orElseThrow(() -> new IllegalStateException("Failed to get file from resolved dependency!")));
+            task.getOutput().fileValue(new File(runtimeWorkingDirectory, ResolvedDependencyUtils.toFileName(deobfuscatingTaskConfiguration.getResolvedDependency()) + "-sources.jar"));
         });
 
-        final TaskProvider<? extends WithOutput> rawJarDeobfuscator = mappingsExtension.getChannel().get()
+        final TaskProvider<? extends Runtime> generateDependencyLibraries = project.getTasks().register(CommonRuntimeUtils.buildTaskName("collectLibraries", deobfuscatingTaskConfiguration.getResolvedDependency()), CollectDependencyLibraries.class, task -> {
+            task.getBaseLibraryFile().set(runtimeDefinition.getListLibrariesTaskProvider().flatMap(WithOutput::getOutput));
+
+            final List<File> dependencies = deobfuscatingTaskConfiguration.getResolvedDependency().getAllModuleArtifacts().stream().map(ResolvedArtifact::getFile).collect(Collectors.toList());
+            dependencies.removeAll(deobfuscatingTaskConfiguration.getResolvedDependency().getModuleArtifacts().stream().map(ResolvedArtifact::getFile).collect(Collectors.toList()));
+
+            task.getDependencyFiles().from(dependencies);
+            task.getDependencyFiles().from(runtimeDefinition.getRuntimeMappedRawJarTaskProvider().flatMap(WithOutput::getOutput));
+
+            task.dependsOn(runtimeDefinition.getListLibrariesTaskProvider());
+            task.dependsOn(runtimeDefinition.getRuntimeMappedRawJarTaskProvider());
+
+            deobfuscatingTaskConfiguration.getChildResults().values()
+                    .stream().filter(Optional::isPresent).map(Optional::get)
+                    .map(DependencyReplacementResult::getRawJarTaskProvider)
+                    .forEach(task::dependsOn);
+        });
+        runtimeDefinition.configureAssociatedTask(generateDependencyLibraries);
+
+        final Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks = new HashSet<>();
+        final TaskProvider<? extends Runtime> rawJarDeobfuscator = mappingsExtension.getChannel().get()
                 .getApplyCompiledMappingsTaskBuilder().get().build(
                         new TaskBuildingContext(
                                 project,
@@ -306,11 +354,15 @@ public final class DependencyDeobfuscator {
                                 sourceFileProvider,
                                 gameArtifactTasks,
                                 runtimeDefinition.getMappingVersionData(),
-                                new HashSet<>(),
-                                runtimeDefinition)
+                                additionalRuntimeTasks,
+                                runtimeDefinition,
+                                generateDependencyLibraries)
                 );
 
-        deobfuscatingTaskConfiguration.dependencyReplacementResult().getRawJarTaskProvider().configure(task -> {
+        runtimeDefinition.configureAssociatedTask(rawJarDeobfuscator);
+        additionalRuntimeTasks.forEach(runtimeDefinition::configureAssociatedTask);
+
+        deobfuscatingTaskConfiguration.getDependencyReplacementResult().getRawJarTaskProvider().configure(task -> {
             if (!(task instanceof ArtifactFromOutput)) {
                 throw new IllegalStateException("Expected task to be an instance of ArtifactFromOutput!");
             }
@@ -322,7 +374,7 @@ public final class DependencyDeobfuscator {
     }
 
     private void createSourcesProvidingTask(final Project project, final DeobfuscatingTaskConfiguration deobfuscatingTaskConfiguration) {
-        final Configuration sourcesConfiguration = ConfigurationUtils.temporaryConfiguration(project, project.getDependencies().create(this.createSourcesDependencyIdentifier(deobfuscatingTaskConfiguration.resolvedDependency().getModuleArtifacts().iterator().next())));
+        final Configuration sourcesConfiguration = ConfigurationUtils.temporaryConfiguration(project, project.getDependencies().create(this.createSourcesDependencyIdentifier(deobfuscatingTaskConfiguration.getResolvedDependency().getModuleArtifacts().iterator().next())));
         final Optional<File> sourcesFileCandidate = getFileFrom(sourcesConfiguration.getResolvedConfiguration());
 
         final CommonRuntimeExtension<?,?,?> commonRuntimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
@@ -330,14 +382,14 @@ public final class DependencyDeobfuscator {
 
         final File runtimeWorkingDirectory = project.getLayout().getBuildDirectory().dir("dependencies").map(dir -> dir.dir("sources")).get().getAsFile();
 
-        final String postFix = deobfuscatingTaskConfiguration.resolvedDependency().getName() + "Sources";
+        final String postFix = deobfuscatingTaskConfiguration.getResolvedDependency().getName() + "Sources";
 
-        TaskProvider<? extends WithOutput> generateSourcesTask;
+        TaskProvider<? extends Runtime> generateSourcesTask;
         if (sourcesFileCandidate.isPresent()) {
-            final Set<? extends Definition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.context().getConfiguration());
+            final Set<? extends Definition<?>> runtimeDefinitions = commonRuntimeExtension.findIn(deobfuscatingTaskConfiguration.getConfiguration());
             Definition<?> runtimeDefinition;
             if (runtimeDefinitions.size() != 1) {
-                LOGGER.warn("Found {} runtime definitions for configuration {}!", runtimeDefinitions.size(), deobfuscatingTaskConfiguration.context().getConfiguration());
+                LOGGER.warn("Found {} runtime definitions for configuration {}!", runtimeDefinitions.size(), deobfuscatingTaskConfiguration.getConfiguration());
                 LOGGER.warn("Source deobfuscation might not deobfuscate to the correct version!");
             }
             runtimeDefinition = runtimeDefinitions.iterator().next();
@@ -347,9 +399,10 @@ public final class DependencyDeobfuscator {
 
             final TaskProvider<? extends WithOutput> sourceFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
                 task.getInput().fileValue(sourcesFileCandidate.get());
-                task.getOutput().fileValue(new File(runtimeWorkingDirectory,  deobfuscatingTaskConfiguration.resolvedDependency().getName() + "-sources.jar"));
+                task.getOutput().fileValue(new File(runtimeWorkingDirectory, ResolvedDependencyUtils.toFileName(deobfuscatingTaskConfiguration.getResolvedDependency()) + "-sources.jar"));
             });
 
+            final Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks = new HashSet<>();
             generateSourcesTask = mappingsExtension.getChannel().get()
                     .getApplySourceMappingsTaskBuilder().get().build(
                             new TaskBuildingContext(
@@ -359,24 +412,27 @@ public final class DependencyDeobfuscator {
                                     sourceFileProvider,
                                     gameArtifactTasks,
                                     runtimeDefinition.getMappingVersionData(),
-                                    new HashSet<>(),
+                                    additionalRuntimeTasks,
                                     runtimeDefinition)
                     );
+
+            runtimeDefinition.configureAssociatedTask(generateSourcesTask);
+            additionalRuntimeTasks.forEach(runtimeDefinition::configureAssociatedTask);
         } else {
-            LOGGER.warn("Could not find sources for dependency {} decompiling!", deobfuscatingTaskConfiguration.resolvedDependency().getName());
+            LOGGER.warn("Could not find sources for dependency {} decompiling!", deobfuscatingTaskConfiguration.getResolvedDependency().getName());
 
             final DeobfuscationExtension deobfuscationExtension = project.getExtensions().getByType(DeobfuscationExtension.class);
 
             final TaskProvider<? extends WithOutput> rawFileProvider = project.getTasks().register(CommonRuntimeUtils.buildTaskName("provide", postFix), ArtifactFromOutput.class, task -> {
-                task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.resolvedDependency()).orElseThrow(() -> new IllegalStateException("Could not find file for dependency " + deobfuscatingTaskConfiguration.resolvedDependency().getName())));
-                task.getOutput().fileValue(new File(runtimeWorkingDirectory,  deobfuscatingTaskConfiguration.resolvedDependency().getName() + "-sources.jar"));
+                task.getInput().fileValue(getFileFrom(deobfuscatingTaskConfiguration.getResolvedDependency()).orElseThrow(() -> new IllegalStateException("Could not find file for dependency " + deobfuscatingTaskConfiguration.getResolvedDependency().getName())));
+                task.getOutput().fileValue(new File(runtimeWorkingDirectory, ResolvedDependencyUtils.toFileName(deobfuscatingTaskConfiguration.getResolvedDependency()) + "-sources.jar"));
             });
 
             generateSourcesTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("decompile", postFix), Execute.class, task -> {
                 task.getExecutingArtifact().set(deobfuscationExtension.getForgeFlowerVersion().map(version -> String.format(Constants.FORGEFLOWER_ARTIFACT_INTERPOLATION, version)));
                 task.getJvmArguments().addAll(DecompileUtils.DEFAULT_JVM_ARGS);
                 task.getProgramArguments().addAll(DecompileUtils.DEFAULT_PROGRAMM_ARGS);
-                task.getArguments().set(CommonRuntimeUtils.buildArguments(
+                task.getArguments().putAll(CommonRuntimeUtils.buildArguments(
                         value -> Optional.empty(),
                         (String value) -> project.provider(() -> value),
                         Collections.emptyMap(),
@@ -386,7 +442,7 @@ public final class DependencyDeobfuscator {
             });
         }
 
-        deobfuscatingTaskConfiguration.dependencyReplacementResult().getSourcesJarTaskProvider().configure(task -> {
+        deobfuscatingTaskConfiguration.getDependencyReplacementResult().getSourcesJarTaskProvider().configure(task -> {
             if (!(task instanceof ArtifactFromOutput)) {
                 throw new IllegalStateException("Expected task to be an instance of ArtifactFromOutput!");
             }

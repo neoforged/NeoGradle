@@ -5,6 +5,8 @@ import com.google.common.collect.Sets;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gdi.ProjectAssociatedDSLElement;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryEntry;
+import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryReference;
+import net.minecraftforge.gradle.dsl.common.util.ModuleReference;
 import net.minecraftforge.gradle.util.ModuleDependencyUtils;
 import net.minecraftforge.gradle.util.ResolvedDependencyUtils;
 import org.gradle.api.Project;
@@ -12,6 +14,7 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -39,7 +42,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
     private final String version;
     private final String classifier;
     private final String extension;
-    private final Collection<IvyDummyRepositoryReference> dependencies;
+    private final Collection<RepositoryReference> dependencies;
 
     /**
      * @param project      The project thsi entry resides in.
@@ -51,7 +54,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
      * @param dependencies The dependencies for this entry.
      */
     @Inject
-    public IvyDummyRepositoryEntry(Project project, String group, String name, String version, String classifier, String extension, Collection<IvyDummyRepositoryReference> dependencies) {
+    public IvyDummyRepositoryEntry(Project project, String group, String name, String version, String classifier, String extension, Collection<RepositoryReference> dependencies) {
         this.project = project;
         this.group = group;
         this.name = name;
@@ -137,7 +140,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
     }
 
     @Override
-    public Collection<IvyDummyRepositoryReference> getDependencies() {
+    public Collection<? extends RepositoryReference> getDependencies() {
         return dependencies;
     }
 
@@ -192,6 +195,11 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
         return builder.toString();
     }
 
+    @Override
+    public ModuleReference toModuleReference() {
+        return new ModuleReference(getGroup(), getName(), getVersion(), getExtension(), getClassifier());
+    }
+
     public static abstract class Builder implements ConfigurableDSLElement<Builder>, RepositoryEntry.Builder<Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder> {
         private final Project project;
         private String group;
@@ -199,7 +207,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
         private String version;
         private String classifier = "";
         private String extension = "jar";
-        private final Set<IvyDummyRepositoryReference> dependencies = Sets.newHashSet();
+        private final Set<RepositoryReference> dependencies = Sets.newHashSet();
 
         @Inject
         public Builder(Project project) {
@@ -251,7 +259,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
         }
 
         @Override
-        public ImmutableSet<IvyDummyRepositoryReference> getDependencies() {
+        public ImmutableSet<? extends RepositoryReference> getDependencies() {
             return ImmutableSet.copyOf(dependencies);
         }
 
@@ -306,13 +314,13 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
         }
 
         @Override
-        public Builder setDependencies(final Collection<IvyDummyRepositoryReference> dependencies) {
+        public Builder setDependencies(final Collection<? extends RepositoryReference> dependencies) {
             this.dependencies.addAll(dependencies);
             return this;
         }
 
         @Override
-        public Builder setDependencies(final IvyDummyRepositoryReference... dependencies) {
+        public Builder setDependencies(final RepositoryReference... dependencies) {
             this.dependencies.addAll(Arrays.asList(dependencies));
             return this;
         }
@@ -320,6 +328,15 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
         @Override
         public Builder withDependency(final Consumer<IvyDummyRepositoryReference.Builder> consumer) {
             final IvyDummyRepositoryReference.Builder builder = IvyDummyRepositoryReference.Builder.create(project);
+            consumer.accept(builder);
+            this.dependencies.add(builder.build());
+            return this;
+        }
+
+        @NotNull
+        @Override
+        public Builder withProcessedDependency(@NotNull Consumer<Builder> consumer) {
+            final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create(project);
             consumer.accept(builder);
             this.dependencies.add(builder.build());
             return this;

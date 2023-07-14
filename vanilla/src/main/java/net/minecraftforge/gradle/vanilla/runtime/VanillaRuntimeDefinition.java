@@ -5,10 +5,12 @@ import net.minecraftforge.gradle.common.runtime.definition.CommonRuntimeDefiniti
 import net.minecraftforge.gradle.common.runtime.tasks.DownloadAssets;
 import net.minecraftforge.gradle.common.runtime.tasks.ExtractNatives;
 import net.minecraftforge.gradle.common.util.VersionJson;
+import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime;
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.common.runs.run.RunImpl;
+import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.minecraftforge.gradle.vanilla.util.InterpolationConstants;
@@ -16,7 +18,9 @@ import net.minecraftforge.gradle.vanilla.util.ServerLaunchInformation;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -62,6 +66,12 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
     @NotNull
     public TaskProvider<ExtractNatives> getNativesTaskProvider() {
         return nativesTaskProvider;
+    }
+
+    @Override
+    @NotNull
+    public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
+        return this.getTask("libraries");
     }
 
     public VersionJson getVersionJson() {

@@ -73,12 +73,11 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
     }
 
     private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpecification spec, File mcpDirectory, Map<String, File> data, LinkedHashMap<String, TaskProvider<? extends WithOutput>> tasks, McpConfigConfigurationSpecV1.Step step, Runtime mcpRuntimeTask, Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
-        mcpRuntimeTask.getArguments().set(buildArguments(spec, step, tasks, mcpRuntimeTask, alternativeInputProvider));
+        mcpRuntimeTask.getArguments().putAll(buildArguments(spec, step, tasks, mcpRuntimeTask, alternativeInputProvider));
         configureCommonRuntimeTaskParameters(mcpRuntimeTask, data, step.getName(), spec, mcpDirectory);
     }
 
     private static void configureMcpRuntimeTaskWithDefaults(McpRuntimeSpecification spec, File mcpDirectory, Map<String, File> data, Runtime mcpRuntimeTask) {
-        mcpRuntimeTask.getArguments().set(Maps.newHashMap());
         configureCommonRuntimeTaskParameters(mcpRuntimeTask, data, CommonRuntimeUtils.buildStepName(spec, mcpRuntimeTask.getName()), spec, mcpDirectory);
     }
 
@@ -372,6 +371,8 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
         generateDebuggingMappingsTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, task));
         taskOutputs.put(generateDebuggingMappingsTask.getName(), generateDebuggingMappingsTask);
         definition.setDebuggingMappingsTaskProvider(generateDebuggingMappingsTask);
+
+        definition.onBake(context.getNamingChannel(), mcpDirectory);
     }
 
     public abstract Property<DistributionType> getDefaultDistributionType();

@@ -6,7 +6,7 @@ plugins {
 }
 
 //HARDCODED VERSION FOR NOW!
-version = "6.0-SNAPSHOT"
+version = "7.0-NEO"
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
@@ -98,12 +98,6 @@ subprojects.forEach { subProject ->
         groovyOptions.optimizationOptions.indy = true
     }
 
-    subProject.publishing.publications { PublicationContainer publications ->
-        publications.create('maven', MavenPublication) { MavenPublication publication ->
-            project.changelog.publish(publication)
-        }
-    }
-
     subProject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
     //noinspection ConfigurationAvoidance Due to how the eclipse plugin creates this task, tasks.named throws
     subProject.tasks.findByName('eclipseJdt')?.configure {
@@ -156,8 +150,16 @@ subprojects.forEach { subProject ->
                     pluginClassName = evalSubProject.file('src/main/java/').toPath().relativize(pluginFile.toPath()).toString().replace('/', '.').replace('\\', '.').replace(".java", "")
                 }
 
+                def pluginId = 'net.minecraftforge.gradle.' + evalSubProject.name.toLowerCase()
+                try {
+                    var propertyValue = evalSubProject.property('pluginId')
+                    if (propertyValue != null) {
+                        pluginId = propertyValue
+                    }
+                } catch (Exception ignored) {}
+
                 //Setup the plugin id.
-                id = 'net.minecraftforge.gradle.' + evalSubProject.name.toLowerCase()
+                id = pluginId
                 //And the implementation class.
                 implementationClass = pluginClassName
             }
@@ -194,13 +196,19 @@ subprojects.forEach { subProject ->
 subprojects.forEach { subProject ->
     subProject.afterEvaluate { Project evalSubProject ->
         if (evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
-            return;
+            evalSubProject.publishing.publications { PublicationContainer publications ->
+                publications.create('pluginMaven', MavenPublication) { publication ->
+                    project.changelog.publish publication
+                }
+            }
+
+            return
         }
 
         evalSubProject.publishing.publications { PublicationContainer publications ->
-            publications.named('maven', MavenPublication) { publication ->
-                SoftwareComponent component = evalSubProject.components.java
-                publication.from component
+            publications.create('maven', MavenPublication) { publication ->
+                publication.from evalSubProject.components.java
+                project.changelog.publish publication
             }
         }
     }

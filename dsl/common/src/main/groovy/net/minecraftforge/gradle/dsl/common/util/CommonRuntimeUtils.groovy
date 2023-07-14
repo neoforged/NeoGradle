@@ -40,11 +40,30 @@ final class CommonRuntimeUtils {
     }
 
     static String buildTaskName(String name, ResolvedDependency resolvedDependency) {
-        return String.format("%s%s", name, StringUtils.capitalize(resolvedDependency.getName()));
+        final String dependencyName = StringUtils.capitalize(resolvedDependency.getName());
+        final String validDependencyName = dependencyName.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        final String validName = name.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        return String.format("%s%s", validName, validDependencyName);
     }
 
     static String buildTaskName(String name, String defaultName) {
-        return String.format("%s%s", defaultName, StringUtils.capitalize(name));
+        final String suffix = StringUtils.capitalize(name);
+        final String validSuffix = suffix.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        final String validName = defaultName.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        return String.format("%s%s", validName, validSuffix);
+    }
+
+    static String buildTaskName(String prefix, ModuleReference reference) {
+        final String dependencyName = StringUtils.capitalize(reference.toString());
+        final String validDependencyName = dependencyName.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        final String validPrefix = prefix.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        return String.format("%s%s", validPrefix, validDependencyName);
     }
 
     static String buildStepName(Specification spec, String name) {

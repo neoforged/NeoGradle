@@ -26,7 +26,6 @@ final class DependencyReplacementResult {
     private final Configuration additionalDependenciesConfiguration;
     private final Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator;
     private final Collection<DependencyReplacementResult> additionalReplacements;
-    private final Consumer<RepositoryReference.Builder<?, ?>> asDependencyBuilderConfigurator;
     private final Consumer<Dependency> onCreateReplacedDependencyCallback;
     private final Supplier<Set<TaskProvider>> additionalIdePostSyncTasks;
 
@@ -48,9 +47,6 @@ final class DependencyReplacementResult {
         this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
         this.additionalReplacements = Collections.emptyList();
         this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
-
-        //TODO: Handle this:
-        this.asDependencyBuilderConfigurator = builder -> { };
     }
 
     DependencyReplacementResult(Project project,
@@ -60,7 +56,6 @@ final class DependencyReplacementResult {
                                 Configuration additionalDependenciesConfiguration,
                                 Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator,
                                 Collection<DependencyReplacementResult> additionalReplacements,
-                                Consumer<RepositoryReference.Builder<?, ?>> asDependencyBuilderConfigurator,
                                 Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
         this.project = project;
         this.taskNameBuilder = taskNameBuilder;
@@ -69,7 +64,6 @@ final class DependencyReplacementResult {
         this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
         this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
         this.additionalReplacements = additionalReplacements;
-        this.asDependencyBuilderConfigurator = asDependencyBuilderConfigurator;
         this.onCreateReplacedDependencyCallback = dep -> { };
         this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
     }
@@ -142,16 +136,6 @@ final class DependencyReplacementResult {
     @NotNull
     Collection<DependencyReplacementResult> getAdditionalReplacements() {
         return additionalReplacements;
-    }
-
-    /**
-     * Gets the configurator which can be used to configure the dependency replacement as a dependency.
-     *
-     * @return The configurator which can be used to configure the dependency replacement as a dependency.
-     */
-    @NotNull
-    Consumer<RepositoryReference.Builder<?, ?>> getDependencyBuilderConfigurator() {
-        return asDependencyBuilderConfigurator;
     }
 
     /**

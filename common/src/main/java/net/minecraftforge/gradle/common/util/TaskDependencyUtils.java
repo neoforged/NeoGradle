@@ -52,8 +52,14 @@ public final class TaskDependencyUtils {
             return;
 
         final Task task = queue.removeFirst();
-        if (tasks.contains(task))
+        if (tasks.contains(task)) {
+            if (queue.isEmpty()) {
+                return;
+            }
+
+            getDependencies(queue, tasks);
             return;
+        }
 
         ((Set<Task>) tasks).add(task);
         queue.addAll(task.getTaskDependencies().getDependencies(task));

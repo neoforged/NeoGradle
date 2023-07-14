@@ -9,6 +9,7 @@ import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact
+import org.apache.tools.ant.taskdefs.condition.Not
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
@@ -30,6 +31,7 @@ class TaskBuildingContext {
     private final @NotNull Map<String, String> versionData;
     private final @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks;
     private final @Nullable Definition<? extends Specification> runtimeDefinition;
+    private final @Nullable TaskProvider<? extends WithOutput> librariesTask;
 
     TaskBuildingContext(
             @NotNull Project project,
@@ -47,6 +49,7 @@ class TaskBuildingContext {
         this.versionData = versionData;
         this.additionalRuntimeTasks = additionalRuntimeTasks;
         this.runtimeDefinition = null;
+        this.librariesTask = null;
     }
 
     TaskBuildingContext(
@@ -66,6 +69,28 @@ class TaskBuildingContext {
         this.versionData = versionData
         this.additionalRuntimeTasks = additionalRuntimeTasks
         this.runtimeDefinition = runtimeDefinition
+        this.librariesTask = runtimeDefinition.getListLibrariesTaskProvider();
+    }
+
+    TaskBuildingContext(
+            @NotNull Project project,
+            @NotNull String environmentName,
+            @NotNull Function<String, String> taskNameBuilder,
+            @NotNull TaskProvider<? extends WithOutput> taskOutputToModify,
+            @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
+            @NotNull Map<String, String> versionData,
+            @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks,
+            @Nullable Definition<? extends Specification> runtimeDefinition,
+            @NotNull TaskProvider<? extends WithOutput> librariesTask) {
+        this.project = project
+        this.environmentName = environmentName
+        this.taskNameBuilder = taskNameBuilder
+        this.taskOutputToModify = taskOutputToModify
+        this.gameArtifactTasks = gameArtifactTasks
+        this.versionData = versionData
+        this.additionalRuntimeTasks = additionalRuntimeTasks
+        this.runtimeDefinition = runtimeDefinition
+        this.librariesTask = librariesTask
     }
 
     /**
@@ -217,5 +242,15 @@ class TaskBuildingContext {
      */
     @NotNull Optional<? extends Definition<? extends Specification>> getRuntimeDefinition() {
         return Optional.ofNullable(runtimeDefinition)
+    }
+
+    /**
+     * Gives access to a task provider that has as output the libraries that can be used to process the jar.
+     *
+     * @return A task provider which has as output the libraries that can be used to process the jar.
+     */
+    @Nullable
+    TaskProvider<? extends WithOutput> getLibrariesTask() {
+        return librariesTask
     }
 }

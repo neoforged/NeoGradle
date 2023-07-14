@@ -1,15 +1,17 @@
 package net.minecraftforge.gradle.common.deobfuscation;
 
-import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.Context;
 import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedDependency;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class DeobfuscatingTaskConfiguration {
 
-    private final Context context;
+    private final Configuration configuration;
 
     private final DependencyReplacementResult dependencyReplacementResult;
 
@@ -17,27 +19,34 @@ public class DeobfuscatingTaskConfiguration {
 
     private final File input;
 
-    public DeobfuscatingTaskConfiguration(Context context, DependencyReplacementResult dependencyReplacementResult, ResolvedDependency resolvedDependency, File input) {
-        this.context = context;
+    private final Map<ResolvedDependency, Optional<DependencyReplacementResult>> childResults;
+
+    public DeobfuscatingTaskConfiguration(Configuration configuration, DependencyReplacementResult dependencyReplacementResult, ResolvedDependency resolvedDependency, File input, Map<ResolvedDependency, Optional<DependencyReplacementResult>> childResults) {
+        this.configuration = configuration;
         this.dependencyReplacementResult = dependencyReplacementResult;
         this.resolvedDependency = resolvedDependency;
         this.input = input;
+        this.childResults = childResults;
     }
 
-    public Context context() {
-        return context;
-    }
-
-    public DependencyReplacementResult dependencyReplacementResult() {
+    public DependencyReplacementResult getDependencyReplacementResult() {
         return dependencyReplacementResult;
     }
 
-    public ResolvedDependency resolvedDependency() {
+    public ResolvedDependency getResolvedDependency() {
         return resolvedDependency;
     }
 
-    public File input() {
+    public File getInput() {
         return input;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public Map<ResolvedDependency, Optional<DependencyReplacementResult>> getChildResults() {
+        return childResults;
     }
 
     @Override
@@ -47,30 +56,34 @@ public class DeobfuscatingTaskConfiguration {
 
         DeobfuscatingTaskConfiguration that = (DeobfuscatingTaskConfiguration) o;
 
-        if (!Objects.equals(context, that.context)) return false;
-        if (!Objects.equals(dependencyReplacementResult, that.dependencyReplacementResult))
+        if (getConfiguration() != null ? !getConfiguration().equals(that.getConfiguration()) : that.getConfiguration() != null)
             return false;
-        if (!Objects.equals(resolvedDependency, that.resolvedDependency))
+        if (getDependencyReplacementResult() != null ? !getDependencyReplacementResult().equals(that.getDependencyReplacementResult()) : that.getDependencyReplacementResult() != null)
             return false;
-        return Objects.equals(input, that.input);
+        if (getResolvedDependency() != null ? !getResolvedDependency().equals(that.getResolvedDependency()) : that.getResolvedDependency() != null)
+            return false;
+        if (getInput() != null ? !getInput().equals(that.getInput()) : that.getInput() != null) return false;
+        return getChildResults() != null ? getChildResults().equals(that.getChildResults()) : that.getChildResults() == null;
     }
 
     @Override
     public int hashCode() {
-        int result = context != null ? context.hashCode() : 0;
-        result = 31 * result + (dependencyReplacementResult != null ? dependencyReplacementResult.hashCode() : 0);
-        result = 31 * result + (resolvedDependency != null ? resolvedDependency.hashCode() : 0);
-        result = 31 * result + (input != null ? input.hashCode() : 0);
+        int result = getConfiguration() != null ? getConfiguration().hashCode() : 0;
+        result = 31 * result + (getDependencyReplacementResult() != null ? getDependencyReplacementResult().hashCode() : 0);
+        result = 31 * result + (getResolvedDependency() != null ? getResolvedDependency().hashCode() : 0);
+        result = 31 * result + (getInput() != null ? getInput().hashCode() : 0);
+        result = 31 * result + (getChildResults() != null ? getChildResults().hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "DeobfuscatingTaskConfiguration{" +
-                "context=" + context +
+                "configuration=" + configuration +
                 ", dependencyReplacementResult=" + dependencyReplacementResult +
                 ", resolvedDependency=" + resolvedDependency +
                 ", input=" + input +
+                ", childResults=" + childResults +
                 '}';
     }
 }

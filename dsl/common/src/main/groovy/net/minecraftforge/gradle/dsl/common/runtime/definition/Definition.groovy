@@ -1,6 +1,7 @@
 package net.minecraftforge.gradle.dsl.common.runtime.definition
 
 import groovy.transform.CompileStatic
+import net.minecraftforge.gradle.dsl.common.runtime.naming.NamingChannel
 import net.minecraftforge.gradle.dsl.common.runtime.spec.Specification
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.Runtime
 import net.minecraftforge.gradle.dsl.common.tasks.ArtifactProvider
@@ -10,6 +11,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.Nullable
 
 @CompileStatic
 interface Definition<S extends Specification> {
@@ -87,4 +89,19 @@ interface Definition<S extends Specification> {
      * @param runtimeTask The runtime task to configure.
      */
     void configureAssociatedTask(@NotNull final TaskProvider<? extends Runtime> runtimeTask)
-}
+
+    /**
+     * Returns the task which produces the runtime mapped jar.
+     *
+     * @return The runtime mapped jar producing task.
+     */
+    @NotNull
+    abstract TaskProvider<? extends WithOutput> getRuntimeMappedRawJarTaskProvider();
+
+    /**
+     * Returns the task which creates a file listing all the libraries used by the runtime.
+     *
+     * @return The task which creates a file listing all the libraries used by the runtime.
+     */
+    @NotNull
+    abstract TaskProvider<? extends WithOutput> getListLibrariesTaskProvider(); }

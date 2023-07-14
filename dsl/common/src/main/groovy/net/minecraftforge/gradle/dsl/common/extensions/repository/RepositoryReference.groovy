@@ -2,6 +2,7 @@ package net.minecraftforge.gradle.dsl.common.extensions.repository
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
+import net.minecraftforge.gradle.dsl.common.util.ModuleReference
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ResolvedDependency
 import org.jetbrains.annotations.NotNull
@@ -55,6 +56,14 @@ interface RepositoryReference {
      */
     @Nullable
     String getExtension()
+
+    /**
+     * The unique comparable reference to this repository reference.
+     *
+     * @return The reference comparable with other repository systems.
+     */
+    @NotNull
+    ModuleReference toModuleReference ( ) ;
 
     /**
      * Defines a builder which can be used to create a repository reference.

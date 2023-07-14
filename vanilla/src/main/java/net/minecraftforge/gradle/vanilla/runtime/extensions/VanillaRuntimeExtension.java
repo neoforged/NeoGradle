@@ -210,6 +210,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             task.getInput().set(rawTask.flatMap(WithOutput::getOutput));
             task.dependsOn(rawTask);
         });
+
+        definition.onBake(getProject().getExtensions().getByType(Mappings.class).getChannel().get(), runtimeWorkingDirectory);
     }
 
     private StepData buildSteps() {

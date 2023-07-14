@@ -1,5 +1,7 @@
 package net.minecraftforge.gradle.common;
 
+import net.minecraftforge.gradle.common.extensions.ExtensionManager;
+import net.minecraftforge.gradle.common.extensions.ForcedDependencyDeobfuscationExtension;
 import net.minecraftforge.gradle.common.extensions.IdeManagementExtension;
 import net.minecraftforge.gradle.common.extensions.ProjectEvaluationExtension;
 import net.minecraftforge.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
@@ -62,8 +64,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
 
-        //TODO: Setup runs
-
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
@@ -71,9 +71,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create(Obfuscation.class, "obfuscation", ObfuscationExtension.class, project);
+        project.getExtensions().create("extensionManager", ExtensionManager.class, project);
+        project.getExtensions().create("forcedDeobfuscation", ForcedDependencyDeobfuscationExtension.class);
+        project.getExtensions().create("dependencyDeobfuscation", DependencyDeobfuscator.class, project);
 
-        project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
-        project.getExtensions().create(Mappings.class, "mappings", MappingsExtension.class, project);
+        final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
+
+        extensionManager.registerExtension("minecraft", Minecraft.class, (p) -> p.getObjects().newInstance(MinecraftExtension.class, p));
+        extensionManager.registerExtension("mappings", Mappings.class, (p) -> p.getObjects().newInstance(MappingsExtension.class, p));
 
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 
@@ -83,8 +88,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
             e.setUrl(UrlConstants.MOJANG_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::artifact);
         });
-
-        DependencyDeobfuscator.getInstance().apply(project);
 
         project.afterEvaluate(this::applyAfterEvaluate);
 

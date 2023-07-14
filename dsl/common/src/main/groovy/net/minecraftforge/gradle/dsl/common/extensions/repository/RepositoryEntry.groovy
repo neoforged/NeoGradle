@@ -21,7 +21,7 @@ import java.util.function.Consumer
  * @param <TDependency> The type for the dependencies of the entry.
  */
 @CompileStatic
-interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDependency extends RepositoryReference> extends Serializable {
+interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDependency extends RepositoryReference> extends Serializable, RepositoryReference {
 
     /**
      * Indicates if the entry matches a given dependency in gradles dependency management system.
@@ -126,7 +126,7 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
      * @return The dependencies of the entry.
      */
     @NotNull
-    Collection<TDependency> getDependencies()
+    Collection<? extends RepositoryReference> getDependencies()
 
     /**
      * Defines a builder for the repository entry.
@@ -184,8 +184,14 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
          * @return The currently configured dependencies in the builder.
          */
         @NotNull
-        ImmutableSet<TDependency> getDependencies();
+        ImmutableSet<? extends RepositoryReference> getDependencies();
 
+        /**
+         * Configures the group of the repository entry.
+         *
+         * @param group The group.
+         * @return The builder invoked on.
+         */
         @NotNull
         TSelf setGroup(@NotNull String group);
 
@@ -250,7 +256,7 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
          * @return The builder invoked on.
          */
         @NotNull
-        TSelf setDependencies(@NotNull Collection<TDependency> dependencies);
+        TSelf setDependencies(@NotNull Collection<? extends RepositoryReference> dependencies);
 
         /**
          * Adds a dependencies to the entry.
@@ -259,7 +265,7 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
          * @return The builder invoked on.
          */
         @NotNull
-        TSelf setDependencies(@NotNull TDependency... dependencies);
+        TSelf setDependencies(@NotNull RepositoryReference... dependencies);
 
         /**
          * Adds a dependencies to the entry.
@@ -269,6 +275,15 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
          */
         @NotNull
         TSelf withDependency(@NotNull Consumer<TDependencyBuilder> consumer);
+
+        /**
+         * Adds a dependencies to the entry, in such a way that it is considered a processed dependency and that dependency replacement logic needs to be considered.
+         *
+         * @param dependency The dependencies to add.
+         * @return The builder invoked on.
+         */
+        @NotNull
+        TSelf withProcessedDependency(@NotNull Consumer<TSelf> consumer);
 
         /**
          * Creates a copy of the current builder.

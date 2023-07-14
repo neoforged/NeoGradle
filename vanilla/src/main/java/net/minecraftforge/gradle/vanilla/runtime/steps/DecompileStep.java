@@ -27,7 +27,7 @@ public class DecompileStep implements IStep {
             task.getExecutingArtifact().set(vanillaRuntimeExtension.getForgeFlowerVersion().map(version -> String.format(Constants.FORGEFLOWER_ARTIFACT_INTERPOLATION, version)));
             task.getJvmArguments().addAll(DecompileUtils.DEFAULT_JVM_ARGS);
             task.getProgramArguments().addAll(DecompileUtils.DEFAULT_PROGRAMM_ARGS);
-            task.getArguments().set(CommonRuntimeUtils.buildArguments(definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask)));
+            task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask)));
         });
     }
 

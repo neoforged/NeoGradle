@@ -1,18 +1,17 @@
 package net.minecraftforge.gradle.userdev.runtime.extension;
 
-import net.minecraftforge.gradle.common.util.ConfigurationUtils;
-import net.minecraftforge.gradle.dsl.common.util.DistributionType;
-import net.minecraftforge.gradle.util.CopyingFileTreeVisitor;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.runtime.tasks.AccessTransformer;
 import net.minecraftforge.gradle.common.util.CommonRuntimeTaskUtils;
+import net.minecraftforge.gradle.common.util.ConfigurationUtils;
+import net.minecraftforge.gradle.dsl.common.runs.type.Type;
+import net.minecraftforge.gradle.dsl.common.runs.type.Types;
 import net.minecraftforge.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.minecraftforge.gradle.dsl.common.tasks.WithOutput;
 import net.minecraftforge.gradle.dsl.common.tasks.specifications.OutputSpecification;
 import net.minecraftforge.gradle.dsl.common.util.Artifact;
 import net.minecraftforge.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.gradle.dsl.common.runs.type.Type;
-import net.minecraftforge.gradle.dsl.common.runs.type.Types;
+import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.minecraftforge.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.minecraftforge.gradle.mcp.runtime.extensions.McpRuntimeExtension;
@@ -21,10 +20,12 @@ import net.minecraftforge.gradle.mcp.runtime.tasks.InjectCode;
 import net.minecraftforge.gradle.mcp.runtime.tasks.Patch;
 import net.minecraftforge.gradle.mcp.runtime.tasks.SideAnnotationStripper;
 import net.minecraftforge.gradle.mcp.runtime.tasks.UnpackZip;
+import net.minecraftforge.gradle.mcp.util.McpAccessTransformerUtils;
 import net.minecraftforge.gradle.mcp.util.McpRuntimeUtils;
 import net.minecraftforge.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.minecraftforge.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.minecraftforge.gradle.userdev.utils.UserDevConfigurationSpecUtils;
+import net.minecraftforge.gradle.util.CopyingFileTreeVisitor;
 import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -43,7 +44,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<UserDevRuntimeSpecification, UserDevRuntimeSpecification.Builder, UserDevRuntimeDefinition> {
-    
+
     @Inject
     public UserDevRuntimeExtension(Project project) {
         super(project);
@@ -92,7 +93,8 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
 
             final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userDevConfigurationSpec.getAccessTransformerPaths(), unpackedForgeDirectory)
-                    .andThen(createSideAnnotationStripperAdapter(userDevConfigurationSpec.getSideAnnotationStripperPaths(), unpackedForgeDirectory));
+                    .andThen(createSideAnnotationStripperAdapter(userDevConfigurationSpec.getSideAnnotationStripperPaths(), unpackedForgeDirectory))
+                    .andThen(McpAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
 
             builder.withPreTaskAdapter("decompile", atAndSASAdapter);
 
@@ -111,9 +113,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final Types types = getProject().getExtensions().getByType(Types.class);
         userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
             final NamedDomainObjectProvider<Type> typeProvider = types.registerWithPotentialPrefix(spec.getName(), name, type::copyTo);
-            typeProvider.configure(runType -> {
-                runType.getClasspath().from(mcpRuntimeDefinition.getClientExtraJarProvider().map(OutputSpecification::getOutput));
-            });
+            typeProvider.configure(runType -> runType.getClasspath().from(mcpRuntimeDefinition.getClientExtraJarProvider().map(OutputSpecification::getOutput)));
         });
 
         return new UserDevRuntimeDefinition(
@@ -176,9 +176,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
     private TaskTreeAdapter createInjectForgeSourcesAdapter(final String forgeSourcesCoordinate) {
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends DownloadArtifact> downloadForgeSources = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "downloadForgesSources"), DownloadArtifact.class, task -> {
-                task.getArtifactCoordinate().set(forgeSourcesCoordinate);
-            });
+            final TaskProvider<? extends DownloadArtifact> downloadForgeSources = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "downloadForgesSources"), DownloadArtifact.class, task -> task.getArtifactCoordinate().set(forgeSourcesCoordinate));
 
             dependentTaskConfigurationHandler.accept(downloadForgeSources);
 
@@ -200,9 +198,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
     private TaskTreeAdapter createInjectResourcesAdapter(final String forgeUniversalCoordinate) {
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends DownloadArtifact> downloadForgeUniversal = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "downloadForgeUniversal"), DownloadArtifact.class, task -> {
-                task.getArtifactCoordinate().set(forgeUniversalCoordinate);
-            });
+            final TaskProvider<? extends DownloadArtifact> downloadForgeUniversal = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "downloadForgeUniversal"), DownloadArtifact.class, task -> task.getArtifactCoordinate().set(forgeUniversalCoordinate));
 
             dependentTaskConfigurationHandler.accept(downloadForgeUniversal);
 

@@ -4,7 +4,8 @@ import groovy.transform.CompileStatic;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleDependency;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Defines the context of a dependency replacement.
@@ -35,4 +36,13 @@ interface Context {
      */
     @NotNull
     ModuleDependency getDependency();
+
+    /**
+     * The parent dependency replacement context, if any.
+     *
+     * @return The parent dependency replacement context, if any.
+     */
+    @Nullable
+    Context getParent();
+
 }

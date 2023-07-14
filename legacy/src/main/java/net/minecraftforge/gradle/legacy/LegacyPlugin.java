@@ -24,6 +24,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 
+@Deprecated
 public class LegacyPlugin implements Plugin<Object> {
 
     @Override

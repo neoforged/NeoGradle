@@ -88,6 +88,9 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
             }
         }
 
-        throw new IllegalStateException("The string '" + value + "' did not return a valid substitution match!");
+        final String argKeys = String.join(", ", runtimeArguments.keySet());
+        final String dataKeys = String.join(", ", data.keySet());
+        final String error = "The string '$value' did not return a valid substitution match! Available arguments: ${argKeys}, available data: ${dataKeys}."
+        throw new IllegalStateException(error);
     }
 }

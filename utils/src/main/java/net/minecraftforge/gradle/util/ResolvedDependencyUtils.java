@@ -64,4 +64,15 @@ public final class ResolvedDependencyUtils {
         final String artifactExtension = getExtension(resolvedDependency);
         return artifactExtension == null ? "jar" : artifactExtension;
     }
+
+    /***
+     * Returns the file name of the given {@link ResolvedDependency}
+     *
+     * @param resolvedDependency The {@link ResolvedDependency} to get the file name from
+     * @return The file name of the given {@link ResolvedDependency}
+     */
+    @NotNull
+    public static String toFileName(ResolvedDependency resolvedDependency) {
+        return resolvedDependency.getName().replace(":", "/");
+    }
 }

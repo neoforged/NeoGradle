@@ -2,11 +2,13 @@ package net.minecraftforge.gradle.common.extensions.obfuscation;
 
 import com.google.common.collect.Maps;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.minecraftforge.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.minecraftforge.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.minecraftforge.gradle.common.tasks.ArtifactFromOutput;
 import net.minecraftforge.gradle.common.tasks.ObfuscatedDependencyMarker;
 import net.minecraftforge.gradle.common.util.TaskDependencyUtils;
 import net.minecraftforge.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.minecraftforge.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.minecraftforge.gradle.dsl.common.util.DistributionType;
 import net.minecraftforge.gradle.dsl.common.util.GameArtifact;
 import net.minecraftforge.gradle.dsl.common.util.NamingConstants;
@@ -66,8 +68,8 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
 
         getCreateAutomatically().convention(project.provider(() -> (CommonRuntimes<?,?,?>) project.getExtensions().getByType(CommonRuntimes.class)).flatMap(CommonRuntimes::getRuntimes).map(runtimes -> !runtimes.isEmpty()));
 
-        final Repository<?, ?, ?, ?, ?> repository = project.getExtensions().getByType(Repository.class);
-        repository.afterEntryRealisation(evaluatedProject -> {
+        final DependencyReplacement dependencyReplacementsExtension = project.getExtensions().getByType(DependencyReplacement.class);
+        dependencyReplacementsExtension.afterDefinitionBake(evaluatedProject -> {
             manualObfuscationTargets.getAsMap().forEach((name, targetConfig) -> {
                 try {
                     final TaskProvider<? extends Jar> taskProvider = evaluatedProject.getTasks().named(name, Jar.class);
@@ -121,6 +123,9 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
             configuredMappingVersionData = Maps.newHashMap();
         }
 
+        if (runtimeDefinition == null)
+            throw new IllegalArgumentException("No minecraft runtime was configured in a configuration that is consumed by: " + jarTask.getName() + ". Disable automatic configuration, and manually configure your obfuscation targets!");
+
         if (minecraftVersionString != null) {
             configuredMappingVersionData.put(NamingConstants.Version.MINECRAFT_VERSION, minecraftVersionString);
         }
@@ -134,7 +139,7 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
 
         final Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks = new HashSet<>();
 
-        Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = Maps.newHashMap();
+        Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks;
         if (runtimeDefinition != null) {
             gameArtifactTasks = runtimeDefinition.getGameArtifactProvidingTasks();
         } else {
@@ -154,11 +159,13 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
                 gameArtifactTasks,
                 configuredMappingVersionData,
                 additionalRuntimeTasks,
-                runtimeDefinition
+                runtimeDefinition,
+                runtimeDefinition.getListLibrariesTaskProvider()
         );
 
-        final TaskProvider<? extends WithOutput> obfuscator = mappingsExtension.getChannel().get().getUnapplyCompiledMappingsTaskBuilder().get().build(context);
+        final TaskProvider<? extends Runtime> obfuscator = mappingsExtension.getChannel().get().getUnapplyCompiledMappingsTaskBuilder().get().build(context);
         obfuscator.configure(task -> task.dependsOn(devArtifactProvider));
+        runtimeDefinition.configureAssociatedTask(obfuscator);
 
         final TaskProvider<? extends WithOutput> markerGenerator = project.getTasks().register(CommonRuntimeUtils.buildTaskName(jarTask, "markObfuscated"), ObfuscatedDependencyMarker.class, task -> {
             task.dependsOn(obfuscator);
@@ -172,20 +179,6 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
         jarTask.configure(task -> task.finalizedBy(obfuscator));
 
         final Definition<?> finalRuntimeDefinition = runtimeDefinition;
-        additionalRuntimeTasks.forEach(task -> {
-            if (finalRuntimeDefinition != null) {
-                finalRuntimeDefinition.configureAssociatedTask(task);
-            } else {
-                task.configure(t -> CommonRuntimeExtension.configureCommonRuntimeTaskParameters(
-                        t,
-                        Maps.newHashMap(),
-                        t.getName(),
-                        distributionType.getOrNull(),
-                        minecraftVersionString,
-                        getProject(),
-                        new File(getProject().getBuildFile(), String.format("obfuscation/%s", t.getName()))
-                ));
-            }
-        });
+        additionalRuntimeTasks.forEach(finalRuntimeDefinition::configureAssociatedTask);
     }
 }

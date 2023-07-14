@@ -3,6 +3,7 @@ package net.minecraftforge.gradle.common.extensions.repository;
 import groovy.lang.GroovyObjectSupport;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.minecraftforge.gdi.ProjectAssociatedDSLElement;
+import net.minecraftforge.gradle.dsl.common.util.ModuleReference;
 import net.minecraftforge.gradle.util.ResolvedDependencyUtils;
 import net.minecraftforge.gradle.dsl.common.extensions.repository.RepositoryReference;
 import org.gradle.api.Project;
@@ -90,6 +91,12 @@ public abstract class IvyDummyRepositoryReference implements ConfigurableDSLElem
                 "version=" + version + ", " +
                 "classifier=" + classifier + ", " +
                 "extension=" + extension + ']';
+    }
+
+    @NotNull
+    @Override
+    public ModuleReference toModuleReference() {
+        return new ModuleReference(getGroup(), getName(), getVersion(), getExtension(), getClassifier());
     }
 
     public static abstract class Builder extends GroovyObjectSupport implements RepositoryReference.Builder<Builder, IvyDummyRepositoryReference> {
