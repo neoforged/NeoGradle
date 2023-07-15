@@ -20,14 +20,14 @@
 
 package net.minecraftforge.gradle.patcher.tasks;
 
-import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV1.Function;
-import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV1;
-import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2;
-import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
-import net.minecraftforge.gradle.mcp.runs.RunConfiguration;
-import net.minecraftforge.gradle.common.util.Utils;
-import net.minecraftforge.gradle.mcp.McpExtension;
-import net.minecraftforge.gradle.patcher.PatcherExtension;
+import net.neoforged.gradle.common.config.McpConfigConfigurationSpecV1.Function;
+import net.neoforged.gradle.common.config.UserdevConfigurationSpecV1;
+import net.neoforged.gradle.common.config.UserdevConfigurationSpecV2;
+import net.neoforged.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
+import net.neoforged.gradle.mcp.runs.RunConfiguration;
+import net.neoforged.gradle.common.util.Utils;
+import net.neoforged.gradle.mcp.McpExtension;
+import net.neoforged.gradle.patcher.PatcherExtension;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;

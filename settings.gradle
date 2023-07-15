@@ -3,11 +3,15 @@ import java.util.stream.Stream
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://maven.neoforged.net/releases' }
     }
 }
 
-rootProject.name = 'ForgeGradle'
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
+}
+
+rootProject.name = 'NeoGradle'
 
 include 'utils'
 include 'common'

@@ -1,5 +1,5 @@
 plugins {
-    id 'net.minecraftforge.gradle.mcp'
+    id 'net.neoforged.gradle.mcp' version '7.0-NEO'
 }
 
 java {

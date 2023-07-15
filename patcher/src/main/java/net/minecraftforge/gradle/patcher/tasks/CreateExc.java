@@ -20,7 +20,7 @@
 
 package net.minecraftforge.gradle.patcher.tasks;
 
-import net.minecraftforge.gradle.common.config.McpConfigConfigurationSpecV2;
+import net.neoforged.gradle.common.config.McpConfigConfigurationSpecV2;
 
 import net.minecraftforge.srgutils.IMappingFile;
 import org.apache.commons.io.IOUtils;

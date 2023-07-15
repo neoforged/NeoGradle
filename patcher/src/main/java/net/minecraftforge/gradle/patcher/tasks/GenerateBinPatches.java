@@ -20,8 +20,8 @@
 
 package net.minecraftforge.gradle.patcher.tasks;
 
-import net.minecraftforge.gradle.common.tasks.JarExec;
-import net.minecraftforge.gradle.common.util.Utils;
+import net.neoforged.gradle.common.tasks.JarExec;
+import net.neoforged.gradle.common.util.Utils;
 
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;

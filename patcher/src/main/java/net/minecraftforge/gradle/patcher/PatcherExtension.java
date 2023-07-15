@@ -21,9 +21,9 @@
 package net.minecraftforge.gradle.patcher;
 
 import com.google.common.collect.ImmutableMap;
-import net.minecraftforge.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
-import net.minecraftforge.gradle.mcp.runs.RunConfiguration;
-import net.minecraftforge.gradle.mcp.extensions.McpMinecraftExtension;
+import net.neoforged.gradle.common.config.UserdevConfigurationSpecV2.DataFunction;
+import net.neoforged.gradle.mcp.runs.RunConfiguration;
+import net.neoforged.gradle.mcp.extensions.McpMinecraftExtension;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;

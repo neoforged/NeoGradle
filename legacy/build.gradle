@@ -8,4 +8,25 @@ dependencies {
     api "org.codehaus.groovy:groovy-all:3.0.9"
 }
 
+gradlePlugin.plugins {
+    register("fg-legacy") {
+
+        //Determine the class name and package of the plugin.
+        def pluginFile = fileTree('src/main/java')
+                .filter { it.name.toLowerCase() == "${project.getName()}plugin.java".toLowerCase() }
+                .first()
+
+        //We need to handle the case of a fresh new project, no files exist yet, so the pluginFile object will be null.
+        def pluginClassName = "unknown";
+        if (pluginFile != null) {
+            pluginClassName = project.file('src/main/java/').toPath().relativize(pluginFile.toPath()).toString().replace('/', '.').replace('\\', '.').replace(".java", "")
+        }
+
+        //Setup the plugin id.
+        id = 'net.minecraftforge.gradle'
+        //And the implementation class.
+        implementationClass = pluginClassName
+    }
+}
+
 

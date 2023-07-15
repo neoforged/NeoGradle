@@ -2,7 +2,7 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.minecraftforge.gradleutils' version '[2.0.10,)'
+    id 'net.neoforged.gradleutils' version '[2.0.16,)'
 }
 
 //HARDCODED VERSION FOR NOW!
@@ -35,7 +35,7 @@ changelog {
 ///Configure them in such a way that we can run test and have all the plugins applied.
 subprojects.forEach { subProject ->
     //All base plugins.
-    subProject.apply plugin: 'net.minecraftforge.gradleutils'
+    subProject.apply plugin: 'net.neoforged.gradleutils'
     subProject.apply plugin: 'java-library'
     subProject.apply plugin: 'maven-publish'
     subProject.apply plugin: 'eclipse'
@@ -43,7 +43,7 @@ subprojects.forEach { subProject ->
 
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version
-    subProject.group = 'net.minecraftforge.gradle'
+    subProject.group = 'net.neoforged.gradle'
     subProject.archivesBaseName = "fg-${subProject.name.toLowerCase()}"
 
     //Setup the java toolchain
@@ -58,8 +58,8 @@ subprojects.forEach { subProject ->
     //Wire up our custom repositories.
     subProject.repositories.mavenLocal()
     subProject.repositories.maven { MavenArtifactRepository repository ->
-        repository.name 'MinecraftForge'
-        repository.url = 'https://maven.minecraftforge.net/'
+        repository.name 'NeoForged'
+        repository.url = 'https://maven.neoforged.net/'
     }
     subProject.repositories.gradlePluginPortal()
 
@@ -150,7 +150,7 @@ subprojects.forEach { subProject ->
                     pluginClassName = evalSubProject.file('src/main/java/').toPath().relativize(pluginFile.toPath()).toString().replace('/', '.').replace('\\', '.').replace(".java", "")
                 }
 
-                def pluginId = 'net.minecraftforge.gradle.' + evalSubProject.name.toLowerCase()
+                def pluginId = 'net.neoforged.gradle.' + evalSubProject.name.toLowerCase()
                 try {
                     var propertyValue = evalSubProject.property('pluginId')
                     if (propertyValue != null) {
@@ -201,6 +201,7 @@ subprojects.forEach { subProject ->
                     project.changelog.publish publication
                 }
             }
+
 
             return
         }
