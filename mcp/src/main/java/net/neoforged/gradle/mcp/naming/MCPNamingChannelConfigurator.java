@@ -30,7 +30,7 @@ public final class MCPNamingChannelConfigurator {
 
     public void configure(final Project project) {
         final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
-        SUPPORTED_CHANNELS.forEach(channelName -> minecraftExtension.getNamingChannelProviders().register(channelName, namingChannelProvider -> {
+        SUPPORTED_CHANNELS.forEach(channelName -> minecraftExtension.getNamingChannels().register(channelName, namingChannelProvider -> {
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::build);
             namingChannelProvider.getHasAcceptedLicense().set(true);
             namingChannelProvider.getLicenseText().set("MCP is licensed under the terms of the MCP license.");

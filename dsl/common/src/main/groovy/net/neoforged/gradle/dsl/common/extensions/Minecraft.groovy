@@ -16,7 +16,7 @@ interface Minecraft extends BaseDSLElement<Minecraft> {
      * @return The naming channels that are known in the current project.
      */
     @DSLProperty
-    NamedDomainObjectContainer<NamingChannel> getNamingChannelProviders();
+    NamedDomainObjectContainer<NamingChannel> getNamingChannels();
 
     /**
      * Gives access to the mappings configuration extension.

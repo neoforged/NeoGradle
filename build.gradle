@@ -78,9 +78,9 @@ subprojects.forEach { subProject ->
     subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
-    subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Base:${project.trainingwheels_version}"
-    subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Gradle-Base:${project.trainingwheels_version}"
-    subProject.dependencies.testImplementation "net.minecraftforge:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged:TrainingWheels-Base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged:TrainingWheels-Gradle-Base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
 
     //Exclude duplicates.
     subProject.tasks.withType(Jar).configureEach { jarTask ->
@@ -133,7 +133,7 @@ subprojects.forEach { subProject ->
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
             spec.exclude group: 'org.codehaus.groovy'
         }
-        evalSubProject.dependencies.functionalTestImplementation "net.minecraftforge:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
+        evalSubProject.dependencies.functionalTestImplementation "net.neoforged:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
 
         //Configure the plugin metadata, so we can publish it.
         evalSubProject.gradlePlugin.plugins { org.gradle.api.NamedDomainObjectContainer<PluginDeclaration> plugins ->
@@ -201,7 +201,6 @@ subprojects.forEach { subProject ->
                     project.changelog.publish publication
                 }
             }
-
 
             return
         }

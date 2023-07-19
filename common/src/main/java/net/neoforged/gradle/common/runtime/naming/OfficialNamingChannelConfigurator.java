@@ -65,7 +65,7 @@ public final class OfficialNamingChannelConfigurator {
         mappingsExtension.getExtensions().add(TypeOf.typeOf(Property.class), "acceptMojangEula", hasAcceptedLicenseProperty);
         hasAcceptedLicenseProperty.convention(false);
 
-        minecraftExtension.getNamingChannelProviders().register("official", namingChannelProvider -> {
+        minecraftExtension.getNamingChannels().register("official", namingChannelProvider -> {
             namingChannelProvider.getMinecraftVersionExtractor().set(this::extractMinecraftVersion);
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::buildApplySourceMappingTask);
             namingChannelProvider.getApplyCompiledMappingsTaskBuilder().set(this::buildApplyCompiledMappingsTask);
@@ -75,7 +75,7 @@ public final class OfficialNamingChannelConfigurator {
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> ((Property<Boolean>) mappingsExtension.getExtensions().getByName("acceptMojangEula")).get()));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
         });
-        minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannelProviders().named("official"));
+        minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannels().named("official"));
     }
 
     private String extractMinecraftVersion(Map<String, String> stringStringMap) {

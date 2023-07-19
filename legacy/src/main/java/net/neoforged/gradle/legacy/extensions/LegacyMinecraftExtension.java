@@ -6,7 +6,6 @@ import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import org.gradle.api.Project;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Optional;
 
@@ -46,7 +45,7 @@ public abstract class LegacyMinecraftExtension extends MinecraftExtension {
             throw new IllegalArgumentException("Only official channel is supported");
         }
 
-        getMappings().getChannel().set(getNamingChannelProviders().getByName(channelName));
+        getMappings().getChannel().set(getNamingChannels().getByName(channelName));
         getMappings().getVersion().put(NamingConstants.Version.VERSION, version);
 
         getProject().getLogger().warn(String.format("Using legacy mappings for channel: %s and version: %s.", channelName, version));

@@ -52,7 +52,7 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
     }
 
     @Override
-    public NamedDomainObjectContainer<NamingChannel> getNamingChannelProviders() {
+    public NamedDomainObjectContainer<NamingChannel> getNamingChannels() {
         return namingChannelProviders;
     }
 

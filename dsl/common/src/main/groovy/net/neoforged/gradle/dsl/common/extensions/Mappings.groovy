@@ -49,4 +49,11 @@ interface Mappings extends BaseDSLElement<Mappings> {
     @Optional
     @DSLProperty
     MapProperty<String, String> getVersion();
+
+    /**
+     * Configures the version data of the current mappings channel to the given version.
+     *
+     * @param version The version data.
+     */
+    void version(String version);
 }

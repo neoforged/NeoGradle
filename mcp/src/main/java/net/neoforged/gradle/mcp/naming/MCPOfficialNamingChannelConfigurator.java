@@ -44,10 +44,10 @@ public final class MCPOfficialNamingChannelConfigurator {
     public void configure(final Project project) {
         final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
 
-        final NamingChannel namingChannel = minecraftExtension.getNamingChannelProviders().getByName("official");
-        minecraftExtension.getNamingChannelProviders().remove(namingChannel);
+        final NamingChannel namingChannel = minecraftExtension.getNamingChannels().getByName("official");
+        minecraftExtension.getNamingChannels().remove(namingChannel);
 
-        minecraftExtension.getNamingChannelProviders().register("official", newOfficialProvider -> {
+        minecraftExtension.getNamingChannels().register("official", newOfficialProvider -> {
             newOfficialProvider.getMinecraftVersionExtractor().convention(namingChannel.getMinecraftVersionExtractor());
             newOfficialProvider.getApplySourceMappingsTaskBuilder().convention(context -> this.adaptApplySourceMappingsTask(context, namingChannel));
             newOfficialProvider.getApplyCompiledMappingsTaskBuilder().convention(context -> this.adaptApplyCompiledMappingsTask(context, namingChannel));
@@ -57,7 +57,7 @@ public final class MCPOfficialNamingChannelConfigurator {
             newOfficialProvider.getHasAcceptedLicense().set(namingChannel.getHasAcceptedLicense());
             newOfficialProvider.getLicenseText().set(namingChannel.getLicenseText());
         });
-        minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannelProviders().named("official"));
+        minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannels().named("official"));
     }
 
     @NotNull

@@ -10,7 +10,7 @@ java {
 
 minecraft {
     mappings {
-        channel = namingChannelProviders.named('official')
+        channel = namingChannels.named('official')
         version.put "minecraft", "1.19.3"
     }
 }

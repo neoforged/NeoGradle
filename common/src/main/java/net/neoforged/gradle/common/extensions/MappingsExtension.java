@@ -2,8 +2,10 @@ package net.neoforged.gradle.common.extensions;
 
 import groovy.lang.MissingMethodException;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gradle.common.util.MappingUtils;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
+import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import org.gradle.api.Project;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +38,15 @@ public abstract class MappingsExtension implements ConfigurableDSLElement<Mappin
         return minecraftExtension;
     }
 
+    @Override
+    public void version(String version) {
+        getVersion().put(NamingConstants.Version.VERSION, version);
+    }
+
     public Object methodMissing(String name, Object args) {
-        if (getMinecraft().getNamingChannelProviders().findByName(name) != null) {
+        if (getMinecraft().getNamingChannels().findByName(name) != null) {
             LOGGER.info("Getting mappings from channel provider {}", name);
-            return getMinecraft().getNamingChannelProviders().named(name);
+            return getMinecraft().getNamingChannels().named(name);
         }
 
         throw new MissingMethodException(name, this.getClass(), new Object[] {args});
