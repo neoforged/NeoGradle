@@ -6,7 +6,8 @@ import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement;
 import net.minecraftforge.gdi.annotations.DSLProperty
-import net.neoforged.gradle.dsl.common.runs.type.Type;
+import net.neoforged.gradle.dsl.common.runs.type.Type
+import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
@@ -20,6 +21,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Defines an object which represents a single configuration for running the game.
@@ -192,4 +194,11 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      * @param type The type to use to configure the run.
      */
     void configure(@NotNull final Type type);
+
+    /**
+     * Configures the run to execute the given tasks before running the run.
+     *
+     * @param tasks The tasks to depend on.
+     */
+    void dependsOn(@NotNull final TaskProvider<? extends Task>... tasks);
 }

@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.runs.run;
 
+import com.google.common.collect.Sets;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 
 import net.minecraftforge.gdi.ConfigurableDSLElement;
@@ -9,14 +10,19 @@ import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.runs.type.Types;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskProvider;
 
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.Set;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
@@ -27,6 +33,8 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     private MapProperty<String, String> environmentVariables;
     private ListProperty<String> programArguments;
     private MapProperty<String, String> systemProperties;
+
+    private final Set<TaskProvider<? extends Task>> dependencies = Sets.newHashSet();
 
     @Inject
     public RunImpl(final Project project, final String name) {
@@ -128,6 +136,11 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     public abstract Property<Boolean> getConfigureFromDependencies();
 
+    @Internal
+    Set<TaskProvider<? extends Task>> getTaskDependencies() {
+        return this.dependencies;
+    }
+
     @Override
     @NotNull
     public final void configure() {
@@ -151,6 +164,12 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         ProjectUtils.afterEvaluate(getProject(), () -> {
             configureInternally(type);
         });
+    }
+
+    @SafeVarargs
+    @Override
+    public final void dependsOn(TaskProvider<? extends Task>... tasks) {
+        this.dependencies.addAll(Arrays.asList(tasks));
     }
 
     @NotNull

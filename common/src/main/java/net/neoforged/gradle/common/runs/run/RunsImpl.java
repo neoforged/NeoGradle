@@ -28,6 +28,8 @@ public abstract class RunsImpl extends DelegatingDomainObjectContainer<Run> impl
                         task.getRun().get().getModSources().get().stream().map(SourceSet::getClassesTaskName)
                                 .map(classTaskName -> evaluatedProject.getTasks().named(classTaskName))
                                 .forEach(task::dependsOn);
+
+                        run.getTaskDependencies().forEach(task::dependsOn);
                     }));
 
                     return run;
