@@ -1,8 +1,8 @@
 package net.neoforged.gradle.util;
 
 import com.google.common.io.ByteStreams;
-import net.minecraftforge.trainingwheels.base.file.FileTestingUtils;
-import net.minecraftforge.trainingwheels.base.file.PathFile;
+import net.neoforged.trainingwheels.base.file.FileTestingUtils;
+import net.neoforged.trainingwheels.base.file.PathFile;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RelativePath;
 import org.junit.jupiter.api.Test;

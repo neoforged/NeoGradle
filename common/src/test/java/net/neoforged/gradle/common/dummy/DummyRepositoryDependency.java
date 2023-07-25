@@ -4,6 +4,7 @@ import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.ResolvedDependencyUtils;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedDependency;
@@ -75,6 +76,12 @@ public final class DummyRepositoryDependency implements RepositoryReference, Rep
     @Override
     public ModuleReference toModuleReference() {
         return new ModuleReference(getGroup(), getName(), getVersion(), getExtension(), getClassifier());
+    }
+
+    @NotNull
+    @Override
+    public Dependency toGradle(Project project) {
+        return project.getDependencies().create(toModuleReference().toString());
     }
 
     @NotNull

@@ -154,7 +154,7 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
         final Path metaFile = baseDir.resolve(String.format("ivy-%s-fg%d.xml", entry.getVersion(), METADATA_VERSION));
 
         if (Files.exists(metaFile)) {
-            FileUtils.delete(metaFile.toFile());
+            FileUtils.delete(metaFile);
             writeIvyMetadataFile(entry, jarFile, baseDir, metaFile);
             return;
         }

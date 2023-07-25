@@ -39,7 +39,17 @@ public class CopyingFileTreeVisitor implements FileVisitor {
             throw new IllegalArgumentException("The given path is a file, not a directory: " + directory);
         }
 
-        FileUtils.delete(directory.toFile());
+        try {
+            FileUtils.delete(directory);
+        } catch (IOException e) {
+            throw new RuntimeException("Cloud not clean up target directory: " + directory, e);
+        }
+
+        try {
+            Files.createDirectories(directory);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create directory: " + directory, e);
+        }
     }
 
     public CopyingFileTreeVisitor(File directory) {

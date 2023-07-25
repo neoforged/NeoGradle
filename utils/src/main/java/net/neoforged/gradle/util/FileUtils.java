@@ -3,6 +3,7 @@ package net.neoforged.gradle.util;
 import com.google.common.collect.Sets;
 import de.siegmar.fastcsv.writer.CsvWriter;
 import de.siegmar.fastcsv.writer.LineDelimiter;
+import org.apache.commons.io.file.DeletingPathVisitor;
 import org.gradle.api.Action;
 import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.FileTree;
@@ -14,11 +15,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -274,17 +272,14 @@ public final class FileUtils {
         return ret;
     }
 
-    public static void delete(final File file) {
-        if (file.isFile()) {
-            file.delete();
+    public static void delete(final Path file) throws IOException {
+        if (Files.isRegularFile(file)) {
+            Files.delete(file);
         }
 
-        if (file.isDirectory()) {
-            for (File listFile : Objects.requireNonNull(file.listFiles())) {
-                delete(listFile);
-            }
-
-            file.delete();
+        if (Files.isDirectory(file)) {
+            Files.walkFileTree(file, DeletingPathVisitor.withLongCounters());
+            Files.deleteIfExists(file);
         }
     }
 }

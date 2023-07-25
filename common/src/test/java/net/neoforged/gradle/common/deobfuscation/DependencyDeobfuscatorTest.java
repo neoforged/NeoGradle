@@ -1,35 +1,20 @@
 package net.neoforged.gradle.common.deobfuscation;
 
 import com.google.common.collect.Sets;
-import net.neoforged.gradle.common.dummy.DummyRepositoryDependency;
 import net.neoforged.gradle.common.dummy.DummyRepositoryEntry;
 import net.neoforged.gradle.common.extensions.ForcedDependencyDeobfuscationExtension;
-import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.*;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
-import net.minecraftforge.trainingwheels.base.file.FileTestingUtils;
-import net.minecraftforge.trainingwheels.base.file.PathFile;
-import net.minecraftforge.trainingwheels.gradle.base.task.TaskMockingUtils;
+import net.neoforged.trainingwheels.base.file.FileTestingUtils;
+import net.neoforged.trainingwheels.base.file.PathFile;
+import net.neoforged.trainingwheels.gradle.base.task.TaskMockingUtils;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.DependencySet;
-import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.artifacts.LenientConfiguration;
-import org.gradle.api.artifacts.ProjectDependency;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedConfiguration;
-import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.*;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskContainer;
@@ -51,11 +36,7 @@ import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class DependencyDeobfuscatorTest {

@@ -175,7 +175,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                 this.getSpecification().getProject().getDependencies().create(
                         MappingDebugChannelDependencyManager.generateCoordinateFor(
                                 namingChannel,
-                                Maps.newHashMap(ImmutableMap.of(NamingConstants.Version.MINECRAFT_VERSION, "1.19.3")),
+                                mcpRuntimeDefinition.getMappingVersionData(),
                                 this
                         )
                 )

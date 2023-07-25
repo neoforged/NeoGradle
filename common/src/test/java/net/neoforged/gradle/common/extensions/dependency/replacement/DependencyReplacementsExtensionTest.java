@@ -48,7 +48,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "unchecked"})
 public class DependencyReplacementsExtensionTest {
 
 
@@ -92,23 +92,6 @@ public class DependencyReplacementsExtensionTest {
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
 
         verify(dependencySet).whenObjectAdded(ArgumentMatchers.<Action<? super Dependency>>any());
-    }
-
-    @Test
-    public void aDependencyGenerationTaskIsAddedToTheProjectOnConstruction() {
-        final Project project = mock(Project.class);
-        final TaskContainer taskContainer = mock(TaskContainer.class);
-        final ObjectFactory objectFactory = mock(ObjectFactory.class);
-        final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
-        final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
-
-        when(project.getConfigurations()).thenReturn(configurationContainer);
-        when(project.getTasks()).thenReturn(taskContainer);
-        when(project.getObjects()).thenReturn(objectFactory);
-
-        final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-
-        verify(taskContainer).register(eq("generateDependencies"), ArgumentMatchers.<Class<? extends Task>>any());
     }
 
     @Test
@@ -194,7 +177,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
 
         when(project.getExtensions()).thenReturn(extensionContainer);
@@ -231,7 +214,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
         final TaskProvider<? extends Task> dependencyGeneratorTask = mock(TaskProvider.class);
@@ -274,7 +257,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
         final TaskProvider<? extends Task> dependencyGeneratorTask = mock(TaskProvider.class);
@@ -305,7 +288,7 @@ public class DependencyReplacementsExtensionTest {
                 mock(DependencyReplacementsExtension.DependencyReplacer.class)
         );
 
-        verify(dependencySet).add(any());
+        verify(dependencySet).whenObjectAdded((Action<? super Dependency>) any());
     }
 
     @Test
@@ -317,7 +300,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
 
@@ -335,7 +318,6 @@ public class DependencyReplacementsExtensionTest {
         }).when(configurationContainer).configureEach(any());
 
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-        dependencyReplacementsExtension.getConfiguredConfigurations().add(configuration);
 
         dependencyReplacementsExtension.handleDependencyReplacement(
                 configuration,
@@ -349,7 +331,7 @@ public class DependencyReplacementsExtensionTest {
     }
 
     @Test
-    public void callingRegisterDependencyProviderTaskIfNecessaryToRegistersTheGenerationTaskWhenNotDoneYet() {
+    public void callingHandleConfigurationRegistersDependencyMonitor() {
         final Project project = mock(Project.class);
         final ExtensionContainer extensionContainer = mock(ExtensionContainer.class);
         final TaskContainer taskContainer = mock(TaskContainer.class);
@@ -357,10 +339,9 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
-        final TaskProvider<? extends Task> dependencyGeneratorTask = mock(TaskProvider.class);
         final DependencyGenerationTask dependencyGeneratorTaskInstance = mock(DependencyGenerationTask.class);
 
         when(project.getExtensions()).thenReturn(extensionContainer);
@@ -370,43 +351,6 @@ public class DependencyReplacementsExtensionTest {
         when(project.getTasks()).thenReturn(taskContainer);
         when(project.getObjects()).thenReturn(objectFactory);
         when(configuration.getDependencies()).thenReturn(dependencySet);
-        when(taskContainer.register(eq("generateDependencies"), eq(DependencyGenerationTask.class))).thenAnswer(invocation -> dependencyGeneratorTask);
-        doAnswer(invocation -> {
-            final Action<Configuration> configurationAction = invocation.getArgument(0);
-            configurationAction.execute(configuration);
-            return null;
-        }).when(configurationContainer).configureEach(any());
-        when(dependencyGeneratorTask.get()).thenAnswer(invocation -> dependencyGeneratorTaskInstance);
-
-        final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-
-        dependencyReplacementsExtension.registerDependencyProviderTaskIfNecessaryTo(
-                configuration
-        );
-
-        verify(dependencySet).add(any());
-    }
-
-    @Test
-    public void callingRegisterDependencyProviderTaskIfNecessaryToDoesNotRegisterTheGenerationTaskWhenAlreadyDone() {
-        final Project project = mock(Project.class);
-        final ExtensionContainer extensionContainer = mock(ExtensionContainer.class);
-        final TaskContainer taskContainer = mock(TaskContainer.class);
-        final ObjectFactory objectFactory = mock(ObjectFactory.class);
-        final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
-        final Configuration configuration = mock(Configuration.class);
-        final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
-        final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
-        final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
-
-        when(project.getExtensions()).thenReturn(extensionContainer);
-        when(extensionContainer.getByType(Repository.class)).thenReturn(repository);
-        when(extensionContainer.getByType(IdeManagementExtension.class)).thenReturn(ideManagementExtension);
-        when(project.getConfigurations()).thenReturn(configurationContainer);
-        when(project.getTasks()).thenReturn(taskContainer);
-        when(project.getObjects()).thenReturn(objectFactory);
-        when(configuration.getDependencies()).thenReturn(dependencySet);
         doAnswer(invocation -> {
             final Action<Configuration> configurationAction = invocation.getArgument(0);
             configurationAction.execute(configuration);
@@ -414,13 +358,8 @@ public class DependencyReplacementsExtensionTest {
         }).when(configurationContainer).configureEach(any());
 
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-        dependencyReplacementsExtension.getConfiguredConfigurations().add(configuration);
 
-        dependencyReplacementsExtension.registerDependencyProviderTaskIfNecessaryTo(
-                configuration
-        );
-
-        verify(dependencySet, never()).add(any());
+        verify(dependencySet).whenObjectAdded((Action<? super Dependency>) any());
     }
 
     @Test
@@ -432,7 +371,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
         final DependencyReplacementsExtension.DependencyReplacer gradleReplacementHandler = mock(DependencyReplacementsExtension.DependencyReplacer.class);
@@ -451,7 +390,6 @@ public class DependencyReplacementsExtensionTest {
         }).when(configurationContainer).configureEach(any());
 
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-        dependencyReplacementsExtension.getConfiguredConfigurations().add(configuration);
 
         dependencyReplacementsExtension.handleDependencyReplacement(
                 configuration,
@@ -473,7 +411,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
         final DependencyReplacementsExtension.DependencyReplacer ideReplacementHandler = mock(DependencyReplacementsExtension.DependencyReplacer.class);
@@ -493,7 +431,6 @@ public class DependencyReplacementsExtensionTest {
         when(ideManagementExtension.isIdeImportInProgress()).thenReturn(true);
 
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-        dependencyReplacementsExtension.getConfiguredConfigurations().add(configuration);
 
         dependencyReplacementsExtension.handleDependencyReplacement(
                 configuration,
@@ -515,7 +452,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
         final DependencyReplacementsExtension.DependencyReplacer ideReplacementHandler = mock(DependencyReplacementsExtension.DependencyReplacer.class);
@@ -535,7 +472,6 @@ public class DependencyReplacementsExtensionTest {
         when(ideManagementExtension.isIdeImportInProgress()).thenReturn(false);
 
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-        dependencyReplacementsExtension.getConfiguredConfigurations().add(configuration);
 
         dependencyReplacementsExtension.handleDependencyReplacement(
                 configuration,
@@ -557,7 +493,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
 
         when(project.getExtensions()).thenReturn(extensionContainer);
@@ -593,7 +529,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final ExternalModuleDependency dependency = mock(ExternalModuleDependency.class);
         final DependencyArtifact artifact = mock(DependencyArtifact.class);
         final DependencyReplacementResult result = mock(DependencyReplacementResult.class);
@@ -618,7 +554,7 @@ public class DependencyReplacementsExtensionTest {
             Action<RepositoryEntry.Builder<?, ?, ?>> configurator = invocation.getArgument(0);
             actions.add(configurator);
             return null;
-        }).when(repository).withDependency(any(), any());
+        }).when(repository).withDependency(any(), any(), any(), any());
         when(dependency.getGroup()).thenReturn("group");
         when(dependency.getName()).thenReturn("name");
         when(dependency.getVersion()).thenReturn("version");
@@ -665,7 +601,7 @@ public class DependencyReplacementsExtensionTest {
         final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
         final Configuration configuration = mock(Configuration.class);
         final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?, ?, ?, ?, ?> repository = mock(Repository.class);
+        final Repository<?> repository = mock(Repository.class);
         final ExternalModuleDependency dependency = mock(ExternalModuleDependency.class);
         final DependencyArtifact artifact = mock(DependencyArtifact.class);
         final DependencyReplacementResult result = mock(DependencyReplacementResult.class);
@@ -691,7 +627,7 @@ public class DependencyReplacementsExtensionTest {
             Action<RepositoryEntry.Builder<?, ?, ?>> configurator = invocation.getArgument(0);
             actions.add(configurator);
             return null;
-        }).when(repository).withDependency(any(), any());
+        }).when(repository).withDependency(any(), any(), any(), any());
         when(dependency.getGroup()).thenReturn("group");
         when(dependency.getName()).thenReturn("name");
         when(dependency.getVersion()).thenReturn("version");
@@ -730,15 +666,6 @@ public class DependencyReplacementsExtensionTest {
         assertEquals("version", entry.getVersion());
         assertEquals("artifactClassifier", entry.getClassifier());
         assertEquals("artifactExtension", entry.getExtension());
-
-        assertFalse(entry.getDependencies().isEmpty());
-        assertEquals(1, entry.getDependencies().size());
-        final RepositoryReference dummyRepositoryDependency = entry.getDependencies().iterator().next();
-        assertEquals("additionalGroup", dummyRepositoryDependency.getGroup());
-        assertEquals("additionalName", dummyRepositoryDependency.getName());
-        assertEquals("additionalVersion", dummyRepositoryDependency.getVersion());
-        assertNull(dummyRepositoryDependency.getClassifier());
-        assertNull(dummyRepositoryDependency.getExtension());
     }
 
 
