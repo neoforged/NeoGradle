@@ -74,8 +74,6 @@ public class IdeRunIntegrationManager {
             runs.getAsMap().forEach((name, run) -> {
                 final String runName = StringUtils.capitalize(project.getName() + ": " + name);
 
-                project.getLogger().lifecycle("Creating IDEA Run: " + runName);
-
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
 
@@ -84,6 +82,7 @@ public class IdeRunIntegrationManager {
                     ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name));
                     ideBeforeRunTask.configure(task -> {
                         runImpl.getTaskDependencies().forEach(dep -> {
+                            //noinspection Convert2MethodRef Creates a compiler error regarding incompatible types.
                             task.dependsOn(dep);
                         });
                     });
