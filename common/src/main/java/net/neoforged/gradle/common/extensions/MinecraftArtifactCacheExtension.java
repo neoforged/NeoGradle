@@ -105,8 +105,11 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
     @Override
     @NotNull
-    public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, final File outputDirectory, final String gameVersion, final DistributionType side) {
+    public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, final String gameVersion, final DistributionType side) {
         final TaskKey key = new TaskKey(project, gameVersion);
+
+        final File outputDirectory = project.getLayout().getProjectDirectory().dir(".gradle").dir("caches").dir("minecraft").dir(gameVersion).getAsFile();
+
         return tasks.computeIfAbsent(key, k -> {
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 

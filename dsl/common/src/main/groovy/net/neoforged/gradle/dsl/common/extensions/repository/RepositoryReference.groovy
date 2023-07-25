@@ -3,6 +3,8 @@ package net.neoforged.gradle.dsl.common.extensions.repository
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.neoforged.gradle.dsl.common.util.ModuleReference
+import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ResolvedDependency
 import org.jetbrains.annotations.NotNull
@@ -63,7 +65,16 @@ interface RepositoryReference {
      * @return The reference comparable with other repository systems.
      */
     @NotNull
-    ModuleReference toModuleReference ( ) ;
+    ModuleReference toModuleReference();
+
+    /**
+     * Converts the current entry into a gradle dependency.
+     *
+     * @param project The project which the dependency should be created for.
+     * @return The gradle dependency.
+     */
+    @NotNull
+    Dependency toGradle(Project project)
 
     /**
      * Defines a builder which can be used to create a repository reference.

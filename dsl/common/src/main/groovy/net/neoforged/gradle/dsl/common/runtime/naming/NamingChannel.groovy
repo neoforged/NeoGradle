@@ -106,4 +106,10 @@ interface NamingChannel extends BaseDSLElement<NamingChannel> {
      */
     @DSLProperty
     Property<String> getLicenseText();
+
+    /**
+     * @return The dependency notation version manager.
+     */
+    @DSLProperty
+    Property<DependencyNotationVersionManager> getDependencyNotationVersionManager();
 }

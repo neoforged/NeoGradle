@@ -7,6 +7,7 @@ import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.ResolvedDependencyUtils;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedDependency;
@@ -97,6 +98,11 @@ public abstract class IvyDummyRepositoryReference implements ConfigurableDSLElem
     @Override
     public ModuleReference toModuleReference() {
         return new ModuleReference(getGroup(), getName(), getVersion(), getExtension(), getClassifier());
+    }
+
+    @Override
+    public Dependency toGradle(Project project) {
+        throw new UnsupportedOperationException("Can not create a gradle dependency from a raw reference.");
     }
 
     public static abstract class Builder extends GroovyObjectSupport implements RepositoryReference.Builder<Builder, IvyDummyRepositoryReference> {

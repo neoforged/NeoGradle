@@ -39,20 +39,7 @@ public class CopyingFileTreeVisitor implements FileVisitor {
             throw new IllegalArgumentException("The given path is a file, not a directory: " + directory);
         }
 
-        try (Stream<Path> files = Files.walk(directory)) {
-            final List<Path> filesList = files.collect(Collectors.toList());
-            if (!filesList.isEmpty()) {
-                Collections.reverse(filesList);
-
-                for (Path path : filesList) {
-                    Files.delete(path);
-                }
-
-                Files.createDirectories(directory);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to clean up the target directory", e);
-        }
+        FileUtils.delete(directory.toFile());
     }
 
     public CopyingFileTreeVisitor(File directory) {

@@ -36,6 +36,7 @@ import net.neoforged.gradle.mcp.util.McpRuntimeConstants;
 import net.neoforged.gradle.mcp.util.McpRuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -224,7 +225,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                 spec.getProject().getDependencies().create(library)
         ));
 
-        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec, mcpDirectory);
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
 
         final Map<String, File> data = buildDataMap(mcpConfig, spec.getDistribution(), unpackedMcpZipDirectory);
 
@@ -237,7 +238,7 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
 
         final McpRuntimeDefinition definition = new McpRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
             configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, runtimeTask);
-        }), unpackedMcpZipDirectory, mcpConfig, createClientExtraJarTasks(spec, data, mcpDirectory, gameArtifacts), createDownloadAssetsTasks(spec, data, mcpDirectory, versionJson), createExtractNativesTasks(spec, data, mcpDirectory, versionJson));
+        }), unpackedMcpZipDirectory, mcpConfig, createDownloadAssetsTasks(spec, data, mcpDirectory, versionJson), createExtractNativesTasks(spec, data, mcpDirectory, versionJson));
 
         return definition;
     }
@@ -349,6 +350,10 @@ public abstract class McpRuntimeExtension extends CommonRuntimeExtension<McpRunt
                     recompileSourceJar.getInputJar().set(remapTask.flatMap(WithOutput::getOutput));
                     recompileSourceJar.getCompileClasspath().setFrom(recompileDependencies);
                     recompileSourceJar.getStepName().set("recompile");
+
+                    for (Task task : recompileDependencies.getBuildDependencies().getDependencies(recompileSourceJar)) {
+                        recompileSourceJar.dependsOn(task);
+                    }
                 });
         recompileTask.configure(mcpRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, mcpDirectory, data, mcpRuntimeTask));
 

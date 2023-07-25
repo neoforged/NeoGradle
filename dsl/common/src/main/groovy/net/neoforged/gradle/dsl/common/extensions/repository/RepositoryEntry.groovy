@@ -32,15 +32,6 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
     boolean matches(ModuleComponentIdentifier id)
 
     /**
-     * Converts the current entry into a gradle dependency.
-     *
-     * @param project The project which the dependency should be created for.
-     * @return The gradle dependency.
-     */
-    @NotNull
-    Dependency toGradle(Project project)
-
-    /**
      * Creates a new unregistered entry which is a copy of the current entry, however which represents the sources
      * classified dependency of the current entry.
      *
@@ -136,7 +127,7 @@ interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDe
      * @param <TDependencyBuilder> The type for the dependency builders.
      */
     @CompileStatic
-    interface Builder<TSelf extends Builder<TSelf, TDependency, TDependencyBuilder>, TDependency extends RepositoryReference, TDependencyBuilder extends RepositoryReference.Builder<TDependencyBuilder, TDependency>> extends BaseDSLElement<TSelf>, Serializable {
+    interface Builder<TSelf extends Builder<TSelf, TDependency, TDependencyBuilder>, TDependency extends RepositoryReference, TDependencyBuilder extends RepositoryReference.Builder<TDependencyBuilder, TDependency>> extends RepositoryReference.Builder<TSelf, TDependency>, BaseDSLElement<TSelf>, Serializable {
 
         /**
          * The currently configured group in the builder.

@@ -1,5 +1,7 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
+import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
@@ -14,7 +16,7 @@ import java.io.FileOutputStream;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
-public abstract class ClientExtraJar extends DefaultRuntime {
+public abstract class ClientExtraJar extends ForgeGradleBase implements WithOutput {
 
     public ClientExtraJar() {
         super();

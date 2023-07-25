@@ -20,10 +20,11 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElement<IvyDummyRepositoryExtension>, Repository<IvyDummyRepositoryExtension, IvyDummyRepositoryEntry, IvyDummyRepositoryEntry.Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder>
+public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElement<IvyDummyRepositoryExtension>, Repository<IvyDummyRepositoryExtension>
 {
     /**
      * A version for stored metadata.
@@ -38,7 +39,7 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
 
 
     private final Set<IvyDummyRepositoryEntry> entries = Sets.newHashSet();
-    private final Set<Consumer<Project>> entryConfigurators = Sets.newHashSet();
+    private final LinkedHashSet<Consumer<Project>> entryConfigurators = new LinkedHashSet<>();
     private final Set<Consumer<Project>> afterEntryCallbacks = Sets.newHashSet();
     private final Set<ModuleReference> configuredReferences = Sets.newHashSet();
     private boolean hasBeenRealized = false;
@@ -57,7 +58,7 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
         return project;
     }
 
-    public void onPreDefinitionBakes(final Project project) {
+    public void onPostDefinitionBake(final Project project) {
         this.hasBeenRealized = true;
         this.entryConfigurators.forEach(e -> e.accept(project));
 
@@ -98,13 +99,21 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
     }
 
     @Override
-    public void withDependency(final Action<IvyDummyRepositoryEntry.Builder> configurator, final Action<IvyDummyRepositoryEntry> configuredEntryConsumer) {
+    public void withDependency(Action<RepositoryReference.Builder<?,?>> referenceBuilder, Action<RepositoryReference> onReferenceBuild, Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer) throws XMLStreamException, IOException {
+        //Build the reference first so that a replacement dependency is potentially immediately available.
+        final IvyDummyRepositoryEntry.Builder builder = project.getObjects().newInstance(IvyDummyRepositoryEntry.Builder.class, project);
+        referenceBuilder.execute(builder);
+        final IvyDummyRepositoryEntry entry = builder.build();
+
+        onReferenceBuild.execute(entry);
+
+        //Now schedule the on disk generation of the dependencies for after stuff is properly baked and evaluated.
         entryConfigurators.add(evaluatedProject -> {
             processDependency(configurator, configuredEntryConsumer);
         });
     }
 
-    private void processDependency(Action<IvyDummyRepositoryEntry.Builder> configurator, Action<IvyDummyRepositoryEntry> configuredEntryConsumer) {
+    private void processDependency(Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer) {
         final IvyDummyRepositoryEntry.Builder builder = IvyDummyRepositoryEntry.Builder.create(getProject());
         configurator.execute(builder);
         final IvyDummyRepositoryEntry entry = builder.build();
@@ -112,7 +121,7 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
         processBuildEntry(configuredEntryConsumer, entry);
     }
 
-    private void processBuildEntry(Action<IvyDummyRepositoryEntry> configuredEntryConsumer, IvyDummyRepositoryEntry entry) {
+    private void processBuildEntry(Action<RepositoryEntry<?,?>> configuredEntryConsumer, IvyDummyRepositoryEntry entry) {
         final ModuleReference reference = entry.toModuleReference();
         if (configuredReferences.contains(reference))
             return;
@@ -145,20 +154,27 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
         final Path metaFile = baseDir.resolve(String.format("ivy-%s-fg%d.xml", entry.getVersion(), METADATA_VERSION));
 
         if (Files.exists(metaFile)) {
+            FileUtils.delete(metaFile.toFile());
+            writeIvyMetadataFile(entry, jarFile, baseDir, metaFile);
             return;
         }
 
+        writeIvyMetadataFile(entry, jarFile, baseDir, metaFile);
+
+        Files.createFile(jarFile);
+
+        final Path sourcesFile = entry.asSources().buildArtifactPath(getRepositoryDirectory().get().getAsFile().toPath());
+        Files.createFile(sourcesFile);
+        writeDummyDependencyDataIfNeeded(entry);
+    }
+
+    private static void writeIvyMetadataFile(RepositoryEntry<?, ?> entry, Path jarFile, Path baseDir, Path metaFile) throws IOException, XMLStreamException {
         Files.createDirectories(baseDir);
         final Path metaFileTmp = FileUtils.temporaryPath(metaFile.getParent(), "metadata");
         try (final IvyModuleWriter writer = new IvyModuleWriter(metaFileTmp)) {
             writer.write(entry);
         }
         FileUtils.atomicMove(metaFileTmp, metaFile);
-        Files.createFile(jarFile);
-
-        final Path sourcesFile = entry.asSources().buildArtifactPath(getRepositoryDirectory().get().getAsFile().toPath());
-        Files.createFile(sourcesFile);
-        writeDummyDependencyDataIfNeeded(entry);
     }
 
     private void writeDummyDependencyDataIfNeeded(RepositoryEntry<?, ?> entry) throws IOException, XMLStreamException {

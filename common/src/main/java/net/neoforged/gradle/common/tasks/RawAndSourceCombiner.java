@@ -2,20 +2,21 @@ package net.neoforged.gradle.common.tasks;
 
 import com.google.common.io.Files;
 import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
 
-public abstract class RawAndSourceCombiner extends ForgeGradleBase {
+public abstract class RawAndSourceCombiner extends ForgeGradleBase implements WithOutput {
 
     @TaskAction
     public void doCombine() {
-        final File rawJarOutput = ensureFileWorkspaceReady(getRawJarOutput());
+        final File rawJarOutput = ensureFileWorkspaceReady(getOutput());
         final File sourceJarOutput = ensureFileWorkspaceReady(getSourceJarOutput());
 
-        final File rawJarInput = getRawJarInput().getAsFile().get();
+        final File rawJarInput = getInput().getAsFile().get();
         final File sourceJarInput = getSourceJarInput().getAsFile().get();
 
         copy(rawJarInput, rawJarOutput);
@@ -32,14 +33,11 @@ public abstract class RawAndSourceCombiner extends ForgeGradleBase {
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public abstract RegularFileProperty getRawJarInput();
+    public abstract RegularFileProperty getInput();
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getSourceJarInput();
-
-    @OutputFile
-    public abstract RegularFileProperty getRawJarOutput();
 
     @OutputFile
     public abstract RegularFileProperty getSourceJarOutput();

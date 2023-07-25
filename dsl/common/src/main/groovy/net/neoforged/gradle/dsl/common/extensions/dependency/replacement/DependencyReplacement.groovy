@@ -5,6 +5,7 @@ import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.jetbrains.annotations.NotNull
 
 import java.util.function.Consumer
@@ -14,6 +15,9 @@ import java.util.function.Consumer
  */
 @CompileStatic
 interface DependencyReplacement extends BaseDSLElement<DependencyReplacement> {
+
+
+    void handleConfiguration(Configuration configuration);
 
     /**
      * The dependency replacement handlers.

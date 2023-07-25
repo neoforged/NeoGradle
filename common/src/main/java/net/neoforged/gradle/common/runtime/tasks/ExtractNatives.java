@@ -15,7 +15,7 @@ import org.gradle.workers.WorkerExecutor;
 import javax.inject.Inject;
 import java.io.File;
 
-@DisableCachingByDefault()
+@CacheableTask()
 public abstract class ExtractNatives extends DefaultRuntime {
 
     public ExtractNatives() {

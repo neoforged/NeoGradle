@@ -29,6 +29,8 @@ public abstract class GenerateDebuggingMappings extends DefaultRuntime {
                         .cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT))
                 .map(TransformerUtils.guard(IMappingFile::load))
                 .map(CacheableIMappingFile::new));
+
+        getOutputFileName().convention("mappings.zip");
     }
 
     @TaskAction

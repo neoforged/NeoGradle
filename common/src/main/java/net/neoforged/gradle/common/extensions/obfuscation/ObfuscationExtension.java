@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.File;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -141,10 +140,8 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
         } else {
             gameArtifactTasks = artifactCache.cacheGameVersionTasks(
                     getProject(),
-                    new File(getProject().getBuildFile(), "obfuscation-cache"),
-                    Objects.requireNonNull(minecraftVersionString),
-                    Objects.requireNonNull(distributionType == null ? null : distributionType.getOrNull())
-                    );
+                    Objects.requireNonNull(minecraftVersionString), Objects.requireNonNull(distributionType == null ? null : distributionType.getOrNull())
+            );
         }
 
         final TaskBuildingContext context = new TaskBuildingContext(

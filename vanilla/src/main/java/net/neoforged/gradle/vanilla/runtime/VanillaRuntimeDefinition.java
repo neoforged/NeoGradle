@@ -99,8 +99,6 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
 
     @Override
     public void configureRun(RunImpl run) {
-
-
         if (getSpecification().getDistribution().isClient()) {
             Arrays.stream(getVersionJson().getArguments().getGame()).filter(arg -> arg.getRules() == null || arg.getRules().length == 0).flatMap(arg -> arg.value.stream()).forEach(arg -> run.getProgramArguments().add(arg));
             Arrays.stream(getVersionJson().getArguments().getJvm()).filter(VersionJson.RuledObject::isAllowed).flatMap(arg -> arg.value.stream()).forEach(arg -> run.getJvmArguments().add(arg));

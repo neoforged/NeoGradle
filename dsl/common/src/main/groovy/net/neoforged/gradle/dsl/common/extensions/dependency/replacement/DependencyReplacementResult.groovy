@@ -9,6 +9,7 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 
+import java.util.function.BiConsumer
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Supplier
@@ -26,6 +27,7 @@ final class DependencyReplacementResult {
     private final Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator;
     private final Collection<DependencyReplacementResult> additionalReplacements;
     private final Consumer<Dependency> onCreateReplacedDependencyCallback;
+    private final Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback;
     private final Supplier<Set<TaskProvider>> additionalIdePostSyncTasks;
 
     DependencyReplacementResult(
@@ -36,6 +38,7 @@ final class DependencyReplacementResult {
             Configuration additionalDependenciesConfiguration,
             Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator,
             Consumer<Dependency> onCreateReplacedDependencyCallback,
+            Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback,
             Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
         this.project = project;
         this.taskNameBuilder = taskNameBuilder;
@@ -44,6 +47,7 @@ final class DependencyReplacementResult {
         this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
         this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
         this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
+        this.onRepoWritingTaskRegisteredCallback = onRepoWritingTaskRegisteredCallback;
         this.additionalReplacements = Collections.emptyList();
         this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
     }
@@ -63,7 +67,8 @@ final class DependencyReplacementResult {
         this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
         this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
         this.additionalReplacements = additionalReplacements;
-        this.onCreateReplacedDependencyCallback = dep -> { };
+        this.onCreateReplacedDependencyCallback = (dep) -> { };
+        this.onRepoWritingTaskRegisteredCallback = (task) -> { };
         this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
     }
 
@@ -145,6 +150,11 @@ final class DependencyReplacementResult {
     @NotNull
     Consumer<Dependency> getOnCreateReplacedDependencyCallback() {
         return onCreateReplacedDependencyCallback;
+    }
+
+    @NotNull
+    Consumer<TaskProvider<? extends WithOutput>> getOnRepoWritingTaskRegisteredCallback() {
+        return onRepoWritingTaskRegisteredCallback;
     }
 
     @NotNull

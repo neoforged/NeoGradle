@@ -106,7 +106,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         stepsMcpDirectory.mkdirs();
 
         final Map<String, File> data = Collections.emptyMap();
-        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec, vanillaDirectory);
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
         if (gameArtifactTasks.containsKey(GameArtifact.SERVER_JAR) && BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
             final TaskProvider<? extends WithOutput> serverJarTask = gameArtifactTasks.get(GameArtifact.SERVER_JAR);
             final TaskProvider<? extends WithOutput> extractedBundleTask = FileCacheUtils.createFileCacheEntryProvidingTask(

@@ -53,7 +53,8 @@ public final class McpDependencyManager {
                                 runtimeDefinition.getMinecraftDependenciesConfiguration(),
                                 builder -> builder.setVersion(runtimeDefinition.getSpecification().getMcpVersion()),
                                 runtimeDefinition::setReplacedDependency,
-                                () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getClientExtraJarProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider())
+                                runtimeDefinition::onRepoWritten,
+                                () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider())
                 ));
             });
         });

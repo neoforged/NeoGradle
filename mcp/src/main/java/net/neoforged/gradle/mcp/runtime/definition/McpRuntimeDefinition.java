@@ -29,7 +29,6 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
     private final File unpackedMcpZipDirectory;
     private final McpConfigConfigurationSpecV2 mcpConfig;
 
-    private final TaskProvider<ClientExtraJar> clientExtraJarProvider;
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
     private TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider;
@@ -43,13 +42,11 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
                                 @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
                                 @NotNull File unpackedMcpZipDirectory,
                                 @NotNull McpConfigConfigurationSpecV2 mcpConfig,
-                                @NotNull TaskProvider<ClientExtraJar> clientExtraJarProvider,
                                 @NotNull TaskProvider<DownloadAssets> assetsTaskProvider,
                                 @NotNull TaskProvider<ExtractNatives> nativesTaskProvider) {
         super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
         this.unpackedMcpZipDirectory = unpackedMcpZipDirectory;
         this.mcpConfig = mcpConfig;
-        this.clientExtraJarProvider = clientExtraJarProvider;
         this.assetsTaskProvider = assetsTaskProvider;
         this.nativesTaskProvider = nativesTaskProvider;
     }
@@ -85,10 +82,6 @@ public class McpRuntimeDefinition extends CommonRuntimeDefinition<McpRuntimeSpec
         result = 31 * result + unpackedMcpZipDirectory.hashCode();
         result = 31 * result + mcpConfig.hashCode();
         return result;
-    }
-
-    public TaskProvider<ClientExtraJar> getClientExtraJarProvider() {
-        return clientExtraJarProvider;
     }
 
     @Override

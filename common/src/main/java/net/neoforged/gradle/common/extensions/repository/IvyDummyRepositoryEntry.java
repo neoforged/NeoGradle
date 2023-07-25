@@ -87,11 +87,6 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
     }
 
     @Override
-    public Dependency toGradle(Project project) {
-        return project.getDependencies().create(toString());
-    }
-
-    @Override
     public IvyDummyRepositoryEntry asSources() {
         return Builder.create(project, this).setClassifier("sources").build();
     }
@@ -198,6 +193,11 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
     @Override
     public ModuleReference toModuleReference() {
         return new ModuleReference(getGroup(), getName(), getVersion(), getExtension(), getClassifier());
+    }
+
+    @Override
+    public Dependency toGradle(Project project) {
+        return project.getDependencies().create(toString());
     }
 
     public static abstract class Builder implements ConfigurableDSLElement<Builder>, RepositoryEntry.Builder<Builder, IvyDummyRepositoryReference, IvyDummyRepositoryReference.Builder> {

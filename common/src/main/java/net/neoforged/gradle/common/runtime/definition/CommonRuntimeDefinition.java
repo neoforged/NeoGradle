@@ -154,6 +154,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.replacedDependency = dependency;
     }
 
+    public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
+    }
+
     @Override
     @NotNull
     public Map<String, String> getMappingVersionData() {

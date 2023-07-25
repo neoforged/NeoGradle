@@ -54,8 +54,9 @@ public final class MCPOfficialNamingChannelConfigurator {
             newOfficialProvider.getUnapplyCompiledMappingsTaskBuilder().convention(context -> this.adaptUnapplyCompiledMappingsTask(context, namingChannel));
             newOfficialProvider.getUnapplyAccessTransformerMappingsTaskBuilder().convention(context -> this.adaptUnapplyAccessTransformerMappingsTask(context, namingChannel));
             newOfficialProvider.getGenerateDebuggingMappingsJarTaskBuilder().convention(this::buildGenerateDebuggingMappingsJarTask);
-            newOfficialProvider.getHasAcceptedLicense().set(namingChannel.getHasAcceptedLicense());
-            newOfficialProvider.getLicenseText().set(namingChannel.getLicenseText());
+            newOfficialProvider.getHasAcceptedLicense().convention(namingChannel.getHasAcceptedLicense());
+            newOfficialProvider.getLicenseText().convention(namingChannel.getLicenseText());
+            newOfficialProvider.getDependencyNotationVersionManager().convention(namingChannel.getDependencyNotationVersionManager());
         });
         minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannels().named("official"));
     }

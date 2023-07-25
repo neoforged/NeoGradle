@@ -2,8 +2,8 @@ package net.neoforged.gradle.common.runtime.extensions;
 
 import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
-import net.neoforged.gradle.common.runtime.tasks.ClientExtraJar;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.common.util.VersionJson;
@@ -16,6 +16,7 @@ import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import net.neoforged.gradle.util.GradleInternalUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -58,9 +59,9 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         mcpRuntimeTask.getJavaVersion().convention(project.getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
     }
 
-    protected static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final Specification spec, final File runtimeWorkingDirectory) {
+    public static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final Specification spec) {
         final MinecraftArtifactCache artifactCache = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
-        return artifactCache.cacheGameVersionTasks(spec.getProject(), new File(runtimeWorkingDirectory, "cache"), spec.getMinecraftVersion(), spec.getDistribution());
+        return artifactCache.cacheGameVersionTasks(spec.getProject(), spec.getMinecraftVersion(), spec.getDistribution());
     }
 
     @Override
@@ -87,7 +88,12 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     @NotNull
     public final D create(final Action<B> configurator) {
         final S spec = createSpec(configurator);
-        if (runtimes.containsKey(spec.getName()))
+
+        if (GradleInternalUtils.getExtensions(project.getExtensions())
+                .stream()
+                .filter(CommonRuntimeExtension.class::isInstance)
+                .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
+                .anyMatch(ext -> ext.runtimes.containsKey(spec.getName())))
             throw new IllegalArgumentException(String.format("Runtime with name '%s' already exists", spec.getName()));
 
         final D runtime = doCreate(spec);
@@ -124,7 +130,17 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     protected abstract void bakeDefinition(D definition);
 
     public final void bakeDefinitions() {
-        this.runtimes.values().forEach(this::bakeDefinition);
+        this.runtimes.values()
+                .stream()
+                .filter(def -> !(def instanceof IDelegatingRuntimeDefinition))
+                .forEach(this::bakeDefinition);
+    }
+
+    public final void bakeDelegateDefinitions() {
+        this.runtimes.values()
+                .stream()
+                .filter(def -> def instanceof IDelegatingRuntimeDefinition)
+                .forEach(this::bakeDefinition);
     }
 
     @Override
@@ -142,14 +158,6 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                 .flatMap(config -> config.getAllDependencies().stream())
                 .flatMap(dep -> getRuntimes().get().values().stream().filter(runtime -> runtime.getReplacedDependency().equals(dep)))
                 .collect(Collectors.toSet());
-    }
-
-    protected final TaskProvider<ClientExtraJar> createClientExtraJarTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final Map<GameArtifact, File> gameArtifacts) {
-        return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "clientExtraJar"), ClientExtraJar.class, task -> {
-            task.getOriginalClientJar().set(gameArtifacts.get(GameArtifact.CLIENT_JAR));
-
-            configureCommonRuntimeTaskParameters(task, data, "clientExtraJar", specification, runtimeDirectory);
-        });
     }
 
     protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final VersionJson versionJson) {

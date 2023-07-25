@@ -44,10 +44,9 @@ public final class UserDevDependencyManager {
 
             final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency);
 
-            final Set<Dependency> additionalDependencies = Sets.newHashSet();
-            additionalDependencies.addAll(runtimeDefinition.getMcpRuntimeDefinition().getMinecraftDependenciesConfiguration().getDependencies());
-            additionalDependencies.addAll(runtimeDefinition.getAdditionalUserDevDependencies().getDependencies());
-            final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(project, additionalDependencies.toArray(new Dependency[0]));
+            final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(project);
+            additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getMcpRuntimeDefinition().getMinecraftDependenciesConfiguration());
+            additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
 
             return Optional.of(
                     new DependencyReplacementResult(
@@ -58,7 +57,8 @@ public final class UserDevDependencyManager {
                             additionalDependenciesConfiguration,
                             builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
                             runtimeDefinition::setReplacedDependency,
-                            () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getClientExtraJarProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider()))
+                            runtimeDefinition::onRepoWritten,
+                            () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider()))
             );
         }));
     }

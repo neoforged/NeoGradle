@@ -4,6 +4,8 @@ import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.extensions.Mappings;
+import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.runs.type.Types;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
@@ -112,8 +114,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         final Types types = getProject().getExtensions().getByType(Types.class);
         userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
-            final NamedDomainObjectProvider<Type> typeProvider = types.registerWithPotentialPrefix(spec.getName(), name, type::copyTo);
-            typeProvider.configure(runType -> runType.getClasspath().from(mcpRuntimeDefinition.getClientExtraJarProvider().map(OutputSpecification::getOutput)));
+             types.registerWithPotentialPrefix(spec.getName(), name, type::copyTo);
         });
 
         return new UserDevRuntimeDefinition(
@@ -132,7 +133,14 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
     @Override
     protected void bakeDefinition(UserDevRuntimeDefinition definition) {
-        //Noop.
+        final UserDevRuntimeSpecification spec = definition.getSpecification();
+        final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
+        final Mappings mappingsExtension = minecraftExtension.getMappings();
+
+        definition.onBake(
+                mappingsExtension.getChannel().get(),
+                spec.getProject().getLayout().getBuildDirectory().get().dir("userdev").dir(spec.getName()).getAsFile()
+        );
     }
 
     private TaskTreeAdapter createAccessTransformerAdapter(final List<String> accessTransformerPaths, final File unpackedForgeUserDevDirectory) {

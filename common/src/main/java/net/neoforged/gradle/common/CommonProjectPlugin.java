@@ -1,5 +1,7 @@
 package net.neoforged.gradle.common;
 
+import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
+import net.neoforged.gradle.common.dependency.MappingDebugChannelDependencyManager;
 import net.neoforged.gradle.common.extensions.ExtensionManager;
 import net.neoforged.gradle.common.extensions.ForcedDependencyDeobfuscationExtension;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
@@ -15,6 +17,7 @@ import net.neoforged.gradle.common.extensions.ProjectHolderExtension;
 import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.neoforged.gradle.common.extensions.obfuscation.ObfuscationExtension;
 import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
+import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunsImpl;
 import net.neoforged.gradle.common.runs.type.TypesImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
@@ -50,6 +53,9 @@ import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class CommonProjectPlugin implements Plugin<Project> {
 
     @Override
@@ -74,11 +80,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
         project.getExtensions().create("forcedDeobfuscation", ForcedDependencyDeobfuscationExtension.class);
         project.getExtensions().create("dependencyDeobfuscation", DependencyDeobfuscator.class, project);
+        project.getExtensions().create("clientExtraJarDependencyManager", ClientExtraJarDependencyManager.class, project);
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
 
         extensionManager.registerExtension("minecraft", Minecraft.class, (p) -> p.getObjects().newInstance(MinecraftExtension.class, p));
         extensionManager.registerExtension("mappings", Mappings.class, (p) -> p.getObjects().newInstance(MappingsExtension.class, p));
+
+        project.getExtensions().create("mappingDebugChannelDependencyManager", MappingDebugChannelDependencyManager.class, project);
 
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 
@@ -116,20 +125,28 @@ public class CommonProjectPlugin implements Plugin<Project> {
                         types.matching(type -> type.getName().equals(run.getName())).forEach(impl::configureInternally);
                     });
         });
+
+        IdeRunIntegrationManager.getInstance().apply(project);
     }
 
     private void applyAfterEvaluate(final Project project) {
-        final Repository<?,?,?,?,?> repositoryExtension = project.getExtensions().getByType(Repository.class);
-        if (repositoryExtension instanceof IvyDummyRepositoryExtension) {
-            final IvyDummyRepositoryExtension ivyDummyRepositoryExtension = (IvyDummyRepositoryExtension) repositoryExtension;
-            ivyDummyRepositoryExtension.onPreDefinitionBakes(project);
-        }
-
-        GradleInternalUtils.getExtensions(project.getExtensions())
+        final List<CommonRuntimeExtension<?,?,?>> runtimeExtensions = GradleInternalUtils.getExtensions(project.getExtensions())
                 .stream()
                 .filter(CommonRuntimeExtension.class::isInstance)
                 .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
+                .collect(Collectors.toList());
+
+        runtimeExtensions
                 .forEach(CommonRuntimeExtension::bakeDefinitions);
+
+        runtimeExtensions
+                .forEach(CommonRuntimeExtension::bakeDelegateDefinitions);
+
+        final Repository<?> repositoryExtension = project.getExtensions().getByType(Repository.class);
+        if (repositoryExtension instanceof IvyDummyRepositoryExtension) {
+            final IvyDummyRepositoryExtension ivyDummyRepositoryExtension = (IvyDummyRepositoryExtension) repositoryExtension;
+            ivyDummyRepositoryExtension.onPostDefinitionBake(project);
+        }
 
         project.getExtensions().getByType(Runs.class).forEach(run -> {
             if (run instanceof RunImpl) {

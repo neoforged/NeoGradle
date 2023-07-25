@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Function;
@@ -271,5 +272,19 @@ public final class FileUtils {
         ret.setTime(time);
         TimeZone.setDefault(_default);
         return ret;
+    }
+
+    public static void delete(final File file) {
+        if (file.isFile()) {
+            file.delete();
+        }
+
+        if (file.isDirectory()) {
+            for (File listFile : Objects.requireNonNull(file.listFiles())) {
+                delete(listFile);
+            }
+
+            file.delete();
+        }
     }
 }

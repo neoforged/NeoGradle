@@ -1,17 +1,25 @@
 package net.neoforged.gradle.userdev.runtime.definition;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
+import net.neoforged.gradle.common.dependency.MappingDebugChannelDependencyManager;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
-import net.neoforged.gradle.common.runtime.tasks.ClientExtraJar;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
+import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.neoforged.gradle.mcp.runtime.definition.McpRuntimeDefinition;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
+import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.TaskProvider;
@@ -29,6 +37,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     private final File unpackedUserDevJarDirectory;
     private final UserDevConfigurationSpecV2 userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
+    private final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer;
 
     public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, McpRuntimeDefinition mcpRuntimeDefinition, File unpackedUserDevJarDirectory, UserDevConfigurationSpecV2 userdevConfiguration, Configuration additionalUserDevDependencies) {
         super(specification, mcpRuntimeDefinition.getTasks(), mcpRuntimeDefinition.getSourceJarTask(), mcpRuntimeDefinition.getRawJarTask(), mcpRuntimeDefinition.getGameArtifactProvidingTasks(), mcpRuntimeDefinition.getMinecraftDependenciesConfiguration(), mcpRuntimeDefinition::configureAssociatedTask);
@@ -36,6 +45,22 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         this.unpackedUserDevJarDirectory = unpackedUserDevJarDirectory;
         this.userdevConfiguration = userdevConfiguration;
         this.additionalUserDevDependencies = additionalUserDevDependencies;
+
+        this.additionalUserDevDependencies.getDependencies().add(
+                this.getSpecification().getProject().getDependencies().create(
+                        ClientExtraJarDependencyManager.generateCoordinateFor(this.getSpecification().getMinecraftVersion())
+                )
+        );
+
+        this.minecraftClasspathSerializer = specification.getProject().getTasks().register(
+                CommonRuntimeUtils.buildStepName(getSpecification(), "writeMinecraftClasspath"),
+                ClasspathSerializer.class,
+                task -> {
+                    task.getInputFiles().from(this.additionalUserDevDependencies);
+                    task.getInputFiles().from(mcpRuntimeDefinition.getMinecraftDependenciesConfiguration());
+                }
+        );
+        configureAssociatedTask(this.minecraftClasspathSerializer);
     }
 
     @Override
@@ -64,9 +89,13 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         mcpRuntimeDefinition.setReplacedDependency(dependency);
     }
 
-    @NotNull
-    public TaskProvider<ClientExtraJar> getClientExtraJarProvider() {
-        return mcpRuntimeDefinition.getClientExtraJarProvider();
+
+    @Override
+    public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
+        mcpRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
+        this.minecraftClasspathSerializer.configure(task -> {
+            task.getInputFiles().from(finalRepoWritingTask);
+        });
     }
 
     @Override
@@ -92,6 +121,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     public void configureRun(RunImpl run) {
         super.configureRun(run);
         run.getClasspath().from(getDebuggingMappingsTaskProvider());
+        run.dependsOn(this.minecraftClasspathSerializer);
     }
 
     @Override
@@ -103,6 +133,11 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
         return mcpRuntimeDefinition.getListLibrariesTaskProvider();
+    }
+
+    @NotNull
+    public TaskProvider<ClasspathSerializer> getMinecraftClasspathSerializer() {
+        return minecraftClasspathSerializer;
     }
 
     @Override
@@ -124,11 +159,26 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
             interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
         }
 
+        interpolationData.put("minecraft_classpath_file", this.minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
+
         return interpolationData;
     }
 
     @Override
     public Definition<?> getDelegate() {
         return mcpRuntimeDefinition;
+    }
+
+    @Override
+    public void onBake(NamingChannel namingChannel, File runtimeDirectory) {
+        this.additionalUserDevDependencies.getDependencies().add(
+                this.getSpecification().getProject().getDependencies().create(
+                        MappingDebugChannelDependencyManager.generateCoordinateFor(
+                                namingChannel,
+                                Maps.newHashMap(ImmutableMap.of(NamingConstants.Version.MINECRAFT_VERSION, "1.19.3")),
+                                this
+                        )
+                )
+        );
     }
 }

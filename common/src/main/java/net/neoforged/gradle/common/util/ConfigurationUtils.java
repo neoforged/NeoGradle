@@ -1,5 +1,7 @@
 package net.neoforged.gradle.common.util;
 
+import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -24,6 +26,10 @@ public final class ConfigurationUtils {
         final Configuration configuration = project.getConfigurations().detachedConfiguration(dependencies);
         configuration.setCanBeConsumed(false);
         configuration.setCanBeResolved(true);
+
+        final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class);
+        dependencyReplacement.handleConfiguration(configuration);
+
         return configuration;
     }
 }

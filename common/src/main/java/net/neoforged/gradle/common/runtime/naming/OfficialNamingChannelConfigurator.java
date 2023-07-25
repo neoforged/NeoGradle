@@ -74,6 +74,7 @@ public final class OfficialNamingChannelConfigurator {
             namingChannelProvider.getGenerateDebuggingMappingsJarTaskBuilder().set(this::buildGenerateDebuggingMappingsJarTask);
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> ((Property<Boolean>) mappingsExtension.getExtensions().getByName("acceptMojangEula")).get()));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
+            namingChannelProvider.getDependencyNotationVersionManager().set(new SimpleDependencyNotationVersionManager());
         });
         minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannels().named("official"));
     }

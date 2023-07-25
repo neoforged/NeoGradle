@@ -1,24 +1,23 @@
 package net.neoforged.gradle.common.extensions.dependency.replacement;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.dependency.creation.DependencyCreator;
 import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
-import net.neoforged.gradle.common.tasks.DependencyGenerationTask;
 import net.neoforged.gradle.common.tasks.RawAndSourceCombiner;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
+import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ExternalModuleDependency;
@@ -27,6 +26,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.inject.Inject;
@@ -45,13 +45,10 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
     private final Project project;
     private final DependencyCreator dependencyCreator;
-
-    private final TaskProvider<? extends DependencyGenerationTask> dependencyGenerator;
-    private final Set<Configuration> configuredConfigurations = Sets.newHashSet();
-    private final Set<Dependency> replacedDependencies = Sets.newHashSet();
     private final Set<ModuleReference> configuredReferences = Sets.newHashSet();
     private final Set<ModuleReference> configuredGradleTasks = Sets.newHashSet();
     private final Set<ModuleReference> configuredIdeTasks = Sets.newHashSet();
+    private final Table<Dependency, Configuration, Optional<DependencyReplacementResult>> dependencyReplacementInformation = HashBasedTable.create();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
     private boolean registeredTaskToIde;
     private boolean hasBeenBaked = false;
@@ -63,25 +60,21 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         this.dependencyCreator = dependencyCreator;
 
         //Wire up a replacement handler to each configuration for when a dependency is added.
-        this.project.getConfigurations().configureEach(configuration -> configuration.getDependencies().whenObjectAdded(dependency -> {
-            //Do not handle the same dependency twice.
-            if (replacedDependencies.contains(dependency)) {
-                return;
-            }
+        this.project.getConfigurations().configureEach(this::handleConfiguration);
+        //Collection holder of all custom dependency replacement handlers.
+        this.dependencyReplacementHandlers = this.project.getObjects().domainObjectContainer(DependencyReplacementHandler.class, name -> this.project.getObjects().newInstance(DependencyReplacementHandlerImpl.class, this.project, name));
+    }
 
+    @Override
+    public void handleConfiguration(Configuration configuration) {
+        configuration.getDependencies().whenObjectAdded(dependency -> {
             //We only support module based dependencies.
             if (dependency instanceof ModuleDependency) {
                 final ModuleDependency moduleDependency = (ModuleDependency) dependency;
                 //Try replacing the dependency.
                 handleDependency(configuration, moduleDependency);
             }
-        }));
-
-        //This is the root task that gets wired up to every configuration which has its dependency replaced.
-        this.dependencyGenerator = this.project.getTasks().register("generateDependencies", DependencyGenerationTask.class);
-
-        //Collection holder of all custom dependency replacement handlers.
-        this.dependencyReplacementHandlers = this.project.getObjects().domainObjectContainer(DependencyReplacementHandler.class, name -> this.project.getObjects().newInstance(DependencyReplacementHandlerImpl.class, this.project, name));
+        });
     }
 
     @Override
@@ -127,15 +120,29 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
      * @implNote Currently short circuits on the first replacement handler that returns a replacement, might want to change this in the future.
      */
     @VisibleForTesting
-    @SuppressWarnings("OptionalGetWithoutIsPresent") //Two lines above the get....
     void handleDependency(final Configuration configuration, final ModuleDependency dependency) {
-        Set<DependencyReplacementHandler> replacementHandlers = getReplacementHandlers();
-        replacementHandlers.stream()
-                .map(handler -> handler.getReplacer().get() .get(new DependencyReplacementContext(project, configuration, dependency, null)))
-                .filter(Optional::isPresent)
-                .findFirst()
-                .map(Optional::get)
-                .ifPresent(result -> handleDependencyReplacement(configuration, dependency, result, this::handleDependencyReplacementForIde, this::handleDependencyReplacementForGradle));
+        Optional<DependencyReplacementResult> candidate;
+        if (dependencyReplacementInformation.contains(dependency, configuration)) {
+            candidate = dependencyReplacementInformation.get(dependency, configuration);
+            if (candidate == null) {
+                candidate = Optional.empty();
+                dependencyReplacementInformation.remove(dependency, configuration);
+            }
+        } else {
+            candidate = Optional.empty();
+            for (DependencyReplacementHandler handler : getReplacementHandlers()) {
+                Optional<DependencyReplacementResult> dependencyReplacementResult = handler.getReplacer().get().get(new DependencyReplacementContext(project, configuration, dependency, null));
+                if (dependencyReplacementResult.isPresent()) {
+                    candidate = dependencyReplacementResult;
+                    break;
+                }
+            }
+            if (!dependencyReplacementInformation.contains(dependency, configuration)) {
+                dependencyReplacementInformation.put(dependency, configuration, candidate);
+            }
+        }
+
+        candidate.ifPresent(result -> handleDependencyReplacement(configuration, dependency, result, this::handleDependencyReplacementForIde, this::handleDependencyReplacementForGradle));
     }
 
     /**
@@ -147,18 +154,6 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     @NotNull
     Set<Consumer<Project>> getAfterDefinitionBakeCallbacks() {
         return afterDefinitionBakeCallbacks;
-    }
-
-    /**
-     * A set of all configurations which have at least one dependency replaced and as such are configured to run the relevant
-     * generation tasks to provide the dependencies.
-     *
-     * @return The set of configurations.
-     */
-    @VisibleForTesting
-    @NotNull
-    Set<Configuration> getConfiguredConfigurations() {
-        return configuredConfigurations;
     }
 
     /**
@@ -176,8 +171,6 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result, DependencyReplacer ideReplacer, DependencyReplacer gradleReplacer) {
         configuration.getDependencies().remove(dependency);
 
-        registerDependencyProviderTaskIfNecessaryTo(configuration);
-
         final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
 
         if (ideManagementExtension.isIdeImportInProgress()) {
@@ -187,36 +180,43 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         gradleReplacer.handle(configuration, dependency, result);
     }
 
-    /**
-     * Registers the dependency provider task to the given configuration if it has not already been registered.
-     * 
-     * @param configuration The configuration to register the task to.
-     */
-    @VisibleForTesting
-    void registerDependencyProviderTaskIfNecessaryTo(Configuration configuration) {
-        if (!this.configuredConfigurations.contains(configuration)) {
-            this.configuredConfigurations.add(configuration);
-            configuration.getDependencies().add(this.dependencyCreator.from(this.dependencyGenerator.get()));
-        }
-
-        if (!registeredTaskToIde) {
-            final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
-            ideManagementExtension.registerTaskToRun(dependencyGenerator);
-            registeredTaskToIde = true;
-        }
-    }
-
     private void handleDependencyReplacementForGradle(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result) {
         createDependencyReplacementResult(configuration, dependency, result, (repoBaseDir, entry) -> {
             final ModuleReference reference = entry.toModuleReference();
 
             final String artifactSelectionTaskName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
             if (configuredGradleTasks.contains(reference))
-                return project.getTasks().named(artifactSelectionTaskName);
+                return new RepositoryEntryGenerationTasks(project.getTasks().named(artifactSelectionTaskName, ArtifactFromOutput.class));
 
             configuredGradleTasks.add(reference);
 
-            return project.getTasks().register(artifactSelectionTaskName, ArtifactFromOutput.class, artifactFromOutput -> {
+            return new RepositoryEntryGenerationTasks(project.getTasks().register(artifactSelectionTaskName, ArtifactFromOutput.class, artifactFromOutput -> {
+                artifactFromOutput.setGroup("forgegradle/dependencies");
+                artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
+
+                artifactFromOutput.getInput().set(result.getRawJarTaskProvider().flatMap(WithOutput::getOutput));
+                artifactFromOutput.getOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.buildArtifactPath(dir.getAsFile().toPath()).toFile())));
+                artifactFromOutput.dependsOn(result.getRawJarTaskProvider());
+            }));
+        });
+    }
+
+    private void handleDependencyReplacementForIde(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result) {
+        createDependencyReplacementResult(configuration, dependency, result, ((repoBaseDir, entry) -> {
+            final ModuleReference reference = entry.toModuleReference();
+
+            final String rawArtifactSelectorName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
+            final String sourceArtifactSelectorName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectSourceArtifact", reference));
+
+            if (configuredIdeTasks.contains(reference)) {
+                final TaskProvider<? extends WithOutput> rawProvider = project.getTasks().named(rawArtifactSelectorName, WithOutput.class);
+                final TaskProvider<? extends WithOutput> sourceProvider = project.getTasks().named(sourceArtifactSelectorName, WithOutput.class);
+
+                return new RepositoryEntryGenerationTasks(rawProvider, sourceProvider);
+            }
+
+            configuredIdeTasks.add(reference);
+            final TaskProvider<? extends WithOutput> rawProvider = project.getTasks().register(rawArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
                 artifactFromOutput.setGroup("forgegradle/dependencies");
                 artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
 
@@ -224,27 +224,17 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
                 artifactFromOutput.getOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.buildArtifactPath(dir.getAsFile().toPath()).toFile())));
                 artifactFromOutput.dependsOn(result.getRawJarTaskProvider());
             });
-        });
-    }
 
-    private void handleDependencyReplacementForIde(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result) {
-        createDependencyReplacementResult(configuration, dependency, result, ((repoBaseDir, entry) -> {
-            final ModuleReference reference = entry.toModuleReference();
-            final String dependencyExporterTaskName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("combined", reference));
-            if (configuredIdeTasks.contains(reference))
-                return project.getTasks().named(dependencyExporterTaskName);
+            final TaskProvider<? extends WithOutput> sourceProvider = project.getTasks().register(sourceArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
+                artifactFromOutput.setGroup("forgegradle/dependencies");
+                artifactFromOutput.setDescription(String.format("Selects the source artifact from the %s dependency and puts it in the Ivy repository", dependency));
 
-            configuredIdeTasks.add(reference);
-            return project.getTasks().register(dependencyExporterTaskName, RawAndSourceCombiner.class, rawAndSourceCombiner -> {
-                rawAndSourceCombiner.setGroup("forgegradle/dependencies");
-                rawAndSourceCombiner.setDescription(String.format("Combines the raw and sources jars into a single task execution tree for: %s", dependency.toString()));
-
-                rawAndSourceCombiner.getRawJarInput().set(result.getRawJarTaskProvider().flatMap(WithOutput::getOutput));
-                rawAndSourceCombiner.getSourceJarInput().set(result.getSourcesJarTaskProvider().flatMap(WithOutput::getOutput));
-
-                rawAndSourceCombiner.getRawJarOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.buildArtifactPath(dir.getAsFile().toPath()).toFile())));
-                rawAndSourceCombiner.getSourceJarOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.asSources().buildArtifactPath(dir.getAsFile().toPath()).toFile())));
+                artifactFromOutput.getInput().set(result.getSourcesJarTaskProvider().flatMap(WithOutput::getOutput));
+                artifactFromOutput.getOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.asSources().buildArtifactPath(dir.getAsFile().toPath()).toFile())));
+                artifactFromOutput.dependsOn(result.getSourcesJarTaskProvider());
             });
+
+            return new RepositoryEntryGenerationTasks(rawProvider, sourceProvider);
         }));
     }
 
@@ -256,10 +246,12 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
         final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
 
-        final Repository<?,?,?,?,?> extension = project.getExtensions().getByType(Repository.class);
+        final Repository<?> extension = project.getExtensions().getByType(Repository.class);
         final Provider<Directory> repoBaseDir = extension.getRepositoryDirectory();
         try {
             extension.withDependency(
+                    builder -> configureRepositoryReference(result, externalModuleDependency, builder),
+                    reference -> processRepositoryReference(configuration, result, generator, repoBaseDir, reference),
                     builder -> configureRepositoryEntry(result, externalModuleDependency, builder),
                     entry -> processRepositoryEntry(configuration, result, generator, repoBaseDir, entry)
             );
@@ -268,6 +260,13 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         }
     }
 
+    private void processRepositoryReference(Configuration configuration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryReference entry) {
+        final Dependency replacedDependency = entry.toGradle(project);
+        configuration.getDependencies().add(replacedDependency);
+        result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
+    }
+
+
     private void processRepositoryEntry(Configuration configuration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
         final ModuleReference reference = entry.toModuleReference();
         if (configuredReferences.contains(reference))
@@ -275,29 +274,30 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
         configuredReferences.add(reference);
 
-        final TaskProvider<? extends Task> rawAndSourceCombinerTask = generator.generate(repoBaseDir, entry);
+        final RepositoryEntryGenerationTasks entryGenerationTasks = generator.generate(repoBaseDir, entry);
 
-        final Dependency replacedDependency = entry.toGradle(project);
-        if (replacedDependencies.add(replacedDependency)) {
-            configuration.getDependencies().add(replacedDependency);
-            result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
+        configuration.getDependencies().add(this.dependencyCreator.from(entryGenerationTasks.getRawJarProvider()));
+        result.getOnRepoWritingTaskRegisteredCallback().accept(entryGenerationTasks.getRawJarProvider());
 
-            afterDefinitionBake(projectAfterBake -> {
-                this.dependencyGenerator.configure(task -> task.dependsOn(rawAndSourceCombinerTask));
+        afterDefinitionBake(projectAfterBake -> {
+            final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
+            if (ideManagementExtension.isIdeImportInProgress()) {
+                ideManagementExtension.registerTaskToRun(entryGenerationTasks.getRawJarProvider());
+                entryGenerationTasks.getSourceJarProvider().ifPresent(ideManagementExtension::registerTaskToRun);
+                result.getAdditionalIdePostSyncTasks().forEach(ideManagementExtension::registerTaskToRun);
+            }
+        });
+    }
 
-                final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
-                if (ideManagementExtension.isIdeImportInProgress()) {
-                    result.getAdditionalIdePostSyncTasks().forEach(ideManagementExtension::registerTaskToRun);
-                }
-            });
-        }
+    private void configureRepositoryReference(DependencyReplacementResult result, ExternalModuleDependency externalModuleDependency, RepositoryReference.Builder<?, ?> builder) {
+        builder.from(externalModuleDependency);
     }
 
     private void configureRepositoryEntry(DependencyReplacementResult result, ExternalModuleDependency externalModuleDependency, RepositoryEntry.Builder<?, ?, ?> builder) {
         builder.from(externalModuleDependency);
         result.getDependencyMetadataConfigurator().accept(builder);
 
-        result.getAdditionalDependenciesConfiguration().getDependencies()
+        result.getAdditionalDependenciesConfiguration().getAllDependencies()
                 .stream()
                 .filter(ExternalModuleDependency.class::isInstance)
                 .map(ExternalModuleDependency.class::cast)
@@ -315,11 +315,38 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     }
 
     @VisibleForTesting
+    public static class RepositoryEntryGenerationTasks {
+        @NotNull
+        private final TaskProvider<? extends WithOutput> rawJarProvider;
+        @Nullable
+        private final TaskProvider<? extends WithOutput> sourceJarProvider;
+
+        public RepositoryEntryGenerationTasks(@NotNull TaskProvider<? extends WithOutput> rawJarProvider) {
+            this.rawJarProvider = rawJarProvider;
+            this.sourceJarProvider = null;
+        }
+
+        public RepositoryEntryGenerationTasks(@NotNull TaskProvider<? extends WithOutput> rawJarProvider, @Nullable TaskProvider<? extends WithOutput> sourceJarProvider) {
+            this.rawJarProvider = rawJarProvider;
+            this.sourceJarProvider = sourceJarProvider;
+        }
+
+        public TaskProvider<? extends WithOutput> getRawJarProvider() {
+            return rawJarProvider;
+        }
+
+        public Optional<TaskProvider<? extends WithOutput>> getSourceJarProvider() {
+            return Optional.ofNullable(sourceJarProvider);
+        }
+    }
+
+    @VisibleForTesting
     @FunctionalInterface
     interface TaskProviderGenerator {
 
-        TaskProvider<? extends Task> generate(final Provider<Directory> repoBaseDir, final RepositoryEntry<?,?> entry);
+        RepositoryEntryGenerationTasks generate(final Provider<Directory> repoBaseDir, final RepositoryEntry<?,?> entry);
     }
+
 
     @VisibleForTesting
     @FunctionalInterface

@@ -2,6 +2,7 @@ package com.example.examplemod;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.main.Main;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -59,6 +60,8 @@ public class ExampleMod
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
+
+        LOGGER.info(Main.class.getName());
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

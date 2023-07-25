@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.runs.run;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 
@@ -16,12 +17,15 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
@@ -137,8 +141,8 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     public abstract Property<Boolean> getConfigureFromDependencies();
 
     @Internal
-    Set<TaskProvider<? extends Task>> getTaskDependencies() {
-        return this.dependencies;
+    public Set<TaskProvider<? extends Task>> getTaskDependencies() {
+        return ImmutableSet.copyOf(this.dependencies);
     }
 
     @Override
@@ -182,5 +186,16 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getSystemProperties().convention(spec.getSystemProperties());
         getIsClient().convention(spec.getIsClient());
         getClasspath().from(spec.getClasspath());
+    }
+
+    @NotNull
+    public List<String> realiseJvmArguments() {
+        final List<String> args = new ArrayList<>(getJvmArguments().get());
+
+        getSystemProperties().get().forEach((key, value) -> {
+            args.add(String.format("-D%s=%s", key, value));
+        });
+
+        return args;
     }
 }

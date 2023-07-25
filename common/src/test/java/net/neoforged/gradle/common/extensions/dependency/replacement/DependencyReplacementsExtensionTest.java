@@ -218,7 +218,7 @@ public class DependencyReplacementsExtensionTest {
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
         );
 
-        verify(repository, never()).withDependency(any(), any());
+        verify(repository, never()).withDependency(any(), any(), any(), any());
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
@@ -581,7 +581,7 @@ public class DependencyReplacementsExtensionTest {
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
         );
 
-        verify(repository).withDependency(any(), any());
+        verify(repository).withDependency(any(), any(), any(), any());
     }
 
     @Test
