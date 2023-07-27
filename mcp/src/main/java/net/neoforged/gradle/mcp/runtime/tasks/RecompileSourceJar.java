@@ -39,6 +39,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         this.javaVersion = getProject().getObjects().property(JavaLanguageVersion.class);
 
+        getRuntimeName().orElse("unknown");
         getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
         getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
@@ -108,7 +109,10 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getInputJar().finalizeValueOnRead();
     }
 
-
+    @Override
+    public String getGroup() {
+        return "NeoGradle/Runtime/" + getRuntimeName().getOrElse("unknown");
+    }
 
     @Internal
     public final Provider<JavaToolchainService> getJavaToolChain() {

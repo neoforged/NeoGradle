@@ -23,6 +23,14 @@ import org.gradle.api.tasks.Nested
 trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
 
     /**
+     * The runtime name, it is the overarching identifier of the runtime that this task is
+     * part of.
+     * @return The runtime name
+     */
+    @Internal
+    abstract Property<String> getRuntimeName();
+
+    /**
      * The runtime directory, it is the location of the runtime working directory.
      * @return The mcp working directory.
      */
