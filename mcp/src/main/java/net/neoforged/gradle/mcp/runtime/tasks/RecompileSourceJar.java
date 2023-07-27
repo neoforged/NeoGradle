@@ -111,7 +111,8 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     @Override
     public String getGroup() {
-        return "NeoGradle/Runtime/" + getRuntimeName().getOrElse("unknown");
+        final String name = getRuntimeName().getOrElse("unknown");
+        return String.format("NeoGradle/Runtime/%s", name);
     }
 
     @Internal
