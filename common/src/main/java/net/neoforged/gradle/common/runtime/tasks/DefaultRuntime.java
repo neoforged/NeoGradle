@@ -51,8 +51,10 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
 
     @Override
     public String getGroup() {
-        return "NeoGradle/Runtime/" + getRuntimeName().orElse("unknown");
+        final String name = getRuntimeName().getOrElse("unknown");
+        return String.format("NeoGradle/Runtime/%s", name);
     }
+
 
     protected Provider<File> getFileInOutputDirectory(final String fileName) {
         return getOutputDirectory().map(directory -> directory.file(fileName).getAsFile());
