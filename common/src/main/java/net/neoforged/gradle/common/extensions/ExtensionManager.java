@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public abstract class ExtensionManager {
 
-    public static final String EXTENSION_CHECK_PROPERTY_NAME = "forgegradle.extensions.%s.type";
+    public static final String EXTENSION_CHECK_PROPERTY_NAME = "neogradle.extensions.%s.type";
 
     private final Project project;
 

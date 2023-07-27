@@ -198,7 +198,7 @@ subprojects.forEach { subProject ->
         evalSubProject.publishing.repositories { RepositoryHandler repositories ->
             maven gradleutils.getPublishingForgeMaven()
 
-            if (project.ldtteamUsername != null && project.ldtteamPassword != null) {
+            if (project.hasProperty("ldtteamUsername") && project.hasProperty("ldtteamPassword")) {
                 maven {
                     name 'LDTTeamJfrog'
                     credentials {

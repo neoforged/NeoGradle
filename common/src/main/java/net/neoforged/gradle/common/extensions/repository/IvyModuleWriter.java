@@ -42,7 +42,7 @@ public final class IvyModuleWriter implements AutoCloseable {
 
     private static final String XSI = XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI;
     private static final String IVY = "http://ant.apache.org/ivy/schemas/ivy.xsd";
-    private static final String VANILLAGRADLE = "https://minecraftforge.net/forgegradle/ivy-extra";
+    private static final String VANILLAGRADLE = "https://minecraftforge.net/neogradle/ivy-extra";
 
     private static final XMLOutputFactory OUTPUT_FACTORY = XMLOutputFactory.newInstance();
     private static final String INDENT = "  ";
@@ -70,7 +70,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer.writeStartDocument("UTF-8", "1.0");
         this.writer.writeStartElement("ivy-module");
         this.writer.writeNamespace("xsi", IvyModuleWriter.XSI);
-        this.writer.writeNamespace("ForgeGradle", IvyModuleWriter.VANILLAGRADLE);
+        this.writer.writeNamespace("NeoGradle", IvyModuleWriter.VANILLAGRADLE);
         this.writer.writeAttribute(IvyModuleWriter.XSI, "noNamespaceSchemaLocation", IvyModuleWriter.IVY);
         this.writer.writeAttribute("version", "2.0");
 

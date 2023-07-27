@@ -20,7 +20,7 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements E
         super();
 
         //All of these taskOutputs belong to the MCP group
-        setGroup("forgegradle/runtimes");
+        setGroup("NeoGradle/runtimes");
 
         getArguments().convention(new HashMap<>());
 

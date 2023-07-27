@@ -13,7 +13,7 @@ import org.gradle.work.DisableCachingByDefault;
 @DisableCachingByDefault(because = "This runs a game. It should not be cached.")
 public abstract class RunExec extends JavaExec {
 
-    public static final String GROUP = "ForgeGradle/Runs";
+    public static final String GROUP = "NeoGradle/Runs";
 
     public RunExec() {
         super();

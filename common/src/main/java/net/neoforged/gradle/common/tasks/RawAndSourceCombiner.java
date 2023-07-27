@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.tasks;
 
 import com.google.common.io.Files;
-import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
@@ -9,7 +9,7 @@ import org.gradle.api.tasks.*;
 import java.io.File;
 import java.io.IOException;
 
-public abstract class RawAndSourceCombiner extends ForgeGradleBase implements WithOutput {
+public abstract class RawAndSourceCombiner extends NeoGradleBase implements WithOutput {
 
     @TaskAction
     public void doCombine() {

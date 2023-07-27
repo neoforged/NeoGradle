@@ -45,7 +45,6 @@ public final class MCPNamingChannelConfigurator {
         }
 
         return project.getTasks().register(mcpDownloadTaskName, DownloadMavenArtifact.class, downloadMavenArtifactTask -> {
-            downloadMavenArtifactTask.setGroup("ForgeGradle");
             downloadMavenArtifactTask.setDescription(String.format("Downloads the MCP mappings for version %s", mappingsVersion));
             downloadMavenArtifactTask.setArtifact(String.format("de.oceanlabs.mcp:mcp_%s:%s@zip", namingChannelProvider.getName(), mappingsVersion));
         });
@@ -62,7 +61,6 @@ public final class MCPNamingChannelConfigurator {
         );
 
         return context.getProject().getTasks().register(applyTaskName, ApplyMcpMappingsToSourceJar.class, applyMcpMappingsToSourceJarTask -> {
-            applyMcpMappingsToSourceJarTask.setGroup("ForgeGradle");
             applyMcpMappingsToSourceJarTask.setDescription(String.format("Applies the MCP mappings for version %s to %s pipeline", mappingVersion, context.getEnvironmentName()));
 
             applyMcpMappingsToSourceJarTask.getMappings().set(downloadMavenArtifact.flatMap(DownloadMavenArtifact::getOutput));

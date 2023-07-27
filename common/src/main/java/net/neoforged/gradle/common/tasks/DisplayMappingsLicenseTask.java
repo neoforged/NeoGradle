@@ -4,7 +4,7 @@ import net.neoforged.gradle.common.runtime.naming.NamingChannelProvider;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
-import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -15,7 +15,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public abstract class DisplayMappingsLicenseTask extends ForgeGradleBase {
+public abstract class DisplayMappingsLicenseTask extends NeoGradleBase {
 
     public DisplayMappingsLicenseTask() {
         getProject().getTasks().configureEach(task -> {

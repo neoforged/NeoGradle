@@ -1,11 +1,11 @@
 package net.neoforged.gradle.common.tasks;
 
 import net.neoforged.gradle.dsl.common.extensions.ArtifactDownloader;
-import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 
-public abstract class DownloadingTask extends ForgeGradleBase {
+public abstract class DownloadingTask extends NeoGradleBase {
     @Internal
     public final Provider<ArtifactDownloader> getDownloader() {
         return getProject().provider(() -> getProject().getExtensions().getByType(ArtifactDownloader.class));

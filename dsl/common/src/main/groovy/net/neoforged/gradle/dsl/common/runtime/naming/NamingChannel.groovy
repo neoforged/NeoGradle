@@ -81,7 +81,7 @@ interface NamingChannel extends BaseDSLElement<NamingChannel> {
      * - fields.csv: ""searge", "name", "side", "desc""
      *
      * See the following example of the legacy code that generated the file in FG5:
-     * https://github.com/MinecraftForge/ForgeGradle/blob/ce931cc5c05c935b7b48bce580334abca21840dd/src/mcp/java/net/minecraftforge/gradle/mcp/OfficialChannelProvider.java#L126
+     * https://github.com/MinecraftForge/NeoGradle/blob/ce931cc5c05c935b7b48bce580334abca21840dd/src/mcp/java/net/minecraftforge/gradle/mcp/OfficialChannelProvider.java#L126
      * @return The builder property.
      */
     @DSLProperty

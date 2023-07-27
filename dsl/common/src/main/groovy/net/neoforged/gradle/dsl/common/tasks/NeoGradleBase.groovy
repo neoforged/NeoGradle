@@ -5,13 +5,13 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.logging.LogLevel;
 
 /**
- * Base class for all ForgeGradle tasks.
+ * Base class for all NeoGradle tasks.
  */
 @CompileStatic
-abstract class ForgeGradleBase extends DefaultTask implements WithWorkspace {
+abstract class NeoGradleBase extends DefaultTask implements WithWorkspace {
 
-    ForgeGradleBase() {
-        setGroup("ForgeGradle");
+    NeoGradleBase() {
+        setGroup("NeoGradle");
 
         getLogging().captureStandardOutput(LogLevel.DEBUG);
         getLogging().captureStandardError(LogLevel.ERROR);

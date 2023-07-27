@@ -10,7 +10,7 @@ import java.nio.file.Path;
 
 @CacheableTask
 @CompileStatic
-abstract class ArtifactProvider extends ForgeGradleBase implements WithOutput {
+abstract class ArtifactProvider extends NeoGradleBase implements WithOutput {
 
     @TaskAction
     void doProvide() throws Exception {

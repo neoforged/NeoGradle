@@ -69,7 +69,7 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
 
     private void createRepositories() {
         project.getRepositories().ivy(repositoryConfiguration(
-                "ForgeGradle Artifacts",
+                "NeoGradle Artifacts",
                 getRepositoryDirectory()
         ));
     }

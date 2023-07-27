@@ -163,9 +163,9 @@ public abstract class DependencyDeobfuscator {
             Manifest mf = jarStream.getManifest();
             //Check if we have a valid manifest.
             final boolean isObfuscated = mf != null && mf.getMainAttributes().containsKey(new Attributes.Name("Obfuscated")) && Boolean.parseBoolean(mf.getMainAttributes().getValue("Obfuscated"));
-            final boolean obfuscatedByForgeGradle = mf != null && mf.getMainAttributes().containsKey(new Attributes.Name("Obfuscated-By")) && mf.getMainAttributes().getValue("Obfuscated-By").equals("ForgeGradle");
+            final boolean obfuscatedByNeoGradle = mf != null && mf.getMainAttributes().containsKey(new Attributes.Name("Obfuscated-By")) && mf.getMainAttributes().getValue("Obfuscated-By").equals("NeoGradle");
 
-            if ((isObfuscated && obfuscatedByForgeGradle) || forceDeobfuscation) {
+            if ((isObfuscated && obfuscatedByNeoGradle) || forceDeobfuscation) {
                 return createDeobfuscationDependencyReplacementResult(project, configuration, forceDeobfuscation, resolvedDependency, file);
             } else {
                 return Optional.empty();

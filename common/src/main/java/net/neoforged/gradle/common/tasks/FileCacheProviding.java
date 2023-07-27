@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @CacheableTask
-public abstract class FileCacheProviding extends ForgeGradleBase implements WithOutput, WithWorkspace {
+public abstract class FileCacheProviding extends NeoGradleBase implements WithOutput, WithWorkspace {
 
     public FileCacheProviding() {
     }

@@ -1316,7 +1316,7 @@ public class DependencyDeobfuscatorTest {
         zip.putNextEntry(manifest);
         zip.write("Manifest-Version: 1.0\n".getBytes(StandardCharsets.UTF_8));
         zip.write("Obfuscated: true\n".getBytes(StandardCharsets.UTF_8));
-        zip.write("Obfuscated-By: ForgeGradle\n".getBytes(StandardCharsets.UTF_8));
+        zip.write("Obfuscated-By: NeoGradle\n".getBytes(StandardCharsets.UTF_8));
         zip.closeEntry();
         zip.flush();
         zip.close();

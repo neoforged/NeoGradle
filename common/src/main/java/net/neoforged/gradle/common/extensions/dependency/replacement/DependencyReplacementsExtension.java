@@ -191,7 +191,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
             configuredGradleTasks.add(reference);
 
             return new RepositoryEntryGenerationTasks(project.getTasks().register(artifactSelectionTaskName, ArtifactFromOutput.class, artifactFromOutput -> {
-                artifactFromOutput.setGroup("forgegradle/dependencies");
+                artifactFromOutput.setGroup("neogradle/dependencies");
                 artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
 
                 artifactFromOutput.getInput().set(result.getRawJarTaskProvider().flatMap(WithOutput::getOutput));
@@ -217,7 +217,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
             configuredIdeTasks.add(reference);
             final TaskProvider<? extends WithOutput> rawProvider = project.getTasks().register(rawArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
-                artifactFromOutput.setGroup("forgegradle/dependencies");
+                artifactFromOutput.setGroup("neogradle/dependencies");
                 artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
 
                 artifactFromOutput.getInput().set(result.getRawJarTaskProvider().flatMap(WithOutput::getOutput));
@@ -226,7 +226,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
             });
 
             final TaskProvider<? extends WithOutput> sourceProvider = project.getTasks().register(sourceArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
-                artifactFromOutput.setGroup("forgegradle/dependencies");
+                artifactFromOutput.setGroup("neogradle/dependencies");
                 artifactFromOutput.setDescription(String.format("Selects the source artifact from the %s dependency and puts it in the Ivy repository", dependency));
 
                 artifactFromOutput.getInput().set(result.getSourcesJarTaskProvider().flatMap(WithOutput::getOutput));

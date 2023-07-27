@@ -1,13 +1,13 @@
 package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
 @CacheableTask
-public abstract class ArtifactFromOutput extends ForgeGradleBase implements WithOutput {
+public abstract class ArtifactFromOutput extends NeoGradleBase implements WithOutput {
 
     public ArtifactFromOutput() {
         getOutputFileName().convention(getName() + ".jar");

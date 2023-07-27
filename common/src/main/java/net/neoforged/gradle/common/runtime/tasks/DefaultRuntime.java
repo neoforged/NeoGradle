@@ -21,7 +21,7 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         super();
 
         //All of these taskOutputs belong to the MCP group
-        setGroup("forgegradle/runtimes");
+        setGroup("NeoGradle/runtimes");
 
         //Sets up the base configuration for directories and outputs.
         getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
@@ -47,6 +47,11 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         }));
 
         getArguments().convention(Maps.newHashMap());
+    }
+
+    @Override
+    public String getGroup() {
+        return "NeoGradle/Runtime/" + getRuntimeName().orElse("unknown");
     }
 
     protected Provider<File> getFileInOutputDirectory(final String fileName) {

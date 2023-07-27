@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.dsl.common.tasks.ForgeGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 
-public class IdePostSyncExecutionTask extends ForgeGradleBase {
+public class IdePostSyncExecutionTask extends NeoGradleBase {
 }

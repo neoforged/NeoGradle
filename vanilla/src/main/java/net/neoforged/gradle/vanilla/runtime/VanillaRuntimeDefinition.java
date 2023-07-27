@@ -91,7 +91,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
         interpolationData.put(InterpolationConstants.USER_TYPE, "legacy");
         interpolationData.put(InterpolationConstants.VERSION_TYPE, getVersionJson().getType());
         interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, getNativesTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
-        interpolationData.put(InterpolationConstants.LAUNCHER_NAME, "ForgeGradle-Vanilla");
+        interpolationData.put(InterpolationConstants.LAUNCHER_NAME, "NeoGradle-Vanilla");
         interpolationData.put(InterpolationConstants.LAUNCHER_VERSION, fgVersion == null ? "DEV" : fgVersion);
 
         return interpolationData;
