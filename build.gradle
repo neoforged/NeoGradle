@@ -6,7 +6,7 @@ plugins {
 }
 
 //HARDCODED VERSION FOR NOW!
-version = "7.0-NEO"
+version = gradleutils.getTagOffsetBranchVersion("next/neo");
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
@@ -195,6 +195,21 @@ subprojects.forEach { subProject ->
 //Configure all the subprojects which are not plugins
 subprojects.forEach { subProject ->
     subProject.afterEvaluate { Project evalSubProject ->
+        evalSubProject.publishing.repositories { RepositoryHandler repositories ->
+            maven gradleutils.getPublishingForgeMaven()
+
+            if (project.ldtteamUsername != null && project.ldtteamPassword != null) {
+                maven {
+                    name 'LDTTeamJfrog'
+                    credentials {
+                        username project.ldtteamUsername
+                        password project.ldtteamPassword
+                    }
+                    url 'https://ldtteam.jfrog.io/ldtteam/neogradle-next'
+                }
+            }
+        }
+
         if (evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
             evalSubProject.publishing.publications { PublicationContainer publications ->
                 publications.create('pluginMaven', MavenPublication) { publication ->

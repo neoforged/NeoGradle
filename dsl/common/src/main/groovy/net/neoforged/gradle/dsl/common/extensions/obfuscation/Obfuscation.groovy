@@ -3,7 +3,9 @@ package net.neoforged.gradle.dsl.common.extensions.obfuscation
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import org.gradle.api.DomainObjectCollection
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Task
 import org.gradle.api.provider.Property
 import org.jetbrains.annotations.NotNull
 

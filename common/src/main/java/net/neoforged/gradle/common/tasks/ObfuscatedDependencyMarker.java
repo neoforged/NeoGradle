@@ -33,8 +33,6 @@ public abstract class ObfuscatedDependencyMarker extends DefaultTask implements 
 
     @TaskAction
     public void doMark() throws Exception {
-        final File tempDirectory = Files.createTempDirectory("obfuscated-dependency-marker").toFile();
-
         try {
             final File outputJar = this.ensureFileWorkspaceReady(getOutput());
             final FileOutputStream fileOutputStream = new FileOutputStream(outputJar);
@@ -51,7 +49,7 @@ public abstract class ObfuscatedDependencyMarker extends DefaultTask implements 
                         try {
                             final String manifest = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name()) + "\n" +
                                     "Obfuscated: true\n" +
-                                    "Obfuscated-By: ForgeGradle\n";
+                                    "Obfuscated-By: NeoGradle\n";
 
                             outputStream.write(manifest.getBytes(StandardCharsets.UTF_8));
                         } catch (IOException e) {

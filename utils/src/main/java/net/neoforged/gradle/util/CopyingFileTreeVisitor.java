@@ -17,12 +17,27 @@ import java.util.stream.Stream;
 public class CopyingFileTreeVisitor implements FileVisitor {
 
     private final Path directory;
+    private final boolean processDirectories;
 
-    public CopyingFileTreeVisitor(Path directory) {
+    public CopyingFileTreeVisitor(Path directory, boolean processDirectories) {
         this.directory = directory;
+        this.processDirectories = processDirectories;
 
         initTargetDirectory(directory);
     }
+
+    public CopyingFileTreeVisitor(File directory, boolean processDirectories) {
+        this(directory.toPath(), processDirectories);
+    }
+
+    public CopyingFileTreeVisitor(Path directory) {
+        this(directory, true);
+    }
+
+    public CopyingFileTreeVisitor(File directory) {
+        this(directory, true);
+    }
+
 
     @VisibleForTesting
     static void initTargetDirectory(Path directory) {
@@ -52,12 +67,11 @@ public class CopyingFileTreeVisitor implements FileVisitor {
         }
     }
 
-    public CopyingFileTreeVisitor(File directory) {
-        this(directory.toPath());
-    }
-
     @Override
     public void visitDir(FileVisitDetails dirDetails) {
+        if (!processDirectories)
+            return;
+
         final Path target = directory.resolve(dirDetails.getRelativePath().getPathString());
         try {
             Files.createDirectories(target);
