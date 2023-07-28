@@ -1,6 +1,6 @@
 package net.neoforged.gradle.mcp
 
-import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
+import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
 class FunctionalTests extends SimpleTestSpecification {

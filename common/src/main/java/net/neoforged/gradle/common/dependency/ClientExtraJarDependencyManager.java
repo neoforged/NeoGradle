@@ -81,6 +81,7 @@ public abstract class ClientExtraJarDependencyManager {
                     extraJarTaskProvider,
                     project.getConfigurations().detachedConfiguration(),
                     builder -> { },
+                    builder -> { },
                     (dep) -> { },
                     (task) -> { },
                     Sets::newHashSet

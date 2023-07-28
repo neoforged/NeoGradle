@@ -5,7 +5,6 @@ import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.dependency.creation.DependencyCreator;
 import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
-import net.neoforged.gradle.common.tasks.RawAndSourceCombiner;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
@@ -291,11 +290,12 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
     private void configureRepositoryReference(DependencyReplacementResult result, ExternalModuleDependency externalModuleDependency, RepositoryReference.Builder<?, ?> builder) {
         builder.from(externalModuleDependency);
+        result.getReferenceConfigurator().accept(builder);
     }
 
     private void configureRepositoryEntry(DependencyReplacementResult result, ExternalModuleDependency externalModuleDependency, RepositoryEntry.Builder<?, ?, ?> builder) {
         builder.from(externalModuleDependency);
-        result.getDependencyMetadataConfigurator().accept(builder);
+        result.getMetadataConfigurator().accept(builder);
 
         result.getAdditionalDependenciesConfiguration().getAllDependencies()
                 .stream()

@@ -54,6 +54,7 @@ public final class VanillaDependencyManager {
                                     runtimeDefinition.getRawJarTask(),
                                     runtimeDefinition.getMinecraftDependenciesConfiguration(),
                                     builder -> builder.setVersion(runtimeDefinition.getSpecification().getMinecraftVersion()),
+                                    builder -> builder.setVersion(runtimeDefinition.getSpecification().getMinecraftVersion()),
                                     runtimeDefinition::setReplacedDependency,
                                     runtimeDefinition::onRepoWritten,
                                     () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider())

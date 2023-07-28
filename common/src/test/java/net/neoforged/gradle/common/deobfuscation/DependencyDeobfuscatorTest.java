@@ -797,9 +797,9 @@ public class DependencyDeobfuscatorTest {
         assertNotNull(replacementResult.getAdditionalDependenciesConfiguration());
         assertTrue(replacementResult.getAdditionalDependenciesConfiguration().getDependencies().isEmpty());
 
-        assertNotNull(replacementResult.getDependencyMetadataConfigurator());
+        assertNotNull(replacementResult.getMetadataConfigurator());
         final DummyRepositoryEntry entry = new DummyRepositoryEntry(project);
-        replacementResult.getDependencyMetadataConfigurator().accept(entry);
+        replacementResult.getMetadataConfigurator().accept(entry);
         assertEquals("fg.deobf.naming_channel.group", entry.getGroup());
         assertEquals("name", entry.getName());
         assertEquals("version", entry.getVersion());
@@ -934,9 +934,9 @@ public class DependencyDeobfuscatorTest {
         assertNotNull(replacementResult.getAdditionalDependenciesConfiguration());
         assertTrue(replacementResult.getAdditionalDependenciesConfiguration().getDependencies().isEmpty());
 
-        assertNotNull(replacementResult.getDependencyMetadataConfigurator());
+        assertNotNull(replacementResult.getMetadataConfigurator());
         final DummyRepositoryEntry entry = new DummyRepositoryEntry(project);
-        replacementResult.getDependencyMetadataConfigurator().accept(entry);
+        replacementResult.getMetadataConfigurator().accept(entry);
         assertEquals("fg.deobf.some_group.group", entry.getGroup());
         assertEquals("name", entry.getName());
         assertEquals("version", entry.getVersion());
@@ -1086,9 +1086,9 @@ public class DependencyDeobfuscatorTest {
         assertNotNull(replacementResult.getAdditionalDependenciesConfiguration());
         assertTrue(replacementResult.getAdditionalDependenciesConfiguration().getDependencies().isEmpty());
 
-        assertNotNull(replacementResult.getDependencyMetadataConfigurator());
+        assertNotNull(replacementResult.getMetadataConfigurator());
         final DummyRepositoryEntry entry = new DummyRepositoryEntry(project);
-        replacementResult.getDependencyMetadataConfigurator().accept(entry);
+        replacementResult.getMetadataConfigurator().accept(entry);
         assertEquals("fg.deobf.naming_channel.group", entry.getGroup());
         assertEquals("name", entry.getName());
         assertEquals("version", entry.getVersion());
@@ -1247,9 +1247,9 @@ public class DependencyDeobfuscatorTest {
         assertNotNull(replacementResult.getAdditionalDependenciesConfiguration());
         assertTrue(replacementResult.getAdditionalDependenciesConfiguration().getDependencies().isEmpty());
 
-        assertNotNull(replacementResult.getDependencyMetadataConfigurator());
+        assertNotNull(replacementResult.getMetadataConfigurator());
         final DummyRepositoryEntry entry = new DummyRepositoryEntry(project);
-        replacementResult.getDependencyMetadataConfigurator().accept(entry);
+        replacementResult.getMetadataConfigurator().accept(entry);
         assertEquals("fg.deobf.naming_channel.group", entry.getGroup());
         assertEquals("name", entry.getName());
         assertEquals("version", entry.getVersion());
@@ -1283,9 +1283,9 @@ public class DependencyDeobfuscatorTest {
         assertNotNull(additionalReplacement.getAdditionalDependenciesConfiguration());
         assertTrue(additionalReplacement.getAdditionalDependenciesConfiguration().getDependencies().isEmpty());
 
-        assertNotNull(additionalReplacement.getDependencyMetadataConfigurator());
+        assertNotNull(additionalReplacement.getMetadataConfigurator());
         final DummyRepositoryEntry dependencyRawEntry = new DummyRepositoryEntry(project);
-        additionalReplacement.getDependencyMetadataConfigurator().accept(dependencyRawEntry);
+        additionalReplacement.getMetadataConfigurator().accept(dependencyRawEntry);
         assertEquals("fg.deobf.naming_channel.dependent_group", dependencyRawEntry.getGroup());
         assertEquals("dependency", dependencyRawEntry.getName());
         assertEquals("some_classy_version", dependencyRawEntry.getVersion());

@@ -1,15 +1,12 @@
 package net.neoforged.gradle.common.extensions.dependency.replacement;
 
-import net.neoforged.gradle.common.dummy.DummyRepositoryDependency;
 import net.neoforged.gradle.common.dummy.DummyRepositoryEntry;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.dependency.creation.DependencyCreator;
 import net.neoforged.gradle.common.tasks.DependencyGenerationTask;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
-import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.ProjectState;
@@ -563,7 +560,8 @@ public class DependencyReplacementsExtensionTest {
         when(artifact.getClassifier()).thenReturn("artifactClassifier");
         when(artifact.getExtension()).thenReturn("artifactExtension");
         when(dependency.getArtifacts()).thenReturn(Collections.singleton(artifact));
-        when(result.getDependencyMetadataConfigurator()).thenReturn((b) -> {});
+        when(result.getMetadataConfigurator()).thenReturn((b) -> {});
+        when(result.getReferenceConfigurator()).thenReturn((b) -> {});
         when(result.getAdditionalDependenciesConfiguration()).thenReturn(additionalDependencies);
         when(additionalDependencies.getDependencies()).thenReturn(additionalDependenciesSet);
         when(additionalDependenciesSet.stream()).thenReturn(Stream.empty());
@@ -636,7 +634,8 @@ public class DependencyReplacementsExtensionTest {
         when(artifact.getClassifier()).thenReturn("artifactClassifier");
         when(artifact.getExtension()).thenReturn("artifactExtension");
         when(dependency.getArtifacts()).thenReturn(Collections.singleton(artifact));
-        when(result.getDependencyMetadataConfigurator()).thenReturn((b) -> {});
+        when(result.getMetadataConfigurator()).thenReturn((b) -> {});
+        when(result.getReferenceConfigurator()).thenReturn((b) -> {});
         when(result.getAdditionalDependenciesConfiguration()).thenReturn(additionalDependencies);
         when(additionalDependencies.getDependencies()).thenReturn(additionalDependenciesSet);
         when(additionalDependenciesSet.stream()).thenReturn(Stream.of(additionalDependency));

@@ -1,6 +1,6 @@
 package net.neoforged.gradle.mcp.naming
 
-import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
+import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
 
 class OfficialNamingChannelConfiguratorTest extends SimpleTestSpecification {
 

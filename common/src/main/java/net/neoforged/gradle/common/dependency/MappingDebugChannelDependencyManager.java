@@ -119,6 +119,7 @@ public abstract class MappingDebugChannelDependencyManager {
                     generateDebugMappingsJar,
                     project.getConfigurations().detachedConfiguration(),
                     builder -> { },
+                    builder -> { },
                     (dep) -> { },
                     (task) -> { },
                     Sets::newHashSet

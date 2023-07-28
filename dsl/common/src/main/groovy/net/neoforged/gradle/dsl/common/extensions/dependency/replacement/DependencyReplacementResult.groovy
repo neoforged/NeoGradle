@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.common.extensions.dependency.replacement
 
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry
+import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -9,7 +10,6 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 
-import java.util.function.BiConsumer
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Supplier
@@ -24,7 +24,8 @@ final class DependencyReplacementResult {
     private final TaskProvider<? extends WithOutput> sourcesJarTaskProvider;
     private final TaskProvider<? extends WithOutput> rawJarTaskProvider;
     private final Configuration additionalDependenciesConfiguration;
-    private final Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator;
+    private final Consumer<RepositoryReference.Builder<?, ?>> referenceConfigurator;
+    private final Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator;
     private final Collection<DependencyReplacementResult> additionalReplacements;
     private final Consumer<Dependency> onCreateReplacedDependencyCallback;
     private final Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback;
@@ -36,7 +37,8 @@ final class DependencyReplacementResult {
             TaskProvider<? extends WithOutput> sourcesJarTaskProvider,
             TaskProvider<? extends WithOutput> rawJarTaskProvider,
             Configuration additionalDependenciesConfiguration,
-            Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator,
+            Consumer<RepositoryReference.Builder<?,?>> referenceConfigurator,
+            Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator,
             Consumer<Dependency> onCreateReplacedDependencyCallback,
             Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback,
             Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
@@ -45,7 +47,8 @@ final class DependencyReplacementResult {
         this.sourcesJarTaskProvider = sourcesJarTaskProvider;
         this.rawJarTaskProvider = rawJarTaskProvider;
         this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
-        this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
+        this.referenceConfigurator = referenceConfigurator;
+        this.metadataConfigurator = metadataConfigurator;
         this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
         this.onRepoWritingTaskRegisteredCallback = onRepoWritingTaskRegisteredCallback;
         this.additionalReplacements = Collections.emptyList();
@@ -57,7 +60,8 @@ final class DependencyReplacementResult {
                                 TaskProvider<? extends WithOutput> sourcesJarTaskProvider,
                                 TaskProvider<? extends WithOutput> rawJarTaskProvider,
                                 Configuration additionalDependenciesConfiguration,
-                                Consumer<RepositoryEntry.Builder<?, ?, ?>> dependencyMetadataConfigurator,
+                                Consumer<RepositoryReference.Builder<?,?>> referenceConfigurator,
+                                Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator,
                                 Collection<DependencyReplacementResult> additionalReplacements,
                                 Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
         this.project = project;
@@ -65,7 +69,8 @@ final class DependencyReplacementResult {
         this.sourcesJarTaskProvider = sourcesJarTaskProvider;
         this.rawJarTaskProvider = rawJarTaskProvider;
         this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
-        this.dependencyMetadataConfigurator = dependencyMetadataConfigurator;
+        this.referenceConfigurator = referenceConfigurator;
+        this.metadataConfigurator = metadataConfigurator;
         this.additionalReplacements = additionalReplacements;
         this.onCreateReplacedDependencyCallback = (dep) -> { };
         this.onRepoWritingTaskRegisteredCallback = (task) -> { };
@@ -123,13 +128,23 @@ final class DependencyReplacementResult {
     }
 
     /**
+     * Gets the configurator which can be used to configure the reference of the dependency replacement.
+     *
+     * @return The configurator which can be used to configure the reference of the dependency replacement.
+     */
+    @NotNull
+    Consumer<RepositoryReference.Builder<?, ?>> getReferenceConfigurator() {
+        return referenceConfigurator;
+    }
+
+    /**
      * Gets the configurator which can be used to configure the metadata of the dependency replacement.
      *
      * @return The configurator which can be used to configure the metadata of the dependency replacement.
      */
     @NotNull
-    Consumer<RepositoryEntry.Builder<?, ?, ?>> getDependencyMetadataConfigurator() {
-        return dependencyMetadataConfigurator;
+    Consumer<RepositoryEntry.Builder<?, ?, ?>> getMetadataConfigurator() {
+        return metadataConfigurator;
     }
 
     /**
@@ -167,12 +182,12 @@ final class DependencyReplacementResult {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DependencyReplacementResult that = (DependencyReplacementResult) o;
-        return Objects.equals(project, that.project) && Objects.equals(taskNameBuilder, that.taskNameBuilder) && Objects.equals(sourcesJarTaskProvider, that.sourcesJarTaskProvider) && Objects.equals(rawJarTaskProvider, that.rawJarTaskProvider) && Objects.equals(additionalDependenciesConfiguration, that.additionalDependenciesConfiguration) && Objects.equals(dependencyMetadataConfigurator, that.dependencyMetadataConfigurator) && Objects.equals(additionalReplacements, that.additionalReplacements);
+        return Objects.equals(project, that.project) && Objects.equals(taskNameBuilder, that.taskNameBuilder) && Objects.equals(sourcesJarTaskProvider, that.sourcesJarTaskProvider) && Objects.equals(rawJarTaskProvider, that.rawJarTaskProvider) && Objects.equals(additionalDependenciesConfiguration, that.additionalDependenciesConfiguration) && Objects.equals(metadataConfigurator, that.metadataConfigurator) && Objects.equals(additionalReplacements, that.additionalReplacements);
     }
 
     @Override
     int hashCode() {
-        return Objects.hash(project, taskNameBuilder, sourcesJarTaskProvider, rawJarTaskProvider, additionalDependenciesConfiguration, dependencyMetadataConfigurator, additionalReplacements);
+        return Objects.hash(project, taskNameBuilder, sourcesJarTaskProvider, rawJarTaskProvider, additionalDependenciesConfiguration, metadataConfigurator, additionalReplacements);
     }
 
     @Override
@@ -183,7 +198,7 @@ final class DependencyReplacementResult {
                 ", sourcesJarTaskProvider=" + sourcesJarTaskProvider +
                 ", rawJarTaskProvider=" + rawJarTaskProvider +
                 ", additionalDependenciesConfiguration=" + additionalDependenciesConfiguration +
-                ", dependencyMetadataConfigurator=" + dependencyMetadataConfigurator +
+                ", dependencyMetadataConfigurator=" + metadataConfigurator +
                 ", additionalReplacements=" + additionalReplacements +
                 '}';
     }

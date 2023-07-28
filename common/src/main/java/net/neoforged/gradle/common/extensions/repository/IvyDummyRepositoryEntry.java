@@ -348,7 +348,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
         }
 
         public IvyDummyRepositoryEntry build() {
-            return project.getObjects().newInstance(IvyDummyRepositoryEntry.class, project, group, name, version, classifier, extension, dependencies);
+            return project.getObjects().newInstance(IvyDummyRepositoryEntry.class, project, group, name, version != null ? version : "", classifier, extension, dependencies);
         }
     }
 }

@@ -212,13 +212,23 @@ public abstract class DependencyDeobfuscator {
                 rawProvider,
                 ConfigurationUtils.temporaryConfiguration(project),
                 builder -> {
+                    builder.from(resolvedDependency);
+
+                    final Mappings mappings = project.getExtensions().getByType(Mappings.class);
+                    String deobfuscatedMappingsPrefix = mappings.getChannel().get().getDeobfuscationGroupSupplier().get();
+                    if (deobfuscatedMappingsPrefix.trim().isEmpty()) {
+                        deobfuscatedMappingsPrefix = mappings.getChannel().get().getName();
+                    }
+                    builder.setGroup("fg.deobf." + deobfuscatedMappingsPrefix + "." + resolvedDependency.getModuleGroup());
+                },
+                builder -> {
                     children.forEach(childDependency -> {
                         if (!childResults.containsKey(childDependency) || !childResults.get(childDependency).isPresent()) {
                             builder.withDependency(depBuilder -> depBuilder.from(childDependency));
                         } else {
                             final DependencyReplacementResult childResult = childResults.get(childDependency).get();
                             builder.withProcessedDependency(b -> {
-                                childResult.getDependencyMetadataConfigurator().accept(b);
+                                childResult.getMetadataConfigurator().accept(b);
                             });
                         }
                     });

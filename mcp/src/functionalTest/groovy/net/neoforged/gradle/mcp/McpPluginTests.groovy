@@ -1,7 +1,7 @@
 package net.neoforged.gradle.mcp
 
 
-import net.minecraftforge.trainingwheels.gradle.functional.SimpleTestSpecification
+import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
 import net.neoforged.gradle.util.UrlConstants
 import org.gradle.testkit.runner.TaskOutcome
 

@@ -52,6 +52,7 @@ public final class McpDependencyManager {
                                 runtimeDefinition.getRawJarTask(),
                                 runtimeDefinition.getMinecraftDependenciesConfiguration(),
                                 builder -> builder.setVersion(runtimeDefinition.getSpecification().getMcpVersion()),
+                                builder -> builder.setVersion(runtimeDefinition.getSpecification().getMcpVersion()),
                                 runtimeDefinition::setReplacedDependency,
                                 runtimeDefinition::onRepoWritten,
                                 () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider())
