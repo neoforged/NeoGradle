@@ -16,7 +16,7 @@ minecraft {
 }
 
 dependencies {
-    implementation 'net.minecraftforge:forge:1.19.3-44.0.48'
+    implementation 'net.neoforged:forge:1.20.1-47.1.56'
 }
 
 runs {

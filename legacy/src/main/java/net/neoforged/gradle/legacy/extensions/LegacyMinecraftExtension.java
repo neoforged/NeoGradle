@@ -4,6 +4,7 @@ import net.neoforged.gradle.common.extensions.IExtensionCreator;
 import net.neoforged.gradle.common.extensions.MinecraftExtension;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
+import net.neoforged.gradle.dsl.common.runs.run.Runs;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import org.gradle.api.Project;
 import org.gradle.api.file.RegularFileProperty;
@@ -19,8 +20,8 @@ public abstract class LegacyMinecraftExtension extends MinecraftExtension {
     public LegacyMinecraftExtension(Project project) {
         super(project);
 
-        final AccessTransformers accessTransformers = getAccessTransformers();
-        accessTransformers.getFiles().from(getAccessTransformer().orElse(project.getLayout().getBuildDirectory().file("tmp/unknown_at.cfg")));
+        //final AccessTransformers accessTransformers = getAccessTransformers();
+        //accessTransformers.getFiles().from(getAccessTransformer().orElse(project.getLayout().getBuildDirectory().file("tmp/unknown_at.cfg")));
     }
 
     @Deprecated
@@ -54,6 +55,10 @@ public abstract class LegacyMinecraftExtension extends MinecraftExtension {
     @Deprecated
     @Optional
     public abstract RegularFileProperty getAccessTransformer();
+
+    public Runs getRuns() {
+        return getProject().getExtensions().getByType(Runs.class);
+    }
 
     public static final class Creator implements IExtensionCreator<Minecraft> {
 

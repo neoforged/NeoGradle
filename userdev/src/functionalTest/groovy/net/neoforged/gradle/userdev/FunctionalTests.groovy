@@ -41,7 +41,7 @@ class FunctionalTests extends SimpleTestSpecification {
         result.output.contains('BUILD SUCCESSFUL')
     }
 
-    def "a mod with usedev as dependency and official mappings can compile through gradle"() {
+    def "a mod with userdev as dependency and official mappings can compile through gradle"() {
         given:
         settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
         buildFile << """

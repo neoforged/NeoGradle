@@ -56,7 +56,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
         final McpRuntimeExtension mcpRuntimeExtension = getProject().getExtensions().getByType(McpRuntimeExtension.class);
 
-        final Dependency userDevDependency = getProject().getDependencies().create(String.format("net.minecraftforge:forge:%s:userdev", spec.getForgeVersion()));
+        final Dependency userDevDependency = getProject().getDependencies().create(String.format("%s:%s:%s:userdev", spec.getForgeGroup(), spec.getForgeName(), spec.getForgeVersion()));
         final Configuration userDevConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), userDevDependency);
         final ResolvedConfiguration resolvedUserDevConfiguration = userDevConfiguration.getResolvedConfiguration();
         final File userDevJar = resolvedUserDevConfiguration.getFiles().iterator().next();
