@@ -40,7 +40,8 @@ final class CommonRuntimeUtils {
     }
 
     static String buildTaskName(String name, ResolvedDependency resolvedDependency) {
-        final String dependencyName = StringUtils.capitalize(resolvedDependency.getName());
+        final String dependencyClassifier = resolvedDependency.getModuleArtifacts().iterator().next().getClassifier();
+        final String dependencyName = StringUtils.capitalize(resolvedDependency.getName() + (dependencyClassifier == null ? "" : ":" + dependencyClassifier));
         final String validDependencyName = dependencyName.replaceAll("[/\\\\:<>\"?*|]", "_");
 
         final String validName = name.replaceAll("[/\\\\:<>\"?*|]", "_");
