@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.util;
 
+import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
 import net.neoforged.gradle.util.GradleInternalUtils;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
@@ -9,15 +10,13 @@ import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -72,28 +71,19 @@ public final class TaskDependencyUtils {
 
     @SuppressWarnings("unchecked")
     public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
-        final Optional<JavaCompile> javaCompile;
-        if (t instanceof JavaCompile) {
-            javaCompile = Optional.of((JavaCompile) t);
-        } else {
-            javaCompile = getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
-                    .findFirst();
+        final CommonRuntimeExtension<?, ?, ? extends Definition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
+        final Collection<? extends Definition<?>> runtimes = runtimeExtension.getRuntimes().get().values();
+        final List<? extends CommonRuntimeDefinition<?>> definitions = getDependencies(t).stream()
+                .filter(ArtifactFromOutput.class::isInstance)
+                .map(ArtifactFromOutput.class::cast)
+                .flatMap(afo -> runtimes.stream().filter(runtime -> afo.getName().startsWith(runtime.getSpecification().getName())))
+                .distinct()
+                .map(runtime -> (CommonRuntimeDefinition<?>) runtime)
+                .collect(Collectors.toList());
+
+        if (definitions.isEmpty()) {
+            throw new IllegalStateException("Could not find runtime definition for task: " + t.getName());
         }
-
-        final Optional<List<? extends CommonRuntimeDefinition<?>>> listCandidate = javaCompile.map(JavaCompile::getClasspath)
-                .filter(Configuration.class::isInstance)
-                .map(Configuration.class::cast)
-                .map(Configuration::getAllDependencies)
-                .map(dependencies -> {
-                    final CommonRuntimeExtension<?, ?, ? extends Definition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
-                    return runtimeExtension.getRuntimes().get()
-                            .values()
-                            .stream()
-                            .filter(runtime -> dependencies.contains(runtime.getReplacedDependency()));
-                })
-                .map(stream -> stream.collect(Collectors.toList()));
-
-        final List<? extends CommonRuntimeDefinition<?>> definitions = listCandidate.orElseThrow(() -> new IllegalStateException("Could not find runtime definition for task: " + t.getName()));
         final List<CommonRuntimeDefinition<?>> undelegated = unwrapDelegation(project, definitions);
 
         if (undelegated.size() != 1)
