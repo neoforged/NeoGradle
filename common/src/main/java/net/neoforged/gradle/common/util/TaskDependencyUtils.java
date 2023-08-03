@@ -10,15 +10,19 @@ import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.DependencySet;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.internal.tasks.AbstractTaskDependencyResolveContext;
+import org.gradle.api.internal.tasks.TaskDependencyContainer;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class TaskDependencyUtils {
@@ -70,30 +74,12 @@ public final class TaskDependencyUtils {
         return extractRuntimeDefinition(project, t.get());
     }
 
-    @SuppressWarnings("unchecked")
     public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
-        final Optional<JavaCompile> javaCompile;
-        if (t instanceof JavaCompile) {
-            javaCompile = Optional.of((JavaCompile) t);
-        } else {
-            javaCompile = getDependencies(t).stream().filter(JavaCompile.class::isInstance).map(JavaCompile.class::cast)
-                    .findFirst();
+        Collection<? extends CommonRuntimeDefinition<?>> definitions = findRuntimes(project, t);
+
+        if (definitions.isEmpty()) {
+            throw new IllegalStateException("Could not find runtime definition for task: " + t.getName());
         }
-
-        final Optional<List<? extends CommonRuntimeDefinition<?>>> listCandidate = javaCompile.map(JavaCompile::getClasspath)
-                .filter(Configuration.class::isInstance)
-                .map(Configuration.class::cast)
-                .map(Configuration::getAllDependencies)
-                .map(dependencies -> {
-                    final CommonRuntimeExtension<?, ?, ? extends Definition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
-                    return runtimeExtension.getRuntimes().get()
-                            .values()
-                            .stream()
-                            .filter(runtime -> dependencies.contains(runtime.getReplacedDependency()));
-                })
-                .map(stream -> stream.collect(Collectors.toList()));
-
-        final List<? extends CommonRuntimeDefinition<?>> definitions = listCandidate.orElseThrow(() -> new IllegalStateException("Could not find runtime definition for task: " + t.getName()));
         final List<CommonRuntimeDefinition<?>> undelegated = unwrapDelegation(project, definitions);
 
         if (undelegated.size() != 1)
@@ -102,8 +88,18 @@ public final class TaskDependencyUtils {
         return undelegated.get(0);
     }
 
+    private static Collection<? extends CommonRuntimeDefinition<?>> findRuntimes(Project project, Task t) {
+        FileCollection files = t.getInputs().getFiles();
+        if (files instanceof TaskDependencyContainer) {
+            RuntimeFindingTaskDependencyResolveContext context = new RuntimeFindingTaskDependencyResolveContext(project);
+            ((TaskDependencyContainer) files).visitDependencies(context);
+            return context.getRuntimes();
+        }
+        return Collections.emptySet();
+    }
+
     @SuppressWarnings("SuspiciousMethodCalls")
-    private static List<CommonRuntimeDefinition<?>> unwrapDelegation(final Project project, final List<? extends CommonRuntimeDefinition<?>> input) {
+    private static List<CommonRuntimeDefinition<?>> unwrapDelegation(final Project project, final Collection<? extends CommonRuntimeDefinition<?>> input) {
         final List<CommonRuntimeDefinition<?>> output = new LinkedList<>();
 
         GradleInternalUtils.getExtensions(project.getExtensions())
@@ -124,5 +120,57 @@ public final class TaskDependencyUtils {
                         .noneMatch(r -> r.getDelegate().equals(runtime))).collect(Collectors.toList());
         output.addAll(noneDelegated);
         return output.stream().distinct().collect(Collectors.toList());
+    }
+
+    private static class RuntimeFindingTaskDependencyResolveContext extends AbstractTaskDependencyResolveContext {
+        private final Set<Object> seen = new HashSet<>();
+        private final Set<CommonRuntimeDefinition<?>> found = new HashSet<>();
+        private final SourceSetContainer sourceSets;
+        private final Collection<? extends Definition<?>> runtimes;
+        @SuppressWarnings("unchecked")
+
+        public RuntimeFindingTaskDependencyResolveContext(Project project) {
+            this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+            final CommonRuntimeExtension<?, ?, ? extends Definition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
+            this.runtimes = runtimeExtension.getRuntimes().get().values();
+        }
+
+        @Override
+        public void add(@NotNull Object dependency) {
+            if (!this.seen.add(dependency)) {
+                return;
+            }
+            if (dependency instanceof SourceDirectorySet) {
+                sourceSets.stream()
+                        .filter(sourceSet ->
+                                sourceSet.getAllJava() == dependency ||
+                                sourceSet.getResources() == dependency ||
+                                sourceSet.getJava() == dependency ||
+                                sourceSet.getAllSource() == dependency)
+                        .map(SourceSet::getCompileClasspath)
+                        .forEach(this::add);
+            } else if (dependency instanceof JavaCompile) {
+                this.add(((JavaCompile) dependency).getClasspath());
+            } else if (dependency instanceof Configuration) {
+                DependencySet dependencies = ((Configuration) dependency).getAllDependencies();
+                runtimes.stream()
+                        .filter(runtime -> dependencies.contains(runtime.getReplacedDependency()))
+                        .map(runtime -> (CommonRuntimeDefinition<?>) runtime)
+                        .forEach(found::add);
+            } else if (dependency instanceof TaskDependencyContainer) {
+                TaskDependencyContainer container = (TaskDependencyContainer)dependency;
+                container.visitDependencies(this);
+            }
+        }
+
+        @Nullable
+        @Override
+        public Task getTask() {
+            return null;
+        }
+
+        public Collection<? extends CommonRuntimeDefinition<?>> getRuntimes() {
+            return found;
+        }
     }
 }
