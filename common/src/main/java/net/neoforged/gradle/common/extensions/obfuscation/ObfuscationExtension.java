@@ -165,7 +165,7 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
 
             task.getObfuscatedJar().set(obfuscator.flatMap(WithOutput::getOutput));
             task.getOutputFileName().set(obfuscator.flatMap(WithOutput::getOutputFileName));
-            task.getOutput().set(project.getLayout().getBuildDirectory().file("libs/" + obfuscator.flatMap(WithOutput::getOutputFileName)));
+            task.getOutput().set(project.getLayout().getBuildDirectory().file(obfuscator.flatMap(WithOutput::getOutputFileName).map(fileName -> "libs/" + fileName)));
         });
 
         obfuscator.configure(task -> task.finalizedBy(markerGenerator));
