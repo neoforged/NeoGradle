@@ -1,22 +1,18 @@
 package net.neoforged.gradle.userdev.runtime.definition;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
 import net.neoforged.gradle.common.dependency.MappingDebugChannelDependencyManager;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
-import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
-import net.neoforged.gradle.mcp.runtime.definition.McpRuntimeDefinition;
+import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
@@ -33,13 +29,13 @@ import java.util.stream.Collectors;
  * Represents a configured and registered runtime for forges userdev environment.
  */
 public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<UserDevRuntimeSpecification> implements UserDevDefinition<UserDevRuntimeSpecification>, IDelegatingRuntimeDefinition<UserDevRuntimeSpecification> {
-    private final McpRuntimeDefinition mcpRuntimeDefinition;
+    private final NeoFormRuntimeDefinition mcpRuntimeDefinition;
     private final File unpackedUserDevJarDirectory;
     private final UserDevConfigurationSpecV2 userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
     private final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer;
 
-    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, McpRuntimeDefinition mcpRuntimeDefinition, File unpackedUserDevJarDirectory, UserDevConfigurationSpecV2 userdevConfiguration, Configuration additionalUserDevDependencies) {
+    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition mcpRuntimeDefinition, File unpackedUserDevJarDirectory, UserDevConfigurationSpecV2 userdevConfiguration, Configuration additionalUserDevDependencies) {
         super(specification, mcpRuntimeDefinition.getTasks(), mcpRuntimeDefinition.getSourceJarTask(), mcpRuntimeDefinition.getRawJarTask(), mcpRuntimeDefinition.getGameArtifactProvidingTasks(), mcpRuntimeDefinition.getMinecraftDependenciesConfiguration(), mcpRuntimeDefinition::configureAssociatedTask);
         this.mcpRuntimeDefinition = mcpRuntimeDefinition;
         this.unpackedUserDevJarDirectory = unpackedUserDevJarDirectory;
@@ -64,7 +60,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
-    public McpRuntimeDefinition getMcpRuntimeDefinition() {
+    public NeoFormRuntimeDefinition getMcpRuntimeDefinition() {
         return mcpRuntimeDefinition;
     }
 

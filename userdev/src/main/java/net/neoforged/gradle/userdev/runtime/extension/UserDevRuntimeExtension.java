@@ -6,35 +6,31 @@ import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
-import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.runs.type.Types;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.tasks.specifications.OutputSpecification;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
-import net.neoforged.gradle.mcp.runtime.definition.McpRuntimeDefinition;
-import net.neoforged.gradle.mcp.runtime.extensions.McpRuntimeExtension;
-import net.neoforged.gradle.mcp.runtime.tasks.DownloadArtifact;
-import net.neoforged.gradle.mcp.runtime.tasks.InjectCode;
-import net.neoforged.gradle.mcp.runtime.tasks.Patch;
-import net.neoforged.gradle.mcp.runtime.tasks.SideAnnotationStripper;
-import net.neoforged.gradle.mcp.runtime.tasks.UnpackZip;
-import net.neoforged.gradle.mcp.util.McpAccessTransformerUtils;
-import net.neoforged.gradle.mcp.util.McpRuntimeUtils;
+import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
+import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
+import net.neoforged.gradle.neoform.runtime.tasks.DownloadArtifact;
+import net.neoforged.gradle.neoform.runtime.tasks.InjectCode;
+import net.neoforged.gradle.neoform.runtime.tasks.Patch;
+import net.neoforged.gradle.neoform.runtime.tasks.SideAnnotationStripper;
+import net.neoforged.gradle.neoform.runtime.tasks.UnpackZip;
+import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
+import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.neoforged.gradle.userdev.utils.UserDevConfigurationSpecUtils;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
-import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +50,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
     @Override
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
-        final McpRuntimeExtension mcpRuntimeExtension = getProject().getExtensions().getByType(McpRuntimeExtension.class);
+        final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
 
         final Dependency userDevDependency = getProject().getDependencies().create(String.format("%s:%s:%s:userdev", spec.getForgeGroup(), spec.getForgeName(), spec.getForgeVersion()));
         final Configuration userDevConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), userDevDependency);
@@ -88,15 +84,15 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         final String mcpVersion = Artifact.from(userDevConfigurationSpec.getMcpVersion().get()).getVersion();
 
-        final McpRuntimeDefinition mcpRuntimeDefinition = mcpRuntimeExtension.maybeCreate(builder -> {
-            builder.withMcpVersion(mcpVersion)
+        final NeoFormRuntimeDefinition mcpRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
+            builder.withNeoFormVersion(mcpVersion)
                     .withDistributionType(DistributionType.JOINED)
                     .withName(spec.getName())
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
 
             final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userDevConfigurationSpec.getAccessTransformerPaths(), unpackedForgeDirectory)
                     .andThen(createSideAnnotationStripperAdapter(userDevConfigurationSpec.getSideAnnotationStripperPaths(), unpackedForgeDirectory))
-                    .andThen(McpAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
+                    .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
 
             builder.withPreTaskAdapter("decompile", atAndSASAdapter);
 
@@ -157,7 +153,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     private TaskTreeAdapter createSideAnnotationStripperAdapter(final List<String> sideAnnotationStripperPaths, final File unpackedForgeUserDevDirectory) {
         final List<File> sideAnnotationStripperFiles = sideAnnotationStripperPaths.stream().map(path -> new File(unpackedForgeUserDevDirectory, path)).collect(Collectors.toList());
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends SideAnnotationStripper> sideAnnotationStripper = McpRuntimeUtils.createSideAnnotationStripper(definition.getSpecification(), "Forges", sideAnnotationStripperFiles, Collections.emptyList());
+            final TaskProvider<? extends SideAnnotationStripper> sideAnnotationStripper = NeoFormRuntimeUtils.createSideAnnotationStripper(definition.getSpecification(), "Forges", sideAnnotationStripperFiles, Collections.emptyList());
             sideAnnotationStripper.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             sideAnnotationStripper.configure(task -> task.dependsOn(previousTasksOutput));
             return sideAnnotationStripper;

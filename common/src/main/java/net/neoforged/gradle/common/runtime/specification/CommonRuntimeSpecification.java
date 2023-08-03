@@ -130,11 +130,6 @@ public abstract class CommonRuntimeSpecification implements Specification {
          * Configures the current builder instance from the project configured.
          */
         protected void configureBuilder() {
-            final CommonRuntimes<?,?,?> runtimeExtension = this.project.getExtensions().getByType(CommonRuntimes.class);
-
-            if (!this.hasConfiguredDistributionType) {
-                this.distributionType = runtimeExtension.getDefaultDistributionType();
-            }
         }
 
 

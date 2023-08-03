@@ -40,14 +40,6 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
     Project getProject();
 
     /**
-     * The default distribution type to use for the runtime specifications.
-     *
-     * @return The default distribution type.
-     */
-    @DSLProperty
-    Property<DistributionType> getDefaultDistributionType();
-
-    /**
      * Gives access to a provider which provides the runtime definitions which are defined in this extension.
      * This provider is live and will be updated when the runtime definitions are added or removed.
      * However the definitions might not be baked yet.

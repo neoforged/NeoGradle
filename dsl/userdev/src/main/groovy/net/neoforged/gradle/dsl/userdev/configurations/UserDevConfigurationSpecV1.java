@@ -23,7 +23,7 @@ package net.neoforged.gradle.dsl.userdev.configurations;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.neoforged.gradle.dsl.common.configuration.VersionedConfiguration;
-import net.neoforged.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV1;
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
 
 import javax.annotation.Nullable;
@@ -43,7 +43,7 @@ public class UserDevConfigurationSpecV1 extends VersionedConfiguration {
     private List<String> srgs = Lists.newArrayList();
     private List<String> srg_lines = Lists.newArrayList();
     private String binpatches; //To be applied to joined.jar, remapped, and added to the classpath
-    private McpConfigConfigurationSpecV1.Function binpatcher;
+    private NeoFormConfigConfigurationSpecV1.Function binpatcher;
     private String patches;
     @Nullable
     private String sources;
@@ -111,7 +111,7 @@ public class UserDevConfigurationSpecV1 extends VersionedConfiguration {
     /**
      * {@return The function specification to use to handle the binary patching of the raw jar. Also known as the binary patcher.}
      */
-    public McpConfigConfigurationSpecV1.Function getBinaryPatcher() {
+    public NeoFormConfigConfigurationSpecV1.Function getBinaryPatcher() {
         return binpatcher;
     }
 

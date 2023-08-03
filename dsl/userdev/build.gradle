@@ -8,5 +8,5 @@ dependencies {
     api "net.minecraftforge:groovydslimprover:${project.groovy_dsl_improver_version}"
 
     compileOnly project(':dsl-common')
-    compileOnly project(':dsl-mcp')
+    compileOnly project(':dsl-neoform')
 }

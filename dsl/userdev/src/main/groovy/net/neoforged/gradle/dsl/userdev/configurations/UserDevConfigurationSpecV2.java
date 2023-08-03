@@ -22,7 +22,7 @@ package net.neoforged.gradle.dsl.userdev.configurations;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import net.neoforged.gradle.dsl.mcp.configuration.McpConfigConfigurationSpecV1;
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -90,7 +90,7 @@ public class UserDevConfigurationSpecV2 extends UserDevConfigurationSpecV1 {
     /**
      * Defines a runtime execution function that can be used with additional data.
      */
-    public static class DataFunction extends McpConfigConfigurationSpecV1.Function {
+    public static class DataFunction extends NeoFormConfigConfigurationSpecV1.Function {
         private Map<String, String> data = Maps.newHashMap();
 
         /**

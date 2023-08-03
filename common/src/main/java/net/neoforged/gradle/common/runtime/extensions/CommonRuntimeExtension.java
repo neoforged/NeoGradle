@@ -37,8 +37,6 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
 
     protected CommonRuntimeExtension(Project project) {
         this.project = project;
-
-        this.getDefaultDistributionType().convention(DistributionType.JOINED);
     }
 
     public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, File> data, String step, Specification spec, File runtimeDirectory) {
