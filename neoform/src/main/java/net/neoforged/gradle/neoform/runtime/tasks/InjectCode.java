@@ -1,8 +1,8 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
-import net.neoforged.gradle.util.FileUtils;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
+import net.neoforged.gradle.util.FileUtils;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.*;
@@ -23,7 +23,6 @@ import java.util.zip.ZipOutputStream;
 
 @CacheableTask
 public abstract class InjectCode extends DefaultRuntime {
-    private static final CacheableMinecraftVersion v1_14_4 = CacheableMinecraftVersion.from("1.14.4");
 
     public InjectCode() {
         super();
@@ -33,6 +32,8 @@ public abstract class InjectCode extends DefaultRuntime {
 
     @TaskAction
     public void run() throws Exception {
+        final CacheableMinecraftVersion minimalSupportedVersion = CacheableMinecraftVersion.from("1.14.4", getProject());
+
         final Provider<RegularFile> inputZipFile = getInjectionSource();
         final File outputFile = ensureFileWorkspaceReady(getOutput());
 
@@ -55,7 +56,7 @@ public abstract class InjectCode extends DefaultRuntime {
                     String pkg = entry.isDirectory() && !entry.getName().endsWith("/") ? entry.getName() : entry.getName().indexOf('/') == -1 ? "" : entry.getName().substring(0, entry.getName().lastIndexOf('/'));
                     if (visited.add(pkg)) {
                         if (!pkg.startsWith("net/minecraft/") &&
-                                (!pkg.startsWith("com/mojang/") || getMinecraftVersion().get().compareTo(v1_14_4) <= 0)) //Add com/mojang package-infos in 1.15+, could probably get away without the version check
+                                (!pkg.startsWith("com/mojang/") || getMinecraftVersion().get().compareTo(minimalSupportedVersion) <= 0)) //Add com/mojang package-infos in 1.15+, could probably get away without the version check
                             continue;
                         zos.putNextEntry(FileUtils.getStableEntry(pkg + "/package-info.java"));
                         zos.write(packageInfoTemplateContent.replace("{PACKAGE}", pkg.replaceAll("/", ".")).getBytes(StandardCharsets.UTF_8));

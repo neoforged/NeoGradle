@@ -1,6 +1,8 @@
 package net.neoforged.gradle.dsl.common.util
 
 import groovy.transform.CompileStatic
+import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache
+import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.jetbrains.annotations.Nullable
@@ -11,9 +13,12 @@ import org.jetbrains.annotations.Nullable
 @CompileStatic
 final class CacheableMinecraftVersion implements Comparable<CacheableMinecraftVersion>, Serializable {
 
-    static CacheableMinecraftVersion from(String version) {
+    static CacheableMinecraftVersion from(String version, Project project) {
         try {
-            return get(version);
+            final MinecraftArtifactCache cache = project.getExtensions().getByType(MinecraftArtifactCache.class);
+            final String resolvedVersion = cache.resolveVersion(version);
+
+            return get(resolvedVersion);
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {

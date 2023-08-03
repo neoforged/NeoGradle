@@ -127,11 +127,11 @@ public final class OfficialNamingChannelConfigurator {
             task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
 
             if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
-                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()))));
+                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()), context.getProject())));
             } else {
                 task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
                     try {
-                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()));
+                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
                     } catch (MultipleDefinitionsFoundException e) {
                         throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getName()).collect(Collectors.joining(", ")), e);
                     }
@@ -164,11 +164,11 @@ public final class OfficialNamingChannelConfigurator {
             task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
 
             if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
-                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()))));
+                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()), context.getProject())));
             } else {
                 task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
                     try {
-                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()));
+                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
                     } catch (MultipleDefinitionsFoundException e) {
                         throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getName()).collect(Collectors.joining(", ")), e);
                     }

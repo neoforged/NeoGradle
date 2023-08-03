@@ -43,7 +43,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         runtimeTask.getData().set(data);
         runtimeTask.getStepName().set(step);
         runtimeTask.getDistribution().set(spec.getDistribution());
-        runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion()));
+        runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion(), spec.getProject()));
         runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
         runtimeTask.getRuntimeName().set(spec.getName());
         runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
@@ -53,7 +53,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         mcpRuntimeTask.getData().set(data);
         mcpRuntimeTask.getStepName().set(step);
         mcpRuntimeTask.getDistribution().set(distributionType);
-        mcpRuntimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(minecraftVersion));
+        mcpRuntimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(minecraftVersion, project));
         mcpRuntimeTask.getRuntimeDirectory().set(runtimeDirectory);
         mcpRuntimeTask.getRuntimeName().set("unknown");
         mcpRuntimeTask.getJavaVersion().convention(project.getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());

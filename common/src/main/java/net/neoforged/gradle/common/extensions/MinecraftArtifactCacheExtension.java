@@ -267,7 +267,8 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
         FileDownloadingUtils.downloadThrowing(project, new FileDownloadingUtils.DownloadInfo(url, null, "json", null, null), file);
     }
 
-    private String resolveVersion(final String gameVersion) {
+    @Override
+    public String resolveVersion(final String gameVersion) {
         if (!Objects.equals(gameVersion, "+"))
             return gameVersion;
 

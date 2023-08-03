@@ -110,4 +110,15 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      */
     @NotNull
     File cache(@NotNull String url, @NotNull CacheFileSelector selector);
-}
+
+    /**
+     * Resolves a minecraft version to an actual version if it is not.
+     * Currently this method supports two formats:
+     * - x.y.z or 12w34a (so a normal version)
+     * - + (so a plus, indicating latest)
+     *
+     * @param gameVersion The game version to resolve in any of the above formats.
+     * @return The resolved version.
+     */
+    @NotNull
+    String resolveVersion(String gameVersion); }
