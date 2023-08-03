@@ -89,36 +89,44 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     }
 
     @Override
-    public final Map<GameArtifact, File> cacheGameVersion(final String gameVersion, DistributionType side) {
+    public final Map<GameArtifact, File> cacheGameVersion(String gameVersion, DistributionType side) {
+        gameVersion = resolveVersion(gameVersion);
+
         final Map<GameArtifact, File> result = new EnumMap<>(GameArtifact.class);
+
+        final String finalGameVersion = gameVersion;
 
         GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.LAUNCHER_MANIFEST, this.cacheLauncherMetadata()));
         GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.LAUNCHER_MANIFEST, this.cacheLauncherMetadata()));
-        GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.VERSION_MANIFEST, this.cacheVersionManifest(gameVersion)));
-        GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT)));
-        GameArtifact.SERVER_JAR.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_JAR, this.cacheVersionArtifact(gameVersion, DistributionType.SERVER)));
-        GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.CLIENT)));
-        GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(gameVersion, DistributionType.SERVER)));
+        GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.VERSION_MANIFEST, this.cacheVersionManifest(finalGameVersion)));
+        GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_JAR, this.cacheVersionArtifact(finalGameVersion, DistributionType.CLIENT)));
+        GameArtifact.SERVER_JAR.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_JAR, this.cacheVersionArtifact(finalGameVersion, DistributionType.SERVER)));
+        GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, this.cacheVersionMappings(finalGameVersion, DistributionType.CLIENT)));
+        GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(finalGameVersion, DistributionType.SERVER)));
 
         return result;
     }
 
     @Override
     @NotNull
-    public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, final String gameVersion, final DistributionType side) {
+    public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, String gameVersion, final DistributionType side) {
+        gameVersion = resolveVersion(gameVersion);
+
         final TaskKey key = new TaskKey(project, gameVersion);
 
         final File outputDirectory = project.getLayout().getProjectDirectory().dir(".gradle").dir("caches").dir("minecraft").dir(gameVersion).getAsFile();
 
+        final String finalGameVersion = gameVersion;
+
         return tasks.computeIfAbsent(key, k -> {
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
-            GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
-            GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJson(gameVersion), () -> this.cacheVersionManifest(gameVersion))));
-            GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.CLIENT))));
-            GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(gameVersion, DistributionType.SERVER))));
-            GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.CLIENT))));
-            GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, gameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(gameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(gameVersion, DistributionType.SERVER))));
+            GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
+            GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJson(finalGameVersion), () -> this.cacheVersionManifest(finalGameVersion))));
+            GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(finalGameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(finalGameVersion, DistributionType.CLIENT))));
+            GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(finalGameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(finalGameVersion, DistributionType.SERVER))));
+            GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(finalGameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(finalGameVersion, DistributionType.CLIENT))));
+            GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(finalGameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(finalGameVersion, DistributionType.SERVER))));
 
             return results;
         });
@@ -131,20 +139,29 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
     @Override
     public final File cacheVersionManifest(String gameVersion) {
+        gameVersion = resolveVersion(gameVersion);
+
         final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionJson(gameVersion);
-        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionManifestToCache(project, getCacheDirectory().get().getAsFile(), gameVersion));
+        final String finalGameVersion = gameVersion;
+        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionManifestToCache(project, getCacheDirectory().get().getAsFile(), finalGameVersion));
     }
 
     @Override
     public final File cacheVersionArtifact(String gameVersion, DistributionType side) {
+        gameVersion = resolveVersion(gameVersion);
+
         final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionJar(gameVersion, side.getName());
-        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionArtifactToCache(project, getCacheDirectory().get().getAsFile(), gameVersion, side));
+        final String finalGameVersion = gameVersion;
+        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionArtifactToCache(project, getCacheDirectory().get().getAsFile(), finalGameVersion, side));
     }
 
     @Override
     public final File cacheVersionMappings(String gameVersion, DistributionType side) {
+        gameVersion = resolveVersion(gameVersion);
+
         final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionMappings(gameVersion, side.getName());
-        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionMappingsToCache(project, getCacheDirectory().get().getAsFile(), gameVersion, side));
+        final String finalGameVersion = gameVersion;
+        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionMappingsToCache(project, getCacheDirectory().get().getAsFile(), finalGameVersion, side));
     }
 
     @Override
@@ -167,7 +184,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
             for (JsonElement e : json.getAsJsonArray("versions")) {
                 String v = e.getAsJsonObject().get("id").getAsString();
-                if (v.equals(minecraftVersion)) {
+                if (Objects.equals(minecraftVersion, "+") || v.equals(minecraftVersion)) {
                     url = e.getAsJsonObject().get("url").getAsString();
                     break;
                 }
@@ -184,7 +201,9 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
         return downloadJsonToCache(project, url, cacheDirectory, CacheFileSelector.forVersionJson(minecraftVersion));
     }
 
-    private File downloadVersionArtifactToCache(final Project project, final File cacheDirectory, final String minecraftVersion, final DistributionType side) {
+    private File downloadVersionArtifactToCache(final Project project, final File cacheDirectory, String minecraftVersion, final DistributionType side) {
+        minecraftVersion = resolveVersion(minecraftVersion);
+
         return doDownloadVersionDownloadToCache(project,
                 cacheDirectory,
                 minecraftVersion,
@@ -193,7 +212,9 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
                 String.format("Failed to download game artifact %s for %s", side.getName(), minecraftVersion));
     }
 
-    private File downloadVersionMappingsToCache(final Project project, final File cacheDirectory, final String minecraftVersion, final DistributionType side) {
+    private File downloadVersionMappingsToCache(final Project project, final File cacheDirectory, String minecraftVersion, final DistributionType side) {
+        minecraftVersion = resolveVersion(minecraftVersion);
+
         return doDownloadVersionDownloadToCache(project,
                 cacheDirectory,
                 minecraftVersion,
@@ -203,6 +224,8 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     }
 
     private File doDownloadVersionDownloadToCache(Project project, File cacheDirectory, String minecraftVersion, final String artifact, final CacheFileSelector cacheFileSelector, final String potentialError) {
+        minecraftVersion = resolveVersion(minecraftVersion);
+
         final File versionManifestFile = this.cacheVersionManifest(minecraftVersion);
 
         try {
@@ -242,5 +265,27 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
     private void downloadJsonTo(Project project, String url, File file) {
         FileDownloadingUtils.downloadThrowing(project, new FileDownloadingUtils.DownloadInfo(url, null, "json", null, null), file);
+    }
+
+    private String resolveVersion(final String gameVersion) {
+        if (!Objects.equals(gameVersion, "+"))
+            return gameVersion;
+
+        final File launcherMetadata = this.cacheLauncherMetadata();
+
+        Gson gson = new Gson();
+        String url = null;
+        try(final Reader reader = new FileReader(launcherMetadata)) {
+            JsonObject json = gson.fromJson(reader, JsonObject.class);
+
+            for (JsonElement e : json.getAsJsonArray("versions")) {
+                return e.getAsJsonObject().get("id").getAsString();
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read the launcher manifest", e);
+        }
+
+        throw new IllegalStateException("Could not find the correct version json.");
     }
 }
