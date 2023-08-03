@@ -9,6 +9,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
+import net.neoforged.gradle.dsl.common.util.GradleGsonTypeAdapter;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.ListProperty;
@@ -78,7 +79,7 @@ public abstract class TypeImpl implements ConfigurableDSLElement<Type>, Type {
         other.getClasspath().from(getClasspath());
     }
 
-    public static final class Serializer implements JsonSerializer<Type>, JsonDeserializer<Type> {
+    public static final class Serializer extends GradleGsonTypeAdapter<Type> {
 
         public static Serializer scoped(final Project project) {
             return new Serializer(project);
@@ -89,7 +90,6 @@ public abstract class TypeImpl implements ConfigurableDSLElement<Type>, Type {
         private Serializer(Project project) {
             this.project = project;
         }
-
 
         @Override
         public Type deserialize(JsonElement json, java.lang.reflect.Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -116,35 +116,6 @@ public abstract class TypeImpl implements ConfigurableDSLElement<Type>, Type {
             return type;
         }
 
-        @SuppressWarnings("unchecked")
-        private static <T> void deserializeProperty(final JsonObject json, final JsonDeserializationContext context, final Property<T> property, final String key, final T defaultValue) {
-            final JsonElement value = json.getAsJsonObject().get(key);
-            if (value != null) {
-                property.set((T) context.deserialize(value, defaultValue.getClass()));
-            } else {
-                property.set(defaultValue);
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        private static <T> void deserializeProperty(final JsonObject json, final JsonDeserializationContext context, final ListProperty<T> property, final String key, final List<T> defaultValue) {
-            final JsonElement value = json.getAsJsonObject().get(key);
-            if (value != null) {
-                property.set((List<T>) context.deserialize(value, defaultValue.getClass()));
-            } else {
-                property.set(defaultValue);
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        private static <T extends Map<? extends K, ? extends V>, K, V> void deserializeProperty(final JsonObject json, final JsonDeserializationContext context, final MapProperty<K, V> property, final String key, final T defaultValue) {
-            final JsonElement value = json.getAsJsonObject().get(key);
-            if (value != null) {
-                property.set((T) context.deserialize(value, defaultValue.getClass()));
-            } else {
-                property.set(defaultValue);
-            }
-        }
 
         @Override
         public JsonElement serialize(Type src, java.lang.reflect.Type typeOfSrc, JsonSerializationContext context) {
@@ -161,19 +132,6 @@ public abstract class TypeImpl implements ConfigurableDSLElement<Type>, Type {
             serializeProperty(json, context, src.getSystemProperties(), "props");
 
             return json;
-        }
-
-        private <T> void serializeProperty(JsonObject json, JsonSerializationContext context, Property<T> property, String key) {
-            json.add(key, context.serialize(property.get()));
-        }
-
-        private <T> void serializeProperty(JsonObject json, JsonSerializationContext context, ListProperty<T> property, String key) {
-            json.add(key, context.serialize(property.get()));
-        }
-
-
-        private <K, V> void serializeProperty(JsonObject json, JsonSerializationContext context, MapProperty<K, V> property, String key) {
-            json.add(key, context.serialize(property.get()));
         }
     }
 }
