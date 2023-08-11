@@ -104,6 +104,15 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 });
             case "patch":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Patch.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step)));
+            case "mergeMappings":
+                NeoFormConfigConfigurationSpecV1.Function function = neoFormConfigV2.getFunction(step.getType());
+                if (function == null) {
+                    throw new IllegalArgumentException(String.format("Invalid MCP Config, Unknown function step type: %s File: %s", step.getType(), neoFormConfigV2));
+                }
+
+                TaskProvider<? extends Runtime> execute = createExecute(spec, step, function);
+                execute.configure(task -> task.getArguments().put("outputExtension", task.newProvider("tsrg")));
+                return execute;
         }
         if (neoFormConfigV2.getSpec() >= 2) {
             switch (step.getType()) {
