@@ -79,6 +79,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     public final TaskProvider<? extends WithOutput> getTask(String name) {
         final String taskName = CommonRuntimeUtils.buildTaskName(this, name);
         if (!taskOutputs.containsKey(taskName)) {
+            if (this instanceof IDelegatingRuntimeDefinition) {
+                return ((IDelegatingRuntimeDefinition<?>) this).getDelegate().getTask(name);
+            }
             throw new IllegalArgumentException("No task with name " + name + " found in runtime " + specification.getVersionedName());
         }
 
@@ -160,6 +163,8 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     public abstract TaskProvider<ExtractNatives> getNatives();
 
     public void configureRun(RunImpl run) {
+        run.getExtensions().getExtraProperties().set("runtimeDefinition", this);
+
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);

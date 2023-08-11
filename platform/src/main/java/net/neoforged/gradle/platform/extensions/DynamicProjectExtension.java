@@ -13,6 +13,7 @@ import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
+import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.common.tasks.PotentiallySignJar;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
@@ -29,7 +30,6 @@ import net.neoforged.gradle.dsl.platform.model.LauncherProfile;
 import net.neoforged.gradle.dsl.platform.model.Library;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
-import net.neoforged.gradle.neoform.naming.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import net.neoforged.gradle.neoform.runtime.tasks.Download;
@@ -669,18 +669,18 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         return projectSetup;
     }
-    
+
     private void configureRunType(final Project project, final RunType runType, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration, RuntimeDevRuntimeDefinition runtimeDefinition) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
-        
+
         final Configuration runtimeClasspath = project.getConfigurations().getByName(mainSourceSet.getRuntimeClasspathConfigurationName());
-        
+
         runType.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
-        
+
         runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
         runType.getJvmArguments().addAll("-p", moduleOnlyConfiguration.getAsPath());
-        
+
         runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
         runType.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
         runType.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
@@ -691,11 +691,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         runType.getJvmArguments().addAll("--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler");
         runType.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
         runType.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
-        
+
         runType.getEnvironmentVariables().put("NEOFORGE_SPEC", project.getVersion().toString());
-        
+
         runType.getClasspath().from(runtimeClasspath);
-        
+
         Provider<String> assetsDir = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetsDirectory).map(Directory::getAsFile).map(File::getAbsolutePath);
         Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
 
@@ -708,11 +708,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 run.getProgramArguments().addAll("--versionrun", "release");
                 run.getProgramArguments().addAll("--launchTarget", "forgeclientdev");
             }
-            
+
             if (run.getIsServer().get()) {
                 run.getProgramArguments().addAll("--launchTarget", "forgeserverdev");
             }
-            
+
             if (run.getIsGameTest().get()) {
                 run.getSystemProperties().put("neoforge.enableGameTest", "true");
 
@@ -720,10 +720,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     run.getSystemProperties().put("neoforge.gameTestServer", "true");
                 }
             }
-            
+
             if (run.getIsDataGenerator().get()) {
                 run.getProgramArguments().addAll("--launchTarget", "forgedatadev");
-                
+
                 run.getProgramArguments().addAll("--flat", "--all", "--validate");
                 run.getProgramArguments().add("--output");
                 run.getProgramArguments().add(project.getRootProject().file("src/generated/resources/").getAbsolutePath());
@@ -731,7 +731,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     run.getProgramArguments().addAll("--existing", file.getAbsolutePath());
                 });
             }
-            
+
             if (run.getIsDataGenerator().get() || run.getIsClient().get()) {
                 run.getProgramArguments().add("--assetsDir");
                 run.getProgramArguments().add(assetsDir);
@@ -740,7 +740,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             }
         });
     }
-    
+
     private static void configureInstallerTokens(final TokenizedTask tokenizedTask, final RuntimeDevRuntimeDefinition runtimeDefinition, final Collection<Configuration> ignoreConfigurations, final Configuration pluginLayerLibraries, final Configuration gameLayerLibraries) {
         tokenizedTask.token("TASK", "forgeserver");
         tokenizedTask.token("MAVEN_PATH", String.format("%s/%s/%s", tokenizedTask.getProject().getGroup().toString().replace('.', '/'), tokenizedTask.getProject().getName(), tokenizedTask.getProject().getVersion()));
@@ -759,11 +759,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         tokenizedTask.token("GAME_LAYER_LIBRARIES", gameLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("MODULES", "ALL-MODULE-PATH");
     }
-    
+
     private static Provider<String> collectFileNames(Configuration config, Project project) {
         return project.provider(() -> config.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
     }
-    
+
     @NotNull
     private static Provider<String> createIgnoreList(Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
         return project.provider(() -> {
@@ -775,7 +775,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             return ignoreList.toString();
         });
     }
-    
+
     private static Provider<String> collectFilePaths(Configuration config, String prefix, String seperator, Project project) {
         return project.provider(() -> {
             final ArtifactPathsCollector collector = new ArtifactPathsCollector(project.getObjects(), seperator, prefix);
@@ -783,19 +783,19 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             return collector.toString();
         });
     }
-    
+
     private void configureRun(final Run run, final RuntimeDevRuntimeDefinition runtimeDefinition) {
         run.getConfigureAutomatically().set(true);
         run.getConfigureFromDependencies().set(false);
-        
+
         if (run.getIsClient().get()) {
             run.dependsOn(runtimeDefinition.getAssets(), runtimeDefinition.getNatives());
         }
     }
-    
+
     private TaskProvider<? extends WithOutput> createCleanProvider(final TaskProvider<? extends WithOutput> jarProvider, final RuntimeDevRuntimeDefinition runtimeDefinition, File workingDirectory) {
         final RuntimeDevRuntimeSpecification spec = runtimeDefinition.getSpecification();
-        
+
         final Provider<Map<String, String>> versionData = project.provider(() -> {
             final Map<String, String> data = Maps.newHashMap();
             final Mappings mappingsExtension = project.getExtensions().getByType(Mappings.class);
@@ -805,38 +805,38 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             mappingVersionData.putAll(mappingsExtension.getVersion().get());
             return data;
         });
-        
+
         final Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks = Sets.newHashSet();
         final TaskBuildingContext context = new TaskBuildingContext(spec.getProject(), String.format("mapCleanFor%s", StringUtils.capitalize(jarProvider.getName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), jarProvider, runtimeDefinition.getGameArtifactProvidingTasks(), versionData, additionalRuntimeTasks, runtimeDefinition);
         
         final TaskProvider<? extends Runtime> remapTask = context.getNamingChannel().getApplyCompiledMappingsTaskBuilder().get().build(context);
         additionalRuntimeTasks.forEach(taskProvider -> taskProvider.configure(task -> CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory)));
         remapTask.configure(task -> CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory));
-        
+
         return remapTask;
     }
-    
+
     private TaskProvider<? extends WithOutput> createFlippedMojMapProvider(final TaskProvider<? extends WithOutput> mojmapProvider, final RuntimeDevRuntimeDefinition runtimeDefinition, File workingDirectory) {
         final String taskName = String.format("invert%s", StringUtils.capitalize(mojmapProvider.getName()));
         if (project.getTasks().getNames().contains(taskName)) {
             return project.getTasks().named(taskName, WriteIMappingsFile.class);
         }
-        
+
         return project.getTasks().register(taskName, WriteIMappingsFile.class, task -> {
             task.getMappings().set(mojmapProvider.flatMap(WithOutput::getOutput).map(TransformerUtils.guard(file -> IMappingFile.load(file.getAsFile()))).map(file -> new CacheableIMappingFile(file.reverse())));
             
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         });
     }
-    
+
     private void configureUserdevRunType(final RunType runType, Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
         runType.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
-        
+
         runType.getArguments().addAll("--gameDir", ".");
-        
+
         runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
         runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
-        
+
         runType.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
         runType.getSystemProperties().put("fml.gameLayerLibraries", collectFileNames(gameLayerLibraryConfiguration, project));
         runType.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
@@ -848,21 +848,21 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         runType.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
         runType.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
     }
-    
+
     private static String createCoordinate(final Project project, final String classifier) {
         return Artifact.from(project, classifier, "jar").toString();
     }
-    
+
     @NotNull
     public DynamicProjectType getType() {
         if (type == null) throw new IllegalStateException("Project is not configured yet!");
         return type;
     }
-    
+
     @DSLProperty
     public abstract Property<Boolean> getIsUpdating();
-    
+
     @Inject
     public abstract ProviderFactory getProviderFactory();
-    
+
 }

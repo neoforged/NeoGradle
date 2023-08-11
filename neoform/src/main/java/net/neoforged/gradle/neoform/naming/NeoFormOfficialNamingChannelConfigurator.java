@@ -6,13 +6,13 @@ import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefiniti
 import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
+import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.neoform.naming.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.util.IMappingFileUtils;
 import net.neoforged.gradle.util.TransformerUtils;
