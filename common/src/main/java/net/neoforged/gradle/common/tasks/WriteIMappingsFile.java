@@ -1,4 +1,4 @@
-package net.neoforged.gradle.neoform.naming.tasks;
+package net.neoforged.gradle.common.tasks;
 
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;

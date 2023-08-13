@@ -7,7 +7,7 @@ import net.neoforged.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
 import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
-import net.neoforged.gradle.neoform.naming.tasks.WriteIMappingsFile;
+import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.util.IMappingFileUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
