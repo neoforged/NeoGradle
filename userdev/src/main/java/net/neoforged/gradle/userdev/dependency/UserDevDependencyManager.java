@@ -18,7 +18,6 @@ import org.gradle.api.provider.Provider;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public final class UserDevDependencyManager {
     private static final UserDevDependencyManager INSTANCE = new UserDevDependencyManager();

@@ -1,5 +1,3 @@
-import java.util.stream.Stream
-
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -18,6 +16,7 @@ include 'common'
 include 'vanilla'
 include 'neoform'
 include 'userdev'
+include 'mixin'
 include 'legacy'
 
 subProject 'dsl-common'
