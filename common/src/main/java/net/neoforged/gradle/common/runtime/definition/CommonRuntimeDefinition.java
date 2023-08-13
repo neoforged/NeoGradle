@@ -186,6 +186,8 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     }
 
     public void configureRun(RunImpl run) {
+        run.getExtensions().getExtraProperties().set("runtimeDefinition", this);
+
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
