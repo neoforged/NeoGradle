@@ -18,10 +18,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.function.BiConsumer;
 import java.util.zip.ZipOutputStream;
 
+// TODO do this differently (it breaks if the manifest has sections)
 @CacheableTask
 public abstract class ObfuscatedDependencyMarker extends DefaultTask implements WithOutput, WithWorkspace {
 
