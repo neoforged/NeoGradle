@@ -25,8 +25,11 @@ public abstract class RunsImpl extends DelegatingDomainObjectContainer<Run> impl
                     });
 
                     project.afterEvaluate(evaluatedProject -> runTask.configure(task -> {
-                        task.getRun().get().getModSources().get().stream().map(SourceSet::getClassesTaskName)
-                                .map(classTaskName -> evaluatedProject.getTasks().named(classTaskName))
+                        task.getRun().get()
+                                .getModSources().get()
+                                .stream()
+                                .map(SourceSet::getClassesTaskName)
+                                .map(evaluatedProject.getTasks()::named)
                                 .forEach(task::dependsOn);
 
                         run.getTaskDependencies().forEach(task::dependsOn);

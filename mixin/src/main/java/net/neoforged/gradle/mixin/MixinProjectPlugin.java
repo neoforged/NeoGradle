@@ -19,9 +19,11 @@ import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.bundling.Jar;
 
 import java.io.File;
 
@@ -29,43 +31,50 @@ public class MixinProjectPlugin implements Plugin<Project> {
 
     public static final String REFMAP_REMAP_MAPPINGS_TASK_NAME = "writeMappingsForMixinRefmapRemapping";
 
+    private Project project;
+    private Mixin extension;
+
     @Override
     public void apply(Project project) {
         if (project.getPlugins().findPlugin(CommonProjectPlugin.class) == null) {
             throw new IllegalStateException("The mixin extension requires the common plugin to be applied first.");
         }
-        project.getExtensions().create(Mixin.class, Mixin.EXTENSION_NAME, MixinExtension.class, project);
-        project.afterEvaluate(MixinProjectPlugin::afterEvaluate);
-    }
-
-    private static void afterEvaluate(Project project) {
-        expandRuntimeDefinitions(project);
-        // todo add mixin configs to jar tasks
-        // todo add mixin configs to run configs
-        // todo refmap and extra mappings
-        // todo validate AP
-        // todo compiler args
-        addPropertiesToRunConfigs(project);
-    }
-
-    private static void addPropertiesToRunConfigs(Project project) {
-        project.getExtensions().getByType(Runs.class).configureEach(run -> {
-            final CommonRuntimeDefinition<?> runtimeDefinition = getRuntimeDefinition(project, run);
-            final TaskProvider<? extends WithOutput> refmapMappingsTask = runtimeDefinition.getTask(REFMAP_REMAP_MAPPINGS_TASK_NAME);
-            MapProperty<String, String> systemProperties = run.getSystemProperties();
-            systemProperties.put("mixin.env.refMapRemappingFile", refmapMappingsTask.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getAbsolutePath));
-            systemProperties.put("mixin.env.remapRefMap", "true");
-            run.dependsOn(refmapMappingsTask);
+        this.project = project;
+        this.extension = project.getExtensions().create(Mixin.class, Mixin.EXTENSION_NAME, MixinExtension.class, project);
+        this.project.afterEvaluate(p -> {
+            expandRuntimeDefinitions();
+            p.getTasks().withType(Jar.class).configureEach(this::configureJarTask);
+            // todo refmap and extra mappings
+            // todo validate AP
+            // todo compiler args
+            this.project.getExtensions().getByType(Runs.class).configureEach(this::configureRun);
         });
     }
 
-    private static void expandRuntimeDefinitions(Project project) {
-        GradleInternalUtils.getExtensions(project.getExtensions())
+    private void configureJarTask(Jar jar) {
+        jar.getManifest().getAttributes().computeIfAbsent("MixinConfigs", $ -> String.join(",", extension.getConfigs().get()));
+    }
+
+    private void configureRun(Run run) {
+        final CommonRuntimeDefinition<?> runtimeDefinition = getRuntimeDefinition(this.project, run);
+        final TaskProvider<? extends WithOutput> refmapMappingsTask = runtimeDefinition.getTask(REFMAP_REMAP_MAPPINGS_TASK_NAME);
+        final MapProperty<String, String> systemProperties = run.getSystemProperties();
+        final ListProperty<String> programArguments = run.getProgramArguments();
+        systemProperties.put("mixin.env.refMapRemappingFile", refmapMappingsTask.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getAbsolutePath));
+        systemProperties.put("mixin.env.remapRefMap", "true");
+        for (String config : this.extension.getConfigs().get()) {
+            programArguments.addAll("--mixin.config", config);
+        }
+        run.dependsOn(refmapMappingsTask);
+    }
+
+    private void expandRuntimeDefinitions() {
+        GradleInternalUtils.getExtensions(this.project.getExtensions())
                 .stream()
                 .filter(CommonRuntimeExtension.class::isInstance)
                 .map(extension -> (CommonRuntimeExtension<?,?,? extends CommonRuntimeDefinition<?>>) extension)
                 .flatMap(ext -> ext.getRuntimes().get().values().stream())
-                .forEach(runtimeDefinition -> createRefmapMappingsTask(project, runtimeDefinition));
+                .forEach(runtimeDefinition -> createRefmapMappingsTask(this.project, runtimeDefinition));
     }
 
     private static CommonRuntimeDefinition<?> getRuntimeDefinition(Project project, Run run) {
