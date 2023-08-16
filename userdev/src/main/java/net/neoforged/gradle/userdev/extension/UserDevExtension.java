@@ -18,6 +18,7 @@ public abstract class UserDevExtension implements UserDev, ConfigurableDSLElemen
         this.getDefaultForgeGroup().convention("net.neoforged");
     }
 
+    @Override
     public Project getProject() {
         return project;
     }

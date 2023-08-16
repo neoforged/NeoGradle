@@ -17,16 +17,16 @@ interface UserDev extends BaseDSLElement<UserDev> {
      * @return The default forge version to use for the project.
      */
     @DSLProperty
-    Property<String> getDefaultForgeVersion();    
-    
+    Property<String> getDefaultForgeVersion();
+
     /**
      * Defines the default forge group to use for the project.
      *
      * @return The default forge group to use for the project.
      */
     @DSLProperty
-    Property<String> getDefaultForgeGroup();    
-    
+    Property<String> getDefaultForgeGroup();
+
     /**
      * Defines the default forge artifact name to use for the project.
      *

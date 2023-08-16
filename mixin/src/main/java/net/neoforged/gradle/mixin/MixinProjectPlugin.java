@@ -13,6 +13,7 @@ import net.neoforged.gradle.dsl.common.runs.run.Runs;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import net.neoforged.gradle.dsl.mixin.extension.Mixin;
 import net.neoforged.gradle.util.GradleInternalUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Plugin;
@@ -33,12 +34,14 @@ public class MixinProjectPlugin implements Plugin<Project> {
         if (project.getPlugins().findPlugin(CommonProjectPlugin.class) == null) {
             throw new IllegalStateException("The mixin extension requires the common plugin to be applied first.");
         }
+        project.getExtensions().create(Mixin.class, Mixin.EXTENSION_NAME, MixinExtension.class, project);
         project.afterEvaluate(MixinProjectPlugin::afterEvaluate);
     }
 
     private static void afterEvaluate(Project project) {
         expandRuntimeDefinitions(project);
-        // todo mixin extension
+        // todo add mixin configs to jar tasks
+        // todo add mixin configs to run configs
         // todo refmap and extra mappings
         // todo validate AP
         // todo compiler args
@@ -50,9 +53,8 @@ public class MixinProjectPlugin implements Plugin<Project> {
             final CommonRuntimeDefinition<?> runtimeDefinition = getRuntimeDefinition(project, run);
             final TaskProvider<? extends WithOutput> refmapMappingsTask = runtimeDefinition.getTask(REFMAP_REMAP_MAPPINGS_TASK_NAME);
             MapProperty<String, String> systemProperties = run.getSystemProperties();
-            Provider<String> remapRefMap = systemProperties.getting("mixin.env.remapRefMap");
-            systemProperties.put("mixin.env.refMapRemappingFile", remapRefMap.flatMap($ -> systemProperties.getting("mixin.env.refMapRemappingFile")).orElse(refmapMappingsTask.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getAbsolutePath)));
-            systemProperties.put("mixin.env.remapRefMap", remapRefMap.orElse("true"));
+            systemProperties.put("mixin.env.refMapRemappingFile", refmapMappingsTask.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getAbsolutePath));
+            systemProperties.put("mixin.env.remapRefMap", "true");
             run.dependsOn(refmapMappingsTask);
         });
     }
@@ -86,7 +88,7 @@ public class MixinProjectPlugin implements Plugin<Project> {
                 final Provider<IMappingFile> mergedMappings = mergedMappingsTask.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(TransformerUtils.guard(IMappingFile::load));
                 final Provider<IMappingFile> reversedClientMappings = clientMappings.map(IMappingFile::reverse);
                 final Provider<IMappingFile> reversedMergedMappings = mergedMappings.map(IMappingFile::reverse);
-                final Provider<IMappingFile> mappings = reversedClientMappings.zip(reversedMergedMappings, IMappingFile::chain);
+                final Provider<IMappingFile> mappings = reversedMergedMappings.zip(reversedClientMappings, IMappingFile::chain);
                 task.getMappings().set(mappings.map(CacheableIMappingFile::new));
                 task.getFormat().set(IMappingFile.Format.SRG);
                 task.dependsOn(clientMappingsTask, mergedMappingsTask);
