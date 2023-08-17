@@ -10,7 +10,7 @@ import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.run.RunsImpl;
 import net.neoforged.gradle.common.runs.type.TypesImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
-import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
@@ -20,23 +20,18 @@ import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runs.run.Runs;
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.dsl.common.runs.type.Types;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
-import net.neoforged.gradle.util.GradleInternalUtils;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class CommonProjectPlugin implements Plugin<Project> {
 
@@ -52,6 +47,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
 
+        project.getExtensions().create("allRuntimes", RuntimesExtension.class);
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
@@ -105,17 +101,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
     }
 
     private void applyAfterEvaluate(final Project project) {
-        final List<CommonRuntimeExtension<?,?,?>> runtimeExtensions = GradleInternalUtils.getExtensions(project.getExtensions())
-                .stream()
-                .filter(CommonRuntimeExtension.class::isInstance)
-                .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
-                .collect(Collectors.toList());
-
-        runtimeExtensions
-                .forEach(CommonRuntimeExtension::bakeDefinitions);
-
-        runtimeExtensions
-                .forEach(CommonRuntimeExtension::bakeDelegateDefinitions);
+        RuntimesExtension runtimesExtension = project.getExtensions().getByType(RuntimesExtension.class);
+        runtimesExtension.bakeDefinitions();
+        runtimesExtension.bakeDelegateDefinitions();
 
         final Repository<?> repositoryExtension = project.getExtensions().getByType(Repository.class);
         if (repositoryExtension instanceof IvyDummyRepositoryExtension) {

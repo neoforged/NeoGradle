@@ -3,6 +3,8 @@ package net.neoforged.gradle.dsl.mixin.extension
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 
 @CompileStatic
@@ -12,5 +14,21 @@ interface Mixin extends BaseDSLElement<Mixin> {
     @DSLProperty
     SetProperty<String> getConfigs();
 
-    void config(String config);
+    @DSLProperty
+    Property<Boolean> getDisableTargetValidator();
+
+    @DSLProperty
+    Property<Boolean> getDisableTargetExport();
+
+    @DSLProperty
+    Property<Boolean> getDisableOverwriteChecker();
+
+    @DSLProperty
+    Property<Boolean> getQuiet();
+
+    @DSLProperty
+    Property<Boolean> getShowMessageTypes();
+
+    @DSLProperty
+    RegularFileProperty getReobfTsrgFile();
 }

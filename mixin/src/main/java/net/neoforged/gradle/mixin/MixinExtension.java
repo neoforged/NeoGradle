@@ -16,11 +16,6 @@ public abstract class MixinExtension implements Mixin, ConfigurableDSLElement<Mi
     }
 
     @Override
-    public void config(Object... configs) {
-        getConfigs().from(configs);
-    }
-
-    @Override
     public Project getProject() {
         return project;
     }

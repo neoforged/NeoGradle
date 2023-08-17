@@ -1,9 +1,9 @@
 package net.neoforged.gradle.common.util;
 
-import net.neoforged.gradle.util.GradleInternalUtils;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import org.gradle.api.Buildable;
@@ -133,11 +133,9 @@ public final class TaskDependencyUtils {
     private static List<CommonRuntimeDefinition<?>> unwrapDelegation(final Project project, final Collection<? extends CommonRuntimeDefinition<?>> input) {
         final List<CommonRuntimeDefinition<?>> output = new LinkedList<>();
 
-        GradleInternalUtils.getExtensions(project.getExtensions())
+        project.getExtensions().getByType(RuntimesExtension.class)
+                .getAllDefinitions()
                 .stream()
-                .filter(CommonRuntimeExtension.class::isInstance)
-                .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
-                .flatMap(extension -> extension.getRuntimes().get().values().stream())
                 .filter(IDelegatingRuntimeDefinition.class::isInstance)
                 .map(runtime -> (IDelegatingRuntimeDefinition<?>) runtime)
                 .filter(runtime -> input.contains(runtime.getDelegate()))
