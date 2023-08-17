@@ -59,9 +59,9 @@ public class MixinProjectPlugin implements Plugin<Project> {
         this.project.afterEvaluate(p -> {
             ExtensionContainer extensions = this.project.getExtensions();
             extensions.getByType(RuntimesExtension.class).getAllDefinitions().forEach(this::createRefmapMappingsTask);
-            this.project.getTasks().withType(Jar.class).configureEach(this::configureJarTask);
             // todo refmap and extra mappings
             extensions.getByType(SourceSetContainer.class).configureEach(this::configureSourceSet);
+            this.project.getTasks().withType(Jar.class).configureEach(this::configureJarTask);
             extensions.getByType(Runs.class).configureEach(this::configureRun);
         });
     }
