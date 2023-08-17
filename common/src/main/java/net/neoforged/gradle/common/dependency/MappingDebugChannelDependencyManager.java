@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
@@ -11,7 +12,6 @@ import net.neoforged.gradle.dsl.common.runtime.naming.GenerationTaskBuildingCont
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.util.GradleInternalUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
@@ -86,13 +86,10 @@ public abstract class MappingDebugChannelDependencyManager {
 
         final Minecraft minecraft = project.getExtensions().getByType(Minecraft.class);
         final NamingChannel namingChannel = minecraft.getNamingChannels().getByName(namingChannelName);
-        final CommonRuntimeDefinition<?> runtimeDefinition = GradleInternalUtils.getExtensions(project.getExtensions())
-                .stream()
-                .filter(CommonRuntimeExtension.class::isInstance)
-                .map(ext -> (CommonRuntimeExtension<?,?,?>) ext)
-                .map(ext -> ext.findByNameOrIdentifier(runtimeName))
-                .filter(Objects::nonNull)
-                .findFirst().orElseThrow(() -> new IllegalArgumentException("Could not find runtime with name: " + runtimeName + " for dependency: " + dependency.toString()));
+        final CommonRuntimeDefinition<?> runtimeDefinition = project.getExtensions().getByType(RuntimesExtension.class).findDefinitionByNameOrIdentifier(runtimeName);
+        if (runtimeDefinition == null) {
+            throw new IllegalArgumentException("Could not find runtime with name: " + runtimeName + " for dependency: " + dependency);
+        }
 
         return replacements.computeIfAbsent(String.format("%s-%s-%s", namingChannelName, encodedVersion, runtimeName), (v) -> {
             final String environmentName = String.format("debuggingMappingsZipDependency%s", v);

@@ -1,20 +1,12 @@
 package net.neoforged.gradle.common.runtime.naming;
 
-import net.neoforged.gradle.common.util.MappingUtils;
-import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.util.GradleInternalUtils;
-import net.neoforged.gradle.util.TransformerUtils;
-import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
-import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
-import net.neoforged.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
-import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
-import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
+import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
+import net.neoforged.gradle.common.runtime.naming.tasks.*;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
+import net.neoforged.gradle.common.util.MappingUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -24,7 +16,10 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import net.neoforged.gradle.dsl.common.util.NamingConstants;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
 import org.gradle.api.file.RegularFile;
@@ -205,44 +200,37 @@ public final class OfficialNamingChannelConfigurator {
     private @NotNull Provider<String> getLicenseText(Project project) {
         final MinecraftArtifactCache cacheExtension = project.getExtensions().getByType(MinecraftArtifactCache.class);
 
-        return project.provider(() -> GradleInternalUtils.getExtensions(project.getExtensions())
-                .stream()
-                .filter(CommonRuntimeExtension.class::isInstance)
-                .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
-                .collect(Collectors.toList()))
-                .map(runtimeExtensions -> runtimeExtensions.stream().map(runtimeExtension -> runtimeExtension.getRuntimes()
-                        .map(runtimes -> runtimes.values().stream().map(runtime -> runtime.getSpecification().getMinecraftVersion()).distinct().collect(Collectors.toList()))
-                        .map((Transformer<List<File>, List<String>>) minecraftVersions -> {
-                            if (minecraftVersions.isEmpty()) {
-                                return Collections.emptyList();
-                            }
+        return project.provider(() -> project.getExtensions().getByType(RuntimesExtension.class).getAllDefinitions())
+                .map(runtimes -> runtimes.stream().map(runtime -> runtime.getSpecification().getMinecraftVersion()).distinct().collect(Collectors.toList()))
+                .map((Transformer<List<File>, List<String>>) minecraftVersions -> {
+                    if (minecraftVersions.isEmpty()) {
+                        return Collections.emptyList();
+                    }
 
-                            return minecraftVersions.stream().map(version -> cacheExtension.cacheVersionMappings(version, DistributionType.CLIENT)).collect(Collectors.toList());
-                        })
-                        .map((Transformer<List<String>, List<File>>) mappingFiles -> {
-                            if (mappingFiles.isEmpty())
-                                return Collections.emptyList();
+                    return minecraftVersions.stream().map(version -> cacheExtension.cacheVersionMappings(version, DistributionType.CLIENT)).collect(Collectors.toList());
+                })
+                .map((Transformer<List<String>, List<File>>) mappingFiles -> {
+                    if (mappingFiles.isEmpty())
+                        return Collections.emptyList();
 
-                            return mappingFiles.stream().map(mappingFile -> {
-                                try(final Stream<String> lines = Files.lines(mappingFile.toPath())) {
-                                    return lines
-                                            .filter(line -> line.startsWith("#"))
-                                            .map(l -> l.substring(1).trim())
-                                            .collect(Collectors.joining("\n"));
-                                } catch (IOException e) {
-                                    throw new RuntimeException(String.format("Failed to read the mapping license from: %s", mappingFile.getAbsolutePath()), e);
-                                }
-                            }).distinct().collect(Collectors.toList());
-                        })
-                        .map(licenses -> {
-                            if (licenses.isEmpty()) {
-                                return "No license text found";
-                            }
+                    return mappingFiles.stream().map(mappingFile -> {
+                        try(final Stream<String> lines = Files.lines(mappingFile.toPath())) {
+                            return lines
+                                    .filter(line -> line.startsWith("#"))
+                                    .map(l -> l.substring(1).trim())
+                                    .collect(Collectors.joining("\n"));
+                        } catch (IOException e) {
+                            throw new RuntimeException(String.format("Failed to read the mapping license from: %s", mappingFile.getAbsolutePath()), e);
+                        }
+                    }).distinct().collect(Collectors.toList());
+                })
+                .map(licenses -> {
+                    if (licenses.isEmpty()) {
+                        return "No license text found";
+                    }
 
-                            return licenses.stream().distinct().collect(Collectors.joining("\n\n"));
-                        })
-                ).collect(Collectors.toList()))
-                .map(licenses -> licenses.stream().map(Provider::get).distinct().collect(Collectors.joining("\n\n")));
+                    return licenses.stream().distinct().collect(Collectors.joining("\n\n"));
+                });
     }
 }
 
