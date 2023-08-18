@@ -17,5 +17,5 @@ out
 
 snapshots
 
-/examples/runs/run
+/examples/*/run/ # this is where the run files are stored
 /neoform/tests
