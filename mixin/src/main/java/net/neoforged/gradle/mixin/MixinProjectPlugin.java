@@ -57,7 +57,7 @@ public class MixinProjectPlugin implements Plugin<Project> {
         this.extension = project.getExtensions().create(Mixin.class, Mixin.EXTENSION_NAME, MixinExtension.class, project);
         this.version = determinePluginVersion();
         this.project.afterEvaluate(p -> {
-            ExtensionContainer extensions = this.project.getExtensions();
+            final ExtensionContainer extensions = this.project.getExtensions();
             extensions.getByType(RuntimesExtension.class).getAllDefinitions().forEach(this::createRefmapMappingsTask);
             // todo refmap and extra mappings
             extensions.getByType(SourceSetContainer.class).configureEach(this::configureSourceSet);
@@ -81,28 +81,28 @@ public class MixinProjectPlugin implements Plugin<Project> {
     }
 
     private void configureSourceSet(SourceSet sourceSet) {
-        ExtraPropertiesExtension extraProperties = sourceSet.getExtensions().getExtraProperties();
+        final ExtraPropertiesExtension extraProperties = sourceSet.getExtensions().getExtraProperties();
         if (!extraProperties.has("refMap")) return;
-        Object refMapFileName = extraProperties.get("refMap");
+        final Object refMapFileName = extraProperties.get("refMap");
         if (refMapFileName == null) return;
 
-        TaskProvider<JavaCompile> compileTaskProvider = this.project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
+        final TaskProvider<JavaCompile> compileTaskProvider = this.project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
 
         compileTaskProvider.configure(compile -> {
-            File destinationDirectory = compile.getTemporaryDir();
-            File refMapFile = new RefMapFile(destinationDirectory, "refmap.json", (String) refMapFileName);
-            File tsrgFile = new File(destinationDirectory, "mappings.tsrg");
+            final File destinationDirectory = compile.getTemporaryDir();
+            final File refMapFile = new RefMapFile(destinationDirectory, "refmap.json", (String) refMapFileName);
+            final File tsrgFile = new File(destinationDirectory, "mappings.tsrg");
             compile.getExtensions().getExtraProperties().set("refMapFile", refMapFile);
             compile.getExtensions().getExtraProperties().set("tsrgFile", tsrgFile);
             compile.getOutputs().file(refMapFile);
             compile.getOutputs().file(tsrgFile);
-            Map<String, Object> apArgs = computeApArgs();
+            final Map<String, Object> apArgs = computeApArgs();
             compile.getInputs().properties(apArgs);
-            Provider<RegularFile> generatedMappingsFile = this.project.provider(() -> TaskDependencyUtils.extractRuntimeDefinition(this.project, sourceSet).getTask(AP_MAPPINGS_TASK_NAME)).map(TransformerUtils.guard(mappingTask -> {
+            final Provider<RegularFile> generatedMappingsFile = this.project.provider(() -> TaskDependencyUtils.extractRuntimeDefinition(this.project, sourceSet).getTask(AP_MAPPINGS_TASK_NAME)).map(TransformerUtils.guard(mappingTask -> {
                 compile.dependsOn(mappingTask);
                 return mappingTask.get().getOutput().get();
             }));
-            RegularFile reobfTsrgFile = this.extension.getReobfTsrgFile().orElse(generatedMappingsFile).get();
+            final RegularFile reobfTsrgFile = this.extension.getReobfTsrgFile().orElse(generatedMappingsFile).get();
             compile.getInputs().file(reobfTsrgFile);
             apArgs.put("reobfTsrgFile", reobfTsrgFile.getAsFile().getAbsolutePath());
             apArgs.put("outRefMapFile", refMapFile.getAbsolutePath());
@@ -113,7 +113,7 @@ public class MixinProjectPlugin implements Plugin<Project> {
 
     @NotNull
     private Map<String, Object> computeApArgs() {
-        Map<String, Object> apArgs = new HashMap<>();
+        final Map<String, Object> apArgs = new HashMap<>();
         apArgs.put("mappingTypes", "tsrg");
         apArgs.put("pluginVersion", this.version.contains("neo") ? this.version : this.version + "-neo");
         apArgs.put("disableTargetValidator", this.extension.getDisableTargetValidator().getOrNull());
@@ -129,10 +129,10 @@ public class MixinProjectPlugin implements Plugin<Project> {
         jar.getManifest().getAttributes().computeIfAbsent("MixinConfigs", $ -> String.join(",", extension.getConfigs().get()));
         for (Task task : jar.getSource().getBuildDependencies().getDependencies(jar)) {
             if (!(task instanceof JavaCompile)) continue;
-            ExtensionContainer extensions = task.getExtensions();
-            ExtraPropertiesExtension props = extensions.getExtraProperties();
+            final ExtensionContainer extensions = task.getExtensions();
+            final ExtraPropertiesExtension props = extensions.getExtraProperties();
             if (!props.has("refMapFile")) continue;
-            RefMapFile refMapFile = (RefMapFile) props.get("refMapFile");
+            final RefMapFile refMapFile = (RefMapFile) props.get("refMapFile");
             if (refMapFile == null) continue;
             if (!refMapFile.exists()) continue;
             jar.from(refMapFile, copy -> {
