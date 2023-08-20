@@ -102,14 +102,12 @@ public final class VanillaDependencyManager {
         return runtimeExtension.maybeCreate(builder -> {
             final String version = dependency.getVersion() == null ? runtimeExtension.getVersion().get() : dependency.getVersion();
 
-            builder.withName(dependency.getName());
+            builder.withMinecraftArtifact(StringCapitalizationUtils.deCapitalize(dependency.getName().replace("mcp_", "")));
             builder.withDistributionType(DistributionType.valueOf(dependency.getName().toUpperCase(Locale.ROOT)));
             builder.withMinecraftVersion(version);
             builder.withFartVersion(runtimeExtension.getFartVersion());
             builder.withForgeFlowerVersion(runtimeExtension.getForgeFlowerVersion());
             builder.withAccessTransformerApplierVersion(runtimeExtension.getAccessTransformerApplierVersion());
-
-            builder.withName(String.format("dependencyVanilla%s%s", StringCapitalizationUtils.capitalize(dependency.getName().replace("mcp_", "")), version == null ? "" : version));
         });
     }
 

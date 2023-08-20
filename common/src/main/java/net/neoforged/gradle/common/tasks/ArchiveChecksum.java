@@ -71,7 +71,7 @@ public abstract class ArchiveChecksum extends DefaultTask {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @OutputFile

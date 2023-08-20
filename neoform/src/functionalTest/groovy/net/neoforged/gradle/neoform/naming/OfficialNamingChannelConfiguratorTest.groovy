@@ -9,7 +9,7 @@ class OfficialNamingChannelConfiguratorTest extends SimpleTestSpecification {
         settingsFile << "rootProject.name = 'official-naming-channel-configurator'"
         buildFile << """
             plugins {
-                id 'net.neoforged.gradle.mcp'
+                id 'net.neoforged.gradle.neoform'
             }
             
             println project.minecraft.mappings.channel.get().getName()
@@ -27,7 +27,7 @@ class OfficialNamingChannelConfiguratorTest extends SimpleTestSpecification {
         settingsFile << "rootProject.name = 'official-naming-channel-configurator'"
         buildFile << """
             plugins {
-                id 'net.neoforged.gradle.mcp'
+                id 'net.neoforged.gradle.neoform'
             }
             
             minecraft {
@@ -49,7 +49,7 @@ class OfficialNamingChannelConfiguratorTest extends SimpleTestSpecification {
         settingsFile << "rootProject.name = 'official-naming-channel-configurator'"
         buildFile << """
             plugins {
-                id 'net.neoforged.gradle.mcp'
+                id 'net.neoforged.gradle.neoform'
             }
             
             minecraft {
@@ -65,7 +65,7 @@ class OfficialNamingChannelConfiguratorTest extends SimpleTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraft:mcp_client:1.19.2-20220805.130853'
+                implementation 'net.minecraft:neoform_client:+'
             }
         """
 

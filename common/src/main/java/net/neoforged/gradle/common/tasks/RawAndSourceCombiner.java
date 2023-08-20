@@ -32,11 +32,11 @@ public abstract class RawAndSourceCombiner extends NeoGradleBase implements With
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getSourceJarInput();
 
     @OutputFile

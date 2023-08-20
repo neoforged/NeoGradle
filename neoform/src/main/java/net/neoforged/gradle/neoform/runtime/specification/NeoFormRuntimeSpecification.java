@@ -2,6 +2,7 @@ package net.neoforged.gradle.neoform.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
@@ -9,19 +10,23 @@ import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
+
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Defines a specification for an MCP runtime.
  */
 public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification implements NeoFormSpecification {
-    private static final long serialVersionUID = -3537760562547500214L;
     private final Artifact neoFormArtifact;
     private final FileCollection additionalRecompileDependencies;
 
-    public NeoFormRuntimeSpecification(Project project, String name, Artifact neoFormArtifact, DistributionType side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, FileCollection additionalRecompileDependencies) {
-        super(project, name, side, preTaskTypeAdapters, postTypeAdapters);
+    public NeoFormRuntimeSpecification(Project project, String version, Artifact neoFormArtifact, DistributionType side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, FileCollection additionalRecompileDependencies) {
+        super(project, "neoForm", version, side, preTaskTypeAdapters, postTypeAdapters, NeoFormRuntimeExtension.class);
         this.neoFormArtifact = neoFormArtifact;
         this.additionalRecompileDependencies = additionalRecompileDependencies;
     }
@@ -158,7 +163,23 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
         }
 
         public NeoFormRuntimeSpecification build() {
-            return new NeoFormRuntimeSpecification(project, namePrefix, neoFormArtifact.get(), distributionType.get(), preTaskAdapters, postTaskAdapters, additionalDependencies);
+            final Provider<Artifact> resolvedArtifact = neoFormArtifact.map(a -> resolveNeoFormVersion(project, a));
+            final Provider<String> resolvedVersion = resolvedArtifact.map(Artifact::getVersion).map(v -> v.equals("+") ? "" : v);
+
+            return new NeoFormRuntimeSpecification(project, resolvedVersion.get(), resolvedArtifact.get(), distributionType.get(), preTaskAdapters, postTaskAdapters, additionalDependencies);
+        }
+
+        private static Artifact resolveNeoFormVersion(final Project project, final Artifact current) {
+            if (!Objects.equals(current.getVersion(), "+")) {
+                return current;
+            }
+
+            final Configuration resolveConfig = ConfigurationUtils.temporaryConfiguration(project, current.toDependency(project));
+            return resolveConfig.getResolvedConfiguration()
+                    .getResolvedArtifacts().stream()
+                    .filter(current.asArtifactMatcher())
+                    .findFirst()
+                    .map(Artifact::from).orElse(current);
         }
     }
 }

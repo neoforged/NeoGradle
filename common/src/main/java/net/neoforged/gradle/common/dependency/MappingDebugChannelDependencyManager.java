@@ -5,14 +5,11 @@ import com.google.common.collect.Sets;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
-import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
-import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.util.GradleInternalUtils;
 import org.gradle.api.Project;
@@ -36,7 +33,7 @@ public abstract class MappingDebugChannelDependencyManager {
             final Map<String, String> version,
             final CommonRuntimeDefinition<?> runtimeDefinition
     ) {
-        final String encodedVersion = channel.getDependencyNotationVersionManager().get().encode(version) + "¿" + runtimeDefinition.getSpecification().getName();
+        final String encodedVersion = channel.getDependencyNotationVersionManager().get().encode(version) + "¿" + runtimeDefinition.getSpecification().getVersionedName();
         return "fg.mappings:" + channel.getName() + ":" + encodedVersion + ":debug-mappings";
     }
 
@@ -93,7 +90,7 @@ public abstract class MappingDebugChannelDependencyManager {
                 .stream()
                 .filter(CommonRuntimeExtension.class::isInstance)
                 .map(ext -> (CommonRuntimeExtension<?,?,?>) ext)
-                .map(ext -> ext.findByName(runtimeName))
+                .map(ext -> ext.findByNameOrIdentifier(runtimeName))
                 .filter(Objects::nonNull)
                 .findFirst().orElseThrow(() -> new IllegalArgumentException("Could not find runtime with name: " + runtimeName + " for dependency: " + dependency.toString()));
 

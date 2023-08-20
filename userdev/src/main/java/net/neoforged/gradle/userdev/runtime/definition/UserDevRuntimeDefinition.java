@@ -141,7 +141,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         final Map<String, String> interpolationData = mcpRuntimeDefinition.buildRunInterpolationData();
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().isEmpty()) {
-            final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getName());
+            final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
             final Configuration modulesCfg;
             if (getSpecification().getProject().getConfigurations().getNames().contains(name)) {
                 modulesCfg = getSpecification().getProject().getConfigurations().getByName(name);

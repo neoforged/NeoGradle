@@ -21,11 +21,11 @@ public abstract class CollectDependencyLibraries extends DefaultRuntime {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getBaseLibraryFile();
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getDependencyFiles();
 
     @TaskAction

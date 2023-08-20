@@ -47,11 +47,11 @@ public abstract class ApplyBinPatches extends JarExec implements WithOutput {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getClean();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getPatch();
 
     @OutputFile

@@ -57,7 +57,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final ResolvedConfiguration resolvedUserDevConfiguration = userDevConfiguration.getResolvedConfiguration();
         final File userDevJar = resolvedUserDevConfiguration.getFiles().iterator().next();
 
-        final File forgeDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("forge/%s", spec.getName())).get().getAsFile();
+        final File forgeDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("forge/%s", spec.getIdentifier())).get().getAsFile();
         final File unpackedForgeDirectory = new File(forgeDirectory, "unpacked");
 
         unpackedForgeDirectory.mkdirs();
@@ -82,12 +82,11 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             throw new IllegalStateException("Userdev configuration spec has no MCP version. As of now this is not supported!");
         }
 
-        final String mcpVersion = Artifact.from(userDevConfigurationSpec.getMcpVersion().get()).getVersion();
+        final Artifact neoFormArtifact = Artifact.from(userDevConfigurationSpec.getMcpVersion().get());
 
         final NeoFormRuntimeDefinition mcpRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormVersion(mcpVersion)
+            builder.withNeoFormArtifact(neoFormArtifact)
                     .withDistributionType(DistributionType.JOINED)
-                    .withName(spec.getName())
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
 
             final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userDevConfigurationSpec.getAccessTransformerPaths(), unpackedForgeDirectory)
@@ -110,7 +109,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         final Types types = getProject().getExtensions().getByType(Types.class);
         userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
-             types.registerWithPotentialPrefix(spec.getName(), name, type::copyTo);
+             types.registerWithPotentialPrefix(spec.getIdentifier(), name, type::copyTo);
         });
 
         return new UserDevRuntimeDefinition(
@@ -135,7 +134,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         definition.onBake(
                 mappingsExtension.getChannel().get(),
-                spec.getProject().getLayout().getBuildDirectory().get().dir("userdev").dir(spec.getName()).getAsFile()
+                spec.getProject().getLayout().getBuildDirectory().get().dir("userdev").dir(spec.getIdentifier()).getAsFile()
         );
     }
 

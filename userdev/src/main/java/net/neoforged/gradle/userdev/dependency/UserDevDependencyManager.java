@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
@@ -104,11 +105,10 @@ public final class UserDevDependencyManager {
             final Provider<String> group = project.provider(dependency::getGroup).orElse(userDevExtension.getDefaultForgeGroup());
             final Provider<String> name = project.provider(dependency::getName).orElse(userDevExtension.getDefaultForgeName());
 
-
             builder.withForgeVersion(version);
             builder.withForgeGroup(group);
             builder.withForgeName(name);
-            builder.withName(String.format("dependencyForge%s", version.getOrElse("")));
+            builder.withDistributionType(DistributionType.JOINED);
         });
     }
 }

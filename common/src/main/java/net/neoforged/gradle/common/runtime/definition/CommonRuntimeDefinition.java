@@ -99,7 +99,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     public final TaskProvider<? extends WithOutput> getTask(String name) {
         final String taskName = CommonRuntimeUtils.buildTaskName(this, name);
         if (!taskOutputs.containsKey(taskName)) {
-            throw new IllegalArgumentException("No task with name " + name + " found in runtime " + specification.getName());
+            throw new IllegalArgumentException("No task with name " + name + " found in runtime " + specification.getVersionedName());
         }
 
         return taskOutputs.get(taskName);
@@ -205,7 +205,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     protected Map<String, String> buildRunInterpolationData() {
         final Map<String, String> interpolationData = Maps.newHashMap();
 
-        interpolationData.put("runtime_name", specification.getName());
+        interpolationData.put("runtime_name", specification.getVersionedName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
         interpolationData.put("assets_root", getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
         interpolationData.put("asset_index", getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));

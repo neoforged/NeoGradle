@@ -22,8 +22,7 @@ package net.neoforged.gradle.neoform;
 
 import net.neoforged.gradle.common.CommonPlugin;
 import net.neoforged.gradle.neoform.dependency.NeoFormDependencyManager;
-import net.neoforged.gradle.neoform.naming.MCPNamingChannelConfigurator;
-import net.neoforged.gradle.neoform.naming.MCPOfficialNamingChannelConfigurator;
+import net.neoforged.gradle.neoform.naming.NeoFormOfficialNamingChannelConfigurator;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
@@ -38,9 +37,11 @@ public class NeoFormProjectPlugin implements Plugin<Project> {
         // Needed to gain access to the common systems
         project.getPluginManager().apply(CommonPlugin.class);
 
-        NeoFormRuntimeExtension runtimeExtension = project.getExtensions().create("mcpRuntime", NeoFormRuntimeExtension.class, project);
 
-        MCPOfficialNamingChannelConfigurator.getInstance().configure(project);
+
+        NeoFormRuntimeExtension runtimeExtension = project.getExtensions().create("neoFormRuntime", NeoFormRuntimeExtension.class, project);
+
+        NeoFormOfficialNamingChannelConfigurator.getInstance().configure(project);
 
         //Setup handling of the dependencies
         NeoFormDependencyManager.getInstance().apply(project);

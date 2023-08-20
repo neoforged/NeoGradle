@@ -19,11 +19,33 @@ interface Specification {
 
     /**
      * The name of the specification.
-     * Is unique within the project.
+     * Is not unique within the project.
      *
      * @return The name.
      */
     @NotNull String getName();
+
+    /**
+     * The name of the specification.
+     * Is unique within the project.
+     *
+     * Generally combines the name with a unique version.
+     *
+     * @return The identifier.
+     */
+    @NotNull String getIdentifier();
+
+    /**
+     * The versioned name of the specification.
+     * This is unique in the project, it is derived from the name or the identifier.
+     *
+     * If this specification is the only one registered then it will return the normal name, else the identifier.
+     * The idea of this method is to improve the readability of the task tree and logs, in the default case that only
+     * a single runtime of that type is registered to any given project.
+     *
+     * @return The versioned name.
+     */
+    @NotNull String getVersionedName();
 
     /**
      * The artifact distribution type of the specification.
@@ -63,14 +85,6 @@ interface Specification {
          * @return The projcet
          */
         @NotNull Project getProject();
-
-        /**
-         * Sets the name of the specification which is about to be build.
-         *
-         * @param namePrefix The name prefix.
-         * @return The builder instance.
-         */
-        B withName(String namePrefix);
 
         /**
          * Sets the distribution type via a provider of the specification which is about to be build.

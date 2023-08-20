@@ -72,7 +72,7 @@ public abstract class ApplyMappingsToSourceJar extends DefaultRuntime implements
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @Input

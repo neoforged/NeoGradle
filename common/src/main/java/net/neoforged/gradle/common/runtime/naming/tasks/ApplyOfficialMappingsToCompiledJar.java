@@ -45,14 +45,14 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
     public abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getMappings();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getLibraries();
 }

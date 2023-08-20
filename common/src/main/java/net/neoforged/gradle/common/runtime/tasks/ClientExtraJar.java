@@ -41,6 +41,6 @@ public abstract class ClientExtraJar extends NeoGradleBase implements WithOutput
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getOriginalClientJar();
 }

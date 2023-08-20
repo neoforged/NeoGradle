@@ -72,6 +72,6 @@ public abstract class CleanArtifact extends DefaultRuntime {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 }

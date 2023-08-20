@@ -59,11 +59,11 @@ public abstract class Patch extends DefaultRuntime {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @InputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract DirectoryProperty getPatchDirectory();
 
     @OutputFile

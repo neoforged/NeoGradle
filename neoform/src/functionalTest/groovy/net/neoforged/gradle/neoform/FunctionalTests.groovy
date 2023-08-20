@@ -1,72 +1,53 @@
 package net.neoforged.gradle.neoform
 
-import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
+import net.neoforged.gradle.common.util.SerializationUtils
+import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
-class FunctionalTests extends SimpleTestSpecification {
-
-    static {
-        DEBUG = false
-        DEBUG_PROJECT_DIR = false
-    }
-
-    protected File codeFile
+class FunctionalTests extends BuilderBasedTestSpecification {
 
     @Override
-    def setup() {
-        codeFile = new File(testProjectDir, 'src/main/java/net/minecraftforge/gradle/mcp/FunctionalTests.java')
-        codeFile.getParentFile().mkdirs()
+    protected void configurePluginUnderTest() {
+        pluginUnderTest = "net.neoforged.gradle.neoform";
+        injectIntoAllProject = true;
     }
 
-    def "a mod with mcp as dependency can run the patch task for that dependency"() {
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("./tests/")
+    }
+
+    def "a mod with neoform as dependency can run the apply official mappings task"() {
         given:
-        settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
-        buildFile << """
-            plugins {
-                id 'net.neoforged.gradle.mcp'
-            }
-            
+        def project = create "neoform-has-runnable-patch-task", {
+            it.build("""
             java {
                 toolchain {
                     languageVersion = JavaLanguageVersion.of(17)
                 }
-            }
-            
-            mcp {
-                mcpConfigVersion = '1.19-20220627.091056'
             }
             
             dependencies {
-                implementation 'net.minecraft:mcp_client'
+                implementation 'net.minecraft:neoform_client:+'
             }
-        """
+            """)
+        }
 
         when:
-        def result = gradleRunner()
-                .withArguments('--stacktrace', ':dependencyMcpClient1.19-20220627.091056Patch')
-                .build()
+        def run = project.run { it.tasks(':neoFormApplyOfficialMappings') }
 
         then:
-        result.output.contains('BUILD SUCCESSFUL')
+        run.task(':neoFormApplyOfficialMappings').outcome == TaskOutcome.SUCCESS
     }
 
-    def "a mod with mcp as dependency and official mappings can compile through gradle"() {
-
+    def "neoform applies user ATs and allows remapped compiling"() {
         given:
-        settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
-        buildFile << """
-            plugins {
-                id 'net.neoforged.gradle.mcp'
-            }
-            
+        def project = create "neoform-compile-with-ats", {
+            it.build("""
             java {
                 toolchain {
                     languageVersion = JavaLanguageVersion.of(17)
                 }
-            }
-            
-            mcp {
-                mcpConfigVersion = '1.19-20220627.091056'
             }
             
             minecraft {
@@ -76,11 +57,11 @@ class FunctionalTests extends SimpleTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraft:mcp_client:1.19-20220627.091056'
+                implementation 'net.minecraft:neoform_client:+'
             }
-        """
-        codeFile << """
-            package net.neoforged.gradle.mcp;
+            """)
+            it.file("src/main/java/net/neoforged/gradle/neoform/FunctionalTests.java", """
+            package net.neoforged.gradle.neoform;
             
             import net.minecraft.client.Minecraft;
             
@@ -89,39 +70,33 @@ class FunctionalTests extends SimpleTestSpecification {
                     System.out.println(Minecraft.LOGGER.getClass().toString());
                 }
             }
-        """
+            """)
+        }
 
         when:
-        def result = runTask('build')
+        def run = project.run { it.tasks('build') }
 
         then:
-        result.output.contains('BUILD SUCCESSFUL')
+        run.task('build').outcome == TaskOutcome.SUCCESS
     }
 
-    def "the mcp runtime by default supports the build cache"() {
+    def "neoform re-setup uses a build-cache" () {
         given:
-        settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
-        buildFile << """
-            plugins {
-                id 'net.neoforged.gradle.mcp'
-            }
-            
+        def project = create "neoform-compile-with-ats", {
+            it.build("""
             java {
                 toolchain {
                     languageVersion = JavaLanguageVersion.of(17)
                 }
             }
             
-            mcp {
-                mcpConfigVersion = '1.19-20220627.091056'
-            }
-            
             dependencies {
-                implementation 'net.minecraft:mcp_client'
+                implementation 'net.minecraft:neoform_client:+'
             }
-        """
-        codeFile << """
-            package net.neoforged.gradle.mcp;
+            """)
+
+            it.file("src/main/java/net/neoforged/gradle/neoform/FunctionalTests.java", """
+            package net.neoforged.gradle.neoform;
             
             import net.minecraft.client.Minecraft;
             
@@ -130,19 +105,23 @@ class FunctionalTests extends SimpleTestSpecification {
                     System.out.println(Minecraft.getInstance().getClass().toString());
                 }
             }
-        """
+            """)
+        }
 
         when:
-        def result = runTask('--build-cache', ':dependencyMcpClient1.19-20220627.091056SelectRawArtifact')
+        def run = project.run { it.tasks('build') }
 
         then:
-        result.task(":dependencyMcpClient1.19-20220627.091056Recompile").outcome == TaskOutcome.SUCCESS
+        run.task('build').outcome == TaskOutcome.SUCCESS
 
         when:
-        new File(testProjectDir, 'build').deleteDir()
-        result = runTask('--build-cache', ':dependencyMcpClient1.19-20220627.091056SelectRawArtifact')
+        new File(project.getProjectDir(), 'build').deleteDir()
+        def secondRun = project.run {it.tasks('build') }
 
         then:
-        result.task(":dependencyMcpClient1.19-20220627.091056Recompile").outcome == TaskOutcome.FROM_CACHE
+        secondRun.task('build').outcome == TaskOutcome.SUCCESS
+        secondRun.task('neoFormClientRecompile').outcome == TaskOutcome.FROM_CACHE
     }
+
+
 }

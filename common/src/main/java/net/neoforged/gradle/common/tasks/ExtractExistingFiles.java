@@ -55,7 +55,7 @@ public abstract class ExtractExistingFiles extends DefaultTask {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getArchive();
 
     @OutputDirectories

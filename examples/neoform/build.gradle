@@ -1,0 +1,13 @@
+plugins {
+    id 'net.neoforged.gradle.neoform'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    implementation 'net.minecraft:neoform_client:+'
+}

@@ -31,7 +31,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      * @return The path to the jar.
      */
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     @DSLProperty
     RegularFileProperty getExecutingJar();
 

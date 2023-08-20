@@ -67,6 +67,6 @@ public abstract class ObfuscatedDependencyMarker extends DefaultTask implements 
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getObfuscatedJar();
 }

@@ -162,8 +162,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
     @NotNull
     protected NeoFormRuntimeDefinition doCreate(final NeoFormRuntimeSpecification spec) {
-        if (this.runtimes.containsKey(spec.getName()))
-            throw new IllegalArgumentException("Cannot register runtime with name '" + spec.getName() + "' because it already exists");
+        if (this.runtimes.containsKey(spec.getIdentifier()))
+            throw new IllegalArgumentException("Cannot register runtime with identifier '" + spec.getIdentifier() + "' because it already exists");
 
         final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
         final Mappings mappingsExtension = minecraftExtension.getMappings();
@@ -193,7 +193,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             );
         }
 
-        final File neoFormDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getName())).get().getAsFile();
+        final File neoFormDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
         final File unpackedMcpZipDirectory = new File(neoFormDirectory, "unpacked");
         final File stepsMcpDirectory = new File(neoFormDirectory, "steps");
 
@@ -214,10 +214,10 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final Map<String, File> data = buildDataMap(neoFormConfig, spec.getDistribution(), unpackedMcpZipDirectory);
 
-        final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getName(), ArtifactProvider.class, task -> {
+        final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(neoFormDirectory, "sources.jar"));
         });
-        final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getName(), ArtifactProvider.class, task -> {
+        final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(neoFormDirectory, "raw.jar"));
         });
 
@@ -242,13 +242,13 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
-        final File neoFormDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getName())).get().getAsFile();
+        final File neoFormDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
         final File unpackedMcpZipDirectory = new File(neoFormDirectory, "unpacked");
         final File stepsMcpDirectory = new File(neoFormDirectory, "steps");
 
         final Map<String, String> versionData = Maps.newHashMap(mappingsExtension.getVersion().get());
         versionData.put(NamingConstants.Version.MINECRAFT_VERSION, spec.getMinecraftVersion());
-        versionData.put(NeoFormRuntimeConstants.Naming.Version.MCP_RUNTIME, spec.getName());
+        versionData.put(NeoFormRuntimeConstants.Naming.Version.NEOFORM_VERSION, spec.getVersionedName());
         definition.setMappingVersionData(versionData);
 
         final Map<String, File> data = buildDataMap(neoFormConfig, spec.getDistribution(), unpackedMcpZipDirectory);
@@ -320,7 +320,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final TaskProvider<? extends WithOutput> lastTask = Iterators.getLast(taskOutputs.values().iterator());
         final Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks = Sets.newHashSet();
         final TaskBuildingContext context = new TaskBuildingContext(
-                spec.getProject(), String.format("mapGameFor%s", StringUtils.capitalize(spec.getName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), lastTask, definition.getGameArtifactProvidingTasks(), versionData, additionalRuntimeTasks, definition
+                spec.getProject(), String.format("mapGameFor%s", StringUtils.capitalize(spec.getVersionedName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), lastTask, definition.getGameArtifactProvidingTasks(), versionData, additionalRuntimeTasks, definition
         );
 
         final TaskProvider<? extends Runtime> remapTask = context.getNamingChannel().getApplySourceMappingsTaskBuilder().get().build(context);
@@ -352,7 +352,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         });
 
         final GenerationTaskBuildingContext generationTaskBuildingContext = new GenerationTaskBuildingContext(
-                spec.getProject(), String.format("generateDebuggingMappingsFor%s", StringUtils.capitalize(spec.getName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), definition.getGameArtifactProvidingTasks(), definition
+                spec.getProject(), String.format("generateDebuggingMappingsFor%s", StringUtils.capitalize(spec.getVersionedName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), definition.getGameArtifactProvidingTasks(), definition
         );
 
         final TaskProvider<? extends Runtime> generateDebuggingMappingsTask = generationTaskBuildingContext.getNamingChannel().getGenerateDebuggingMappingsJarTaskBuilder().get().build(generationTaskBuildingContext);

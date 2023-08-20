@@ -60,11 +60,11 @@ public abstract class SideAnnotationStripper extends Execute {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInputFile();
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getDataFiles();
 
     @Input

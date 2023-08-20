@@ -10,7 +10,7 @@ public class MultipleDefinitionsFoundException extends Exception {
     private final List<? extends Definition<?>> definitions;
 
     public MultipleDefinitionsFoundException(List<? extends Definition<?>> definitions) {
-        super("Could not determine the runtime definition to use. Multiple definitions were found: " + definitions.stream().map(r -> r.getSpecification().getName()).collect(Collectors.joining(", ")));
+        super("Could not determine the runtime definition to use. Multiple definitions were found: " + definitions.stream().map(r -> r.getSpecification().getVersionedName()).collect(Collectors.joining(", ")));
         this.definitions = definitions;
     }
 

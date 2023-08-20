@@ -29,6 +29,6 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
     }
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getInputFiles();
 }

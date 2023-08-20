@@ -29,12 +29,12 @@ public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSo
     public abstract Property<Boolean> getRemapLambdas();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     @Optional
     public abstract RegularFileProperty getClientMappingsFile();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     @Optional
     public abstract RegularFileProperty getServerMappingsFile();
 }

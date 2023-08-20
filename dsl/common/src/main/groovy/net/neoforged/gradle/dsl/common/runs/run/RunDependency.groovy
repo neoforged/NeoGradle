@@ -14,7 +14,7 @@ import org.gradle.api.tasks.PathSensitivity
 interface RunDependency extends BaseDSLElement<RunDependency> {
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     @DSLProperty
     ConfigurableFileCollection getDependency();
 

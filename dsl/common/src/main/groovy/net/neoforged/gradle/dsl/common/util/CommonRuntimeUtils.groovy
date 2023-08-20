@@ -29,10 +29,10 @@ final class CommonRuntimeUtils {
     }
 
     static String buildTaskName(final Specification runtimeSpec, final String defaultName) {
-        if (runtimeSpec.getName().isEmpty())
+        if (runtimeSpec.getVersionedName().isEmpty())
             return defaultName;
 
-        return runtimeSpec.getName() + StringUtils.capitalize(defaultName);
+        return runtimeSpec.getVersionedName() + StringUtils.capitalize(defaultName);
     }
 
     static <D extends Definition<? extends Specification>> String buildTaskName(final D runtimeSpec, final String defaultName) {
@@ -68,7 +68,7 @@ final class CommonRuntimeUtils {
     }
 
     static String buildStepName(Specification spec, String name) {
-        return StringUtils.uncapitalize(name.replace(spec.getName(), ""));
+        return StringUtils.uncapitalize(name.replace(spec.getVersionedName(), ""));
     }
 
     static Optional<TaskProvider<? extends WithOutput>> getInputTaskForTaskFrom(final Specification spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks) {

@@ -33,7 +33,7 @@ public abstract class UnpackZip extends DefaultRuntime {
     }
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInputZip();
 
     @OutputDirectory

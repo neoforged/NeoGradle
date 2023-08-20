@@ -30,14 +30,14 @@ import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class MCPOfficialNamingChannelConfigurator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MCPOfficialNamingChannelConfigurator.class);
-    private static final MCPOfficialNamingChannelConfigurator INSTANCE = new MCPOfficialNamingChannelConfigurator();
+public final class NeoFormOfficialNamingChannelConfigurator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NeoFormOfficialNamingChannelConfigurator.class);
+    private static final NeoFormOfficialNamingChannelConfigurator INSTANCE = new NeoFormOfficialNamingChannelConfigurator();
 
-    private MCPOfficialNamingChannelConfigurator() {
+    private NeoFormOfficialNamingChannelConfigurator() {
     }
 
-    public static MCPOfficialNamingChannelConfigurator getInstance() {
+    public static NeoFormOfficialNamingChannelConfigurator getInstance() {
         return INSTANCE;
     }
 

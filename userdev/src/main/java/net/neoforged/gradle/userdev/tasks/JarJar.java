@@ -66,7 +66,7 @@ public abstract class JarJar extends Jar {
     }
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     FileCollection getSourceSetsClassesDirs() {
         if (sourceSetsClassesDirs == null) {
             ConfigurableFileCollection allClassesDirs = getProject().getObjects().fileCollection();

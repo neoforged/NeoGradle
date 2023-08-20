@@ -116,12 +116,12 @@ public abstract class ListLibraries extends DefaultRuntime {
 
     @InputFile
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getServerBundleFile();
 
     @InputFile
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getDownloadedVersionJsonFile();
 
     private static class FileList {

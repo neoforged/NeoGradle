@@ -79,7 +79,7 @@ public abstract class ExtractNatives extends DefaultRuntime {
 
     @InputFile
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getVersionJsonFile();
 
     @Input

@@ -6,12 +6,14 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.dsl.userdev.runtime.specification.UserDevSpecification;
+import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Defines a specification for a ForgeUserDev runtime.
@@ -24,8 +26,8 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
     @Nullable
     private String minecraftVersion = null;
 
-    public UserDevRuntimeSpecification(Project project, String name, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String forgeGroup, String forgeName, String forgeVersion) {
-        super(project, name, distribution, preTaskTypeAdapters, postTypeAdapters);
+    public UserDevRuntimeSpecification(Project project, String version, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String forgeGroup, String forgeName, String forgeVersion) {
+        super(project, "forge", version, distribution, preTaskTypeAdapters, postTypeAdapters, UserDevRuntimeExtension.class);
         this.forgeGroup = forgeGroup;
         this.forgeName = forgeName;
         this.forgeVersion = forgeVersion;
@@ -109,18 +111,18 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         @Override
-        public Builder withForgeVersion(final Provider<String> mcpVersion) {
-            this.forgeVersionProvider = mcpVersion;
+        public Builder withForgeVersion(final Provider<String> forgeVersion) {
+            this.forgeVersionProvider = forgeVersion;
             this.hasConfiguredForgeVersion = true;
             return this;
         }
 
         @Override
-        public Builder withForgeVersion(final String mcpVersion) {
-            if (mcpVersion == null) // Additional null check for convenient loading of versions from dependencies.
+        public Builder withForgeVersion(final String forgeVersion) {
+            if (forgeVersion == null) // Additional null check for convenient loading of versions from dependencies.
                 return this;
 
-            return withForgeVersion(project.provider(() -> mcpVersion));
+            return withForgeVersion(project.provider(() -> forgeVersion));
         }
 
         @Override
@@ -154,7 +156,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         public UserDevRuntimeSpecification build() {
-            return new UserDevRuntimeSpecification(project, namePrefix, distributionType.get(), preTaskAdapters, postTaskAdapters, forgeGroupProvider.get(), forgeNameProvider.get(), forgeVersionProvider.get());
+            return new UserDevRuntimeSpecification(project, Optional.of(forgeVersionProvider.get()).map(v -> v.equals("+") ? "" : v).get(), distributionType.get(), preTaskAdapters, postTaskAdapters, forgeGroupProvider.get(), forgeNameProvider.get(), forgeVersionProvider.get());
         }
     }
 }

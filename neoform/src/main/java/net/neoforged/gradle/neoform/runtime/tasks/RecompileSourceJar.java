@@ -128,7 +128,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInputJar();
 
     @InputFiles

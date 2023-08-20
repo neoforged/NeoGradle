@@ -61,7 +61,7 @@ public final class CommonRuntimeTaskUtils {
         final Set<TaskProvider<? extends Runtime>> additionalRemapTasks = new HashSet<>();
         final TaskBuildingContext context = new TaskBuildingContext(
                 definition.getSpecification().getProject(),
-                "accessTransform" + StringUtils.capitalize(definition.getSpecification().getName()) + "_" + fileName,
+                "accessTransform" + StringUtils.capitalize(definition.getSpecification().getVersionedName()) + "_" + fileName,
                 name -> CommonRuntimeUtils.buildTaskName(definition.getSpecification(), name) + "_" + fileName,
                 provider,
                 gameArtifactTaskProviderMap,

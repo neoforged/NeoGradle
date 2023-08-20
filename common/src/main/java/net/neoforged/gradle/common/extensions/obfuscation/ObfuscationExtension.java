@@ -110,10 +110,10 @@ public abstract class ObfuscationExtension implements ConfigurableDSLElement<Obf
             configuredMappingVersionData = runtimeDefinition.getMappingVersionData();
         } catch (MultipleDefinitionsFoundException e) {
             if (minecraftVersion == null) {
-                throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getName()).collect(Collectors.joining(", ")), e);
+                throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
             }
 
-            LOGGER.warn("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getName()).collect(Collectors.joining(", ")), e);
+            LOGGER.warn("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
             LOGGER.warn("Using the manually configured version: " + minecraftVersionString);
             configuredMappingVersionData = Maps.newHashMap();
         }

@@ -28,6 +28,6 @@ public abstract class NoopRuntime extends DefaultRuntime {
 
     @InputFile
     @DSLProperty
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 }

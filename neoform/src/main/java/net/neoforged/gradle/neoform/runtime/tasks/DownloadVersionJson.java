@@ -43,6 +43,6 @@ public abstract class DownloadVersionJson extends DownloadFile {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getDownloadedManifest();
 }

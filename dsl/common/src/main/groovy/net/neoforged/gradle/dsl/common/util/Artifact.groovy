@@ -105,6 +105,14 @@ class Artifact implements Comparable<Artifact>, Serializable {
         return new Artifact(dependency.getGroup() == null ? "" : dependency.getGroup(), dependency.getName(), dependency.getVersion() == null ? "" : dependency.getVersion(), artifact.getClassifier(), artifact.getExtension());
     }
 
+    static Artifact from(ResolvedArtifact dependency) {
+        return new Artifact(dependency.moduleVersion.id.group == null ? "" : dependency.moduleVersion.id.group,
+                dependency.moduleVersion.id.name,
+                dependency.moduleVersion.id.version == null ? "" : dependency.moduleVersion.id.version,
+                dependency.classifier,
+                dependency.extension);
+    }
+
     Artifact(String group, String name, String version, @Nullable String classifier, @Nullable String ext) {
         this.group = group;
         this.name = name;

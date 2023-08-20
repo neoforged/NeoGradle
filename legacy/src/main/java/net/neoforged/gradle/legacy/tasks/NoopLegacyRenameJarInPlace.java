@@ -55,7 +55,7 @@ public abstract class NoopLegacyRenameJarInPlace extends DefaultTask {
 
     @Optional
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public Provider<File> getToolJar() {
         return getProject().provider(() -> File.createTempFile("dummy", ".jar"));
     }

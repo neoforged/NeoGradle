@@ -8,7 +8,7 @@ public final class NeoFormRuntimeConstants {
 
     public static final class Naming {
         public static final class Version {
-            public static final String MCP_RUNTIME = "neoFormVersion";
+            public static final String NEOFORM_VERSION = "neoFormVersion";
         }
     }
 }

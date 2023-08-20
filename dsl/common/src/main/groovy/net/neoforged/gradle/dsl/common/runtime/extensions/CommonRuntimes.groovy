@@ -85,7 +85,7 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @return The runtime definition, or null if not found.
      */
     @Nullable
-    D findByName(String name);
+    D findByNameOrIdentifier(String name);
 
     /**
      * Tries to find all runtimes which can be found in the given configuration or its dependents.

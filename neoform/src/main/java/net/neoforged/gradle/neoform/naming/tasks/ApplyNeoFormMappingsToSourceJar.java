@@ -16,6 +16,6 @@ public abstract class ApplyNeoFormMappingsToSourceJar extends ApplyMappingsToSou
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getMappings();
 }

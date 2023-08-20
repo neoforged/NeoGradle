@@ -20,7 +20,7 @@ public abstract class ArtifactFromOutput extends NeoGradleBase implements WithOu
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @OutputFile

@@ -59,8 +59,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
     @NotNull
     protected VanillaRuntimeDefinition doCreate(final VanillaRuntimeSpecification spec) {
-        if (this.runtimes.containsKey(spec.getName()))
-            throw new IllegalArgumentException("Cannot register runtime with name '" + spec.getName() + "' because it already exists");
+        if (this.runtimes.containsKey(spec.getIdentifier()))
+            throw new IllegalArgumentException("Cannot register runtime with identifier '" + spec.getIdentifier() + "' because it already exists");
 
         final Project project = spec.getProject();
         final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
@@ -99,7 +99,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                             spec.getProject().getDependencies().create(dependency)));
         }
 
-        final File vanillaDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("vanilla/%s", spec.getName())).get().getAsFile();
+        final File vanillaDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("vanilla/%s", spec.getIdentifier())).get().getAsFile();
         final File runtimeWorkingDirectory = new File(vanillaDirectory, "runtime");
         final File stepsMcpDirectory = new File(vanillaDirectory, "steps");
 
@@ -121,10 +121,10 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             gameArtifactTasks.put(GameArtifact.SERVER_JAR, extractedBundleTask);
         }
 
-        final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getName(), ArtifactProvider.class, task -> {
+        final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(runtimeWorkingDirectory, "sources.jar"));
         });
-        final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getName(), ArtifactProvider.class, task -> {
+        final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(runtimeWorkingDirectory, "raw.jar"));
         });
 
@@ -149,7 +149,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
-        final File vanillaDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("vanilla/%s", spec.getName())).get().getAsFile();
+        final File vanillaDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("vanilla/%s", spec.getIdentifier())).get().getAsFile();
         final File runtimeWorkingDirectory = new File(vanillaDirectory, "runtime");
         final File stepsMcpDirectory = new File(vanillaDirectory, "steps");
 

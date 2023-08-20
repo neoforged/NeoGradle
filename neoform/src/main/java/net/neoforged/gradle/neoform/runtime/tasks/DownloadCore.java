@@ -42,7 +42,7 @@ public abstract class DownloadCore extends DownloadFile {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getDownloadedVersionJson();
 
     @Input

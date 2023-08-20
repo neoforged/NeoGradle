@@ -231,7 +231,7 @@ public abstract class JarExec extends DownloadingTask {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public Provider<File> getToolJar() {
         return toolFile;
     }

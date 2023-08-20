@@ -53,11 +53,11 @@ public abstract class ExtractInheritance extends JarExec {
 
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract ListProperty<File> getLibraries();
 
     @OutputFile

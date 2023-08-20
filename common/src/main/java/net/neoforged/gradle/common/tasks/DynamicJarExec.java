@@ -69,7 +69,7 @@ public abstract class DynamicJarExec extends JarExec {
     protected abstract MapProperty<String, FileWrapper> getDataGradle();
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @OutputFile

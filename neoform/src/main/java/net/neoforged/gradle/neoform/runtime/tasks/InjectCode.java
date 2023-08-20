@@ -70,11 +70,11 @@ public abstract class InjectCode extends DefaultRuntime {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInjectionSource();
 
     @InputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract DirectoryProperty getInjectionDirectory();
 
     @Input

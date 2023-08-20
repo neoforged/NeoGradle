@@ -9,6 +9,8 @@ import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 
+import java.util.Optional;
+
 /**
  * Defines a specification for a vanilla runtime.
  */
@@ -18,8 +20,8 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
     private final String forgeFlowerVersion;
     private final String accessTransformerApplierVersion;
 
-    public VanillaRuntimeSpecification(Project project, String name, DistributionType side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String minecraftVersion, String fartVersion, String forgeFlowerVersion, String accessTransformerApplierVersion) {
-        super(project, name, side, preTaskTypeAdapters, postTypeAdapters);
+    public VanillaRuntimeSpecification(Project project, String name, String version, DistributionType side, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String minecraftVersion, String fartVersion, String forgeFlowerVersion, String accessTransformerApplierVersion) {
+        super(project, name, version, side, preTaskTypeAdapters, postTypeAdapters, VanillaRuntimeExtension.class);
         this.minecraftVersion = minecraftVersion;
         this.fartVersion = fartVersion;
         this.forgeFlowerVersion = forgeFlowerVersion;
@@ -81,6 +83,8 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
 
     public static final class Builder extends CommonRuntimeSpecification.Builder<VanillaRuntimeSpecification, Builder> {
 
+        private Provider<String> minecraftArtifact;
+        
         private Provider<String> minecraftVersion;
 
         private Provider<String> fartVersion;
@@ -121,6 +125,18 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
             if (!this.hasConfiguredAccessTransformerApplierVersion) {
                 this.accessTransformerApplierVersion = runtimeExtension.getAccessTransformerApplierVersion();
             }
+        }
+
+        public Builder withMinecraftArtifact(final Provider<String> minecraftArtifact) {
+            this.minecraftArtifact = minecraftArtifact;
+            return getThis();
+        }
+
+        public Builder withMinecraftArtifact(final String minecraftArtifact) {
+            if (minecraftArtifact == null) // Additional null check for convenient loading of sides from dependencies.
+                return getThis();
+
+            return withMinecraftArtifact(project.provider(() -> minecraftArtifact));
         }
 
         public Builder withMinecraftVersion(final Provider<String> minecraftVersion) {
@@ -176,7 +192,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
 
         @Override
         public VanillaRuntimeSpecification build() {
-            return new VanillaRuntimeSpecification(project, namePrefix, distributionType.get(), preTaskAdapters, postTaskAdapters, minecraftVersion.get(), fartVersion.get(), forgeFlowerVersion.get(), accessTransformerApplierVersion.get());
+            return new VanillaRuntimeSpecification(project, minecraftArtifact.get(), Optional.of(minecraftVersion.get()).map(v -> v.equals("+") ? "" : v).get(), distributionType.get(), preTaskAdapters, postTaskAdapters, minecraftVersion.get(), fartVersion.get(), forgeFlowerVersion.get(), accessTransformerApplierVersion.get());
         }
     }
 }

@@ -13,6 +13,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.provider.Provider;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -71,9 +72,9 @@ public final class NeoFormDependencyManager {
     }
 
     private boolean isSupportedSide(final Dependency dependency) {
-        return dependency.getName().equals("neoForm_client") ||
-                dependency.getName().equals("neoForm_server") ||
-                dependency.getName().equals("neoForm_joined");
+        return dependency.getName().equalsIgnoreCase("neoform_client") ||
+                dependency.getName().equalsIgnoreCase("neoform_server") ||
+                dependency.getName().equalsIgnoreCase("neoform_joined");
     }
 
     private boolean hasMatchingArtifact(ExternalModuleDependency externalModuleDependency) {
@@ -97,14 +98,12 @@ public final class NeoFormDependencyManager {
     private static NeoFormRuntimeDefinition buildNeoFormRuntimeFromDependency(Project project, ExternalModuleDependency dependency) {
         final NeoFormRuntimeExtension runtimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
         return runtimeExtension.maybeCreate(builder -> {
-            builder.withDistributionType(DistributionType.valueOf(dependency.getName().replace("neoForm_", "").toUpperCase(Locale.ROOT)));
+            builder.withDistributionType(DistributionType.valueOf(dependency.getName().toLowerCase().replace("neoform_", "").toUpperCase(Locale.ROOT)));
             if (dependency.getVersion() == null) {
                 throw new IllegalStateException("Version is not defined on NeoForm dependency");
             }
 
             builder.withNeoFormVersion(dependency.getVersion());
-            builder.withName(String.format("dependencyNeoForm%s%s", StringCapitalizationUtils.capitalize(dependency.getName().replace("neoForm_", "")), dependency.getVersion()));
-
             builder.withPreTaskAdapter("decompile", NeoFormAccessTransformerUtils.createAccessTransformerAdapter(project));
         });
     }

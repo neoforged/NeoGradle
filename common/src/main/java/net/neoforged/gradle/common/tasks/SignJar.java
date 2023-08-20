@@ -156,7 +156,7 @@ public abstract class SignJar extends DefaultTask implements PatternFilterable {
     }
 
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInputFile();
 
     @OutputFile

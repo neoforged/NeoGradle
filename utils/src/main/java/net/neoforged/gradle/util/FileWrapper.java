@@ -26,7 +26,7 @@ public final class FileWrapper implements Serializable {
      * @return The file.
      */
     @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public File getFile() {
         return this.file;
     }

@@ -83,7 +83,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
 
     @InputFile
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getVersionJsonFile();
 
     @Input

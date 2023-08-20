@@ -45,7 +45,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         runtimeTask.getDistribution().set(spec.getDistribution());
         runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion(), spec.getProject()));
         runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
-        runtimeTask.getRuntimeName().set(spec.getName());
+        runtimeTask.getRuntimeName().set(spec.getVersionedName());
         runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
     }
 
@@ -78,8 +78,8 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     @NotNull
     public final D maybeCreate(final Action<B> configurator) {
         final S spec = createSpec(configurator);
-        if (runtimes.containsKey(spec.getName()))
-            return runtimes.get(spec.getName());
+        if (runtimes.containsKey(spec.getIdentifier()))
+            return runtimes.get(spec.getIdentifier());
 
         return create(configurator);
     }
@@ -93,11 +93,11 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                 .stream()
                 .filter(CommonRuntimeExtension.class::isInstance)
                 .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
-                .anyMatch(ext -> ext.runtimes.containsKey(spec.getName())))
-            throw new IllegalArgumentException(String.format("Runtime with name '%s' already exists", spec.getName()));
+                .anyMatch(ext -> ext.runtimes.containsKey(spec.getIdentifier())))
+            throw new IllegalArgumentException(String.format("Runtime with identifier '%s' already exists", spec.getIdentifier()));
 
         final D runtime = doCreate(spec);
-        runtimes.put(spec.getName(), runtime);
+        runtimes.put(spec.getIdentifier(), runtime);
         return runtime;
     }
 
@@ -121,8 +121,12 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
 
     @Override
     @Nullable
-    public final D findByName(final String name) {
-        return this.runtimes.get(name);
+    public final D findByNameOrIdentifier(final String name) {
+        final D byIdentifier = this.runtimes.get(name);
+        if (byIdentifier != null)
+            return byIdentifier;
+
+        return runtimes.values().stream().filter(r -> r.getSpecification().getVersionedName().equals(name)).findAny().orElse(null);
     }
 
     protected abstract B createBuilder();

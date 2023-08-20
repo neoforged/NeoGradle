@@ -31,7 +31,7 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
     }
 
     @InputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.NONE)
     public abstract DirectoryProperty getFileCache();
 
     @Nested
