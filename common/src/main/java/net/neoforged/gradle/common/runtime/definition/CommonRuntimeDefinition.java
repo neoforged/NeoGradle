@@ -99,6 +99,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     public final TaskProvider<? extends WithOutput> getTask(String name) {
         final String taskName = CommonRuntimeUtils.buildTaskName(this, name);
         if (!taskOutputs.containsKey(taskName)) {
+            if (this instanceof IDelegatingRuntimeDefinition) {
+                return ((IDelegatingRuntimeDefinition<?>) this).getDelegate().getTask(name);
+            }
             throw new IllegalArgumentException("No task with name " + name + " found in runtime " + specification.getVersionedName());
         }
 
