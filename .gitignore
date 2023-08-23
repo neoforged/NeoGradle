@@ -16,37 +16,6 @@ out
 *.iml
 
 snapshots
-repo
 
-examples/runs/run # this is where the run files are stored
-/examples/runs/run/config/fml.toml
-/examples/runs/run/config/forge-client.toml
-/examples/runs/run/config/forge-common.toml
-/examples/runs/run/logs/2023-07-20-2.log.gz
-/examples/runs/run/logs/2023-07-20-3.log.gz
-/examples/runs/run/logs/2023-07-20-4.log.gz
-/examples/runs/run/logs/2023-07-21-2.log.gz
-/examples/runs/run/logs/2023-07-21-3.log.gz
-/examples/runs/run/logs/2023-07-21-4.log.gz
-/examples/runs/run/logs/2023-07-21-5.log.gz
-/examples/runs/run/logs/2023-07-21-6.log.gz
-/examples/runs/run/logs/2023-07-21-7.log.gz
-/examples/runs/run/logs/2023-07-21-8.log.gz
-/examples/runs/run/logs/2023-07-21-9.log.gz
-/examples/runs/run/logs/2023-07-21-10.log.gz
-/examples/runs/run/logs/2023-07-21-11.log.gz
-/examples/runs/run/logs/2023-07-21-12.log.gz
-/examples/runs/run/logs/2023-07-21-13.log.gz
-/examples/runs/run/logs/2023-07-21-14.log.gz
-/examples/runs/run/logs/2023-07-24-2.log.gz
-/examples/runs/run/logs/2023-07-24-3.log.gz
-/examples/runs/run/logs/2023-07-25-1.log.gz
-/examples/runs/run/logs/2023-07-25-2.log.gz
-/examples/runs/run/logs/2023-07-25-3.log.gz
-/examples/runs/run/logs/debug.log
-/examples/runs/run/logs/debug-1.log.gz
-/examples/runs/run/logs/debug-2.log.gz
-/examples/runs/run/logs/debug-3.log.gz
-/examples/runs/run/logs/debug-4.log.gz
-/examples/runs/run/logs/debug-5.log.gz
-/examples/runs/run/logs/latest.log
+/examples/runs/run
+/neoform/tests

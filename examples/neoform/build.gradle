@@ -9,5 +9,5 @@ java {
 }
 
 dependencies {
-    implementation 'net.minecraft:neoform_client:+'
+    implementation 'net.minecraft:neoform_client:1.20.1'
 }
