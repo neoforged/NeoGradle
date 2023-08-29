@@ -33,7 +33,7 @@ import java.util.function.Consumer;
  */
 public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<IvyDummyRepositoryEntry>, RepositoryEntry<IvyDummyRepositoryEntry, IvyDummyRepositoryReference>, Serializable, ProjectAssociatedDSLElement {
 
-    private static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
+    public static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
     private static final long serialVersionUID = 4025734172533096653L;
 
     private transient final Project project;

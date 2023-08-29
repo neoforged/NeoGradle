@@ -15,6 +15,7 @@ import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
+import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
@@ -96,7 +97,6 @@ public abstract class DependencyDeobfuscator {
                 if (!(context.getDependency() instanceof ExternalModuleDependency)) {
                     return Optional.empty();
                 }
-
                 //We only want to replace dependencies that actually exist.
                 final Configuration resolver = ConfigurationUtils.temporaryConfiguration(project, context.getDependency());
                 if (resolver.getResolvedConfiguration().getLenientConfiguration().getFiles().isEmpty()) {

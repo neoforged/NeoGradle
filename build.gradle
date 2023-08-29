@@ -108,6 +108,11 @@ subprojects.forEach { subProject ->
             }
         }
     }
+
+    //Run tests in parallel
+    subProject.test {
+        maxParallelForks = Runtime.runtime.availableProcessors() - 1
+    }
 }
 
 //Configure all the subprojects that are plugins

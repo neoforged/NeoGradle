@@ -15,16 +15,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 
 public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetadataSupplier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IvyDummyRepositoryMetadataSupplier.class);
 
-    private final Provider<IvyDummyRepositoryExtension> extensionProvider;
+    private final Provider<Set<IvyDummyRepositoryEntry>> extensionProvider;
     private final Provider<Directory> rootDirectoryProvider;
 
     @Inject
-    public IvyDummyRepositoryMetadataSupplier(Provider<IvyDummyRepositoryExtension> extensionProvider, Provider<Directory> rootDirectoryProvider) {
+    public IvyDummyRepositoryMetadataSupplier(Provider<Set<IvyDummyRepositoryEntry>> extensionProvider, Provider<Directory> rootDirectoryProvider) {
         this.extensionProvider = extensionProvider;
         this.rootDirectoryProvider = rootDirectoryProvider;
     }
@@ -36,7 +37,7 @@ public final class IvyDummyRepositoryMetadataSupplier implements ComponentMetada
         LOGGER.info("Preparing metadata for {}", id.getVersion());
 
         final Optional<IvyDummyRepositoryEntry> entryCandidate =
-                extensionProvider.get().getEntries().stream()
+                extensionProvider.get().stream()
                         .filter(entry -> entry.matches(id))
                         .findFirst();
 

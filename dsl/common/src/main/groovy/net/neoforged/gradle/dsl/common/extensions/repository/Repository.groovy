@@ -5,6 +5,7 @@ import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.file.DirectoryProperty
 
 import javax.xml.stream.XMLStreamException
@@ -45,4 +46,12 @@ interface Repository<TSelf extends Repository<TSelf>> extends BaseDSLElement<TSe
      * @param projectConsumer The callback, called from an after evaluate phase, which receives the owning project.
      */
     void afterEntryRealisation(Consumer<Project> projectConsumer)
+
+    /**
+     * Indicates whether the given dependency is already a dynamically generated dependency (whether already populated by task or not)
+     *
+     * @param dependency The dependency to check.
+     * @return True when the dependency should be considered dynamic, false when not.
+     */
+    boolean isDynamicDependency(ModuleDependency dependency)
 }

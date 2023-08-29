@@ -19,13 +19,13 @@ class CompatibilityTests extends SimpleTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:forge:1.20.1-47.1.56'
+                implementation 'net.neoforged:forge:+'
             }
         """
 
         when:
         def result = gradleRunner()
-                .withArguments('--stacktrace', 'dependencyForge1.20.1-47.1.56Recompile')
+                .withArguments('--stacktrace', 'neoFormRecompile')
                 .build()
 
         then:

@@ -1,6 +1,6 @@
 package net.neoforged.gradle.neoform
 
-import net.neoforged.gradle.common.util.SerializationUtils
+
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -10,11 +10,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
     protected void configurePluginUnderTest() {
         pluginUnderTest = "net.neoforged.gradle.neoform";
         injectIntoAllProject = true;
-    }
-
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("./tests/")
     }
 
     def "a mod with neoform as dependency can run the apply official mappings task"() {
@@ -77,7 +72,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         def run = project.run { it.tasks('build') }
 
         then:
-        run.task('build').outcome == TaskOutcome.SUCCESS
+        run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
     def "neoform re-setup uses a build-cache" () {
@@ -106,21 +101,23 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
+
+            it.enableLocalBuildCache()
         }
 
         when:
-        def run = project.run { it.tasks('build') }
+        def run = project.run { it.tasks('build').arguments('--build-cache') }
 
         then:
-        run.task('build').outcome == TaskOutcome.SUCCESS
+        run.task(':build').outcome == TaskOutcome.SUCCESS
 
         when:
         new File(project.getProjectDir(), 'build').deleteDir()
-        def secondRun = project.run {it.tasks('build') }
+        def secondRun = project.run {it.tasks('build').arguments('--build-cache') }
 
         then:
-        secondRun.task('build').outcome == TaskOutcome.SUCCESS
-        secondRun.task('neoFormClientRecompile').outcome == TaskOutcome.FROM_CACHE
+        secondRun.task(':build').outcome == TaskOutcome.SUCCESS
+        secondRun.task(':neoFormRecompile').outcome == TaskOutcome.FROM_CACHE
     }
 
 

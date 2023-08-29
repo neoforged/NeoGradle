@@ -21,12 +21,14 @@
 package net.neoforged.gradle.neoform;
 
 import net.neoforged.gradle.common.CommonPlugin;
+import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.neoform.dependency.NeoFormDependencyManager;
 import net.neoforged.gradle.neoform.naming.NeoFormOfficialNamingChannelConfigurator;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 
 import javax.annotation.Nonnull;
 

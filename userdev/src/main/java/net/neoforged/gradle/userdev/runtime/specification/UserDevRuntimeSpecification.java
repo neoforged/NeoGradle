@@ -2,12 +2,15 @@ package net.neoforged.gradle.userdev.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
+import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.dsl.userdev.runtime.specification.UserDevSpecification;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +37,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
     }
 
     @Override
-    public String getForgeVersion() {
+    public @NotNull String getForgeVersion() {
         return forgeVersion;
     }
 
@@ -52,7 +55,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         return Objects.requireNonNull(minecraftVersion, "Minecraft version not set");
     }
 
-    public void setMinecraftVersion(String minecraftVersion) {
+    public void setMinecraftVersion(@NotNull String minecraftVersion) {
         this.minecraftVersion = minecraftVersion;
     }
 
@@ -156,7 +159,27 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         public UserDevRuntimeSpecification build() {
-            return new UserDevRuntimeSpecification(project, Optional.of(forgeVersionProvider.get()).map(v -> v.equals("+") ? "" : v).get(), distributionType.get(), preTaskAdapters, postTaskAdapters, forgeGroupProvider.get(), forgeNameProvider.get(), forgeVersionProvider.get());
+            final String group = forgeGroupProvider.get();
+            final String name = forgeNameProvider.get();
+            final String version = forgeVersionProvider.get();
+
+            final Artifact universalArtifact = new Artifact(group, name, version, "userdev", "jar");
+            final Artifact resolvedArtifact = resolveUserDevVersion(project, universalArtifact);
+
+            return new UserDevRuntimeSpecification(project, resolvedArtifact.getVersion(), distributionType.get(), preTaskAdapters, postTaskAdapters, resolvedArtifact.getGroup(), resolvedArtifact.getName(), resolvedArtifact.getVersion());
+        }
+
+        private static Artifact resolveUserDevVersion(final Project project, final Artifact current) {
+            if (!Objects.equals(current.getVersion(), "+")) {
+                return current;
+            }
+
+            final Configuration resolveConfig = ConfigurationUtils.temporaryConfiguration(project, current.toDependency(project));
+            return resolveConfig.getResolvedConfiguration()
+                    .getResolvedArtifacts().stream()
+                    .filter(current.asArtifactMatcher())
+                    .findFirst()
+                    .map(Artifact::from).orElse(current);
         }
     }
 }

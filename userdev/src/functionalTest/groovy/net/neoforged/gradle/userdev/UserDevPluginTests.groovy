@@ -21,7 +21,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
         result.output.contains('BUILD SUCCESSFUL')
     }
 
-    def "applying userdev plugin applies mcp plugin"() {
+    def "applying userdev plugin applies neoform plugin"() {
         given:
         settingsFile << "rootProject.name = 'test-project'"
         buildFile << """
@@ -36,7 +36,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
         def result = gradleRunner().build()
 
         then:
-        result.output.contains('net.neoforged.gradle.mcp.McpPlugin')
+        result.output.contains('net.neoforged.gradle.neoform.NeoFormPlugin')
         result.output.contains('net.neoforged.gradle.common.CommonPlugin')
     }
 

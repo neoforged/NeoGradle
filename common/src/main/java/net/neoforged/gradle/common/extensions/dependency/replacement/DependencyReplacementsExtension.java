@@ -121,7 +121,11 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     @VisibleForTesting
     void handleDependency(final Configuration configuration, final ModuleDependency dependency) {
         Optional<DependencyReplacementResult> candidate;
-        if (dependencyReplacementInformation.contains(dependency, configuration)) {
+        final Repository<?> repository = project.getExtensions().getByType(Repository.class);
+        if (repository.isDynamicDependency(dependency)) {
+            candidate = Optional.empty();
+            dependencyReplacementInformation.put(dependency, configuration, candidate);
+        } else if (dependencyReplacementInformation.contains(dependency, configuration)) {
             candidate = dependencyReplacementInformation.get(dependency, configuration);
             if (candidate == null) {
                 candidate = Optional.empty();

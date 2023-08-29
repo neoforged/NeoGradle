@@ -2,13 +2,14 @@ package net.neoforged.gradle.common.extensions.repository;
 
 import com.google.common.collect.Sets;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.FileUtils;
-import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
@@ -111,6 +112,11 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
         entryConfigurators.add(evaluatedProject -> {
             processDependency(configurator, configuredEntryConsumer);
         });
+    }
+
+    @Override
+    public boolean isDynamicDependency(ModuleDependency dependency) {
+        return dependency.getGroup() != null && dependency.getGroup().startsWith(IvyDummyRepositoryEntry.FG_DUMMY_FG_MARKER);
     }
 
     private void processDependency(Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer) {
