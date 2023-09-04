@@ -1,5 +1,6 @@
 package net.neoforged.gradle.neoform.naming;
 
+import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileTypeRenamer;
@@ -8,8 +9,7 @@ import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToC
 import net.neoforged.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
 import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
-import net.neoforged.gradle.util.IMappingFileUtils;
-import net.neoforged.gradle.util.TransformerUtils;
+import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
@@ -17,8 +17,8 @@ import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
-import net.neoforged.gradle.common.util.CacheableIMappingFile;
-import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.gradle.util.IMappingFileUtils;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -145,7 +145,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
 
         return unapplyCompiledMappingsTask;
     }
-    
+
     @NotNull
     private static TaskProvider<? extends Runtime> createReverseMappingWritingTaskFor(@NotNull TaskBuildingContext context, String format) {
         Optional<NeoFormRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
