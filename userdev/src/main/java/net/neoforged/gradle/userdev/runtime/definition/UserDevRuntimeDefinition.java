@@ -104,8 +104,14 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         return mcpRuntimeDefinition.getNativesTaskProvider();
     }
 
+    @Override
     public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
         return mcpRuntimeDefinition.getDebuggingMappingsTaskProvider();
+    }
+
+    @Override
+    public @NotNull TaskProvider<? extends WithOutput> getRuntimeToSourceMappingsTaskProvider() {
+        return mcpRuntimeDefinition.getRuntimeToSourceMappingsTaskProvider();
     }
 
     @Override

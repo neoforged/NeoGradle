@@ -1,16 +1,15 @@
 package net.neoforged.gradle.neoform.naming;
 
+import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
 import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileTypeRenamer;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
-import net.neoforged.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
 import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
-import net.neoforged.gradle.util.IMappingFileUtils;
-import net.neoforged.gradle.util.TransformerUtils;
+import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
@@ -18,8 +17,8 @@ import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
-import net.neoforged.gradle.common.util.CacheableIMappingFile;
-import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.gradle.util.IMappingFileUtils;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +52,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
             newOfficialProvider.getApplyCompiledMappingsTaskBuilder().convention(context -> this.adaptApplyCompiledMappingsTask(context, namingChannel));
             newOfficialProvider.getUnapplyCompiledMappingsTaskBuilder().convention(context -> this.adaptUnapplyCompiledMappingsTask(context, namingChannel));
             newOfficialProvider.getUnapplyAccessTransformerMappingsTaskBuilder().convention(context -> this.adaptUnapplyAccessTransformerMappingsTask(context, namingChannel));
-            newOfficialProvider.getGenerateDebuggingMappingsJarTaskBuilder().convention(this::buildGenerateDebuggingMappingsJarTask);
+            newOfficialProvider.getRuntimeToSourceMappingsTaskBuilder().convention(this::buildRuntimeToSourceMappingsTask);
             newOfficialProvider.getHasAcceptedLicense().convention(namingChannel.getHasAcceptedLicense());
             newOfficialProvider.getLicenseText().convention(namingChannel.getLicenseText());
             newOfficialProvider.getDependencyNotationVersionManager().convention(namingChannel.getDependencyNotationVersionManager());
@@ -246,7 +245,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
         return reverseMappingsTask;
     }
 
-    private @NotNull TaskProvider<? extends Runtime> buildGenerateDebuggingMappingsJarTask(@NotNull final GenerationTaskBuildingContext context) {
+    private @NotNull TaskProvider<? extends Runtime> buildRuntimeToSourceMappingsTask(@NotNull final GenerationTaskBuildingContext context) {
         Optional<NeoFormRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
                 .filter(NeoFormRuntimeDefinition.class::isInstance)
                 .map(NeoFormRuntimeDefinition.class::cast);
@@ -269,13 +268,13 @@ public final class NeoFormOfficialNamingChannelConfigurator {
         final String mappingsFilePath = mcpRuntimeDefinition.getNeoFormConfig().getData("mappings");
         final File mappingsFile = new File(mcpRuntimeDefinition.getUnpackedNeoFormZipDirectory(), Objects.requireNonNull(mappingsFilePath));
 
-        final String generateTaskName = context.getTaskNameBuilder().apply("generateDebuggingMappingsJar");
+        final String writeRuntimeToSourceMappingsTaskName = context.getTaskNameBuilder().apply("writeRuntimeToSourceMappings");
 
-        final TaskProvider<GenerateDebuggingMappings> generateTask = context.getProject().getTasks().register(generateTaskName, GenerateDebuggingMappings.class, task -> {
+        return context.getProject().getTasks().register(writeRuntimeToSourceMappingsTaskName, WriteIMappingsFile.class, task -> {
             task.setGroup("mappings/official");
-            task.setDescription("Generates a jar containing the mcp mappings for debugging purposes");
-
-            task.getMappingsFile().set(
+            task.setDescription("Writes the mapping file from runtime to source mappings");
+            task.getFormat().set(IMappingFile.Format.TSRG2);
+            task.getMappings().set(
                     context.getClientMappings()
                             .flatMap(WithOutput::getOutput)
                             .map(TransformerUtils.guard(
@@ -288,9 +287,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
                                     }
                             ))
             );
+            task.dependsOn(context.getClientMappings());
         });
-
-        return generateTask;
     }
-
 }

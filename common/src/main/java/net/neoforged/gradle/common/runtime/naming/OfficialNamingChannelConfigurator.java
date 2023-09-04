@@ -3,6 +3,7 @@ package net.neoforged.gradle.common.runtime.naming;
 import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.tasks.*;
+import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.common.util.MappingUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
@@ -66,7 +67,7 @@ public final class OfficialNamingChannelConfigurator {
             namingChannelProvider.getApplyCompiledMappingsTaskBuilder().set(this::buildApplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyAccessTransformerMappingsTaskBuilder().set(this::buildUnapplyAccessTransformerMappingsTask);
-            namingChannelProvider.getGenerateDebuggingMappingsJarTaskBuilder().set(this::buildGenerateDebuggingMappingsJarTask);
+            namingChannelProvider.getRuntimeToSourceMappingsTaskBuilder().set(this::buildRuntimeToSourceMappingsTask);
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> ((Property<Boolean>) mappingsExtension.getExtensions().getByName("acceptMojangEula")).get()));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
             namingChannelProvider.getDependencyNotationVersionManager().set(new SimpleDependencyNotationVersionManager());
@@ -183,16 +184,17 @@ public final class OfficialNamingChannelConfigurator {
         return applyTask;
     }
 
-    private @NotNull TaskProvider<? extends Runtime> buildGenerateDebuggingMappingsJarTask(@NotNull final GenerationTaskBuildingContext context) {
-        final String generateTaskName = context.getTaskNameBuilder().apply("generateDebuggingMappingsJar");
+    private @NotNull TaskProvider<? extends Runtime> buildRuntimeToSourceMappingsTask(@NotNull final GenerationTaskBuildingContext context) {
+        final String writeRuntimeToSourceMappingsTaskName = context.getTaskNameBuilder().apply("writeRuntimeToSourceMappings");
 
-        return context.getProject().getTasks().register(generateTaskName, GenerateDebuggingMappings.class, task -> {
+        return context.getProject().getTasks().register(writeRuntimeToSourceMappingsTaskName, WriteIMappingsFile.class, task -> {
             task.setGroup("mappings/official");
-            task.setDescription("Generates a jar containing the official mappings for debugging purposes");
-
-            task.getMappingsFile().convention(context.getClientMappings().flatMap(WithOutput::getOutput)
+            task.setDescription("Writes the mapping file from runtime to source mappings");
+            task.getFormat().set(IMappingFile.Format.TSRG2);
+            task.getMappings().set(context.getClientMappings().flatMap(WithOutput::getOutput)
                     .map(TransformerUtils.guard(file -> IMappingFile.load(file.getAsFile())))
-                    .map(CacheableIMappingFile::new));
+                    .map(CacheableIMappingFile::new)
+            );
             task.dependsOn(context.getClientMappings());
         });
     }

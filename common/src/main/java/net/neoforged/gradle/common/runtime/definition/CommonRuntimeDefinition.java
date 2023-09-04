@@ -66,6 +66,8 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
     @NotNull
     protected final TaskProvider<? extends ArtifactFromOutput> runtimeMappedRawJarTaskProvider;
+    private TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider;
+    private TaskProvider<? extends WithOutput> runtimeToSourceMappingsTaskProvider;
 
     protected CommonRuntimeDefinition(
             @NotNull final S specification,
@@ -205,6 +207,8 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         run.overrideSystemProperties(interpolate(run.getSystemProperties(), workingInterpolationData));
 
         run.dependsOn(getAssetsTaskProvider(), getNativesTaskProvider());
+
+        run.getClasspath().from(this.getDebuggingMappingsTaskProvider());
     }
 
     protected Map<String, String> buildRunInterpolationData() {
@@ -288,5 +292,21 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
             result = result.replace(patternPrefix + "{" + entry.getKey() + "}", entry.getValue());
         }
         return result;
+    }
+
+    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
+        return debuggingMappingsTaskProvider;
+    }
+
+    public void setDebuggingMappingsTaskProvider(TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider) {
+        this.debuggingMappingsTaskProvider = debuggingMappingsTaskProvider;
+    }
+
+    public @NotNull TaskProvider<? extends WithOutput> getRuntimeToSourceMappingsTaskProvider() {
+        return runtimeToSourceMappingsTaskProvider;
+    }
+
+    public void setRuntimeToSourceMappingsTaskProvider(TaskProvider<? extends WithOutput> runtimeToSourceMappingsTaskProvider) {
+        this.runtimeToSourceMappingsTaskProvider = runtimeToSourceMappingsTaskProvider;
     }
 }

@@ -10,7 +10,6 @@ import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.dsl.neoform.runtime.definition.NeoFormDefinition;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
-import net.neoforged.gradle.common.runs.run.RunImpl;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +29,6 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
 
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
-    private TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider;
 
     public NeoFormRuntimeDefinition(@NotNull NeoFormRuntimeSpecification specification,
                                     @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
@@ -91,20 +89,6 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
     @Override
     public @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
         return nativesTaskProvider;
-    }
-
-    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
-        return debuggingMappingsTaskProvider;
-    }
-
-    public void setDebuggingMappingsTaskProvider(TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider) {
-        this.debuggingMappingsTaskProvider = debuggingMappingsTaskProvider;
-    }
-
-    @Override
-    public void configureRun(RunImpl run) {
-        super.configureRun(run);
-        run.getClasspath().from(this.getDebuggingMappingsTaskProvider());
     }
 
     @Override

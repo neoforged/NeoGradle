@@ -94,15 +94,23 @@ public abstract class MappingDebugChannelDependencyManager {
         return replacements.computeIfAbsent(String.format("%s-%s-%s", namingChannelName, encodedVersion, runtimeName), (v) -> {
             final String environmentName = String.format("debuggingMappingsZipDependency%s", v);
 
+            GenerationTaskBuildingContext context = new GenerationTaskBuildingContext(
+                    project,
+                    environmentName,
+                    taskName -> CommonRuntimeUtils.buildTaskName(taskName, environmentName),
+                    CommonRuntimeExtension.buildDefaultArtifactProviderTasks(runtimeDefinition.getSpecification()),
+                    runtimeDefinition
+            );
+
+            final TaskProvider<? extends Runtime> runtimeToSourceMappingsTask =
+                    namingChannel.getRuntimeToSourceMappingsTaskBuilder().get()
+                            .build(context);
+
+            runtimeDefinition.configureAssociatedTask(runtimeToSourceMappingsTask);
+
             final TaskProvider<? extends Runtime> generateDebugMappingsJar =
                     namingChannel.getGenerateDebuggingMappingsJarTaskBuilder().get()
-                            .build(new GenerationTaskBuildingContext(
-                                    project,
-                                    environmentName,
-                                    taskName -> CommonRuntimeUtils.buildTaskName(taskName, environmentName),
-                                    CommonRuntimeExtension.buildDefaultArtifactProviderTasks(runtimeDefinition.getSpecification()),
-                                    runtimeDefinition
-                            ));
+                            .build(context);
 
             runtimeDefinition.configureAssociatedTask(generateDebugMappingsJar);
 
