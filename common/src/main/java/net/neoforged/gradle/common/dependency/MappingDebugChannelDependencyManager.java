@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public abstract class MappingDebugChannelDependencyManager {
+    private static final String DEPENDENCY_RUNTIME_NAME_SEPERATOR = "¿";
 
     private final Map<String, DependencyReplacementResult> replacements = Maps.newHashMap();
     private final Project project;
@@ -80,9 +81,11 @@ public abstract class MappingDebugChannelDependencyManager {
     }
 
     private DependencyReplacementResult generateReplacement(final Project project, final Dependency dependency) {
-        final String encodedVersion = Objects.requireNonNull(dependency.getVersion()).substring(0, dependency.getVersion().lastIndexOf("¿"));
+        final String version = Objects.requireNonNull(dependency.getVersion());
+        final int i = version.lastIndexOf(DEPENDENCY_RUNTIME_NAME_SEPERATOR);
+        final String encodedVersion = version.substring(0, i);
         final String namingChannelName = dependency.getName();
-        final String runtimeName = dependency.getVersion().substring(dependency.getVersion().lastIndexOf("¿") + 1);
+        final String runtimeName = version.substring(i + DEPENDENCY_RUNTIME_NAME_SEPERATOR.length());
 
         final Minecraft minecraft = project.getExtensions().getByType(Minecraft.class);
         final NamingChannel namingChannel = minecraft.getNamingChannels().getByName(namingChannelName);
