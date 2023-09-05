@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Set;
 
+@Deprecated()
 class MCPChannelProvider implements ChannelProvider {
     @Nonnull
     @Override

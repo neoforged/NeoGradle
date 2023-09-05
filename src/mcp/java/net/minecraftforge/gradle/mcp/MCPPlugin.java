@@ -32,7 +32,7 @@ public class MCPPlugin implements Plugin<Project> {
 
         downloadConfig.configure(task -> {
             task.getConfig().set(extension.getConfig().map(Artifact::getDescriptor));
-            task.getOutput().set(project.getLayout().getBuildDirectory().file("mcp_config.zip"));
+            task.getOutput().set(project.getLayout().getBuildDirectory().file("neoform.zip"));
         });
         setupMCP.configure(task -> {
             task.getPipeline().set(extension.getPipeline());

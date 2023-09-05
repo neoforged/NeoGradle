@@ -288,7 +288,7 @@ public class UserDevPlugin implements Plugin<Project> {
             String mcVer = (String) project.getExtensions().getExtraProperties().get("MC_VERSION");
             String mcpVer = (String) project.getExtensions().getExtraProperties().get("MCP_VERSION");
             // TODO: convert to constant and use String.format
-            downloadMcpConfig.configure(t -> t.setArtifact("de.oceanlabs.mcp:mcp_config:" + mcpVer + "@zip"));
+            downloadMcpConfig.configure(t -> t.setArtifact("net.neoforged:neoform:" + mcpVer + "@zip"));
             downloadMCMeta.configure(t -> t.getMCVersion().convention(mcVer));
 
             // Register reobfJar for the 'jar' task
