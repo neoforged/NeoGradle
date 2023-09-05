@@ -143,9 +143,9 @@ public class MinecraftRepo extends BaseRepo {
         return null;
     }
 
-    private File findMcp(String version) throws IOException {
-        Artifact mcp = Artifact.from("de.oceanlabs.mcp:mcp_config:" + version + "@zip");
-        File zip = cache("versions", version, "mcp.zip");
+    private File findNeoForm(String version) throws IOException {
+        Artifact mcp = Artifact.from("net.neoforged:neoform:" + version + "@zip");
+        File zip = cache("versions", version, "neoform.zip");
         if (!zip.exists()) {
             FileUtils.copyFile(MavenArtifactDownloader.manual(project, mcp.getDescriptor(), false), zip);
             Utils.updateHash(zip);
@@ -154,17 +154,17 @@ public class MinecraftRepo extends BaseRepo {
     }
 
     @Nullable
-    private File findMcpMappings(String version) throws IOException {
-        File mcp = findMcp(version);
+    private File findNeoFormMappings(String version) throws IOException {
+        File mcp = findNeoForm(version);
         if (mcp == null)
             return null;
 
-        File mappings = cache("versions", version, "mcp_mappings.tsrg");
-        HashStore cache = commonCache(cache("versions", version, "mcp_mappings.tsrg"));
+        File mappings = cache("versions", version, "neoform_mappings.tsrg");
+        HashStore cache = commonCache(cache("versions", version, "neoform_mappings.tsrg"));
         cache.add(mcp);
 
         if (!cache.isSame() || !mappings.exists()) {
-            MCPWrapperSlim wrapper = new MCPWrapperSlim(mcp);
+            NeoFormWrapperSlim wrapper = new NeoFormWrapperSlim(mcp);
             wrapper.extractData(mappings, "mappings");
             cache.save();
             Utils.updateHash(mappings);
@@ -286,7 +286,7 @@ public class MinecraftRepo extends BaseRepo {
     private File findExtra(String side, String version, boolean forceStable, File json) throws IOException {
         boolean stable = v1_14_4.compareTo(MinecraftVersion.from(getMCVersion(version))) < 0;
         File raw = findRaw(side, version, json);
-        File mappings = findMcpMappings(version);
+        File mappings = findNeoFormMappings(version);
         File extra = cache("versions", version, side + "-extra" + (forceStable && !stable ? "-stable" : "") + ".jar");
         HashStore cache = commonCache(cache("versions", version, side + "-extra" + (forceStable && !stable ? "-stable" : "") + ".jar"))
                 .add("raw", raw)
@@ -304,7 +304,7 @@ public class MinecraftRepo extends BaseRepo {
     private File findSlim(String side, String version, boolean forceStable, File json) throws IOException {
         boolean stable = v1_14_4.compareTo(MinecraftVersion.from(getMCVersion(version))) < 0;
         File raw = findRaw(side, version, json);
-        File mappings = findMcpMappings(version);
+        File mappings = findNeoFormMappings(version);
         File extra = cache("versions", version, side + "-slim" + (forceStable && !stable ? "-stable" : "") + ".jar");
         HashStore cache = commonCache(cache("versions", version, side + "-slim" + (forceStable && !stable ? "-stable" : "") + ".jar"))
                 .add("raw", raw)
@@ -397,10 +397,10 @@ public class MinecraftRepo extends BaseRepo {
     }
 
 
-    private static class MCPWrapperSlim {
+    private static class NeoFormWrapperSlim {
         private final File data;
         private final MCPConfigV1 config;
-        public MCPWrapperSlim(File data) throws IOException {
+        public NeoFormWrapperSlim(File data) throws IOException {
             this.data = data;
             this.config = MCPConfigV2.getFromArchive(data);
         }
@@ -408,7 +408,7 @@ public class MinecraftRepo extends BaseRepo {
         public void extractData(File target, String... path) throws IOException {
             String name = config.getData(path);
             if (name == null)
-                throw new IOException("Unknown MCP Entry: " + Joiner.on("/").join(path));
+                throw new IOException("Unknown NeoForm Entry: " + Joiner.on("/").join(path));
 
             try (ZipFile zip = new ZipFile(data)) {
                 Utils.extractFile(zip, name, target);

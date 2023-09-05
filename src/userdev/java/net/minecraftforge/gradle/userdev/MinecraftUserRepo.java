@@ -369,7 +369,7 @@ public class MinecraftUserRepo extends BaseRepo {
             }
 
             String artifact = isPatcher ? (GROUP + ":" + NAME +":" + VERSION + ':' + classifier) :
-                                        ("de.oceanlabs.mcp:mcp_config:" + VERSION + "@zip");
+                                        ("net.neoforged:neoform:" + VERSION + "@zip");
             boolean patcher = isPatcher;
             Patcher last = null;
             while (artifact != null) {
@@ -1544,7 +1544,7 @@ public class MinecraftUserRepo extends BaseRepo {
         private MCP(File data, String artifact) {
             this.artifact = Artifact.from(artifact);
             try {
-                File mcp_dir = MinecraftUserRepo.this.cache("mcp", this.artifact.getVersion());
+                File mcp_dir = MinecraftUserRepo.this.cache("neoform", this.artifact.getVersion());
                 this.wrapper = new MCPWrapper(data, mcp_dir) {
                     public MCPRuntime getRuntime(Project project, String side) {
                         MCPRuntime ret = runtimes.get(side);

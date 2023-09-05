@@ -79,8 +79,8 @@ public class MCPRepo extends BaseRepo {
     private static MCPRepo INSTANCE = null;
     private static final String GROUP_MINECRAFT = "net.minecraft";
     private static final String NAMES_MINECRAFT = "^(client|server|joined|mappings_[a-z_]+)$";
-    private static final String GROUP_MCP = "de.oceanlabs.mcp";
-    private static final String NAMES_MCP = "^(mcp_config)$";
+    private static final String GROUP_NEOFORM = "net.neoforged";
+    private static final String NAMES_NEOFORM = "^(neoform)$";
     private static final String STEP_MERGE = "merge"; //TODO: Design better way to get steps output, for now hardcode
     private static final String STEP_RENAME = "rename";
 
@@ -105,7 +105,7 @@ public class MCPRepo extends BaseRepo {
 
     private static MCPRepo getInstance(Project project) {
         if (INSTANCE == null)
-            INSTANCE = new MCPRepo(project, Utils.getCache(project, "mcp_repo"), project.getLogger());
+            INSTANCE = new MCPRepo(project, Utils.getCache(project, "neoform_repo"), project.getLogger());
         return INSTANCE;
     }
     public static void attach(Project project) {
@@ -130,17 +130,17 @@ public class MCPRepo extends BaseRepo {
 
     private File cacheMCP(String version, @Nullable String classifier, String ext) {
         if (classifier != null)
-            return cache("de", "oceanlabs", "mcp", "mcp_config", version, "mcp_config-" + version + '-' + classifier + '.' + ext);
-        return cache("de", "oceanlabs", "mcp", "mcp_config", version, "mcp_config-" + version + '.' + ext);
+            return cache("net", "neoforged", "neoform", version, "neoform-" + version + '-' + classifier + '.' + ext);
+        return cache("net", "neoforged", "neoform", version, "neoform-" + version + '.' + ext);
     }
     private File cacheMCP(String version) {
-        return cache("de", "oceanlabs", "mcp", "mcp_config", version);
+        return cache("net", "neoforged", "neoform", version);
     }
 
     @Override
     protected void configureFilter(RepositoryContentDescriptor filter) {
         // Escape the dots in the group because byRegex versions are completely regex, not just the module
-        filter.includeModuleByRegex(GROUP_MCP.replace(".", "\\."), NAMES_MCP);
+        filter.includeModuleByRegex(GROUP_NEOFORM.replace(".", "\\."), NAMES_NEOFORM);
         filter.includeModuleByRegex(GROUP_MINECRAFT.replace(".", "\\."), NAMES_MINECRAFT);
     }
 
@@ -149,8 +149,8 @@ public class MCPRepo extends BaseRepo {
         String name = artifact.getName();
         String group = artifact.getGroup();
 
-        if (group.equals(GROUP_MCP)) {
-            if (!name.matches(NAMES_MCP))
+        if (group.equals(GROUP_NEOFORM)) {
+            if (!name.matches(NAMES_NEOFORM))
                 return null;
         } else if (group.equals(GROUP_MINECRAFT)) {
             if (!name.matches(NAMES_MINECRAFT))
@@ -180,7 +180,7 @@ public class MCPRepo extends BaseRepo {
                     case "extra":         return findExtra(name, version);
                 }
             }
-        } else if (group.equals(GROUP_MCP)) {
+        } else if (group.equals(GROUP_NEOFORM)) {
             /* Gradle fucks up caching for anything that isnt a zip or a jar, this is fucking annoying we can't do this.
             MappingFile.Format format = MappingFile.Format.get(ext);
             if (format != null) {
@@ -201,12 +201,12 @@ public class MCPRepo extends BaseRepo {
 
     HashStore commonHash(File mcp) {
         return new HashStore(this.getCacheRoot())
-            .add("mcp", mcp);
+            .add("neoform", mcp);
     }
 
     @Nullable
     File getMCP(String version) {
-        return MavenArtifactDownloader.manual(project, "de.oceanlabs.mcp:mcp_config:" + version + "@zip", false);
+        return MavenArtifactDownloader.manual(project, "net.neoforged:neoform:" + version + "@zip", false);
     }
 
     @Nullable

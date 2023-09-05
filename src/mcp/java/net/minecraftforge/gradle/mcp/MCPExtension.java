@@ -34,7 +34,7 @@ public abstract class MCPExtension {
             if (s.indexOf(':') != -1) { // Full artifact
                 return Artifact.from(s);
             } else {
-                return Artifact.from("de.oceanlabs.mcp:mcp_config:" + s + "@zip");
+                return Artifact.from("net.neoforged:neoform:" + s + "@zip");
             }
         }));
     }
