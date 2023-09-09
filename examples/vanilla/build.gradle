@@ -1,5 +1,5 @@
 plugins {
-    id 'net.neoforged.gradle.vanilla' version '7.0-NEO'
+    id 'net.neoforged.gradle.vanilla'
 }
 
 java {
@@ -9,7 +9,7 @@ java {
 }
 
 dependencies {
-    implementation 'net.minecraft:server:1.16.5'
+    implementation 'net.minecraft:server:1.20.1'
 }
 
 runs {

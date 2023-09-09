@@ -1,5 +1,7 @@
 package com.example.examplemod;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.block.Block;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,5 +18,6 @@ public class ExampleMod
     public ExampleMod()
     {
         LOGGER.debug(Block.class.getName());
+        MinecraftServer
     }
 }

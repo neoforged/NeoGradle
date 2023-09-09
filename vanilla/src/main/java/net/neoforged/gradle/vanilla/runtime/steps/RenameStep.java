@@ -30,7 +30,7 @@ public class RenameStep implements IStep {
         mappingVersionData.put(NamingConstants.Version.MINECRAFT_VERSION, definition.getSpecification().getMinecraftVersion());
         mappingVersionData.putAll(mappingsExtension.getVersion().get());
 
-        final TaskProvider<? extends WithOutput> artifact = definition.getGameArtifactProvidingTasks().get(definition.getSpecification().getDistribution().getGameArtifact());
+        final TaskProvider<? extends WithOutput> artifact = inputProvidingTask;
 
         final Set<TaskProvider<? extends Runtime>> additionalTasks = Sets.newHashSet();
         final TaskBuildingContext context = new TaskBuildingContext(

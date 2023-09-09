@@ -49,7 +49,6 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     private final Set<ModuleReference> configuredIdeTasks = Sets.newHashSet();
     private final Table<Dependency, Configuration, Optional<DependencyReplacementResult>> dependencyReplacementInformation = HashBasedTable.create();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
-    private boolean registeredTaskToIde;
     private boolean hasBeenBaked = false;
     private final Set<Consumer<Project>> afterDefinitionBakeCallbacks = Sets.newHashSet();
 

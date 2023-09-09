@@ -22,12 +22,7 @@ import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
-import net.neoforged.gradle.vanilla.runtime.steps.ApplyAccessTransformerStep;
-import net.neoforged.gradle.vanilla.runtime.steps.CleanManifestStep;
-import net.neoforged.gradle.vanilla.runtime.steps.CollectLibraryInformationStep;
-import net.neoforged.gradle.vanilla.runtime.steps.DecompileStep;
-import net.neoforged.gradle.vanilla.runtime.steps.IStep;
-import net.neoforged.gradle.vanilla.runtime.steps.RenameStep;
+import net.neoforged.gradle.vanilla.runtime.steps.*;
 import net.neoforged.gradle.vanilla.util.ServerLaunchInformation;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -221,6 +216,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         final List<IStep> steps = ImmutableList.<IStep>builder()
                 .add(new CollectLibraryInformationStep())
+                .add(new ExtractBundledServerStep())
                 .add(new RenameStep())
                 .add(new ApplyAccessTransformerStep())
                 .add(rawJarStep)
