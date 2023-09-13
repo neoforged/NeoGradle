@@ -6,6 +6,7 @@
 package net.minecraftforge.gradle.common.util;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import net.minecraftforge.artifactural.gradle.GradleRepositoryAdapter;
 
 import net.minecraftforge.artifactural.gradle.RepositoryContentUtils;
@@ -157,6 +158,9 @@ public class MavenArtifactDownloader {
                     others.add(repo);
             });
 
+            List<ArtifactRepository> gradleRepos = Lists.newArrayList(others);
+            gradleRepos.addAll(mavens);
+            
             if (ret == null && generated) {
                 ret = _generate(fakes, art);
             }
@@ -166,7 +170,7 @@ public class MavenArtifactDownloader {
             }
 
             if (ret == null && gradle) {
-                ret = _gradle(project, others, art, changing);
+                ret = _gradle(project, gradleRepos, art, changing);
             }
 
             if (ret != null)
