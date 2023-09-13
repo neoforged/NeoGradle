@@ -26,7 +26,7 @@ public abstract class ApplyRangeMap extends JarExec {
         getTool().set(Utils.SRG2SOURCE);
         getArgs().addAll("--apply", "--input", "{input}", "--range", "{range}", "--srg", "{srg}", "--exc", "{exc}",
                 "--output", "{output}", "--keepImports", "{keepImports}");
-        setMinimumRuntimeJavaVersion(11);
+        setMinimumRuntimeJavaVersion(17);
 
         getOutput().convention(getProject().getLayout().getBuildDirectory().dir(getName()).map(d -> d.file("output.zip")));
     }
