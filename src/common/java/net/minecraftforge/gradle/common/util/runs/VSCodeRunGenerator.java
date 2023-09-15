@@ -31,6 +31,10 @@ public class VSCodeRunGenerator extends RunConfigGenerator.JsonConfigurationBuil
         config.addProperty("cwd", replaceRootDirBy(project, runConfig.getWorkingDirectory(), "${workspaceFolder}"));
         config.addProperty("vmArgs", getJvmArgs(runConfig, additionalClientArgs, updatedTokens));
         config.addProperty("args", getArgs(runConfig, updatedTokens));
+        String preLaunchTask = runConfig.getPreLaunchTask();
+        if (preLaunchTask != null) {
+            config.addProperty("preLaunchTask", preLaunchTask);
+        }
         JsonObject env = new JsonObject();
         runConfig.getEnvironment().forEach((key, value) -> {
             value = runConfig.replace(updatedTokens, value);
