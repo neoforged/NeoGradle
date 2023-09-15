@@ -47,7 +47,7 @@ public class RunConfig extends GroovyObjectSupport implements Serializable {
 
     private Boolean singleInstance = null;
 
-    private String taskName, main, ideaModule, workDir;
+    private String taskName, main, ideaModule, workDir, preLaunchTask;
 
     private List<SourceSet> sources;
     private List<RunConfig> parents, children;
@@ -283,6 +283,18 @@ public class RunConfig extends GroovyObjectSupport implements Serializable {
         }
 
         return ideaModule;
+    }
+
+    public void preLaunchTask(String value) {
+        setPreLaunchTask(value);
+    }
+
+    public void setPreLaunchTask(String value) {
+        this.preLaunchTask = value;
+    }
+
+    public String getPreLaunchTask() {
+        return preLaunchTask;
     }
 
     public void workingDirectory(String value) {
