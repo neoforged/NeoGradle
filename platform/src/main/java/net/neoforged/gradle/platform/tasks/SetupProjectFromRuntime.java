@@ -6,6 +6,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
@@ -37,6 +38,8 @@ public abstract class SetupProjectFromRuntime extends DefaultTask {
                         })
                 )
         );
+        
+        getShouldLockDirectories().convention(true);
     }
     
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -54,8 +57,10 @@ public abstract class SetupProjectFromRuntime extends DefaultTask {
         codeFiles.visit(new CopyingFileTreeVisitor(sourceDirectory, false));
         noneCodeFiles.visit(new CopyingFileTreeVisitor(resourcesDirectory, false));
         
-        sourceDirectory.setReadOnly();
-        resourcesDirectory.setReadOnly();
+        if (getShouldLockDirectories().get()) {
+            sourceDirectory.setReadOnly();
+            resourcesDirectory.setReadOnly();
+        }
     }
     
     @InputFile
@@ -67,4 +72,8 @@ public abstract class SetupProjectFromRuntime extends DefaultTask {
     
     @OutputDirectory
     public abstract DirectoryProperty getResourcesDirectory();
+    
+    @Input
+    @Optional
+    public abstract Property<Boolean> getShouldLockDirectories();
 }

@@ -129,6 +129,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final TaskProvider<? extends WithOutput> neoFormSources = runtimeDefinition.getNeoformRuntimeDefinition().getSourceJarTask();
         
         final TaskProvider<SetupProjectFromRuntime> setupTask = configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
+        setupTask.configure(task -> task.getShouldLockDirectories().set(false));
         
         final File workingDirectory = getProject().getLayout().getBuildDirectory().dir(String.format("patchgeneration/%s", runtimeDefinition.getSpecification().getIdentifier())).get().getAsFile();
         
