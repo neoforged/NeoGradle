@@ -54,6 +54,9 @@ public abstract class SetupProjectFromRuntime extends DefaultTask {
         final File sourceDirectory = getSourcesDirectory().get().getAsFile();
         final File resourcesDirectory = getResourcesDirectory().get().getAsFile();
         
+        sourceDirectory.setWritable(true);
+        resourcesDirectory.setWritable(true);
+        
         codeFiles.visit(new CopyingFileTreeVisitor(sourceDirectory, false));
         noneCodeFiles.visit(new CopyingFileTreeVisitor(resourcesDirectory, false));
         
