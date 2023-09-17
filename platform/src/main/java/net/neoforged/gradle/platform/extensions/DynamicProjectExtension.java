@@ -18,6 +18,7 @@ import net.neoforged.gradle.platform.runtime.extension.PlatformDevRuntimeExtensi
 import net.neoforged.gradle.platform.runtime.tasks.GeneratePatches;
 import net.neoforged.gradle.platform.runtime.tasks.PackZip;
 import net.neoforged.gradle.platform.tasks.SetupProjectFromRuntime;
+import net.neoforged.gradle.platform.util.SetupUtils;
 import net.neoforged.gradle.vanilla.VanillaProjectPlugin;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
@@ -134,8 +135,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final File workingDirectory = getProject().getLayout().getBuildDirectory().dir(String.format("patchgeneration/%s", runtimeDefinition.getSpecification().getIdentifier())).get().getAsFile();
         
         final TaskProvider<? extends WithOutput> packChanges = project.getTasks().register("packForgeChanges", PackZip.class, task -> {
-            task.getInputFiles().from(setupTask.flatMap(SetupProjectFromRuntime::getSourcesDirectory));
-            
+            task.getInputFiles().from(SetupUtils.getSetupSourceTarget(getProject()));
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         });
         

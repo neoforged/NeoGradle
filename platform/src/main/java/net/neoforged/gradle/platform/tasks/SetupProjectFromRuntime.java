@@ -1,5 +1,6 @@
 package net.neoforged.gradle.platform.tasks;
 
+import net.neoforged.gradle.platform.util.SetupUtils;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
@@ -20,23 +21,11 @@ public abstract class SetupProjectFromRuntime extends DefaultTask {
         setGroup("setup");
         
         getSourcesDirectory().convention(
-                getProject().getLayout().dir(
-                        getProject().provider(() -> {
-                            final JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
-                            final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
-                            return mainSource.getJava().getFiles().size() == 1 ? mainSource.getJava().getSourceDirectories().getSingleFile() : getProject().file("src/main/java");
-                        })
-                )
+                getProject().getLayout().dir(getProject().provider(() -> SetupUtils.getSetupSourceTarget(getProject())))
         );
         
         getResourcesDirectory().convention(
-                getProject().getLayout().dir(
-                        getProject().provider(() -> {
-                            final JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
-                            final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
-                            return mainSource.getResources().getSourceDirectories().getSingleFile();
-                        })
-                )
+                getProject().getLayout().dir(getProject().provider(() -> SetupUtils.getSetupResourcesTarget(getProject())))
         );
         
         getShouldLockDirectories().convention(true);
