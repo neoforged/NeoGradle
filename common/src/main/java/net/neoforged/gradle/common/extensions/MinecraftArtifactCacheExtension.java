@@ -195,7 +195,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
         }
 
         if (url == null) {
-            throw new IllegalStateException("Could not find the correct version json.");
+            throw new IllegalStateException("Could not find the correct version json for version: " + minecraftVersion);
         }
 
         return downloadJsonToCache(project, url, cacheDirectory, CacheFileSelector.forVersionJson(minecraftVersion));

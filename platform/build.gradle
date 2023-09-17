@@ -1,0 +1,19 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+repositories {
+    gradlePluginPortal()
+    mavenLocal()
+    maven { url = 'https://maven.neoforged.net/releases/' }
+    mavenCentral()
+}
+
+dependencies {
+    api gradleApi()
+    api "org.gradle.toolchains:foojay-resolver:${project.foojay_resolver_version}"
+
+    api project(':vanilla')
+    api project(':neoform')
+    api project(':userdev')
+}

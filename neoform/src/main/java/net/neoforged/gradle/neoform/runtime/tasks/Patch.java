@@ -37,7 +37,7 @@ public abstract class Patch extends DefaultRuntime {
                 .patchesPath(getUnpackedMcpZipDirectory().get().getAsFile().toPath())
                 .patchesPrefix(getUnpackedMcpZipDirectory().get().getAsFile().toPath().relativize(getPatchDirectory().get().getAsFile().toPath()).toString())
                 .outputPath(output.toPath())
-                .verbose(getIsVerbose().get())
+                .level(getIsVerbose().get() ? codechicken.diffpatch.util.LogLevel.ALL : codechicken.diffpatch.util.LogLevel.WARN)
                 .mode(PatchMode.OFFSET)
                 .rejectsPath(rejects.toPath());
 

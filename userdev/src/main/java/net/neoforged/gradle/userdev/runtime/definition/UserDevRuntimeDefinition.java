@@ -1,19 +1,17 @@
 package net.neoforged.gradle.userdev.runtime.definition;
 
 import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
-import net.neoforged.gradle.common.dependency.MappingDebugChannelDependencyManager;
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
-import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
-import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
 import org.gradle.api.artifacts.Configuration;
@@ -60,7 +58,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
-    public NeoFormRuntimeDefinition getMcpRuntimeDefinition() {
+    public NeoFormRuntimeDefinition getNeoFormRuntimeDefinition() {
         return mcpRuntimeDefinition;
     }
 
@@ -120,11 +118,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         run.dependsOn(this.minecraftClasspathSerializer);
     }
 
-    @Override
-    public @NotNull TaskProvider<? extends WithOutput> getRuntimeMappedRawJarTaskProvider() {
-        return mcpRuntimeDefinition.getRuntimeMappedRawJarTaskProvider();
-    }
-
     @NotNull
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
@@ -163,18 +156,5 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     @Override
     public Definition<?> getDelegate() {
         return mcpRuntimeDefinition;
-    }
-
-    @Override
-    public void onBake(NamingChannel namingChannel, File runtimeDirectory) {
-        this.additionalUserDevDependencies.getDependencies().add(
-                this.getSpecification().getProject().getDependencies().create(
-                        MappingDebugChannelDependencyManager.generateCoordinateFor(
-                                namingChannel,
-                                mcpRuntimeDefinition.getMappingVersionData(),
-                                this
-                        )
-                )
-        );
     }
 }

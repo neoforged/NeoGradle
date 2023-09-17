@@ -25,7 +25,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
     @NotNull private final Multimap<String, TaskTreeAdapter> preTaskTypeAdapters;
     @NotNull private final Multimap<String, TaskTreeAdapter> postTypeAdapters;
     @NotNull private final CommonRuntimeExtension<?,?,?> runtimeExtension;
-    protected CommonRuntimeSpecification(Project project, String name, @NotNull String version, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, @NotNull Class<? extends CommonRuntimeExtension<?, ?, ?>> runtimeExtensionClass) {
+    protected CommonRuntimeSpecification(Project project, @NotNull String name, @NotNull String version, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, @NotNull Class<? extends CommonRuntimeExtension<?, ?, ?>> runtimeExtensionClass) {
         this.project = project;
         this.name = name;
         this.version = version;
@@ -52,7 +52,12 @@ public abstract class CommonRuntimeSpecification implements Specification {
     public String getIdentifier() {
         return getName() + version;
     }
-
+    
+    @Override
+    public @NotNull String getVersion() {
+        return version;
+    }
+    
     @NotNull
     public final String getVersionedName() {
         final Map<String, ? extends CommonRuntimeDefinition<?>> runtimes = runtimeExtension.getRuntimes().get();

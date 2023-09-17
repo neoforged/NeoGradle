@@ -102,6 +102,9 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
 
         private Builder(Project project) {
             super(project);
+            
+            withMinecraftArtifact("client");
+            withDistributionType(DistributionType.CLIENT);
         }
 
         @Override

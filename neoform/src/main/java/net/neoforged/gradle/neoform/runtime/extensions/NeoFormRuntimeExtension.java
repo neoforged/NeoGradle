@@ -359,7 +359,5 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         generateDebuggingMappingsTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, data, task));
         taskOutputs.put(generateDebuggingMappingsTask.getName(), generateDebuggingMappingsTask);
         definition.setDebuggingMappingsTaskProvider(generateDebuggingMappingsTask);
-
-        definition.onBake(context.getNamingChannel(), neoFormDirectory);
     }
 }

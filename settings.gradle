@@ -19,6 +19,7 @@ include 'vanilla'
 include 'neoform'
 include 'userdev'
 include 'legacy'
+include 'platform'
 
 subProject 'dsl-common'
 subProject 'dsl-neoform'

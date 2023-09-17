@@ -23,13 +23,11 @@ package net.neoforged.gradle.common.extensions;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.naming.NamingChannelProvider;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
-import net.neoforged.gradle.dsl.common.extensions.Deobfuscation;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
@@ -64,11 +62,5 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
     @Override
     public AccessTransformers getAccessTransformers() {
         return this.accessTransformers;
-    }
-
-    @NotNull
-    @Override
-    public Deobfuscation getDeobfuscation() {
-        return project.getExtensions().getByType(DeobfuscationExtension.class);
     }
 }

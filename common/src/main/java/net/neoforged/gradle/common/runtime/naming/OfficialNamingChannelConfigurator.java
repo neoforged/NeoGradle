@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.runtime.naming;
 
 import net.neoforged.gradle.common.util.MappingUtils;
+import net.neoforged.gradle.common.util.StreamUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.GradleInternalUtils;
@@ -9,7 +10,6 @@ import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
-import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
@@ -68,9 +68,8 @@ public final class OfficialNamingChannelConfigurator {
         minecraftExtension.getNamingChannels().register("official", namingChannelProvider -> {
             namingChannelProvider.getMinecraftVersionExtractor().set(this::extractMinecraftVersion);
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::buildApplySourceMappingTask);
-            namingChannelProvider.getApplyCompiledMappingsTaskBuilder().set(this::buildApplyCompiledMappingsTask);
+            namingChannelProvider.getJarDeobfuscatingTaskBuilder().set(this::buildApplyCompiledMappingsTask);
             namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
-            namingChannelProvider.getUnapplyAccessTransformerMappingsTaskBuilder().set(this::buildUnapplyAccessTransformerMappingsTask);
             namingChannelProvider.getGenerateDebuggingMappingsJarTaskBuilder().set(this::buildGenerateDebuggingMappingsJarTask);
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> ((Property<Boolean>) mappingsExtension.getExtensions().getByName("acceptMojangEula")).get()));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
@@ -81,23 +80,6 @@ public final class OfficialNamingChannelConfigurator {
 
     private String extractMinecraftVersion(Map<String, String> stringStringMap) {
         return MappingUtils.getMinecraftVersion(stringStringMap);
-    }
-
-    private TaskProvider<? extends Runtime> buildUnapplyAccessTransformerMappingsTask(TaskBuildingContext context) {
-        final String mappingVersion = MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion());
-
-        final String applyTaskName = context.getTaskNameBuilder().apply("unApplyAccessTransformer");
-        return context.getProject().getTasks().register(applyTaskName, UnapplyOfficialMappingsToAccessTransformer.class, task -> {
-            task.setGroup("mappings/official");
-            task.setDescription(String.format("Unapplies the Official mappings for version %s.", mappingVersion));
-
-            task.getOutputFileName().set("at.cfg");
-
-            task.getClientMappings().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
-            task.getServerMappings().set(context.getGameArtifactTask(GameArtifact.SERVER_MAPPINGS).flatMap(WithOutput::getOutput));
-
-            task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
-        });
     }
 
     private @NotNull TaskProvider<? extends Runtime> buildApplySourceMappingTask(@NotNull final TaskBuildingContext context) {
@@ -225,8 +207,7 @@ public final class OfficialNamingChannelConfigurator {
 
                             return mappingFiles.stream().map(mappingFile -> {
                                 try(final Stream<String> lines = Files.lines(mappingFile.toPath())) {
-                                    return lines
-                                            .filter(line -> line.startsWith("#"))
+                                    return StreamUtils.takeWhile(lines, line -> line.startsWith("#"))
                                             .map(l -> l.substring(1).trim())
                                             .collect(Collectors.joining("\n"));
                                 } catch (IOException e) {

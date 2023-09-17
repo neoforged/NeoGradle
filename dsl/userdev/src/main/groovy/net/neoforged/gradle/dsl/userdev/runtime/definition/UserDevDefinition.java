@@ -11,7 +11,7 @@ import java.io.File;
 
 @CompileStatic
 public interface UserDevDefinition<S extends UserDevSpecification> extends Definition<S> {
-    NeoFormDefinition<?> getMcpRuntimeDefinition();
+    NeoFormDefinition<?> getNeoFormRuntimeDefinition();
 
     File getUnpackedUserDevJarDirectory();
 

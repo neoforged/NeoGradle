@@ -18,7 +18,6 @@ import org.gradle.api.provider.Provider;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public final class UserDevDependencyManager {
     private static final UserDevDependencyManager INSTANCE = new UserDevDependencyManager();
@@ -46,15 +45,15 @@ public final class UserDevDependencyManager {
             final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency);
 
             final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(project);
-            additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getMcpRuntimeDefinition().getMinecraftDependenciesConfiguration());
+            additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getNeoFormRuntimeDefinition().getMinecraftDependenciesConfiguration());
             additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
 
             return Optional.of(
                     new DependencyReplacementResult(
                             project,
-                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition.getMcpRuntimeDefinition(), name),
-                            runtimeDefinition.getMcpRuntimeDefinition().getSourceJarTask(),
-                            runtimeDefinition.getMcpRuntimeDefinition().getRawJarTask(),
+                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition.getNeoFormRuntimeDefinition(), name),
+                            runtimeDefinition.getNeoFormRuntimeDefinition().getSourceJarTask(),
+                            runtimeDefinition.getNeoFormRuntimeDefinition().getRawJarTask(),
                             additionalDependenciesConfiguration,
                             builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
                             builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),

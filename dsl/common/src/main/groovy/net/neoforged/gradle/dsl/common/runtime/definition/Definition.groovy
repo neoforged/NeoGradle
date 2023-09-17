@@ -89,14 +89,6 @@ interface Definition<S extends Specification> {
     void configureAssociatedTask(@NotNull final TaskProvider<? extends Runtime> runtimeTask)
 
     /**
-     * Returns the task which produces the runtime mapped jar.
-     *
-     * @return The runtime mapped jar producing task.
-     */
-    @NotNull
-    abstract TaskProvider<? extends WithOutput> getRuntimeMappedRawJarTaskProvider();
-
-    /**
      * Returns the task which creates a file listing all the libraries used by the runtime.
      *
      * @return The task which creates a file listing all the libraries used by the runtime.

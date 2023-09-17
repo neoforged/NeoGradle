@@ -48,6 +48,13 @@ interface Specification {
     @NotNull String getVersionedName();
 
     /**
+     * The current version of the specification that is used.
+     *
+     * @return The version of the specification that is used to build the task tree.
+     */
+    @NotNull String getVersion();
+
+    /**
      * The artifact distribution type of the specification.
      *
      * @return The distribution type.

@@ -1,23 +1,12 @@
 package net.neoforged.gradle.common;
 
 import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
-import net.neoforged.gradle.common.dependency.MappingDebugChannelDependencyManager;
-import net.neoforged.gradle.common.extensions.ExtensionManager;
-import net.neoforged.gradle.common.extensions.ForcedDependencyDeobfuscationExtension;
-import net.neoforged.gradle.common.extensions.IdeManagementExtension;
-import net.neoforged.gradle.common.extensions.ProjectEvaluationExtension;
+import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
-import net.neoforged.gradle.common.deobfuscation.DependencyDeobfuscator;
-import net.neoforged.gradle.common.extensions.AccessTransformersExtension;
-import net.neoforged.gradle.common.extensions.ArtifactDownloaderExtension;
-import net.neoforged.gradle.common.extensions.MappingsExtension;
-import net.neoforged.gradle.common.extensions.MinecraftArtifactCacheExtension;
-import net.neoforged.gradle.common.extensions.MinecraftExtension;
-import net.neoforged.gradle.common.extensions.ProjectHolderExtension;
 import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
-import net.neoforged.gradle.common.extensions.obfuscation.ObfuscationExtension;
 import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.run.RunsImpl;
 import net.neoforged.gradle.common.runs.type.TypesImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
@@ -25,21 +14,14 @@ import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
-import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
-import net.neoforged.gradle.dsl.common.runs.type.Types;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
-import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
-import net.neoforged.gradle.dsl.common.extensions.ArtifactDownloader;
-import net.neoforged.gradle.dsl.common.extensions.Mappings;
-import net.neoforged.gradle.dsl.common.extensions.Minecraft;
-import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
+import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.obfuscation.Obfuscation;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runs.run.Runs;
-import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.dsl.common.runs.type.Types;
+import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.GradleInternalUtils;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
@@ -76,18 +58,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
-        project.getExtensions().create(Obfuscation.class, "obfuscation", ObfuscationExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
         project.getExtensions().create("forcedDeobfuscation", ForcedDependencyDeobfuscationExtension.class);
-        project.getExtensions().create("dependencyDeobfuscation", DependencyDeobfuscator.class, project);
         project.getExtensions().create("clientExtraJarDependencyManager", ClientExtraJarDependencyManager.class, project);
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
 
         extensionManager.registerExtension("minecraft", Minecraft.class, (p) -> p.getObjects().newInstance(MinecraftExtension.class, p));
         extensionManager.registerExtension("mappings", Mappings.class, (p) -> p.getObjects().newInstance(MappingsExtension.class, p));
-
-        project.getExtensions().create("mappingDebugChannelDependencyManager", MappingDebugChannelDependencyManager.class, project);
 
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 

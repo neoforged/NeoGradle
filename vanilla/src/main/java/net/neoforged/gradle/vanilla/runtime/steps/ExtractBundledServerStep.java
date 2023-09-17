@@ -21,8 +21,6 @@ public class ExtractBundledServerStep implements IStep {
 
     @Override
     public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull File workingDirectory, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
-        definition.getSpecification().getProject().getLogger().warn("Creating extract bundled server task");
-
         final TaskProvider<? extends WithOutput> artifact = definition.getGameArtifactProvidingTasks().get(definition.getSpecification().getDistribution().getGameArtifact());
 
         return definition.getSpecification().getProject().getTasks().register(getTaskName(definition), ExtractBundledServerTask.class, task -> {

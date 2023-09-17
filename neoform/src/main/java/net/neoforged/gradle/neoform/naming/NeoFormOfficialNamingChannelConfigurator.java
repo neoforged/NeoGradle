@@ -6,7 +6,6 @@ import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileTypeRename
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
-import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToAccessTransformer;
 import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.neoform.naming.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.util.IMappingFileUtils;
@@ -50,9 +49,8 @@ public final class NeoFormOfficialNamingChannelConfigurator {
         minecraftExtension.getNamingChannels().register("official", newOfficialProvider -> {
             newOfficialProvider.getMinecraftVersionExtractor().convention(namingChannel.getMinecraftVersionExtractor());
             newOfficialProvider.getApplySourceMappingsTaskBuilder().convention(context -> this.adaptApplySourceMappingsTask(context, namingChannel));
-            newOfficialProvider.getApplyCompiledMappingsTaskBuilder().convention(context -> this.adaptApplyCompiledMappingsTask(context, namingChannel));
+            newOfficialProvider.getJarDeobfuscatingTaskBuilder().convention(context -> this.adaptApplyCompiledMappingsTask(context, namingChannel));
             newOfficialProvider.getUnapplyCompiledMappingsTaskBuilder().convention(context -> this.adaptUnapplyCompiledMappingsTask(context, namingChannel));
-            newOfficialProvider.getUnapplyAccessTransformerMappingsTaskBuilder().convention(context -> this.adaptUnapplyAccessTransformerMappingsTask(context, namingChannel));
             newOfficialProvider.getGenerateDebuggingMappingsJarTaskBuilder().convention(this::buildGenerateDebuggingMappingsJarTask);
             newOfficialProvider.getHasAcceptedLicense().convention(namingChannel.getHasAcceptedLicense());
             newOfficialProvider.getLicenseText().convention(namingChannel.getLicenseText());
@@ -116,7 +114,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
 
     @NotNull
     private TaskProvider<? extends Runtime> adaptApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context, @NotNull final NamingChannel namingChannel) {
-        final TaskProvider<? extends Runtime> applyCompiledMappingsTask = namingChannel.getApplyCompiledMappingsTaskBuilder().get().build(context);
+        final TaskProvider<? extends Runtime> applyCompiledMappingsTask = namingChannel.getJarDeobfuscatingTaskBuilder().get().build(context);
 
         final TaskProvider<? extends Runtime> reverseMappingsTask = createReverseMappingWritingTaskFor(context, "reverseMappingsForApplyToCompiledFor%s");
 
@@ -147,60 +145,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
 
         return unapplyCompiledMappingsTask;
     }
-
-    @NotNull
-    private TaskProvider<? extends Runtime> adaptUnapplyAccessTransformerMappingsTask(TaskBuildingContext context, NamingChannel namingChannel) {
-        final TaskProvider<? extends Runtime> applySourceMappingsTask = namingChannel.getUnapplyAccessTransformerMappingsTaskBuilder().get().build(context);
-
-        Optional<NeoFormRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()
-                .filter(NeoFormRuntimeDefinition.class::isInstance)
-                .map(NeoFormRuntimeDefinition.class::cast);
-
-        if (!runtimeDefinition.isPresent()) {
-            //Resolve delegation
-            runtimeDefinition = context.getRuntimeDefinition()
-                    .filter(IDelegatingRuntimeDefinition.class::isInstance)
-                    .map(IDelegatingRuntimeDefinition.class::cast)
-                    .map(IDelegatingRuntimeDefinition::getDelegate)
-                    .filter(NeoFormRuntimeDefinition.class::isInstance)
-                    .map(NeoFormRuntimeDefinition.class::cast);
-        }
-
-        if (!runtimeDefinition.isPresent()) {
-            throw new IllegalStateException("The runtime definition is not present.");
-        }
-
-        final NeoFormRuntimeDefinition mcpRuntimeDefinition = runtimeDefinition.get();
-        final String mappingsFilePath = mcpRuntimeDefinition.getNeoFormConfig().getData("mappings");
-        final File mappingsFile = new File(mcpRuntimeDefinition.getUnpackedNeoFormZipDirectory(), Objects.requireNonNull(mappingsFilePath));
-
-        applySourceMappingsTask.configure(task -> {
-            if (task instanceof UnapplyOfficialMappingsToAccessTransformer) {
-                final UnapplyOfficialMappingsToAccessTransformer applyMappingsToSourceJar = (UnapplyOfficialMappingsToAccessTransformer) task;
-                applyMappingsToSourceJar.getTypeRenamer().set(
-                        context.getClientMappings()
-                                .flatMap(WithOutput::getOutput)
-                                .flatMap(clientMappings ->
-                                        context.getServerMappings()
-                                                .flatMap(WithOutput::getOutput)
-                                                .map(TransformerUtils.guard(serverMappings -> {
-                                                    final IMappingFile clientMappingFile = IMappingFile.load(clientMappings.getAsFile());
-                                                    final IMappingFile serverMappingFile = IMappingFile.load(serverMappings.getAsFile());
-                                                    final IMappingFile mcpConfigMappings = IMappingFile.load(mappingsFile);
-                                                    final IMappingFile reversedMcpConfigMappings = mcpConfigMappings.reverse();
-                                                    return IMappingFileTypeRenamer.from(
-                                                            reversedMcpConfigMappings.chain(clientMappingFile.reverse()).reverse(),
-                                                            reversedMcpConfigMappings.chain(serverMappingFile.reverse()).reverse()
-                                                    );
-                                                }))
-                                )
-                );
-            }
-        });
-
-        return applySourceMappingsTask;
-    }
-
+    
     @NotNull
     private static TaskProvider<? extends Runtime> createReverseMappingWritingTaskFor(@NotNull TaskBuildingContext context, String format) {
         Optional<NeoFormRuntimeDefinition> runtimeDefinition = context.getRuntimeDefinition()

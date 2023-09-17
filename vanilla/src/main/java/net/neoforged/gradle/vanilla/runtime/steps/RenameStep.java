@@ -37,7 +37,7 @@ public class RenameStep implements IStep {
                 definition.getSpecification().getProject(), "mapGame", taskName -> CommonRuntimeUtils.buildTaskName(definition.getSpecification(), taskName), artifact, definition.getGameArtifactProvidingTasks(), mappingVersionData, additionalTasks, definition
         );
 
-        final TaskProvider<? extends Runtime> namingTask = context.getNamingChannel().getApplyCompiledMappingsTaskBuilder().get().build(context);
+        final TaskProvider<? extends Runtime> namingTask = context.getNamingChannel().getJarDeobfuscatingTaskBuilder().get().build(context);
         additionalTasks.forEach(additionalTaskConfigurator);
 
         namingTask.configure(

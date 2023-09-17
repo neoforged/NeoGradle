@@ -2,9 +2,8 @@ package net.neoforged.gradle.neoform.dependency;
 
 import com.google.common.collect.Sets;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
-import net.neoforged.gradle.util.StringCapitalizationUtils;
+import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
@@ -13,7 +12,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.provider.Provider;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -104,7 +102,8 @@ public final class NeoFormDependencyManager {
             }
 
             builder.withNeoFormVersion(dependency.getVersion());
-            builder.withPreTaskAdapter("decompile", NeoFormAccessTransformerUtils.createAccessTransformerAdapter(project));
+            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
         });
     }
+    
 }

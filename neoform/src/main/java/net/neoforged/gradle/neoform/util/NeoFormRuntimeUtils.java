@@ -8,6 +8,7 @@ import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
 import net.neoforged.gradle.neoform.runtime.tasks.SideAnnotationStripper;
+import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -134,5 +135,9 @@ public final class NeoFormRuntimeUtils {
             task.getAdditionalDataEntries().addAll(data);
             task.getDataFiles().setFrom(spec.getProject().files(files.toArray()));
         });
+    }
+    
+    public static void configureDefaultRuntimeSpecBuilder(Project project, NeoFormRuntimeSpecification.Builder builder) {
+        builder.withPreTaskAdapter("decompile", NeoFormAccessTransformerUtils.createAccessTransformerAdapter(project));
     }
 }

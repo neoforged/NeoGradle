@@ -34,12 +34,4 @@ interface Minecraft extends BaseDSLElement<Minecraft> {
      */
     @NotNull
     AccessTransformers getAccessTransformers();
-
-    /**
-     * Gives access to the deobfuscation configuration extension.
-     *
-     * @return The deobfuscation configuration extension.
-     */
-    @NotNull
-    Deobfuscation getDeobfuscation();
 }
