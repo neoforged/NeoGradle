@@ -48,11 +48,8 @@ public abstract class SetupProjectFromRuntime extends DefaultTask {
         final FileTree codeFiles = jarFileTree.matching(filter -> filter.include("**/**.java"));
         final FileTree noneCodeFiles = jarFileTree.matching(filter -> filter.exclude("**/**.java"));
         
-        final JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
-        final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
-        
-        final File sourceDirectory = mainSource.getJava().getFiles().size() == 1 ? mainSource.getJava().getSourceDirectories().getSingleFile() : getProject().file("src/main/java");
-        final File resourcesDirectory = mainSource.getResources().getSourceDirectories().getSingleFile();
+        final File sourceDirectory = getSourcesDirectory().get().getAsFile();
+        final File resourcesDirectory = getResourcesDirectory().get().getAsFile();
         
         codeFiles.visit(new CopyingFileTreeVisitor(sourceDirectory, false));
         noneCodeFiles.visit(new CopyingFileTreeVisitor(resourcesDirectory, false));
@@ -65,13 +62,9 @@ public abstract class SetupProjectFromRuntime extends DefaultTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getSourcesFile();
     
-    @InputDirectory
-    @PathSensitive(PathSensitivity.NONE)
-    @Optional
+    @OutputDirectory
     public abstract DirectoryProperty getSourcesDirectory();
     
-    @InputDirectory
-    @PathSensitive(PathSensitivity.NONE)
-    @Optional
+    @OutputDirectory
     public abstract DirectoryProperty getResourcesDirectory();
 }
