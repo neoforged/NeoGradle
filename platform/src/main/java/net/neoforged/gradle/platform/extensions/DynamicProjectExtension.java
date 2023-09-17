@@ -2,16 +2,21 @@ package net.neoforged.gradle.platform.extensions;
 
 import net.minecraftforge.gdi.BaseDSLElement;
 import net.minecraftforge.gdi.annotations.ProjectGetter;
+import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
+import net.neoforged.gradle.neoform.runtime.tasks.UnpackZip;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.platform.PlatformDevProjectPlugin;
 import net.neoforged.gradle.platform.model.DynamicProjectType;
 import net.neoforged.gradle.platform.runtime.definition.PlatformDevRuntimeDefinition;
 import net.neoforged.gradle.platform.runtime.extension.PlatformDevRuntimeExtension;
+import net.neoforged.gradle.platform.runtime.tasks.GeneratePatches;
+import net.neoforged.gradle.platform.runtime.tasks.PackZip;
 import net.neoforged.gradle.platform.tasks.SetupProjectFromRuntime;
 import net.neoforged.gradle.vanilla.VanillaProjectPlugin;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
@@ -28,6 +33,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
+import java.io.File;
+import java.util.HashMap;
 
 public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicProjectExtension> {
 
@@ -119,10 +126,34 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                   .withDistributionType(DistributionType.CLIENT);
         });
         
-        configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
+        final TaskProvider<? extends WithOutput> neoFormSources = runtimeDefinition.getNeoformRuntimeDefinition().getSourceJarTask();
+        
+        final TaskProvider<SetupProjectFromRuntime> setupTask = configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
+        
+        final File workingDirectory = getProject().getLayout().getBuildDirectory().dir(String.format("patchgeneration/%s", runtimeDefinition.getSpecification().getIdentifier())).get().getAsFile();
+        
+        final TaskProvider<? extends WithOutput> packChanges = project.getTasks().register("packForgeChanges", PackZip.class, task -> {
+            task.getInputFiles().from(setupTask.flatMap(SetupProjectFromRuntime::getSourcesDirectory));
+            
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+        });
+        
+        final TaskProvider<? extends GeneratePatches> createPatches = project.getTasks().register("createPatches", GeneratePatches.class, task -> {
+            task.getBase().set(neoFormSources.flatMap(WithOutput::getOutput));
+            task.getModified().set(packChanges.flatMap(WithOutput::getOutput));
+            
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+        });
+        
+        final TaskProvider<? extends UnpackZip> unpackZip = project.getTasks().register("unpackPatches", UnpackZip.class, task -> {
+            task.getInputZip().set(createPatches.flatMap(WithOutput::getOutput));
+            task.getUnpackingTarget().set(patches);
+            
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+        });
     }
 
-    private void configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {
+    private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {
         final TaskProvider<SetupProjectFromRuntime> projectSetup = project.getTasks().register("setup", SetupProjectFromRuntime.class, task -> {
             task.getSourcesFile().set(rawJarProvider);
         });
@@ -137,6 +168,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         }
 
         rootProject.getTasks().named("setup").configure(task -> task.dependsOn(projectSetup));
+        
+        return projectSetup;
     }
 
     @NotNull

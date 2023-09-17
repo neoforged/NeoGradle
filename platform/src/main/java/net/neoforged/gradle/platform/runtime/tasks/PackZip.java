@@ -4,9 +4,7 @@ import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,5 +25,6 @@ public abstract class PackZip extends DefaultRuntime {
    }
    
    @InputFiles
+   @PathSensitive(PathSensitivity.NONE)
    public abstract ConfigurableFileCollection getInputFiles();
 }

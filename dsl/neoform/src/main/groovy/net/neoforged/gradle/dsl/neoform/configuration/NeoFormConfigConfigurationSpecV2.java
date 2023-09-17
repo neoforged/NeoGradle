@@ -35,11 +35,16 @@ public class NeoFormConfigConfigurationSpecV2 extends NeoFormConfigConfiguration
         try (final InputStream stream = new FileInputStream(file)) {
             return get(stream);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
     public static NeoFormConfigConfigurationSpecV2 get(InputStream stream) {
-        return GSON.fromJson(new InputStreamReader(stream), NeoFormConfigConfigurationSpecV2.class);
+        try(final InputStreamReader reader = new InputStreamReader(stream)) {
+            return GSON.fromJson(reader, NeoFormConfigConfigurationSpecV2.class);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        
     }
     public static NeoFormConfigConfigurationSpecV2 get(byte[] data) {
         return get(new ByteArrayInputStream(data));

@@ -43,23 +43,16 @@ public abstract class ApplyPatches extends DefaultRuntime implements WithWorkspa
       }
       
       Path outputPath = ensureFileWorkspaceReady(getOutput()).toPath();
-      ArchiveFormat outputFormat = getOutputFormat().getOrNull();
-      if (outputFormat == null) {
-         outputFormat = ArchiveFormat.findFormat(outputPath.getFileName());
-      }
-      
-      Path rejectsPath = getRejects().map(Directory::getAsFile).map(File::toPath).getOrNull();
-      ArchiveFormat rejectsFormat = getOutputFormat().getOrNull();
-      if (rejectsFormat == null && rejectsPath != null) {
-         rejectsFormat = ArchiveFormat.findFormat(rejectsPath.getFileName());
-      }
+
+      final Directory rejectsDir = getRejects().get();
+      Path rejectsPath = rejectsDir.getAsFile().toPath();
       
       PatchOperation.Builder builder = PatchOperation.builder()
                                              .logTo(new LoggingOutputStream(getLogger(), LogLevel.LIFECYCLE))
                                              .basePath(getBase().get().getAsFile().toPath())
                                              .patchesPath(getPatches().get().getAsFile().toPath())
-                                             .outputPath(outputPath, outputFormat)
-                                             .rejectsPath(rejectsPath, rejectsFormat)
+                                             .outputPath(outputPath, ArchiveFormat.findFormat(outputPath.getFileName()))
+                                             .rejectsPath(rejectsPath, ArchiveFormat.findFormat(rejectsPath.getFileName()))
                                              .mode(getPatchMode().get())
                                              .aPrefix(getOriginalPrefix().get())
                                              .bPrefix(getModifiedPrefix().get())
@@ -94,13 +87,9 @@ public abstract class ApplyPatches extends DefaultRuntime implements WithWorkspa
    @PathSensitive(PathSensitivity.NONE)
    public abstract DirectoryProperty getPatches();
    
-   @InputDirectory
-   @PathSensitive(PathSensitivity.NONE)
-   public abstract DirectoryProperty getRejects();
-   
-   @Input
+   @OutputDirectory
    @Optional
-   public abstract Property<ArchiveFormat> getOutputFormat();
+   public abstract DirectoryProperty getRejects();
    
    @Input
    @Optional
