@@ -45,8 +45,9 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
             data.forEach((key, value) -> result.put(key, unpackedMcpDirectory.file(value.getPath()).getAsFile()));
             return result;
         }));
-
+        
         getArguments().convention(Maps.newHashMap());
+        getMultiArguments().convention(Maps.newHashMap());
     }
 
     @Override

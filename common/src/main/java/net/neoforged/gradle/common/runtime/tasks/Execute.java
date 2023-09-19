@@ -8,6 +8,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -32,6 +33,7 @@ public abstract class Execute extends DefaultRuntime implements net.neoforged.gr
         getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact))));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
+        getMultiRuntimeArguments().convention(new HashMap<>());
     }
 
     @TaskAction

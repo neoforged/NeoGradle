@@ -59,7 +59,7 @@ subprojects.forEach { subProject ->
     subProject.repositories.mavenLocal()
     subProject.repositories.maven { MavenArtifactRepository repository ->
         repository.name 'NeoForged'
-        repository.url = 'https://maven.neoforged.net/'
+        repository.url = 'https://maven.neoforged.net/releases'
     }
     subProject.repositories.gradlePluginPortal()
 

@@ -10,6 +10,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -23,6 +24,7 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements E
         setGroup("NeoGradle/runtimes");
 
         getArguments().convention(new HashMap<>());
+        getMultiArguments().convention(new HashMap<>());
 
         //And configure output default locations.
         getOutputDirectory().convention(getProject().getLayout().getBuildDirectory().dir("forgegradle/tools/" + getName()));
@@ -51,6 +53,7 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements E
             return result;
         }));
         getRuntimeData().convention(new HashMap<>());
+        getMultiRuntimeArguments().convention(getMultiArguments());
     }
 
     @TaskAction
@@ -66,6 +69,14 @@ public abstract class JavaToolExecutingTask extends JavaRuntimeTask implements E
      */
     @Input
     public abstract MapProperty<String, Provider<String>> getArguments();
+    
+    /**
+     * The multi arguments for this step.
+     *
+     * @return The arguments for this step.
+     */
+    @Input
+    public abstract MapProperty<String, Provider<List<String>>> getMultiArguments();
 
     @Input
     public abstract Property<String> getConsoleLogFileName();

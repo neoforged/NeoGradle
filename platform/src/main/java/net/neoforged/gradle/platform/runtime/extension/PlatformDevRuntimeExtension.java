@@ -23,21 +23,21 @@ import java.io.File;
 import java.util.HashMap;
 
 public abstract class PlatformDevRuntimeExtension extends CommonRuntimeExtension<PlatformDevRuntimeSpecification, PlatformDevRuntimeSpecification.Builder, PlatformDevRuntimeDefinition> {
-
+    
     @Inject
     public PlatformDevRuntimeExtension(Project project) {
         super(project);
     }
-
+    
     @Override
     protected @NotNull PlatformDevRuntimeDefinition doCreate(PlatformDevRuntimeSpecification spec) {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
-
+        
         final Artifact neoFormArtifact = spec.getNeoFormArtifact();
-
+        
         final File workingDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("platform/%s", spec.getIdentifier())).get().getAsFile();
         
-        final NeoFormRuntimeDefinition neoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
+        final NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
             builder.withNeoFormArtifact(neoFormArtifact)
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(spec.getAdditionalDependencies());
@@ -45,8 +45,24 @@ public abstract class PlatformDevRuntimeExtension extends CommonRuntimeExtension
             NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
         });
         
+        final NeoFormRuntimeDefinition clientNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
+            builder.withNeoFormArtifact(neoFormArtifact)
+                    .withDistributionType(DistributionType.CLIENT)
+                    .withAdditionalDependencies(spec.getAdditionalDependencies());
+            
+            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
+        });
+        
+        final NeoFormRuntimeDefinition serverNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
+            builder.withNeoFormArtifact(neoFormArtifact)
+                    .withDistributionType(DistributionType.SERVER)
+                    .withAdditionalDependencies(spec.getAdditionalDependencies());
+            
+            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
+        });
+        
         final TaskProvider<ApplyPatches> patchApply = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyPatches"), ApplyPatches.class, task -> {
-            task.getBase().set(neoFormRuntimeDefinition.getSourceJarTask().flatMap(ArtifactProvider::getOutput));
+            task.getBase().set(joinedNeoFormRuntimeDefinition.getSourceJarTask().flatMap(ArtifactProvider::getOutput));
             task.getPatches().set(spec.getPatchesDirectory());
             task.getRejects().set(spec.getRejectsDirectory());
             task.getPatchMode().set(PatchMode.FUZZY);
@@ -57,25 +73,27 @@ public abstract class PlatformDevRuntimeExtension extends CommonRuntimeExtension
             task.getInput().set(patchApply.flatMap(ApplyPatches::getOutput));
             task.getOutput().set(new File(workingDirectory, "patched.jar"));
         });
-
+        
         return new PlatformDevRuntimeDefinition(
-              spec,
-              neoFormRuntimeDefinition,
-              sourcesProvider
+                spec,
+                clientNeoFormRuntimeDefinition,
+                serverNeoFormRuntimeDefinition,
+                joinedNeoFormRuntimeDefinition,
+                sourcesProvider
         );
     }
-
+    
     @Override
     protected PlatformDevRuntimeSpecification.Builder createBuilder() {
         return PlatformDevRuntimeSpecification.Builder.from(getProject());
     }
-
+    
     @Override
     protected void bakeDefinition(PlatformDevRuntimeDefinition definition) {
         final PlatformDevRuntimeSpecification spec = definition.getSpecification();
         final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
         final Mappings mappingsExtension = minecraftExtension.getMappings();
-
+        
         definition.onBake(
                 mappingsExtension.getChannel().get(),
                 spec.getProject().getLayout().getBuildDirectory().get().dir("userdev").dir(spec.getIdentifier()).getAsFile()

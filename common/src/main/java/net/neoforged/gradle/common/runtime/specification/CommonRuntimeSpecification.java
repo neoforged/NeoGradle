@@ -8,6 +8,7 @@ import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +51,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
     @NotNull
     @Override
     public String getIdentifier() {
-        return getName() + version;
+        return getName() + StringUtils.capitalize(getDistribution().getName().toLowerCase()) + version;
     }
     
     @Override

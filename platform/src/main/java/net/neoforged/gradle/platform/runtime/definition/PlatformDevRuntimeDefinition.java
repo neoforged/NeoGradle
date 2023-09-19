@@ -21,46 +21,58 @@ import java.util.Map;
  */
 //TODO: Create DSL for platform
 public final class PlatformDevRuntimeDefinition extends CommonRuntimeDefinition<PlatformDevRuntimeSpecification> implements IDelegatingRuntimeDefinition<PlatformDevRuntimeSpecification> {
-    private final NeoFormRuntimeDefinition neoformRuntimeDefinition;
+    private final NeoFormRuntimeDefinition clientNeoFormRuntimeDefinition;
+    private final NeoFormRuntimeDefinition serverNeoFormRuntimeDefinition;
+    private final NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition;
     
-    public PlatformDevRuntimeDefinition(@NotNull PlatformDevRuntimeSpecification specification, NeoFormRuntimeDefinition neoformRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider) {
-        super(specification, neoformRuntimeDefinition.getTasks(), sourcesProvider, neoformRuntimeDefinition.getRawJarTask(), neoformRuntimeDefinition.getGameArtifactProvidingTasks(), neoformRuntimeDefinition.getMinecraftDependenciesConfiguration(), neoformRuntimeDefinition::configureAssociatedTask);
-        this.neoformRuntimeDefinition = neoformRuntimeDefinition;
+    public PlatformDevRuntimeDefinition(@NotNull PlatformDevRuntimeSpecification specification, NeoFormRuntimeDefinition clientNeoFormRuntimeDefinition, NeoFormRuntimeDefinition serverNeoFormRuntimeDefinition, NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider) {
+        super(specification, clientNeoFormRuntimeDefinition.getTasks(), sourcesProvider, clientNeoFormRuntimeDefinition.getRawJarTask(), clientNeoFormRuntimeDefinition.getGameArtifactProvidingTasks(), clientNeoFormRuntimeDefinition.getMinecraftDependenciesConfiguration(), clientNeoFormRuntimeDefinition::configureAssociatedTask);
+        this.clientNeoFormRuntimeDefinition = clientNeoFormRuntimeDefinition;
+        this.serverNeoFormRuntimeDefinition = serverNeoFormRuntimeDefinition;
+        this.joinedNeoFormRuntimeDefinition = joinedNeoFormRuntimeDefinition;
     }
     
-    public NeoFormRuntimeDefinition getNeoformRuntimeDefinition() {
-        return neoformRuntimeDefinition;
+    public NeoFormRuntimeDefinition getClientNeoFormRuntimeDefinition() {
+        return clientNeoFormRuntimeDefinition;
+    }
+    
+    public NeoFormRuntimeDefinition getServerNeoFormRuntimeDefinition() {
+        return serverNeoFormRuntimeDefinition;
+    }
+    
+    public NeoFormRuntimeDefinition getJoinedNeoFormRuntimeDefinition() {
+        return joinedNeoFormRuntimeDefinition;
     }
     
     @Override
     public void setReplacedDependency(@NotNull Dependency dependency) {
         super.setReplacedDependency(dependency);
-        neoformRuntimeDefinition.setReplacedDependency(dependency);
+        clientNeoFormRuntimeDefinition.setReplacedDependency(dependency);
     }
 
 
     @Override
     public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
-        neoformRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
+        clientNeoFormRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
     }
 
     @Override
     public @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
-        return neoformRuntimeDefinition.getAssetsTaskProvider();
+        return clientNeoFormRuntimeDefinition.getAssetsTaskProvider();
     }
 
     @Override
     public @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
-        return neoformRuntimeDefinition.getNativesTaskProvider();
+        return clientNeoFormRuntimeDefinition.getNativesTaskProvider();
     }
 
     public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
-        return neoformRuntimeDefinition.getDebuggingMappingsTaskProvider();
+        return clientNeoFormRuntimeDefinition.getDebuggingMappingsTaskProvider();
     }
 
     @Override
     public @NotNull Map<String, String> getMappingVersionData() {
-        return neoformRuntimeDefinition.getMappingVersionData();
+        return clientNeoFormRuntimeDefinition.getMappingVersionData();
     }
 
     @Override
@@ -72,17 +84,17 @@ public final class PlatformDevRuntimeDefinition extends CommonRuntimeDefinition<
     @NotNull
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
-        return neoformRuntimeDefinition.getListLibrariesTaskProvider();
+        return clientNeoFormRuntimeDefinition.getListLibrariesTaskProvider();
     }
 
     @Override
     protected Map<String, String> buildRunInterpolationData() {
-        final Map<String, String> interpolationData = neoformRuntimeDefinition.buildRunInterpolationData();
+        final Map<String, String> interpolationData = clientNeoFormRuntimeDefinition.buildRunInterpolationData();
         return interpolationData;
     }
 
     @Override
     public Definition<?> getDelegate() {
-        return neoformRuntimeDefinition;
+        return clientNeoFormRuntimeDefinition;
     }
 }

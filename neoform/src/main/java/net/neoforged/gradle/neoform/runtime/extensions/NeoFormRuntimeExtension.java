@@ -142,7 +142,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 }
 
                 dependentTask.ifPresent(taskForArguments::dependsOn);
-                dependentTask.ifPresent(task -> arguments.put(key, task.flatMap(t -> t.getOutput().getAsFile().map(File::getAbsolutePath))));
+                dependentTask.ifPresent(task -> arguments.put(key, task.map(t -> t.getOutput().get().getAsFile().getAbsolutePath())));
             } else {
                 arguments.put(key, spec.getProject().provider(() -> value));
             }
@@ -333,10 +333,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     recompileSourceJar.getInputJar().set(remapTask.flatMap(WithOutput::getOutput));
                     recompileSourceJar.getCompileClasspath().setFrom(recompileDependencies);
                     recompileSourceJar.getStepName().set("recompile");
-
-                    for (Task task : recompileDependencies.getBuildDependencies().getDependencies(recompileSourceJar)) {
-                        recompileSourceJar.dependsOn(task);
-                    }
                 });
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, data, neoFormRuntimeTask));
 

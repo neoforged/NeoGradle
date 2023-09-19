@@ -133,10 +133,15 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         } else {
             candidate = Optional.empty();
             for (DependencyReplacementHandler handler : getReplacementHandlers()) {
-                Optional<DependencyReplacementResult> dependencyReplacementResult = handler.getReplacer().get().get(new DependencyReplacementContext(project, configuration, dependency, null));
-                if (dependencyReplacementResult.isPresent()) {
-                    candidate = dependencyReplacementResult;
-                    break;
+                try {
+                    Optional<DependencyReplacementResult> dependencyReplacementResult = handler.getReplacer().get().get(new DependencyReplacementContext(project, configuration, dependency, null));
+                    
+                    if (dependencyReplacementResult.isPresent()) {
+                        candidate = dependencyReplacementResult;
+                        break;
+                    }
+                } catch (Exception exception) {
+                    getProject().getLogger().info("Failed to process dependency replacement on handler: " + exception.getMessage(), exception);
                 }
             }
             if (!dependencyReplacementInformation.contains(dependency, configuration)) {

@@ -103,4 +103,13 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      */
     @Internal
     MapProperty<String, Provider<String>> getRuntimeArguments();
+
+
+    /**
+     * The interpolated runtime arguments that will be used to interpolate the arguments, with multiple values
+     *
+     * @return The interpolated runtime arguments.
+     */
+    @Internal
+    MapProperty<String, Provider<List<String>>> getMultiRuntimeArguments();
 }

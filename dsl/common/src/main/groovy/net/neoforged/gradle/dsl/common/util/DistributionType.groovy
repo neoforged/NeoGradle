@@ -6,6 +6,7 @@
 package net.neoforged.gradle.dsl.common.util
 
 import groovy.transform.CompileStatic
+import org.apache.commons.lang3.StringUtils
 
 /**
  * Defines the distribution type (also known as the side) of a game artifact.
@@ -73,4 +74,13 @@ enum DistributionType {
         return server
     }
 
+    /**
+     * Creates a task name where the distribution type is sandwiched between the given prefix and suffix.
+     *
+     * @param prefix The prefix for the task name.
+     * @param suffix The suffix for the task name.
+     */
+    String createTaskName(final String prefix, final String suffix) {
+        return "${StringUtils.uncapitalize(prefix)}${StringUtils.capitalize(this.name().toLowerCase())}${StringUtils.capitalize(suffix)}".toString();
+    }
 }

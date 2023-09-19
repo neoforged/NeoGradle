@@ -12,8 +12,6 @@ import codechicken.diffpatch.util.archiver.ArchiveFormat;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.Property;
@@ -21,8 +19,9 @@ import org.gradle.api.tasks.*;
 
 import java.nio.file.Path;
 
-public abstract class GeneratePatches extends DefaultRuntime implements WithOutput, WithWorkspace {
-    public GeneratePatches() {
+public abstract class GenerateSourcePatches extends DefaultRuntime implements WithOutput, WithWorkspace {
+    
+    public GenerateSourcePatches() {
         getOriginalPrefix().convention("a/");
         getModifiedPrefix().convention("b/");
         getLineEnding().convention(System.lineSeparator());

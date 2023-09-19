@@ -97,6 +97,15 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
     abstract MapProperty<String, Provider<String>> getArguments();
 
     /**
+     * The multi statement arguments for this step.
+     *
+     * @return The arguments for this step.
+     */
+    @Input
+    @DSLProperty
+    abstract MapProperty<String, Provider<List<String>>> getMultiArguments();
+
+    /**
      * The name of the output file name for this step.
      *
      * @return The name of the output file.

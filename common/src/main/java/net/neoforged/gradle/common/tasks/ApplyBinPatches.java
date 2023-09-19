@@ -32,7 +32,7 @@ import java.util.List;
 @CacheableTask
 public abstract class ApplyBinPatches extends JarExec implements WithOutput {
     public ApplyBinPatches() {
-        getTool().set(Constants.BINPATCHER);
+        getTool().set(Constants.BINPATCHER_VERSION);
         getArgs().addAll("--clean", "{clean}", "--output", "{output}", "--apply", "{patch}");
 
         getOutput().convention(getProject().getLayout().getBuildDirectory().dir(getName()).map(d -> d.file("output.jar")));

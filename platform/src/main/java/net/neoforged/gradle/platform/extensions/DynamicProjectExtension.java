@@ -15,7 +15,8 @@ import net.neoforged.gradle.platform.PlatformDevProjectPlugin;
 import net.neoforged.gradle.platform.model.DynamicProjectType;
 import net.neoforged.gradle.platform.runtime.definition.PlatformDevRuntimeDefinition;
 import net.neoforged.gradle.platform.runtime.extension.PlatformDevRuntimeExtension;
-import net.neoforged.gradle.platform.runtime.tasks.GeneratePatches;
+import net.neoforged.gradle.platform.runtime.tasks.GenerateBinaryPatches;
+import net.neoforged.gradle.platform.runtime.tasks.GenerateSourcePatches;
 import net.neoforged.gradle.platform.runtime.tasks.PackZip;
 import net.neoforged.gradle.platform.tasks.SetupProjectFromRuntime;
 import net.neoforged.gradle.platform.util.SetupUtils;
@@ -26,16 +27,18 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.plugins.JavaPlatformExtension;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.HashMap;
+import java.util.EnumMap;
 
 public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicProjectExtension> {
 
@@ -124,10 +127,15 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             builder.withNeoFormVersion(neoFormVersion)
                   .withPatchesDirectory(patches)
                   .withRejectsDirectory(rejects)
-                  .withDistributionType(DistributionType.CLIENT);
+                  .withDistributionType(DistributionType.JOINED);
         });
         
-        final TaskProvider<? extends WithOutput> neoFormSources = runtimeDefinition.getNeoformRuntimeDefinition().getSourceJarTask();
+        final EnumMap<DistributionType, TaskProvider<? extends WithOutput>> neoformRawJarProviders = new EnumMap<>(DistributionType.class);
+        neoformRawJarProviders.put(DistributionType.CLIENT, runtimeDefinition.getClientNeoFormRuntimeDefinition().getRawJarTask());
+        neoformRawJarProviders.put(DistributionType.JOINED, runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getRawJarTask());
+        neoformRawJarProviders.put(DistributionType.SERVER, runtimeDefinition.getServerNeoFormRuntimeDefinition().getRawJarTask());
+        
+        final TaskProvider<? extends WithOutput> neoFormSources = runtimeDefinition.getClientNeoFormRuntimeDefinition().getSourceJarTask();
         
         final TaskProvider<SetupProjectFromRuntime> setupTask = configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
         setupTask.configure(task -> task.getShouldLockDirectories().set(false));
@@ -139,18 +147,44 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         });
         
-        final TaskProvider<? extends GeneratePatches> createPatches = project.getTasks().register("createPatches", GeneratePatches.class, task -> {
+        final TaskProvider<? extends GenerateSourcePatches> createPatches = project.getTasks().register("createSourcePatches", GenerateSourcePatches.class, task -> {
             task.getBase().set(neoFormSources.flatMap(WithOutput::getOutput));
             task.getModified().set(packChanges.flatMap(WithOutput::getOutput));
             
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         });
         
-        final TaskProvider<? extends UnpackZip> unpackZip = project.getTasks().register("unpackPatches", UnpackZip.class, task -> {
+        final TaskProvider<? extends UnpackZip> unpackZip = project.getTasks().register("unpackSourcePatches", UnpackZip.class, task -> {
             task.getInputZip().set(createPatches.flatMap(WithOutput::getOutput));
             task.getUnpackingTarget().set(patches);
             
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+        });
+        
+        final TaskProvider<? extends Jar> compiledJarProvider = project.getTasks().named(
+                project.getExtensions().getByType(JavaPluginExtension.class).getSourceSets().getByName("main").getJarTaskName(),
+                Jar.class
+        );
+        
+        final EnumMap<DistributionType, TaskProvider<GenerateBinaryPatches>> binaryPatchGenerators = new EnumMap<>(DistributionType.class);
+        for (DistributionType distribution : DistributionType.values()) {
+            final TaskProvider<? extends WithOutput> cleanProvider = neoformRawJarProviders.get(distribution);
+            final TaskProvider<GenerateBinaryPatches> generateBinaryPatchesTask = project.getTasks().register(distribution.createTaskName("generate", "BinaryPatches"), GenerateBinaryPatches.class, task  -> {
+                task.getClean().set(cleanProvider.flatMap(WithOutput::getOutput));
+                task.getPatched().set(compiledJarProvider.flatMap(Jar::getArchiveFile));
+                task.getDistributionType().set(distribution);
+                
+                task.mustRunAfter(unpackZip);
+                task.mustRunAfter(setupTask);
+                
+                CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+            });
+            binaryPatchGenerators.put(distribution, generateBinaryPatchesTask);
+        }
+        
+        final TaskProvider<?> generateBinaryPatches = project.getTasks().register("generateBinaryPatches", task -> {
+            binaryPatchGenerators.values().forEach(task::dependsOn);
+            task.setGroup("neogradle/runtime/platform");
         });
     }
 

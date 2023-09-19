@@ -8,6 +8,10 @@ java {
     }
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
-    implementation 'net.minecraft:neoform_client:1.20.1'
+    implementation 'net.minecraft:neform_client:1.20.2-pre4-20230917.110507'
 }
