@@ -2,10 +2,14 @@ package net.neoforged.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.annotations.DefaultMethods;
-import org.gradle.api.Task;
+import org.gradle.api.Task
+import org.gradle.api.file.ArchiveOperations
+import org.gradle.api.file.FileSystemOperations;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider
+
+import javax.inject.Inject
 
 /**
  * Defines a task which has a workspace associated with it.
@@ -15,7 +19,7 @@ import org.gradle.api.provider.Provider
  */
 @CompileStatic
 @DefaultMethods
-trait WithWorkspace implements Task {
+trait WithWorkspace extends WithOperations {
 
     /**
      * Ensures the workspace is ready for the file and realises the given property and regular file.
@@ -58,6 +62,16 @@ trait WithWorkspace implements Task {
     }
 
     /**
+     * Works as a provider transformer to ensure the file is ready when needed without realising it at the time of calling.
+     *
+     * @param fileProvider The provider for the file.
+     * @return The provider for the file, rigged for realisation.
+     */
+    default Provider<File> transformEnsureFileWorkspaceReady(final File fileProvider) {
+        return getProviderFactory().provider(() -> fileProvider).map(this::ensureFileWorkspaceReady);
+    }
+
+    /**
      * Ensures the workspace is ready for the file.
      *
      * @param file The file.
@@ -80,6 +94,6 @@ trait WithWorkspace implements Task {
      * @return The provider.
      */
     default <T> Provider<T> newProvider(final T value) {
-        return getProject().provider(() -> value);
+        return getProviderFactory().provider(() -> value);
     }
 }

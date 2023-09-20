@@ -2,6 +2,7 @@ package net.neoforged.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.runtime.tasks.Execute;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
@@ -24,7 +25,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
     public ApplyOfficialMappingsToCompiledJar() {
         super();
 
-        getExecutingArtifact().set(Constants.FART);
+        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.FART));
         getProgramArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_PROGRAMM_ARGS));
         getJvmArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_JVM_ARGS));
         getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));

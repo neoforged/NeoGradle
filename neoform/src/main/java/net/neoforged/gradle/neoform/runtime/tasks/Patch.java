@@ -32,7 +32,7 @@ public abstract class Patch extends DefaultRuntime {
         final File rejects = getRejectsFile().get().getAsFile();
 
         PatchOperation.Builder builder = PatchOperation.builder()
-                .logTo(new LoggingOutputStream(getProject().getLogger(), LogLevel.LIFECYCLE))
+                .logTo(new LoggingOutputStream(getLogger(), LogLevel.LIFECYCLE))
                 .basePath(input.toPath())
                 .patchesPath(getUnpackedMcpZipDirectory().get().getAsFile().toPath())
                 .patchesPrefix(getUnpackedMcpZipDirectory().get().getAsFile().toPath().relativize(getPatchDirectory().get().getAsFile().toPath()).toString())

@@ -63,7 +63,7 @@ public abstract class CleanArtifact extends DefaultRuntime {
                     super.visitFile(fileVisitDetails);
                 }
             };
-            getProject().zipTree(getInput().get()).visit(visitor);
+            getArchiveOperations().zipTree(getInput().get()).visit(visitor);
             outputZipStream.close();
             fileOutputStream.close();
         } catch (IOException e) {

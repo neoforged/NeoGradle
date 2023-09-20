@@ -69,7 +69,15 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 
-        project.getTasks().create("handleNamingLicense", DisplayMappingsLicenseTask.class);
+        project.getTasks().register("handleNamingLicense", DisplayMappingsLicenseTask.class, task -> {
+            task.getLicense().set(project.provider(() -> {
+                final Mappings mappings = project.getExtensions().getByType(Mappings.class);
+                if (mappings.getChannel().get().getHasAcceptedLicense().get())
+                    return null;
+                
+                return mappings.getChannel().get().getLicenseText().get();
+            }));
+        });
 
         project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.MOJANG_MAVEN);

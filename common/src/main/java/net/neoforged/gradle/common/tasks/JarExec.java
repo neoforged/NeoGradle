@@ -27,6 +27,7 @@ import org.gradle.api.Action;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.ListProperty;
@@ -76,17 +77,10 @@ import java.util.stream.Collectors;
 @CacheableTask
 public abstract class JarExec extends DownloadingTask {
     protected boolean hasLog = true;
-
-    private final Provider<File> toolFile;
-    private final Provider<String> resolvedVersion;
-
     protected final Provider<Directory> workDir = getProject().getLayout().getBuildDirectory().dir(getName());
     protected final Provider<RegularFile> logFile = workDir.map(d -> d.file("log.txt"));
 
     public JarExec() {
-        toolFile = getTool().flatMap(toolStr -> getDownloader().flatMap(downloader -> downloader.file(toolStr)));
-        resolvedVersion = getTool().flatMap(toolStr -> getDownloader().flatMap(downloader -> downloader.version(toolStr)));
-
         getDebug().convention(false);
 
         final JavaPluginExtension extension = getProject().getExtensions().findByType(JavaPluginExtension.class);
@@ -102,7 +96,7 @@ public abstract class JarExec extends DownloadingTask {
 
     @TaskAction
     public void apply() throws IOException {
-        File jar = getToolJar().get();
+        File jar = getToolJar().get().getAsFile();
         File logFile = this.logFile.get().getAsFile();
 
         // Locate main class in jar file
@@ -216,11 +210,6 @@ public abstract class JarExec extends DownloadingTask {
         return Objects.toString(obj);
     }
 
-    @Internal
-    public String getResolvedVersion() {
-        return resolvedVersion.get();
-    }
-
     @Input
     public boolean getHasLog() {
         return hasLog;
@@ -232,12 +221,7 @@ public abstract class JarExec extends DownloadingTask {
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
-    public Provider<File> getToolJar() {
-        return toolFile;
-    }
-
-    @Input
-    public abstract Property<String> getTool();
+    public abstract RegularFileProperty getToolJar();
 
     @Input
     public abstract ListProperty<String> getArgs();

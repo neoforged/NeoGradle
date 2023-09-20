@@ -7,7 +7,6 @@ import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.DecompileUtils;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
-import net.neoforged.gradle.vanilla.runtime.tasks.CleanArtifact;
 import net.neoforged.gradle.vanilla.runtime.tasks.ExtractBundledServerTask;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +26,8 @@ public class ExtractBundledServerStep implements IStep {
             task.getInput().set(artifact.flatMap(WithOutput::getOutput));
             task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask)));
             task.getMinecraftVersion().set(CacheableMinecraftVersion.from(definition.getSpecification().getMinecraftVersion(), definition.getSpecification().getProject()));
+            
+            task.dependsOn(artifact);
         });
     }
 

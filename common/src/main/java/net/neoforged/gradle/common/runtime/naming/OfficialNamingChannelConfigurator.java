@@ -160,6 +160,7 @@ public final class OfficialNamingChannelConfigurator {
             task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
             task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName).orElse(context.getInputTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getName)))));
             task.getLibraries().set(librariesTask.flatMap(WithOutput::getOutput));
+            task.getMappings().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
 
             task.dependsOn(context.getInputTask());
             task.dependsOn(librariesTask);

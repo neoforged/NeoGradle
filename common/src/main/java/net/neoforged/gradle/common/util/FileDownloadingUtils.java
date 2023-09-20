@@ -17,15 +17,15 @@ public final class FileDownloadingUtils {
     }
 
 
-    public static void downloadThrowing(Project project, FileDownloadingUtils.DownloadInfo info, File file) {
+    public static void downloadThrowing(boolean isOffline, FileDownloadingUtils.DownloadInfo info, File file) {
         try {
-            downloadTo(project, info, file);
+            downloadTo(isOffline, info, file);
         } catch (IOException e) {
             throw new RuntimeException(String.format("Failed to download the file from: %s to: %s", info, file), e);
         }
     }
 
-    public static void downloadTo(Project project, DownloadInfo info, File file) throws IOException {
+    public static void downloadTo(boolean isOffline, DownloadInfo info, File file) throws IOException {
         // Check if file exists in local installer cache
         if (info.type.equals("jar") && info.side.equals("client")) {
             File localPath = new File(getMCDir() + File.separator + "versions" + File.separator + info.version + File.separator + info.version + ".jar");
@@ -35,7 +35,7 @@ public final class FileDownloadingUtils {
             }
         }
 
-        if (!project.getGradle().getStartParameter().isOffline()) {
+        if (!isOffline) {
             FileUtils.copyURLToFile(new URL(info.url), file);
         } else if (!file.exists()) {
             throw new RuntimeException("Could not find the file: " + file + " and we are offline.");

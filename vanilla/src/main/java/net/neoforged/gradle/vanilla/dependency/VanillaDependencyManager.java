@@ -106,7 +106,7 @@ public final class VanillaDependencyManager {
             builder.withDistributionType(DistributionType.valueOf(dependency.getName().toUpperCase(Locale.ROOT)));
             builder.withMinecraftVersion(version);
             builder.withFartVersion(runtimeExtension.getFartVersion());
-            builder.withForgeFlowerVersion(runtimeExtension.getForgeFlowerVersion());
+            builder.withForgeFlowerVersion(runtimeExtension.getVineFlowerVersion());
             builder.withAccessTransformerApplierVersion(runtimeExtension.getAccessTransformerApplierVersion());
         });
     }

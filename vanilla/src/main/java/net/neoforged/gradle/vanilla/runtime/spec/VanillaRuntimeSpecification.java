@@ -122,7 +122,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
             }
 
             if (!this.hasConfiguredForgeFlowerVersion) {
-                this.forgeFlowerVersion = runtimeExtension.getForgeFlowerVersion();
+                this.forgeFlowerVersion = runtimeExtension.getVineFlowerVersion();
             }
 
             if (!this.hasConfiguredAccessTransformerApplierVersion) {

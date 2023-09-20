@@ -8,5 +8,5 @@ import org.gradle.api.Task
  * Interface that indicates that a given task has a project associated with it.
  */
 @CompileStatic
-trait WithProject implements Task, ProjectSpecification {
+trait WithProject implements WithOperations, ProjectSpecification {
 }

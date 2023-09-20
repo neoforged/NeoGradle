@@ -2,6 +2,7 @@ package net.neoforged.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.runtime.tasks.Execute;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.Constants;
@@ -20,7 +21,7 @@ import java.io.File;
 public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
 
     public UnapplyOfficialMappingsToCompiledJar() {
-        getExecutingArtifact().set(Constants.SPECIALSOURCE);
+        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.SPECIALSOURCE));
         getProgramArguments().set(Lists.newArrayList("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}", "--live", "-r"));
         getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
 

@@ -9,6 +9,7 @@ import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfiguration
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
 import net.neoforged.gradle.neoform.runtime.tasks.SideAnnotationStripper;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -28,28 +29,29 @@ public final class NeoFormRuntimeUtils {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends WithOutput>> adaptedInput) {
+    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends WithOutput>> adaptedInput, Task task) {
         if (adaptedInput.isPresent()) {
-            return adaptedInput.get().flatMap(task -> task.getOutput().getAsFile());
+            task.dependsOn(adaptedInput);
+            return adaptedInput.get().flatMap(t -> t.getOutput().getAsFile());
         }
 
         final String inputValue = step.getValue("input");
         if (inputValue == null) {
-            return getInputForTaskFrom(spec, "{" + defaultInputTask + "Output}", tasks);
+            return getInputForTaskFrom(spec, "{" + defaultInputTask + "Output}", tasks, task);
         }
 
-        return getInputForTaskFrom(spec, inputValue, tasks);
+        return getInputForTaskFrom(spec, inputValue, tasks, task);
     }
 
-    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step) {
+    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, Task task) {
         final String inputValue = step.getValue("input");
         if (inputValue == null) {
             throw new IllegalStateException("Can not transformer or get an input of a task without an input");
         }
-        return getInputForTaskFrom(spec, inputValue, tasks);
+        return getInputForTaskFrom(spec, inputValue, tasks, task);
     }
 
-    public static Provider<File> getInputForTaskFrom(final NeoFormRuntimeSpecification spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks) {
+    public static Provider<File> getInputForTaskFrom(final NeoFormRuntimeSpecification spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks, Task task) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {
             return spec.getProject().provider(() -> new File(inputValue));
@@ -81,9 +83,13 @@ public final class NeoFormRuntimeUtils {
             }
 
             String finalTaskName = taskName;
-            return tasks.computeIfAbsent(taskName, value -> {
+            final TaskProvider<? extends WithOutput> inputTask = tasks.computeIfAbsent(taskName, value -> {
                 throw new IllegalArgumentException("Could not find NeoForm task for input: " + value + ", available tasks: " + tasks.keySet() + ", input: " + inputValue + " taskname: " + finalTaskName + " stepname: " + stepName);
-            }).flatMap(t -> t.getOutput().getAsFile());
+            });
+            
+            task.dependsOn(inputTask);
+            
+            return inputTask.flatMap(t -> t.getOutput().getAsFile());
         }
 
         throw new IllegalStateException("The string '" + inputValue + "' did not return a valid substitution match!");

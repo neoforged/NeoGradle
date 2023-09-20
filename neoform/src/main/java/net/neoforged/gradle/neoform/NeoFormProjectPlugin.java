@@ -39,8 +39,6 @@ public class NeoFormProjectPlugin implements Plugin<Project> {
         // Needed to gain access to the common systems
         project.getPluginManager().apply(CommonPlugin.class);
 
-
-
         NeoFormRuntimeExtension runtimeExtension = project.getExtensions().create("neoFormRuntime", NeoFormRuntimeExtension.class, project);
 
         NeoFormOfficialNamingChannelConfigurator.getInstance().configure(project);

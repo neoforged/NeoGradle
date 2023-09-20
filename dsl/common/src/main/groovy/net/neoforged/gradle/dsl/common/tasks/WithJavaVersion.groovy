@@ -8,5 +8,5 @@ import org.gradle.api.Task
  * Defines a task with a java version property.
  */
 @CompileStatic
-trait WithJavaVersion extends WithProject implements Task, JavaVersionSpecification {
+trait WithJavaVersion extends WithProject implements WithOperations, JavaVersionSpecification {
 }

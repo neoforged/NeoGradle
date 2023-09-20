@@ -32,9 +32,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
     }
 
     public String getMinecraftVersion() {
-        final String fromArtifactVersion = getNeoFormArtifact().getVersion().substring(0, getNeoFormArtifact().getVersion().lastIndexOf("-"));
-        final MinecraftArtifactCache cache = getProject().getExtensions().getByType(MinecraftArtifactCache.class);
-        return cache.resolveVersion(fromArtifactVersion);
+        return getNeoFormArtifact().getVersion().substring(0, getNeoFormArtifact().getVersion().lastIndexOf("-"));
     }
 
     @Override

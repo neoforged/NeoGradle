@@ -7,6 +7,7 @@ import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.Execute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
@@ -34,7 +35,6 @@ import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -88,14 +88,14 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     throw new IllegalStateException("Server Jar is required for this step, but was not provided");
                 });
             case "strip":
-                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), StripJar.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step)));
+                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), StripJar.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task)));
             case "listLibraries":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), ListLibraries.class, task -> {
-                    task.getDownloadedVersionJsonFile().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, "downloadJson", adaptedInput));
+                    task.getDownloadedVersionJsonFile().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, "downloadJson", adaptedInput, task));
                 });
             case "inject":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), InjectCode.class, task -> {
-                    task.getInjectionSource().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step));
+                    task.getInjectionSource().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task));
                     if (spec.getDistribution().equals(DistributionType.SERVER)) {
                         task.getInclusionFilter().add("**/server/**");
                     } else if (spec.getDistribution().equals(DistributionType.CLIENT)) {
@@ -103,7 +103,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     }
                 });
             case "patch":
-                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Patch.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step)));
+                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Patch.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task)));
         }
         if (neoFormConfigV2.getSpec() >= 2) {
             switch (step.getType()) {
@@ -123,7 +123,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
     private static TaskProvider<? extends Runtime> createExecute(final NeoFormRuntimeSpecification spec, final NeoFormConfigConfigurationSpecV1.Step step, final NeoFormConfigConfigurationSpecV1.Function function) {
         return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
-            task.getExecutingArtifact().set(function.getVersion());
+            task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
             task.getJvmArguments().addAll(function.getJvmArgs());
             task.getProgramArguments().addAll(function.getArgs());
         });

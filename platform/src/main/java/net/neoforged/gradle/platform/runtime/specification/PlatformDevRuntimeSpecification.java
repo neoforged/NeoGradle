@@ -26,14 +26,16 @@ public final class PlatformDevRuntimeSpecification extends CommonRuntimeSpecific
     private final FileCollection additionalDependencies;
     private final Directory patchesDirectory;
     private final Directory rejectsDirectory;
+    private final boolean isUpdating;
     
-    public PlatformDevRuntimeSpecification(Project project, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, Artifact neoFormArtifact, FileCollection additionalDependencies, Directory patchesDirectory, Directory rejectsDirectory) {
+    public PlatformDevRuntimeSpecification(Project project, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, Artifact neoFormArtifact, FileCollection additionalDependencies, Directory patchesDirectory, Directory rejectsDirectory, boolean isUpdating) {
         super(project, "platform", neoFormArtifact.getVersion(), distribution, preTaskTypeAdapters, postTypeAdapters, PlatformDevRuntimeExtension.class);
         this.minecraftVersion = neoFormArtifact.getVersion().substring(0, neoFormArtifact.getVersion().lastIndexOf("-"));
         this.neoFormArtifact = neoFormArtifact;
         this.additionalDependencies = additionalDependencies;
         this.patchesDirectory = patchesDirectory;
         this.rejectsDirectory = rejectsDirectory;
+        this.isUpdating = isUpdating;
     }
     
     @NotNull
@@ -56,6 +58,10 @@ public final class PlatformDevRuntimeSpecification extends CommonRuntimeSpecific
     
     public Directory getRejectsDirectory() {
         return rejectsDirectory;
+    }
+    
+    public boolean isUpdating() {
+        return isUpdating;
     }
     
     @Override
@@ -81,6 +87,7 @@ public final class PlatformDevRuntimeSpecification extends CommonRuntimeSpecific
         private FileCollection additionalDependencies;
         private Provider<Directory> patchesDirectory;
         private Provider<Directory> rejectsDirectory;
+        private Provider<Boolean> isUpdating;
         
         private Builder(Project project) {
             super(project);
@@ -91,14 +98,15 @@ public final class PlatformDevRuntimeSpecification extends CommonRuntimeSpecific
             this.neoFormVersion = project.provider(() -> "+");
             
             this.neoFormArtifact = this.neoFormGroup
-                                         .flatMap(group -> this.neoFormName
-                                                                 .flatMap(name -> this.neoFormVersion
-                                                                                        .map(version -> Artifact.from(
-                                                                                              String.format("%s:%s:%s@zip", group, name, version)
-                                                                                        ))));
+                                           .flatMap(group -> this.neoFormName
+                                                                     .flatMap(name -> this.neoFormVersion
+                                                                                              .map(version -> Artifact.from(
+                                                                                                      String.format("%s:%s:%s@zip", group, name, version)
+                                                                                              ))));
             
-            this.patchesDirectory = project.provider(() ->  project.getLayout().getProjectDirectory().dir("patches"));
-            this.rejectsDirectory = project.provider(() ->  project.getLayout().getProjectDirectory().dir("rejects"));
+            this.patchesDirectory = project.provider(() -> project.getLayout().getProjectDirectory().dir("patches"));
+            this.rejectsDirectory = project.provider(() -> project.getLayout().getProjectDirectory().dir("rejects"));
+            this.isUpdating = project.provider(() -> false);
         }
         
         @Override
@@ -182,6 +190,18 @@ public final class PlatformDevRuntimeSpecification extends CommonRuntimeSpecific
             return withRejectsDirectory(project.provider(() -> rejectsDirectory));
         }
         
+        public Builder isUpdating(final Provider<Boolean> isUpdating) {
+            this.isUpdating = isUpdating;
+            return getThis();
+        }
+        
+        public Builder isUpdating(final Boolean isUpdating) {
+            if (isUpdating == null) // Additional null check for convenient loading of versions from dependencies.
+                return getThis();
+            
+            return isUpdating(project.provider(() -> isUpdating));
+        }
+        
         
         public Builder withAdditionalDependencies(final FileCollection files) {
             this.additionalDependencies = this.additionalDependencies.plus(files);
@@ -192,14 +212,15 @@ public final class PlatformDevRuntimeSpecification extends CommonRuntimeSpecific
             final Provider<Artifact> resolvedArtifact = neoFormArtifact.map(a -> resolveNeoFormVersion(project, a));
             
             return new PlatformDevRuntimeSpecification(
-                  project,
-                  distributionType.get(),
-                  preTaskAdapters,
-                  postTaskAdapters,
-                  resolvedArtifact.get(),
-                  additionalDependencies,
-                  patchesDirectory.get(),
-                  rejectsDirectory.get());
+                    project,
+                    distributionType.get(),
+                    preTaskAdapters,
+                    postTaskAdapters,
+                    resolvedArtifact.get(),
+                    additionalDependencies,
+                    patchesDirectory.get(),
+                    rejectsDirectory.get(),
+                    isUpdating.get());
         }
         
         private static Artifact resolveNeoFormVersion(final Project project, final Artifact current) {
@@ -209,10 +230,10 @@ public final class PlatformDevRuntimeSpecification extends CommonRuntimeSpecific
             
             final Configuration resolveConfig = ConfigurationUtils.temporaryConfiguration(project, current.toDependency(project));
             return resolveConfig.getResolvedConfiguration()
-                         .getResolvedArtifacts().stream()
-                         .filter(current.asArtifactMatcher())
-                         .findFirst()
-                         .map(Artifact::from).orElse(current);
+                           .getResolvedArtifacts().stream()
+                           .filter(current.asArtifactMatcher())
+                           .findFirst()
+                           .map(Artifact::from).orElse(current);
         }
     }
 }

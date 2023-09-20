@@ -3,14 +3,12 @@ package net.neoforged.gradle.vanilla.runtime.extensions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.tasks.UnpackBundledServer;
 import net.neoforged.gradle.common.util.BundledServerUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
-import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.VersionJson;
-import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -46,7 +44,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     public VanillaRuntimeExtension(Project project) {
         super(project);
 
-        getForgeFlowerVersion().convention(Constants.FORGEFLOWER_VERSION);
+        getVineFlowerVersion().convention(Constants.VINEFLOWER_VERSION);
         getFartVersion().convention(Constants.FART_VERSION);
         getAccessTransformerApplierVersion().convention(Constants.ACCESSTRANSFORMER_VERSION);
     }
@@ -104,13 +102,11 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
         if (gameArtifactTasks.containsKey(GameArtifact.SERVER_JAR) && BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
             final TaskProvider<? extends WithOutput> serverJarTask = gameArtifactTasks.get(GameArtifact.SERVER_JAR);
-            final TaskProvider<? extends WithOutput> extractedBundleTask = FileCacheUtils.createFileCacheEntryProvidingTask(
-                    project, NamingConstants.Task.CACHE_VERSION_EXTRACTED_BUNDLE, spec.getMinecraftVersion(), vanillaDirectory, artifactCacheExtension.getCacheDirectory(), CacheFileSelector.forVersionJar(spec.getMinecraftVersion(), DistributionType.SERVER.getName()), () -> {
-                        final File cacheFile = new File(artifactCacheExtension.getCacheDirectory().get().getAsFile(), CacheFileSelector.forVersionJar(spec.getMinecraftVersion(), DistributionType.SERVER.getName()).getCacheFileName());
-                        BundledServerUtils.extractBundledVersion(serverJarTask.get().getOutput().get().getAsFile(), cacheFile);
-
-                    }
-            );
+            
+            final TaskProvider<? extends WithOutput> extractedBundleTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "extractBundle"), UnpackBundledServer.class, task -> {
+                task.getServerJar().set(serverJarTask.flatMap(WithOutput::getOutput));
+                task.getOutput().fileValue(new File(vanillaDirectory, "files/server.jar"));
+            });
 
             extractedBundleTask.configure(task -> task.dependsOn(serverJarTask));
             gameArtifactTasks.put(GameArtifact.SERVER_JAR, extractedBundleTask);
@@ -232,7 +228,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
     public abstract Property<String> getFartVersion();
 
-    public abstract Property<String> getForgeFlowerVersion();
+    public abstract Property<String> getVineFlowerVersion();
 
     public abstract Property<String> getAccessTransformerApplierVersion();
 

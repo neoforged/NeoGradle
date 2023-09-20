@@ -10,6 +10,6 @@ import org.gradle.api.Task
  */
 @CompileStatic
 @DefaultMethods
-trait WithOutput implements Task, WithWorkspace, WithProject, OutputSpecification {
+trait WithOutput implements WithOperations, WithWorkspace, WithProject, OutputSpecification {
 
 }

@@ -3,12 +3,17 @@ package net.neoforged.gradle.common.runtime.tasks;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.neoforged.gradle.dsl.common.extensions.ArtifactDownloader;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
+import org.apache.commons.io.FileUtils;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
 
+import javax.swing.*;
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -17,42 +22,36 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 @CacheableTask
 public abstract class ListLibraries extends DefaultRuntime {
     private static final Attributes.Name FORMAT = new Attributes.Name("Bundler-Format");
-
+    
     @SuppressWarnings("ConstantConditions")
     public ListLibraries() {
         super();
-
+        
         getServerBundleFile().fileProvider(getRuntimeArguments().map(arguments -> {
             if (!arguments.containsKey("bundle"))
                 return null;
-
+            
             return new File(arguments.get("bundle").get());
         }));
         getOutputFileName().set("libraries.txt");
     }
-
+    
     @TaskAction
     public void run() throws Exception {
         final File output = ensureFileWorkspaceReady(getOutput());
         try (FileSystem bundleFs = !getServerBundleFile().isPresent() ? null : FileSystems.newFileSystem(getServerBundleFile().get().getAsFile().toPath(), this.getClass().getClassLoader())) {
-            Set<String> artifacts;
+            final Set<File> libraries;
             if (bundleFs == null) {
-                artifacts = listDownloadJsonLibraries();
+                libraries = downloadAndListJsonLibraries();
             } else {
-                artifacts = listBundleLibraries(bundleFs);
+                libraries = unpackAndListBundleLibraries(bundleFs);
             }
-
-            Set<File> libraries = new HashSet<>();
-            for (String artifact : artifacts) {
-                final ArtifactDownloader downloader = getDownloader().get();
-                File lib = downloader.file(artifact).get();
-                libraries.add(lib);
-            }
-
+            
             // Write the list
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8));
             for (File file : libraries) {
@@ -62,13 +61,13 @@ public abstract class ListLibraries extends DefaultRuntime {
             writer.close();
         }
     }
-
+    
     private Set<String> listBundleLibraries(FileSystem bundleFs) throws IOException {
         Path mfp = bundleFs.getPath("META-INF", "MANIFEST.MF");
         if (!Files.exists(mfp)) {
             throw new RuntimeException("Input archive does not contain META-INF/MANIFEST.MF");
         }
-
+        
         Manifest mf;
         try (InputStream is = Files.newInputStream(mfp)) {
             mf = new Manifest(is);
@@ -80,61 +79,98 @@ public abstract class ListLibraries extends DefaultRuntime {
         if (!"1.0".equals(format)) {
             throw new RuntimeException("Unsupported bundler format " + format + "; only 1.0 is supported");
         }
-
+        
         FileList libraries = FileList.read(bundleFs.getPath("META-INF", "libraries.list"));
         Set<String> artifacts = new HashSet<>();
         for (FileList.Entry entry : libraries.entries) {
-            artifacts.add(entry.id);
+            artifacts.add(entry.path);
         }
-
+        
         return artifacts;
     }
-
-    private Set<String> listDownloadJsonLibraries() throws IOException {
+    
+    private Set<PathAndUrl> listDownloadJsonLibraries() throws IOException {
         Gson gson = new Gson();
         Reader reader = new FileReader(getDownloadedVersionJsonFile().getAsFile().get());
         JsonObject json = gson.fromJson(reader, JsonObject.class);
         reader.close();
-
+        
         // Gather all the libraries
-        Set<String> artifacts = new HashSet<>();
+        Set<PathAndUrl> artifacts = new HashSet<>();
         for (JsonElement libElement : json.getAsJsonArray("libraries")) {
             JsonObject library = libElement.getAsJsonObject();
-            String name = library.get("name").getAsString();
-
+            
             if (library.has("downloads")) {
                 JsonObject downloads = library.get("downloads").getAsJsonObject();
-                if (downloads.has("artifact"))
-                    artifacts.add(name);
-                if (downloads.has("classifiers"))
-                    downloads.get("classifiers").getAsJsonObject().keySet().forEach(cls -> artifacts.add(name + ':' + cls));
+                if (downloads.has("artifact")) {
+                    final JsonObject artifact = downloads.getAsJsonObject("artifact");
+                    artifacts.add(
+                            new PathAndUrl(
+                                    artifact.get("path").getAsString(),
+                                    artifact.get("url").getAsString()
+                            )
+                    );
+                }
             }
         }
-
+        
         return artifacts;
     }
-
+    
+    private Set<File> unpackAndListBundleLibraries(FileSystem bundleFs) throws IOException {
+        final File outputDir = getOutputDirectory().get().getAsFile();
+        
+        final Set<String> libraryPaths = listBundleLibraries(bundleFs);
+        
+        return libraryPaths.stream()
+                       .map(path -> String.format("META-INF/libraries/%s", path))
+                       .map(path -> {
+                           final File output = new File(outputDir, path);
+                           try (final InputStream stream = Files.newInputStream(bundleFs.getPath(path))) {
+                               FileUtils.copyInputStreamToFile(stream, output);
+                           } catch (IOException e) {
+                               throw new UncheckedIOException(e);
+                           }
+                           return output;
+                       }).collect(Collectors.toSet());
+    }
+    
+    private Set<File> downloadAndListJsonLibraries() throws IOException {
+        final Set<PathAndUrl> libraryCoordinates = listDownloadJsonLibraries();
+        final File outputDirectory = getOutputDirectory().get().getAsFile();
+        
+        final Set<File> result = new HashSet<>();
+        
+        for (PathAndUrl libraryCoordinate : libraryCoordinates) {
+            final File outputFile = new File(outputDirectory, libraryCoordinate.path);
+            FileUtils.copyInputStreamToFile(new URL(libraryCoordinate.url).openStream(), outputFile);
+            result.add(outputFile);
+        }
+        
+        return result;
+    }
+    
     @InputFile
     @Optional
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getServerBundleFile();
-
+    
     @InputFile
     @Optional
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getDownloadedVersionJsonFile();
-
+    
     private static class FileList {
-
+        
         private final List<FileList.Entry> entries;
-
+        
         private FileList(List<FileList.Entry> entries) {
             this.entries = entries;
         }
-
+        
         static FileList read(Path path) throws IOException {
             List<FileList.Entry> ret = new ArrayList<>();
-
+            
             for (String line : Files.readAllLines(path)) {
                 String[] pts = line.split("\t");
                 if (pts.length != 3) {
@@ -142,56 +178,74 @@ public abstract class ListLibraries extends DefaultRuntime {
                 }
                 ret.add(new FileList.Entry(pts[0], pts[1], pts[2]));
             }
-
+            
             return new FileList(ret);
         }
-
+        
         private static final class Entry {
             private final String hash;
             private final String id;
             private final String path;
-
+            
             private Entry(String hash, String id, String path) {
                 this.hash = hash;
                 this.id = id;
                 this.path = path;
             }
-
+            
             public String hash() {
                 return hash;
             }
-
+            
             public String id() {
                 return id;
             }
-
+            
             public String path() {
                 return path;
             }
-
+            
             @Override
             public boolean equals(Object obj) {
                 if (obj == this) return true;
                 if (obj == null || obj.getClass() != this.getClass()) return false;
                 final Entry that = (Entry) obj;
                 return Objects.equals(this.hash, that.hash) &&
-                        Objects.equals(this.id, that.id) &&
-                        Objects.equals(this.path, that.path);
+                               Objects.equals(this.id, that.id) &&
+                               Objects.equals(this.path, that.path);
             }
-
+            
             @Override
             public int hashCode() {
                 return Objects.hash(hash, id, path);
             }
-
+            
             @Override
             public String toString() {
                 return "Entry[" +
-                        "hash=" + hash + ", " +
-                        "id=" + id + ", " +
-                        "path=" + path + ']';
+                               "hash=" + hash + ", " +
+                               "id=" + id + ", " +
+                               "path=" + path + ']';
             }
-
-                }
+            
+        }
+    }
+    
+    private final class PathAndUrl {
+        private final String path;
+        private final String url;
+        
+        private PathAndUrl(String path, String url) {
+            this.path = path;
+            this.url = url;
+        }
+        
+        public String getPath() {
+            return path;
+        }
+        
+        public String getUrl() {
+            return url;
+        }
     }
 }

@@ -17,6 +17,11 @@ abstract class CacheFileSelector implements Serializable {
             String getCacheFileName() {
                 return "launcher_metadata.json";
             }
+
+            @Override
+            String getCacheDirectory() {
+                return "./"
+            }
         };
     }
 
@@ -24,7 +29,12 @@ abstract class CacheFileSelector implements Serializable {
         return new CacheFileSelector() {
             @Override
             String getCacheFileName() {
-                return String.format("versions/%s/metadata.json", version);
+                return String.format("metadata.json", version);
+            }
+
+            @Override
+            String getCacheDirectory() {
+                return String.format("versions/%s", version);
             }
         };
     }
@@ -33,7 +43,12 @@ abstract class CacheFileSelector implements Serializable {
         return new CacheFileSelector() {
             @Override
             String getCacheFileName() {
-                return String.format("versions/%s/%s.jar", version, side);
+                return String.format("%s.jar", side);
+            }
+
+            @Override
+            String getCacheDirectory() {
+                return String.format("versions/%s", version);
             }
         };
     }
@@ -42,13 +57,21 @@ abstract class CacheFileSelector implements Serializable {
         return new CacheFileSelector() {
             @Override
             String getCacheFileName() {
-                return String.format("versions/%s/%s.txt", version, side);
+                return String.format("%s.txt", side);
+            }
+
+            @Override
+            String getCacheDirectory() {
+                return String.format("versions/%s", version);
             }
         };
     }
 
     @Input
     abstract String getCacheFileName();
+
+    @Input
+    abstract String getCacheDirectory();
 
     @Override
     int hashCode() {

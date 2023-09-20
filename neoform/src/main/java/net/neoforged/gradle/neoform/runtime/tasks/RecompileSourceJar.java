@@ -7,9 +7,11 @@ import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.InputFile;
@@ -138,4 +140,10 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @InputFiles
     @Classpath
     public abstract ConfigurableFileCollection getCompileClasspath();
+    
+    @Override
+    public abstract ObjectFactory getObjectFactory();
+    
+    @Override
+    public abstract ProviderFactory getProviderFactory();
 }

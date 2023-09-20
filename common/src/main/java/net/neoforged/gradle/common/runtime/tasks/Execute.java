@@ -1,6 +1,11 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.util.TransformerUtils;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -18,19 +23,17 @@ public abstract class Execute extends DefaultRuntime implements net.neoforged.gr
 
     public Execute() {
         super();
-
-        getLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("log", getProject().provider(() -> "log.log"))).orElse("log.log"));
+        
+        getLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("log", getProviderFactory().provider(() -> "log.log"))).orElse("log.log"));
         getLogFile().convention(getOutputDirectory().flatMap(d -> getLogFileName().map(d::file)));
 
-        getConsoleLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("console.log", getProject().provider(() -> "console.log"))));
+        getConsoleLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("console.log", getProviderFactory().provider(() -> "console.log"))));
         getConsoleLogFile().convention(getOutputDirectory().flatMap(d -> getConsoleLogFileName().map(d::file)));
 
         getMainClass().convention(getExecutingJar().map(TransformerUtils.guardWithResource(
                 jarFile -> jarFile.getManifest().getMainAttributes().getValue(Attributes.Name.MAIN_CLASS),
                 f -> new JarFile(f.getAsFile())
         )));
-
-        getExecutingJar().fileProvider(getExecutingArtifact().flatMap(artifact -> getDownloader().flatMap(downloader -> downloader.file(artifact))));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
         getMultiRuntimeArguments().convention(new HashMap<>());
@@ -50,9 +53,6 @@ public abstract class Execute extends DefaultRuntime implements net.neoforged.gr
 
     @Input
     public abstract ListProperty<String> getProgramArguments();
-
-    @Input
-    public abstract Property<String> getExecutingArtifact();
 
     @Override
     public void buildRuntimeArguments(Map<String, Provider<String>> arguments) {

@@ -24,6 +24,8 @@ import java.util.zip.ZipOutputStream;
 @CacheableTask
 public abstract class InjectCode extends DefaultRuntime {
 
+    private final CacheableMinecraftVersion minimalSupportedVersion = CacheableMinecraftVersion.from("1.14.4", getProject());
+    
     public InjectCode() {
         super();
 
@@ -32,8 +34,6 @@ public abstract class InjectCode extends DefaultRuntime {
 
     @TaskAction
     public void run() throws Exception {
-        final CacheableMinecraftVersion minimalSupportedVersion = CacheableMinecraftVersion.from("1.14.4", getProject());
-
         final Provider<RegularFile> inputZipFile = getInjectionSource();
         final File outputFile = ensureFileWorkspaceReady(getOutput());
 

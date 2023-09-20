@@ -28,6 +28,7 @@ public abstract class CollectDependencyLibraries extends DefaultRuntime {
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getDependencyFiles();
 
+    @SuppressWarnings("deprecation")
     @TaskAction
     public void execute() throws IOException {
         final File output = ensureFileWorkspaceReady(getOutput().get().getAsFile());

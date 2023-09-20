@@ -21,6 +21,7 @@ import java.util.stream.Collectors
 @DefaultMethods
 interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpecification {
 
+
     default List<String> interpolateVariableSubstitution(String value, String previous) {
         final Map<String, Provider<String>> runtimeArguments = getRuntimeArguments().get()
         final Map<String, Provider<List<String>>> multiRuntimeArguments = getMultiRuntimeArguments().get()
@@ -103,7 +104,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         final Execute me = this
 
         try (BufferedOutputStream log_out = new BufferedOutputStream(new FileOutputStream(consoleLogFile))) {
-            getProject().javaexec({ JavaExecSpec java ->
+            getExecuteOperation().javaexec({ JavaExecSpec java ->
                 PrintWriter writer = new PrintWriter(log_out)
                 Function<String, CharSequence> quote = s -> (CharSequence)('"' + s + '"')
                 writer.println("JVM Args:          " + jvmArgs.get().stream().map(quote).collect(Collectors.joining(", ")))
@@ -119,7 +120,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 java.executable(executable.get())
                 java.setJvmArgs(jvmArgs.get())
                 java.setArgs(programArgs.get())
-                java.setClasspath(me.getProject().files(me.getExecutingJar().get()))
+                java.setClasspath(me.getObjectFactory().fileCollection().from(me.getExecutingJar().get()))
                 java.setWorkingDir(me.getOutputDirectory().get())
                 java.getMainClass().set(mainClass)
                 java.setStandardOutput(log_out)

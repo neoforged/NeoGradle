@@ -1,6 +1,7 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
 import com.google.common.collect.Lists;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.Execute;
 import net.neoforged.gradle.dsl.common.util.Constants;
@@ -8,13 +9,8 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.*;
+import org.gradle.internal.impldep.org.glassfish.jaxb.runtime.v2.runtime.reflect.opt.Const;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -27,7 +23,8 @@ public abstract class SideAnnotationStripper extends Execute {
     public SideAnnotationStripper() {
         super();
 
-        getExecutingArtifact().convention(Constants.SIDESTRIPPER);
+        getAdditionalDataEntriesFile().set(getOutputDirectory().map(dir -> dir.file(getProjectFileName("data.sas"))));
+        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.SIDESTRIPPER));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                     final List<String> args = Lists.newArrayList();
@@ -43,7 +40,7 @@ public abstract class SideAnnotationStripper extends Execute {
                     });
 
                     final Provider<File> additionalDataEntriesFileProvider = getAdditionalDataEntries()
-                            .flatMap(additionalDataEntries -> transformEnsureFileWorkspaceReady(getFileInOutputDirectory(getProjectFileName("data.sas")))
+                            .flatMap(additionalDataEntries -> transformEnsureFileWorkspaceReady(getAdditionalDataEntriesFile().get().getAsFile())
                                     .map(TransformerUtils.guard(
                                             TransformerUtils.peakWithThrow(additionalDataEntriesFile ->
                                                     Files.write(additionalDataEntriesFile.toPath(), additionalDataEntries, StandardOpenOption.CREATE_NEW))
@@ -53,7 +50,6 @@ public abstract class SideAnnotationStripper extends Execute {
                         args.add("--data");
                         args.add(additionalDataEntriesFileProvider.get().getAbsolutePath());
                     }
-
 
                     return args;
                 }));
@@ -70,4 +66,8 @@ public abstract class SideAnnotationStripper extends Execute {
     @Input
     @Optional
     public abstract ListProperty<String> getAdditionalDataEntries();
+    
+    @OutputFile
+    public abstract RegularFileProperty getAdditionalDataEntriesFile();
+    
 }

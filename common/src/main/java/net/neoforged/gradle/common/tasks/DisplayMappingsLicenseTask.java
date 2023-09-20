@@ -36,21 +36,18 @@ public abstract class DisplayMappingsLicenseTask extends NeoGradleBase {
         final Mappings mappingsExtension = getProject().getExtensions().getByType(Minecraft.class).getMappings();
 
         displayWarning(mappingsExtension.getChannel().get());
-
-        if (!getUpdateChannel().isPresent() || getUpdateChannel().get().equals(mappingsExtension.getChannel().get())) return;
-
-        displayWarning(getUpdateChannel().get());
     }
 
     private void displayWarning(NamingChannel channel) {
-        Provider<String> license = channel.getLicenseText();
+        if (!getLicense().isPresent())
+            return;
+        
+        final String license = getLicense().get();
 
-        String warning = buildWarning();
+        final String warning = buildWarning();
 
         getLogger().warn(warning);
-        if (license.isPresent()) {
-            getLogger().warn(Arrays.stream(license.get().split("\n")).map(line -> String.format("WARNING: %s", line)).collect(Collectors.joining("\n")));
-        }
+        getLogger().warn(Arrays.stream(license.split("\n")).map(line -> String.format("WARNING: %s", line)).collect(Collectors.joining("\n")));
     }
 
     private String buildWarning() {
@@ -60,12 +57,8 @@ public abstract class DisplayMappingsLicenseTask extends NeoGradleBase {
                "WARNING: You can hide this warning by accepting its license.\n" +
                "WARNING: See the naming channels documentation for more information on how to do that.";
     }
-
+    
     @Input
     @Optional
-    public abstract Property<NamingChannelProvider> getUpdateChannel();
-
-    @Input
-    @Optional
-    public abstract MapProperty<String, String> getUpdateVersion();
+    public abstract Property<String> getLicense();
 }

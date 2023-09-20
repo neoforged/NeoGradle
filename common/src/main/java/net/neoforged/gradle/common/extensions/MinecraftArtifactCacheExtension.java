@@ -5,8 +5,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gradle.common.tasks.MinecraftLauncherFileCacheProvider;
+import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvider;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
+import net.neoforged.gradle.common.util.MinecraftArtifactType;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
@@ -114,19 +117,20 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
         final TaskKey key = new TaskKey(project, gameVersion);
 
-        final File outputDirectory = project.getLayout().getProjectDirectory().dir(".gradle").dir("caches").dir("minecraft").dir(gameVersion).getAsFile();
-
         final String finalGameVersion = gameVersion;
 
         return tasks.computeIfAbsent(key, k -> {
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
-            GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_LAUNCHER_METADATA, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.launcherMetadata(), this::cacheLauncherMetadata)));
-            GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MANIFEST, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJson(finalGameVersion), () -> this.cacheVersionManifest(finalGameVersion))));
-            GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(finalGameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionArtifact(finalGameVersion, DistributionType.CLIENT))));
-            GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionJar(finalGameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionArtifact(finalGameVersion, DistributionType.SERVER))));
-            GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(finalGameVersion, DistributionType.CLIENT.getName()), () -> this.cacheVersionMappings(finalGameVersion, DistributionType.CLIENT))));
-            GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createFileCacheEntryProvidingTask(project, NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, finalGameVersion, outputDirectory, getCacheDirectory(), CacheFileSelector.forVersionMappings(finalGameVersion, DistributionType.SERVER.getName()), () -> this.cacheVersionMappings(finalGameVersion, DistributionType.SERVER))));
+            final TaskProvider<MinecraftLauncherFileCacheProvider> launcher = FileCacheUtils.createLauncherMetadataFileCacheProvidingTask(project);
+            final TaskProvider<MinecraftVersionManifestFileCacheProvider> manifest = FileCacheUtils.createVersionManifestFileCacheProvidingTask(project, finalGameVersion, launcher);
+            
+            GameArtifact.LAUNCHER_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.LAUNCHER_MANIFEST, launcher));
+            GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, manifest));
+            GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, finalGameVersion, DistributionType.CLIENT, MinecraftArtifactType.EXECUTABLE, manifest, results.values())));
+            GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, finalGameVersion, DistributionType.SERVER, MinecraftArtifactType.EXECUTABLE, manifest, results.values())));
+            GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createArtifactFileCacheProvidingTask(project, finalGameVersion, DistributionType.CLIENT, MinecraftArtifactType.MAPPINGS, manifest, results.values())));
+            GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createArtifactFileCacheProvidingTask(project, finalGameVersion, DistributionType.SERVER, MinecraftArtifactType.MAPPINGS, manifest, results.values())));
 
             return results;
         });
@@ -175,7 +179,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     }
 
     private File downloadVersionManifestToCache(Project project, final File cacheDirectory, final String minecraftVersion) {
-        final File manifestFile = new File(cacheDirectory, CacheFileSelector.launcherMetadata().getCacheFileName());
+        final File manifestFile = new File(new File(cacheDirectory, CacheFileSelector.launcherMetadata().getCacheDirectory()), CacheFileSelector.launcherMetadata().getCacheFileName());
 
         Gson gson = new Gson();
         String url = null;
@@ -241,7 +245,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
             final FileDownloadingUtils.DownloadInfo info = new FileDownloadingUtils.DownloadInfo(url, hash, "jar", version, artifact);
 
-            final File cacheFile = new File(cacheDirectory, cacheFileSelector.getCacheFileName());
+            final File cacheFile = new File(new File(cacheDirectory, cacheFileSelector.getCacheDirectory()), cacheFileSelector.getCacheFileName());
 
             if (cacheFile.exists()) {
                 final String fileHash = HashFunction.SHA1.hash(cacheFile);
@@ -250,7 +254,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
                 }
             }
 
-            FileDownloadingUtils.downloadTo(project, info, cacheFile);
+            FileDownloadingUtils.downloadTo(project.getGradle().getStartParameter().isOffline(), info, cacheFile);
             return cacheFile;
         } catch (IOException e) {
             throw new RuntimeException(potentialError, e);
@@ -258,13 +262,13 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     }
 
     private File downloadJsonToCache(Project project, final String url, final File cacheDirectory, final CacheFileSelector selector) {
-        final File cacheFile = new File(cacheDirectory, selector.getCacheFileName());
+        final File cacheFile = new File(new File(cacheDirectory, selector.getCacheDirectory()), selector.getCacheFileName());
         downloadJsonTo(project, url, cacheFile);
         return cacheFile;
     }
 
     private void downloadJsonTo(Project project, String url, File file) {
-        FileDownloadingUtils.downloadThrowing(project, new FileDownloadingUtils.DownloadInfo(url, null, "json", null, null), file);
+        FileDownloadingUtils.downloadThrowing(project.getGradle().getStartParameter().isOffline(), new FileDownloadingUtils.DownloadInfo(url, null, "json", null, null), file);
     }
 
     @Override

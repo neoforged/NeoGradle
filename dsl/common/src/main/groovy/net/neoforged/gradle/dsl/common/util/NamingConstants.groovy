@@ -23,10 +23,11 @@ final class NamingConstants {
 
         public static final String CACHE_LAUNCHER_METADATA = "cacheLauncherMetadata";
         public static final String CACHE_VERSION_MANIFEST = "cacheVersionManifest";
-        public static final String CACHE_VERSION_ARTIFACT_CLIENT = "cacheVersionArtifactClient";
-        public static final String CACHE_VERSION_ARTIFACT_SERVER = "cacheVersionArtifactServer";
+        public static final String CACHE_VERSION_ARTIFACT_CLIENT = "cacheVersionExecutableClient";
+        public static final String CACHE_VERSION_ARTIFACT_SERVER = "cacheVersionExecutableServer";
         public static final String CACHE_VERSION_EXTRACTED_BUNDLE = "cacheVersionExtractedServerBundle";
         public static final String CACHE_VERSION_MAPPINGS_CLIENT = "cacheVersionMappingsClient";
         public static final String CACHE_VERSION_MAPPINGS_SERVER = "cacheVersionMappingsServer";
+        public static final String CACHE_VERSION_PREFIX = "cacheVersion"
     }
 }

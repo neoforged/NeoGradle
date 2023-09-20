@@ -24,13 +24,13 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         setGroup("NeoGradle/runtimes");
 
         //Sets up the base configuration for directories and outputs.
-        getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
+        getRuntimeDirectory().convention(getLayout().getBuildDirectory().dir("mcp"));
         getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProject().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))).orElse("output.jar"));
+        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))).orElse("output.jar"));
         getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.jar").map(d::file)));
 
         //Configure the default runtime data map:

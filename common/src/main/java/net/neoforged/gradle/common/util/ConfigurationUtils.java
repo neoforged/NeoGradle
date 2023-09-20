@@ -4,6 +4,7 @@ import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyR
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
 
 /**
@@ -30,6 +31,21 @@ public final class ConfigurationUtils {
         final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class);
         dependencyReplacement.handleConfiguration(configuration);
 
+        return configuration;
+    }
+    
+    /**
+     * Creates a detached configuration that can be resolved, but not consumed.
+     *
+     * @param configurations The configuration handler.
+     * @param dependencies The dependencies to add to the configuration
+     * @return The detached configuration
+     */
+    public static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final Dependency... dependencies) {
+        final Configuration configuration = configurations.detachedConfiguration(dependencies);
+        configuration.setCanBeConsumed(false);
+        configuration.setCanBeResolved(true);
+        
         return configuration;
     }
 }

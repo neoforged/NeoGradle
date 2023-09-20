@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Lists;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
@@ -23,7 +24,7 @@ public abstract class AccessTransformer extends Execute {
         setDescription("Runs the access transformer on the decompiled sources.");
 
         getData().set(Collections.emptyMap());
-        getExecutingArtifact().convention(Constants.ACCESSTRANSFORMER);
+        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.ACCESSTRANSFORMER));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();

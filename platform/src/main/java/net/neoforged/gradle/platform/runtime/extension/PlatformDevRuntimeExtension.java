@@ -45,27 +45,12 @@ public abstract class PlatformDevRuntimeExtension extends CommonRuntimeExtension
             NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
         });
         
-        final NeoFormRuntimeDefinition clientNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormArtifact(neoFormArtifact)
-                    .withDistributionType(DistributionType.CLIENT)
-                    .withAdditionalDependencies(spec.getAdditionalDependencies());
-            
-            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
-        });
-        
-        final NeoFormRuntimeDefinition serverNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormArtifact(neoFormArtifact)
-                    .withDistributionType(DistributionType.SERVER)
-                    .withAdditionalDependencies(spec.getAdditionalDependencies());
-            
-            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
-        });
-        
         final TaskProvider<ApplyPatches> patchApply = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyPatches"), ApplyPatches.class, task -> {
             task.getBase().set(joinedNeoFormRuntimeDefinition.getSourceJarTask().flatMap(ArtifactProvider::getOutput));
             task.getPatches().set(spec.getPatchesDirectory());
             task.getRejects().set(spec.getRejectsDirectory());
-            task.getPatchMode().set(PatchMode.FUZZY);
+            task.getPatchMode().set(spec.isUpdating() ? PatchMode.FUZZY : PatchMode.ACCESS);
+            task.getShouldFailOnPatchFailure().set(!spec.isUpdating());
             configureCommonRuntimeTaskParameters(task, new HashMap<>(), "applyPatches", spec, workingDirectory);
         });
         
@@ -76,8 +61,6 @@ public abstract class PlatformDevRuntimeExtension extends CommonRuntimeExtension
         
         return new PlatformDevRuntimeDefinition(
                 spec,
-                clientNeoFormRuntimeDefinition,
-                serverNeoFormRuntimeDefinition,
                 joinedNeoFormRuntimeDefinition,
                 sourcesProvider
         );

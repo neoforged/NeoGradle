@@ -1,5 +1,6 @@
 package net.neoforged.gradle.vanilla.runtime.steps;
 
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.DecompileUtils;
 import net.neoforged.gradle.common.runtime.tasks.Execute;
@@ -24,7 +25,9 @@ public class DecompileStep implements IStep {
         final VanillaRuntimeExtension vanillaRuntimeExtension = definition.getSpecification().getProject().getExtensions().getByType(VanillaRuntimeExtension.class);
 
         return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "decompile"), Execute.class, task -> {
-            task.getExecutingArtifact().set(vanillaRuntimeExtension.getForgeFlowerVersion().map(version -> String.format(Constants.FORGEFLOWER_ARTIFACT_INTERPOLATION, version)));
+            final String decompiler = vanillaRuntimeExtension.getVineFlowerVersion().map(version -> String.format(Constants.VINEFLOWER_ARTIFACT_INTERPOLATION, version)).get();
+            
+            task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), decompiler));
             task.getJvmArguments().addAll(DecompileUtils.DEFAULT_JVM_ARGS);
             task.getProgramArguments().addAll(DecompileUtils.DEFAULT_PROGRAMM_ARGS);
             task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask)));
