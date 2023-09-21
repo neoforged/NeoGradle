@@ -134,6 +134,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
             ivyDummyRepositoryExtension.onPostDefinitionBake(project);
         }
 
+        final DependencyReplacement dependencyReplacementExtension = project.getExtensions().getByType(DependencyReplacement.class);
+        if (dependencyReplacementExtension instanceof DependencyReplacementsExtension) {
+            final DependencyReplacementsExtension dependencyReplacementsExtension = (DependencyReplacementsExtension) dependencyReplacementExtension;
+            dependencyReplacementsExtension.onPostDefinitionBakes(project);
+        }
+
         project.getExtensions().getByType(Runs.class).forEach(run -> {
             if (run instanceof RunImpl) {
                 if (run.getConfigureFromTypeWithName().get()) {
@@ -154,11 +160,5 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 }
             }
         });
-
-        final DependencyReplacement dependencyReplacementExtension = project.getExtensions().getByType(DependencyReplacement.class);
-        if (dependencyReplacementExtension instanceof DependencyReplacementsExtension) {
-            final DependencyReplacementsExtension dependencyReplacementsExtension = (DependencyReplacementsExtension) dependencyReplacementExtension;
-            dependencyReplacementsExtension.onPostDefinitionBakes(project);
-        }
     }
 }

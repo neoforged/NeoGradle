@@ -4,6 +4,8 @@ import net.minecraftforge.gdi.BaseDSLElement;
 import net.minecraftforge.gdi.annotations.DSLProperty;
 import net.minecraftforge.gdi.annotations.ProjectGetter;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.Runs;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.runs.type.Types;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -33,7 +35,6 @@ import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.jvm.tasks.Jar;
@@ -42,7 +43,9 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.stream.Collectors;
 
 public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicProjectExtension> {
     
@@ -192,9 +195,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
         
         final Configuration installerConfiguration = project.getConfigurations().create("installer");
-        final Configuration moduleOnlyConfiguration = project.getConfigurations().create("moduleOnly");
-        final Configuration gameLayerLibraryConfiguration = project.getConfigurations().create("gameLayerLibrary");
-        final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary");
+        final Configuration moduleOnlyConfiguration = project.getConfigurations().create("moduleOnly").setTransitive(false);
+        final Configuration gameLayerLibraryConfiguration = project.getConfigurations().create("gameLayerLibrary").setTransitive(false);
+        final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary").setTransitive(false);
         
         project.getConfigurations().getByName(mainSource.getImplementationConfigurationName()).extendsFrom(
                 gameLayerLibraryConfiguration,
@@ -202,42 +205,61 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 installerConfiguration
         );
         
-        project.getExtensions().getByType(Types.class).whenObjectAdded(type -> configureRunType(project, type));
+        project.getExtensions().getByType(Types.class).whenObjectAdded(type -> configureRunType(project, type, installerConfiguration, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration));
+        project.getExtensions().getByType(Runs.class).whenObjectAdded(run -> configureRun(project, run));
     }
-    
+
     private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {
         final TaskProvider<SetupProjectFromRuntime> projectSetup = project.getTasks().register("setup", SetupProjectFromRuntime.class, task -> {
             task.getSourcesFile().set(rawJarProvider);
         });
-        
+
         final Configuration implementation = project.getConfigurations().getByName(mainSource.getImplementationConfigurationName());
         runtimeDefinition1.getAllDependencies()
                 .forEach(dep -> implementation.getDependencies().add(dep));
-        
+
         final Project rootProject = project.getRootProject();
         if (!rootProject.getTasks().getNames().contains("setup")) {
             rootProject.getTasks().create("setup");
         }
-        
+
         rootProject.getTasks().named("setup").configure(task -> task.dependsOn(projectSetup));
-        
+
         return projectSetup;
     }
-    
-    private void configureRunType(final Project project, final Type type) {
+
+    private void configureRunType(final Project project, final Type type, final Configuration installerConfiguration, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration) {
         type.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
-        
-        type.getArguments().addAll("--gameDir", ".");
-        
-        type.getJvmArguments().add("-Djava.net.preferIPv6Addresses=system");
-        
+
+        type.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
+//        type.getJvmArguments().add("-Djava.net.preferIPv6Addresses=system");
+        type.getJvmArguments().addAll("-p", moduleOnlyConfiguration.getAsPath());
+
+        StringBuilder ignoreList = new StringBuilder(1000);
+        for (Configuration cfg: Arrays.asList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration)) {
+            ignoreList.append(cfg.getFiles().stream().map(file -> (file.getName().startsWith("events") || file.getName().startsWith("core") ? file.getName() : file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))).collect(Collectors.joining(","))).append(",");
+        }
+        ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
+        type.getSystemProperties().put("ignoreList", ignoreList.toString());
+        type.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
+        type.getSystemProperties().put("fml.pluginLayerLibraries", pluginLayerLibraryConfiguration.getFiles().stream().map(File::getAbsolutePath).collect(Collectors.joining(",")));
+        type.getSystemProperties().put("fml.gameLayerLibraries", gameLayerLibraryConfiguration.getFiles().stream().map(File::getAbsolutePath).collect(Collectors.joining(",")));
+        type.getSystemProperties().put("legacyClassPath", project.getConfigurations().getByName("runtimeClasspath").getAsPath());
         type.getJvmArguments().addAll("--add-modules", "ALL-MODULE-PATH");
         type.getJvmArguments().addAll("--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler");
         type.getJvmArguments().addAll("--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler");
         type.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
         type.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
+        type.getArguments().addAll("--launchTarget", "forgeclientdev");
+
+        type.getEnvironmentVariables().put("FORGE_SPEC", "1.20.2-ngnext");
     }
-    
+
+
+    private void configureRun(final Project project, final Run run) {
+
+    }
+
     @NotNull
     public DynamicProjectType getType() {
         if (type == null)
