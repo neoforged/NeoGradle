@@ -155,28 +155,62 @@ public abstract class IdeManagementExtension {
             toPerform.eclipse(project, model);
         });
     }
-
+    
     /**
-     * A configuration action for IDE projects.
+     * Applies the specified configuration action to configure idea IDE projects only.
+     *
+     * <p>This does not apply the idea IDEs' respective plugins, but will perform
+     * actions when those plugins are applied.</p>
+     *
+     * @param toPerform the actions to perform
      */
-    public interface IdeImportAction {
-
+    public void onIdea(final IdeaIdeImportAction toPerform) {
+    
+    }
+    
+    /**
+     * Applies the specified configuration action to configure eclipse IDE projects only.
+     *
+     * <p>This does not apply the eclipse IDEs' respective plugins, but will perform
+     * actions when those plugins are applied.</p>
+     *
+     * @param toPerform the actions to perform
+     */
+    public void onEclipse(final EclipseIdeImportAction toPerform) {
+    
+    }
+    
+    /**
+     * A configuration action for idea IDE projects.
+     */
+    public interface IdeaIdeImportAction {
+        
         /**
          * Configure an IntelliJ project.
          *
-         * @param project the project to configure on import
-         * @param idea the basic idea gradle extension
+         * @param project       the project to configure on import
+         * @param idea          the basic idea gradle extension
          * @param ideaExtension JetBrain's extensions to the base idea model
          */
-        void idea(final Project project, final IdeaModel idea, final ProjectSettings ideaExtension);
-
+        void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension);
+    }
+    
+    /**
+     * A configuration action for eclipse IDE projects.
+     */
+    public interface EclipseIdeImportAction {
+        
         /**
          * Configure an eclipse project.
          *
          * @param project the project being imported
          * @param eclipse the eclipse project model to modify
          */
-        void eclipse(final Project project, final EclipseModel eclipse);
-
+        void eclipse(Project project, EclipseModel eclipse);
     }
+    
+    /**
+     * A configuration action for IDE projects.
+     */
+    public interface IdeImportAction extends IdeaIdeImportAction, EclipseIdeImportAction { }
 }

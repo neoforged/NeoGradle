@@ -48,6 +48,8 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         
         getArguments().convention(Maps.newHashMap());
         getMultiArguments().convention(Maps.newHashMap());
+        
+        getOutputDirectory().finalizeValueOnRead();
     }
 
     @Override

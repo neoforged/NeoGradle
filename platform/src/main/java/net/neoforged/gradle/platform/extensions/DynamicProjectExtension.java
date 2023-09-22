@@ -6,12 +6,11 @@ import net.minecraftforge.gdi.annotations.ProjectGetter;
 import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
+import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.Runs;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.runs.type.Types;
-import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
@@ -86,13 +85,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
         
         final VanillaRuntimeExtension vanillaRuntimeExtension = project.getExtensions().getByType(VanillaRuntimeExtension.class);
-        final VanillaRuntimeDefinition runtimeDefinition = vanillaRuntimeExtension.create(builder -> {
-            builder.withMinecraftVersion(minecraftVersion)
-                    .withDistributionType(DistributionType.CLIENT)
-                    .withFartVersion(vanillaRuntimeExtension.getFartVersion())
-                    .withForgeFlowerVersion(vanillaRuntimeExtension.getVineFlowerVersion())
-                    .withAccessTransformerApplierVersion(vanillaRuntimeExtension.getAccessTransformerApplierVersion());
-        });
+        final VanillaRuntimeDefinition runtimeDefinition = vanillaRuntimeExtension.create(builder -> builder.withMinecraftVersion(minecraftVersion)
+                                                                                                             .withDistributionType(DistributionType.CLIENT)
+                                                                                                             .withFartVersion(vanillaRuntimeExtension.getFartVersion())
+                                                                                                             .withForgeFlowerVersion(vanillaRuntimeExtension.getVineFlowerVersion())
+                                                                                                             .withAccessTransformerApplierVersion(vanillaRuntimeExtension.getAccessTransformerApplierVersion()));
         
         configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
     }
@@ -138,13 +135,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
         
         final PlatformDevRuntimeExtension platformDevRuntimeExtension = project.getExtensions().getByType(PlatformDevRuntimeExtension.class);
-        final PlatformDevRuntimeDefinition runtimeDefinition = platformDevRuntimeExtension.create(builder -> {
-            builder.withNeoFormVersion(neoFormVersion)
-                    .withPatchesDirectory(patches)
-                    .withRejectsDirectory(rejects)
-                    .withDistributionType(DistributionType.JOINED)
-                    .isUpdating(getIsUpdating());
-        });
+        final PlatformDevRuntimeDefinition runtimeDefinition = platformDevRuntimeExtension.create(builder -> builder.withNeoFormVersion(neoFormVersion)
+                                                                                                                     .withPatchesDirectory(patches)
+                                                                                                                     .withRejectsDirectory(rejects)
+                                                                                                                     .withDistributionType(DistributionType.JOINED)
+                                                                                                                     .isUpdating(getIsUpdating()));
         
         final EnumMap<DistributionType, TaskProvider<? extends WithOutput>> neoformRawJarProviders = new EnumMap<>(DistributionType.class);
         neoformRawJarProviders.put(DistributionType.JOINED, runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getRawJarTask());
@@ -223,7 +218,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         project.getExtensions().getByType(Types.class).whenObjectAdded(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration));
         project.getExtensions().getByType(Runs.class).whenObjectAdded(run -> configureRun(project, run, runtimeDefinition));
     }
-
+    
     private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {
         final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
         
@@ -233,34 +228,34 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             task.getSourcesFile().set(rawJarProvider);
             task.dependsOn(ideImportTask);
         });
-
+        
         final Configuration implementation = project.getConfigurations().getByName(mainSource.getImplementationConfigurationName());
         runtimeDefinition1.getAllDependencies()
                 .forEach(dep -> implementation.getDependencies().add(dep));
-
+        
         final Project rootProject = project.getRootProject();
         if (!rootProject.getTasks().getNames().contains("setup")) {
             rootProject.getTasks().create("setup");
         }
-
+        
         rootProject.getTasks().named("setup").configure(task -> task.dependsOn(projectSetup));
-
+        
         return projectSetup;
     }
-
+    
     private void configureRunType(final Project project, final Type type, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
         
         final Configuration runtimeClasspath = project.getConfigurations().getByName(mainSourceSet.getRuntimeClasspathConfigurationName());
-       
+        
         type.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
-
+        
         type.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
         type.getJvmArguments().addAll("-p", moduleOnlyConfiguration.getAsPath());
-
+        
         StringBuilder ignoreList = new StringBuilder(1000);
-        for (Configuration cfg: Arrays.asList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration)) {
+        for (Configuration cfg : Arrays.asList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration)) {
             ignoreList.append(cfg.getFiles().stream().map(file -> (file.getName().startsWith("events") || file.getName().startsWith("core") ? file.getName() : file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))).collect(Collectors.joining(","))).append(",");
         }
         ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
@@ -275,17 +270,17 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         type.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
         type.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
         type.getArguments().addAll("--launchTarget", "forgeclientdev");
-
+        
         type.getEnvironmentVariables().put("FORGE_SPEC", project.getVersion().toString());
         
         type.getClasspath().from(runtimeClasspath);
     }
-
-
+    
+    
     private void configureRun(final Project project, final Run run, final PlatformDevRuntimeDefinition runtimeDefinition) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
-
+        
         if (run.getIsClient().get()) {
             run.getProgramArguments().addAll("--username", "Dev");
             run.getProgramArguments().addAll("--version", project.getName());
@@ -293,25 +288,28 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             run.getProgramArguments().addAll("--userType", "mojang");
             run.getProgramArguments().addAll("--versionType", "release");
             run.getProgramArguments().add("--assetsDir");
-            run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().flatMap(Runtime::getOutputDirectory).map(directory -> directory.getAsFile().getAbsolutePath()));
+            run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
             run.getProgramArguments().add("--assetIndex");
-            run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetIndexFile).map(file -> file.getAsFile().getName().substring(0, file.getAsFile().getName().lastIndexOf('.'))));
+            run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         }
-
+        
         run.getConfigureAutomatically().set(true);
         run.getConfigureFromDependencies().set(false);
         run.getConfigureFromTypeWithName().set(true);
         
         run.getModSources().add(mainSourceSet);
         run.dependsOn(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider());
-
+        
+        project.getExtensions().getByType(IdeManagementExtension.class)
+                .onIdea((project1, idea, ideaExtension) -> run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().set(mainSourceSet));
+        
         //TODO: Deal with the lazy component of this, we might in the future move all of this into the run definition.
         run.getEnvironmentVariables().put("MOD_CLASSES", Stream.concat(
                 run.getModSources().get().stream().map(source -> source.getOutput().getResourcesDir()),
                 run.getModSources().get().stream().map(source -> source.getOutput().getClassesDirs().getFiles()).flatMap(Collection::stream)
         ).map(File::getAbsolutePath).map(path -> String.format("minecraft%%%%%s", path)).collect(Collectors.joining(File.pathSeparator)));
     }
-
+    
     @NotNull
     public DynamicProjectType getType() {
         if (type == null)

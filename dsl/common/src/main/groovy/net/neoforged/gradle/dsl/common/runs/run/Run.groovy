@@ -200,5 +200,6 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @param tasks The tasks to depend on.
      */
+    @SafeVarargs
     void dependsOn(@NotNull final TaskProvider<? extends Task>... tasks);
 }

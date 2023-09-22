@@ -1,8 +1,10 @@
 package net.neoforged.gradle.common.runs.ide;
 
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
+import net.neoforged.gradle.common.extensions.ProjectHolderExtension;
 import net.neoforged.gradle.common.runs.ide.extensions.IdeaRunExtensionImpl;
 import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Runs;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -10,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
@@ -77,17 +80,19 @@ public class IdeRunIntegrationManager {
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
 
-                final TaskProvider<?> ideBeforeRunTask;
+                final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
+                    for (SourceSet sourceSet : run.getModSources().get()) {
+                        final Project sourceSetProject = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
+                        task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
+                    }
+                });
                 if (!runImpl.getTaskDependencies().isEmpty()) {
-                    ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name));
                     ideBeforeRunTask.configure(task -> {
                         runImpl.getTaskDependencies().forEach(dep -> {
                             //noinspection Convert2MethodRef Creates a compiler error regarding incompatible types.
                             task.dependsOn(dep);
                         });
                     });
-                } else {
-                    ideBeforeRunTask = null;
                 }
 
                 ideaRuns.register(runName, Application.class, ideaRun -> {
