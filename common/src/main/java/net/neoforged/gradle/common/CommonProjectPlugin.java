@@ -101,17 +101,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 project.getObjects().newInstance(RunsImpl.class, project)
         );
 
-        project.afterEvaluate(p -> {
-            final Types types = p.getExtensions().getByType(Types.class);
-
-            p.getExtensions().getByType(Runs.class)
-                    .matching(run -> run instanceof RunImpl)
-                    .forEach(run -> {
-                        final RunImpl impl = (RunImpl) run;
-                        types.matching(type -> type.getName().equals(run.getName())).forEach(impl::configureInternally);
-                    });
-        });
-
         IdeRunIntegrationManager.getInstance().apply(project);
     }
 

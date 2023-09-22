@@ -100,7 +100,7 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
     }
 
     @Override
-    public void withDependency(Action<RepositoryReference.Builder<?,?>> referenceBuilder, Action<RepositoryReference> onReferenceBuild, Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer) throws XMLStreamException, IOException {
+    public void withDependency(Action<RepositoryReference.Builder<?,?>> referenceBuilder, Action<RepositoryReference> onReferenceBuild, Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer, boolean processImmediately) throws XMLStreamException, IOException {
         //Build the reference first so that a replacement dependency is potentially immediately available.
         final IvyDummyRepositoryEntry.Builder builder = project.getObjects().newInstance(IvyDummyRepositoryEntry.Builder.class, project);
         referenceBuilder.execute(builder);
@@ -108,10 +108,15 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
 
         onReferenceBuild.execute(entry);
 
-        //Now schedule the on disk generation of the dependencies for after stuff is properly baked and evaluated.
-        entryConfigurators.add(evaluatedProject -> {
+        if (!processImmediately) {
+            //Now schedule the on disk generation of the dependencies for after stuff is properly baked and evaluated.
+            entryConfigurators.add(evaluatedProject -> {
+                processDependency(configurator, configuredEntryConsumer);
+            });
+        }
+        else {
             processDependency(configurator, configuredEntryConsumer);
-        });
+        }
     }
 
     @Override

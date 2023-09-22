@@ -78,7 +78,7 @@ public class IdeRunIntegrationManager {
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
 
                 final TaskProvider<?> ideBeforeRunTask;
-                if (runImpl.getTaskDependencies().size() > 0) {
+                if (!runImpl.getTaskDependencies().isEmpty()) {
                     ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name));
                     ideBeforeRunTask.configure(task -> {
                         runImpl.getTaskDependencies().forEach(dep -> {
@@ -91,6 +91,8 @@ public class IdeRunIntegrationManager {
                 }
 
                 ideaRuns.register(runName, Application.class, ideaRun -> {
+                    runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
+                    
                     ideaRun.setMainClass(runImpl.getMainClass().get());
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
                     ideaRun.setJvmArgs(String.join(" ", runImpl.realiseJvmArguments()));

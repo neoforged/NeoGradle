@@ -30,6 +30,34 @@ final class DependencyReplacementResult {
     private final Consumer<Dependency> onCreateReplacedDependencyCallback;
     private final Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback;
     private final Supplier<Set<TaskProvider>> additionalIdePostSyncTasks;
+    private final Boolean processImmediately;
+
+    DependencyReplacementResult(
+            Project project,
+            Function<String, String> taskNameBuilder,
+            TaskProvider<? extends WithOutput> sourcesJarTaskProvider,
+            TaskProvider<? extends WithOutput> rawJarTaskProvider,
+            Configuration additionalDependenciesConfiguration,
+            Consumer<RepositoryReference.Builder<?,?>> referenceConfigurator,
+            Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator,
+            Consumer<Dependency> onCreateReplacedDependencyCallback,
+            Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback,
+            Supplier<Set<TaskProvider>> additionalIdePostSyncTasks,
+            boolean processImmediately
+    ) {
+        this.project = project;
+        this.taskNameBuilder = taskNameBuilder;
+        this.sourcesJarTaskProvider = sourcesJarTaskProvider;
+        this.rawJarTaskProvider = rawJarTaskProvider;
+        this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
+        this.referenceConfigurator = referenceConfigurator;
+        this.metadataConfigurator = metadataConfigurator;
+        this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
+        this.onRepoWritingTaskRegisteredCallback = onRepoWritingTaskRegisteredCallback;
+        this.additionalReplacements = Collections.emptyList();
+        this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
+        this.processImmediately = processImmediately;
+    }
 
     DependencyReplacementResult(
             Project project,
@@ -42,39 +70,19 @@ final class DependencyReplacementResult {
             Consumer<Dependency> onCreateReplacedDependencyCallback,
             Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback,
             Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
-        this.project = project;
-        this.taskNameBuilder = taskNameBuilder;
-        this.sourcesJarTaskProvider = sourcesJarTaskProvider;
-        this.rawJarTaskProvider = rawJarTaskProvider;
-        this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
-        this.referenceConfigurator = referenceConfigurator;
-        this.metadataConfigurator = metadataConfigurator;
-        this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
-        this.onRepoWritingTaskRegisteredCallback = onRepoWritingTaskRegisteredCallback;
-        this.additionalReplacements = Collections.emptyList();
-        this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
-    }
-
-    DependencyReplacementResult(Project project,
-                                Function<String, String> taskNameBuilder,
-                                TaskProvider<? extends WithOutput> sourcesJarTaskProvider,
-                                TaskProvider<? extends WithOutput> rawJarTaskProvider,
-                                Configuration additionalDependenciesConfiguration,
-                                Consumer<RepositoryReference.Builder<?,?>> referenceConfigurator,
-                                Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator,
-                                Collection<DependencyReplacementResult> additionalReplacements,
-                                Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
-        this.project = project;
-        this.taskNameBuilder = taskNameBuilder;
-        this.sourcesJarTaskProvider = sourcesJarTaskProvider;
-        this.rawJarTaskProvider = rawJarTaskProvider;
-        this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
-        this.referenceConfigurator = referenceConfigurator;
-        this.metadataConfigurator = metadataConfigurator;
-        this.additionalReplacements = additionalReplacements;
-        this.onCreateReplacedDependencyCallback = (dep) -> { };
-        this.onRepoWritingTaskRegisteredCallback = (task) -> { };
-        this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
+        this(
+                project,
+                taskNameBuilder,
+                sourcesJarTaskProvider,
+                rawJarTaskProvider,
+                additionalDependenciesConfiguration,
+                referenceConfigurator,
+                metadataConfigurator,
+                onCreateReplacedDependencyCallback,
+                onRepoWritingTaskRegisteredCallback,
+                additionalIdePostSyncTasks,
+                false
+        );
     }
 
     /**
@@ -177,29 +185,65 @@ final class DependencyReplacementResult {
         return additionalIdePostSyncTasks.get();
     }
 
-    @Override
-    boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DependencyReplacementResult that = (DependencyReplacementResult) o;
-        return Objects.equals(project, that.project) && Objects.equals(taskNameBuilder, that.taskNameBuilder) && Objects.equals(sourcesJarTaskProvider, that.sourcesJarTaskProvider) && Objects.equals(rawJarTaskProvider, that.rawJarTaskProvider) && Objects.equals(additionalDependenciesConfiguration, that.additionalDependenciesConfiguration) && Objects.equals(metadataConfigurator, that.metadataConfigurator) && Objects.equals(additionalReplacements, that.additionalReplacements);
+    Boolean getProcessImmediately() {
+        return processImmediately
     }
 
-    @Override
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (o == null || getClass() != o.class) return false
+
+        DependencyReplacementResult that = (DependencyReplacementResult) o
+
+        if (additionalDependenciesConfiguration != that.additionalDependenciesConfiguration) return false
+        if (additionalIdePostSyncTasks != that.additionalIdePostSyncTasks) return false
+        if (additionalReplacements != that.additionalReplacements) return false
+        if (metadataConfigurator != that.metadataConfigurator) return false
+        if (onCreateReplacedDependencyCallback != that.onCreateReplacedDependencyCallback) return false
+        if (onRepoWritingTaskRegisteredCallback != that.onRepoWritingTaskRegisteredCallback) return false
+        if (processImmediately != that.processImmediately) return false
+        if (project != that.project) return false
+        if (rawJarTaskProvider != that.rawJarTaskProvider) return false
+        if (referenceConfigurator != that.referenceConfigurator) return false
+        if (sourcesJarTaskProvider != that.sourcesJarTaskProvider) return false
+        if (taskNameBuilder != that.taskNameBuilder) return false
+
+        return true
+    }
+
     int hashCode() {
-        return Objects.hash(project, taskNameBuilder, sourcesJarTaskProvider, rawJarTaskProvider, additionalDependenciesConfiguration, metadataConfigurator, additionalReplacements);
+        int result
+        result = (project != null ? project.hashCode() : 0)
+        result = 31 * result + (taskNameBuilder != null ? taskNameBuilder.hashCode() : 0)
+        result = 31 * result + (sourcesJarTaskProvider != null ? sourcesJarTaskProvider.hashCode() : 0)
+        result = 31 * result + (rawJarTaskProvider != null ? rawJarTaskProvider.hashCode() : 0)
+        result = 31 * result + (additionalDependenciesConfiguration != null ? additionalDependenciesConfiguration.hashCode() : 0)
+        result = 31 * result + (referenceConfigurator != null ? referenceConfigurator.hashCode() : 0)
+        result = 31 * result + (metadataConfigurator != null ? metadataConfigurator.hashCode() : 0)
+        result = 31 * result + (additionalReplacements != null ? additionalReplacements.hashCode() : 0)
+        result = 31 * result + (onCreateReplacedDependencyCallback != null ? onCreateReplacedDependencyCallback.hashCode() : 0)
+        result = 31 * result + (onRepoWritingTaskRegisteredCallback != null ? onRepoWritingTaskRegisteredCallback.hashCode() : 0)
+        result = 31 * result + (additionalIdePostSyncTasks != null ? additionalIdePostSyncTasks.hashCode() : 0)
+        result = 31 * result + (processImmediately != null ? processImmediately.hashCode() : 0)
+        return result
     }
 
+
     @Override
-    String toString() {
+    public String toString() {
         return "DependencyReplacementResult{" +
                 "project=" + project +
                 ", taskNameBuilder=" + taskNameBuilder +
                 ", sourcesJarTaskProvider=" + sourcesJarTaskProvider +
                 ", rawJarTaskProvider=" + rawJarTaskProvider +
                 ", additionalDependenciesConfiguration=" + additionalDependenciesConfiguration +
-                ", dependencyMetadataConfigurator=" + metadataConfigurator +
+                ", referenceConfigurator=" + referenceConfigurator +
+                ", metadataConfigurator=" + metadataConfigurator +
                 ", additionalReplacements=" + additionalReplacements +
+                ", onCreateReplacedDependencyCallback=" + onCreateReplacedDependencyCallback +
+                ", onRepoWritingTaskRegisteredCallback=" + onRepoWritingTaskRegisteredCallback +
+                ", additionalIdePostSyncTasks=" + additionalIdePostSyncTasks +
+                ", processImmediately=" + processImmediately +
                 '}';
     }
 }

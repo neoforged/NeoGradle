@@ -35,10 +35,11 @@ interface Repository<TSelf extends Repository<TSelf>> extends BaseDSLElement<TSe
      * @param onReferenceBuild Callback triggered with a build reference which can be added as a dependency to any configuration.
      * @param configurator The configurator for the dependency.
      * @param configuredEntryConsumer The callback, called from an after evaluate phase, which receives the configured entry.
+     * @param processImmediately Indicates whether the repository should immediately start with processing of the request, or delay it until after evaluation
      * @throws XMLStreamException when the entry could not be generated because of violations in the XML structure.
      * @throws IOException when the entry could not be generated because of violations in the file system.
      */
-    void withDependency(Action<RepositoryReference.Builder<?,?>> referenceBuilder, Action<RepositoryReference> onReferenceBuild, Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer) throws XMLStreamException, IOException;
+    void withDependency(Action<RepositoryReference.Builder<?,?>> referenceBuilder, Action<RepositoryReference> onReferenceBuild, Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer, boolean processImmediately) throws XMLStreamException, IOException;
 
     /**
      * Allows for the registration of a callback that gets trigger in an after evaluate phase when the dummy repository is generated.

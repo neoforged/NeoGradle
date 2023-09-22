@@ -8,6 +8,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
 import org.jetbrains.gradle.ext.ProjectSettings;
 import org.jetbrains.gradle.ext.TaskTriggersConfig;
@@ -68,6 +69,13 @@ public abstract class IdeManagementExtension {
      * @param taskToRun The task to run
      */
     public void registerTaskToRun(TaskProvider<?> taskToRun) {
+        final TaskProvider<? extends Task> idePostSyncTask = getOrCreateIdeImportTask();
+        //Configure the idePostSync task to depend on the task to run, causing the past in task to become part of the task-tree that is ran after import.
+        idePostSyncTask.configure(task -> task.dependsOn(taskToRun));
+    }
+    
+    @NotNull
+    public TaskProvider<? extends Task> getOrCreateIdeImportTask() {
         final TaskProvider<? extends Task> idePostSyncTask;
         //Check for the existence of the idePostSync task, which is created by us as a central entry point for all IDE post-sync tasks
         if (!project.getTasks().getNames().contains("idePostSync")) {
@@ -95,11 +103,9 @@ public abstract class IdeManagementExtension {
             //Found -> Use it.
             idePostSyncTask = project.getTasks().named("idePostSync");
         }
-
-        //Configure the idePostSync task to depend on the task to run, causing the past in task to become part of the task-tree that is ran after import.
-        idePostSyncTask.configure(task -> task.dependsOn(taskToRun));
+        return idePostSyncTask;
     }
-
+    
     /**
      * Applies the specified configuration action to configure IDE projects.
      *

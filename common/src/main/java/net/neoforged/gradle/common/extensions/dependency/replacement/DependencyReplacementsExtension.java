@@ -260,7 +260,8 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
                     builder -> configureRepositoryReference(result, externalModuleDependency, builder),
                     reference -> processRepositoryReference(configuration, result, generator, repoBaseDir, reference),
                     builder -> configureRepositoryEntry(result, externalModuleDependency, builder),
-                    entry -> processRepositoryEntry(configuration, result, generator, repoBaseDir, entry)
+                    entry -> processRepositoryEntry(configuration, result, generator, repoBaseDir, entry),
+                    result.getProcessImmediately()
             );
         } catch (XMLStreamException | IOException e) {
             throw new RuntimeException(String.format("Failed to create the dummy dependency for: %s", dependency), e);

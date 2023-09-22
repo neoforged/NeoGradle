@@ -178,13 +178,13 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     @NotNull
     public void configureInternally(final Type spec) {
-        getEnvironmentVariables().convention(spec.getEnvironmentVariables());
-        getMainClass().convention(spec.getMainClass());
-        getProgramArguments().convention(spec.getArguments());
-        getJvmArguments().convention(spec.getJvmArguments());
-        getIsSingleInstance().convention(spec.getIsSingleInstance());
-        getSystemProperties().convention(spec.getSystemProperties());
-        getIsClient().convention(spec.getIsClient());
+        getEnvironmentVariables().putAll(spec.getEnvironmentVariables());
+        getMainClass().set(spec.getMainClass());
+        getProgramArguments().addAll(spec.getArguments());
+        getJvmArguments().addAll(spec.getJvmArguments());
+        getIsSingleInstance().set(spec.getIsSingleInstance());
+        getSystemProperties().putAll(spec.getSystemProperties());
+        getIsClient().set(spec.getIsClient());
         getClasspath().from(spec.getClasspath());
     }
 

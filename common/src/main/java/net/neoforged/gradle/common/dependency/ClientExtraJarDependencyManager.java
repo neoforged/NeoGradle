@@ -84,7 +84,8 @@ public abstract class ClientExtraJarDependencyManager {
                     builder -> { },
                     (dep) -> { },
                     (task) -> { },
-                    Sets::newHashSet
+                    Sets::newHashSet,
+                    true
             );
         });
     }
