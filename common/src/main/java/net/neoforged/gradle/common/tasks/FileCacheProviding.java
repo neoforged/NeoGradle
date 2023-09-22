@@ -34,8 +34,7 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
         this.getOutput().set(getFileCache().flatMap(cacheDir -> getOutputFileName().map(cacheDir::file)));
     }
     
-    @InputDirectory
-    @PathSensitive(PathSensitivity.NONE)
+    @Internal
     public abstract DirectoryProperty getFileCache();
 
     @Nested

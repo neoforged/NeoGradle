@@ -6,10 +6,12 @@ import net.minecraftforge.gdi.annotations.ProjectGetter;
 import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.Runs;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.runs.type.Types;
+import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
@@ -218,8 +220,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 clientExtraConfiguration
         );
         
-        project.getExtensions().getByType(Types.class).whenObjectAdded(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition));
-        project.getExtensions().getByType(Runs.class).whenObjectAdded(run -> configureRun(project, run));
+        project.getExtensions().getByType(Types.class).whenObjectAdded(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration));
+        project.getExtensions().getByType(Runs.class).whenObjectAdded(run -> configureRun(project, run, runtimeDefinition));
     }
 
     private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {
@@ -246,7 +248,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         return projectSetup;
     }
 
-    private void configureRunType(final Project project, final Type type, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration, final PlatformDevRuntimeDefinition runtimeDefinition) {
+    private void configureRunType(final Project project, final Type type, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
         
@@ -280,7 +282,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     }
 
 
-    private void configureRun(final Project project, final Run run) {
+    private void configureRun(final Project project, final Run run, final PlatformDevRuntimeDefinition runtimeDefinition) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
 
@@ -290,6 +292,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             run.getProgramArguments().addAll("--accessToken", "0");
             run.getProgramArguments().addAll("--userType", "mojang");
             run.getProgramArguments().addAll("--versionType", "release");
+            run.getProgramArguments().add("--assetsDir");
+            run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().flatMap(Runtime::getOutputDirectory).map(directory -> directory.getAsFile().getAbsolutePath()));
+            run.getProgramArguments().add("--assetIndex");
+            run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetIndexFile).map(file -> file.getAsFile().getName().substring(0, file.getAsFile().getName().lastIndexOf('.'))));
         }
 
         run.getConfigureAutomatically().set(true);
@@ -297,7 +303,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         run.getConfigureFromTypeWithName().set(true);
         
         run.getModSources().add(mainSourceSet);
-        
+        run.dependsOn(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider());
+
         //TODO: Deal with the lazy component of this, we might in the future move all of this into the run definition.
         run.getEnvironmentVariables().put("MOD_CLASSES", Stream.concat(
                 run.getModSources().get().stream().map(source -> source.getOutput().getResourcesDir()),
