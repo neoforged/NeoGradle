@@ -6,7 +6,6 @@ import net.minecraftforge.gdi.annotations.ProjectGetter;
 import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.Runs;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
@@ -219,7 +218,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 clientExtraConfiguration
         );
         
-        project.getExtensions().getByType(Types.class).whenObjectAdded(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration));
+        project.getExtensions().getByType(Types.class).whenObjectAdded(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition));
         project.getExtensions().getByType(Runs.class).whenObjectAdded(run -> configureRun(project, run));
     }
 
@@ -247,7 +246,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         return projectSetup;
     }
 
-    private void configureRunType(final Project project, final Type type, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration) {
+    private void configureRunType(final Project project, final Type type, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration, final PlatformDevRuntimeDefinition runtimeDefinition) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
         
@@ -265,8 +264,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
         type.getSystemProperties().put("ignoreList", ignoreList.toString());
         type.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
-        type.getSystemProperties().put("fml.pluginLayerLibraries", pluginLayerLibraryConfiguration.getFiles().stream().map(File::getAbsolutePath).collect(Collectors.joining(",")));
-        type.getSystemProperties().put("fml.gameLayerLibraries", gameLayerLibraryConfiguration.getFiles().stream().map(File::getAbsolutePath).collect(Collectors.joining(",")));
+        type.getSystemProperties().put("fml.pluginLayerLibraries", pluginLayerLibraryConfiguration.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
+        type.getSystemProperties().put("fml.gameLayerLibraries", gameLayerLibraryConfiguration.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         type.getSystemProperties().put("legacyClassPath", project.getConfigurations().getByName("runtimeClasspath").getAsPath());
         type.getJvmArguments().addAll("--add-modules", "ALL-MODULE-PATH");
         type.getJvmArguments().addAll("--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler");
@@ -284,7 +283,15 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     private void configureRun(final Project project, final Run run) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
-        
+
+        if (run.getIsClient().get()) {
+            run.getProgramArguments().addAll("--username", "Dev");
+            run.getProgramArguments().addAll("--version", project.getName());
+            run.getProgramArguments().addAll("--accessToken", "0");
+            run.getProgramArguments().addAll("--userType", "mojang");
+            run.getProgramArguments().addAll("--versionType", "release");
+        }
+
         run.getConfigureAutomatically().set(true);
         run.getConfigureFromDependencies().set(false);
         run.getConfigureFromTypeWithName().set(true);
