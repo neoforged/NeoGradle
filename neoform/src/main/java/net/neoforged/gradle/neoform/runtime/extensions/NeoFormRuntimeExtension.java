@@ -351,11 +351,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 spec.getProject(), String.format("generateDebuggingMappingsFor%s", StringUtils.capitalize(spec.getVersionedName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), definition.getGameArtifactProvidingTasks(), definition
         );
 
-        final TaskProvider<? extends Runtime> runtimeToSourceMappingsTask = generationTaskBuildingContext.getNamingChannel().getRuntimeToSourceMappingsTaskBuilder().get().build(generationTaskBuildingContext);
-        runtimeToSourceMappingsTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, data, task));
-        taskOutputs.put(runtimeToSourceMappingsTask.getName(), runtimeToSourceMappingsTask);
-        definition.setRuntimeToSourceMappingsTaskProvider(runtimeToSourceMappingsTask);
-
         final TaskProvider<? extends Runtime> generateDebuggingMappingsTask = generationTaskBuildingContext.getNamingChannel().getGenerateDebuggingMappingsJarTaskBuilder().get().build(generationTaskBuildingContext);
         generateDebuggingMappingsTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, data, task));
         taskOutputs.put(generateDebuggingMappingsTask.getName(), generateDebuggingMappingsTask);

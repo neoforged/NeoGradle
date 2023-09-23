@@ -28,7 +28,4 @@ interface Mixin extends BaseDSLElement<Mixin> {
 
     @DSLProperty
     Property<Boolean> getShowMessageTypes();
-
-    @DSLProperty
-    RegularFileProperty getReobfTsrgFile();
 }

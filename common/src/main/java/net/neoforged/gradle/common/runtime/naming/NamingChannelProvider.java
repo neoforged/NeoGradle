@@ -58,7 +58,6 @@ public abstract class NamingChannelProvider implements NamingChannel, Configurab
 
         getMinecraftVersionExtractor().convention(project.getProviders().provider(() -> data -> data.get(NamingConstants.Version.VERSION)));
         getDeobfuscationGroupSupplier().convention("");
-        getGenerateDebuggingMappingsJarTaskBuilder().convention(this::buildGenerateDebuggingMappingsJarTask);
     }
 
     @Override
@@ -69,42 +68,5 @@ public abstract class NamingChannelProvider implements NamingChannel, Configurab
     @Override
     public String getName() {
         return name;
-    }
-
-    private @NotNull TaskProvider<? extends Runtime> buildGenerateDebuggingMappingsJarTask(@NotNull final GenerationTaskBuildingContext context) {
-        Optional<CommonRuntimeDefinition<? extends CommonRuntimeSpecification>> runtimeDefinition = context.getRuntimeDefinition()
-                .filter(obj -> obj instanceof CommonRuntimeDefinition)
-                .map(obj1 -> (CommonRuntimeDefinition<? extends CommonRuntimeSpecification>) obj1);
-
-        if (!runtimeDefinition.isPresent()) {
-            //Resolve delegation
-            runtimeDefinition = context.getRuntimeDefinition()
-                    .filter(IDelegatingRuntimeDefinition.class::isInstance)
-                    .map(IDelegatingRuntimeDefinition.class::cast)
-                    .map(IDelegatingRuntimeDefinition::getDelegate)
-                    .filter(obj -> obj instanceof CommonRuntimeDefinition)
-                    .map(obj1 -> (CommonRuntimeDefinition<? extends CommonRuntimeSpecification>) obj1);
-        }
-
-        if (!runtimeDefinition.isPresent()) {
-            throw new IllegalStateException("The runtime definition is not present.");
-        }
-        final CommonRuntimeDefinition<? extends CommonRuntimeSpecification> definition = runtimeDefinition.get();
-
-        final String generateTaskName = context.getTaskNameBuilder().apply("generateDebuggingMappingsJar");
-
-        return context.getProject().getTasks().register(generateTaskName, GenerateDebuggingMappings.class, task -> {
-            final TaskProvider<? extends WithOutput> runtimeToSourceMappingsTask = definition.getRuntimeToSourceMappingsTaskProvider();
-
-            task.setGroup("mappings/" + context.getNamingChannel().getName());
-            task.setDescription("Generates a jar containing the runtime to source mappings for debugging purposes");
-
-            task.getMappingsFile().set(runtimeToSourceMappingsTask.flatMap(WithOutput::getOutput)
-                    .map(RegularFile::getAsFile)
-                    .map(TransformerUtils.guard(IMappingFileUtils::load))
-                    .map(CacheableIMappingFile::new)
-            );
-            task.dependsOn(runtimeToSourceMappingsTask);
-        });
     }
 }

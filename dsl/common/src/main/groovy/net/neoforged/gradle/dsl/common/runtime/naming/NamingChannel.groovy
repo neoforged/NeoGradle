@@ -78,13 +78,6 @@ interface NamingChannel extends BaseDSLElement<NamingChannel> {
     Property<GenerateDebuggingMappingsJarTaskBuilder> getGenerateDebuggingMappingsJarTaskBuilder();
 
     /**
-     * The builder which generates and writes the mappings file from runtime to source mappings.
-     * @return The builder property.
-     */
-    @DSLProperty
-    Property<WriteRuntimeToSourceMappingsTaskBuilder> getRuntimeToSourceMappingsTaskBuilder();
-
-    /**
      * Returns the group prefix for the current channel that is prefixed to the deobfuscated dependency groups.
      *
      * @return The group prefix.
