@@ -17,7 +17,12 @@ class FunctionalTests extends SimpleTestSpecification {
 
     def "a mod with userdev as dependency can run the patch task for that dependency"() {
         given:
-        settingsFile << "rootProject.name = 'test-project'"
+        settingsFile << """
+        rootProject.name = 'test-project'
+        plugins {
+            id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
+        }
+        """
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.userdev'
@@ -45,7 +50,12 @@ class FunctionalTests extends SimpleTestSpecification {
 
     def "a mod with userdev as dependency and official mappings can compile through gradle"() {
         given:
-        settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
+        settingsFile << """
+        rootProject.name = 'test-project'
+        plugins {
+            id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
+        }
+        """
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.userdev'
@@ -82,7 +92,12 @@ class FunctionalTests extends SimpleTestSpecification {
 
     def "the userdev runtime by default supports the build cache"() {
         given:
-        settingsFile << "rootProject.name = 'mcp-plugin-apply-succeeds'"
+        settingsFile << """
+        rootProject.name = 'test-project'
+        plugins {
+            id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
+        }
+        """
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.userdev'

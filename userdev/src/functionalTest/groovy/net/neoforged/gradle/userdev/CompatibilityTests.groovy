@@ -8,7 +8,12 @@ class CompatibilityTests extends SimpleTestSpecification {
 
     def "a mod with userdev as dependency can run the patch task for that dependency"() {
         given:
-        settingsFile << "rootProject.name = 'test-project'"
+        settingsFile << """
+        rootProject.name = 'test-project'
+        plugins {
+            id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
+        }
+        """
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.userdev'
