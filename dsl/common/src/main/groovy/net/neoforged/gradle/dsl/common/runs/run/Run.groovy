@@ -23,8 +23,7 @@ import org.jetbrains.annotations.NotNull
  * Gradle tasks, IDE run configurations, and other run configurations are all created from this object.
  */
 @CompileStatic
-@DefaultMethods
-trait Run implements BaseDSLElement<Run>, NamedDSLElement {
+interface Run extends BaseDSLElement<Run>, NamedDSLElement {
 
     /**
      * The project which holds the extension.
@@ -235,9 +234,7 @@ trait Run implements BaseDSLElement<Run>, NamedDSLElement {
      *
      * @param typeProvider The type provider to realise and configure with.
      */
-    void configure(@NotNull final Provider<Type> typeProvider) {
-        configure(typeProvider.get());
-    }
+    void configure(@NotNull final Provider<Type> typeProvider);
 
     /**
      * Configures the run to execute the given tasks before running the run.

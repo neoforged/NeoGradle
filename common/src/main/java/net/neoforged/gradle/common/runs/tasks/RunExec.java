@@ -31,8 +31,8 @@ public abstract class RunExec extends JavaExec {
         final RunImpl run = (RunImpl) getRun().get();
 
         setWorkingDir(run.getWorkingDirectory().get().getAsFile());
-        args(run.getProgramArguments().get());
-        jvmArgs(run.getJvmArguments().get());
+        args(run.getProgramArguments());
+        jvmArgs(run.getJvmArguments());
 
         environment(run.getEnvironmentVariables().get());
         systemProperties(run.getSystemProperties().get());

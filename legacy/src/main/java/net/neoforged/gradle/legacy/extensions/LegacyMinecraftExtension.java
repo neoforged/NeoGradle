@@ -2,10 +2,11 @@ package net.neoforged.gradle.legacy.extensions;
 
 import net.neoforged.gradle.common.extensions.IExtensionCreator;
 import net.neoforged.gradle.common.extensions.MinecraftExtension;
-import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
-import net.neoforged.gradle.dsl.common.runs.run.Runs;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Optional;
@@ -53,8 +54,9 @@ public abstract class LegacyMinecraftExtension extends MinecraftExtension {
     @Optional
     public abstract RegularFileProperty getAccessTransformer();
 
-    public Runs getRuns() {
-        return getProject().getExtensions().getByType(Runs.class);
+    @SuppressWarnings("unchecked")
+    public NamedDomainObjectContainer<Run> getRuns() {
+        return (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
     }
 
     public static final class Creator implements IExtensionCreator<Minecraft> {

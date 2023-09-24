@@ -2,7 +2,6 @@ package net.neoforged.gradle.common.runs.run;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
@@ -15,14 +14,14 @@ import org.gradle.api.Task;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
@@ -142,7 +141,12 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
             configureInternally(type);
         });
     }
-
+    
+    @Override
+    public void configure(@NotNull Provider<Type> typeProvider) {
+        configure(typeProvider.get());
+    }
+    
     @SafeVarargs
     @Override
     public final void dependsOn(TaskProvider<? extends Task>... tasks) {

@@ -74,7 +74,7 @@ public class IdeRunIntegrationManager {
             final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
             
             project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
-                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(name));
+                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(name.replace(" ", "-")));
                 
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
@@ -107,11 +107,9 @@ public class IdeRunIntegrationManager {
                     ideaRun.beforeRun(beforeRuns -> {
                         beforeRuns.create("Build", Make.class);
                         
-                        if (ideBeforeRunTask != null) {
-                            beforeRuns.create("Prepare Run", GradleTask.class, gradleTask -> {
-                                gradleTask.setTask(ideBeforeRunTask.get());
-                            });
-                        }
+                        beforeRuns.create("Prepare Run", GradleTask.class, gradleTask -> {
+                            gradleTask.setTask(ideBeforeRunTask.get());
+                        });
                     });
                 });
             }));

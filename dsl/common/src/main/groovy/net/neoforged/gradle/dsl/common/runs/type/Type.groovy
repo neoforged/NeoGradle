@@ -65,7 +65,6 @@ interface Type extends BaseDSLElement<Type>, NamedDSLElement {
      *
      * @return {@code true} if this run is a server run; otherwise, {@code false}.
      */
-    @Input
     @DSLProperty
     Property<Boolean> getIsServer();
 
@@ -74,7 +73,6 @@ interface Type extends BaseDSLElement<Type>, NamedDSLElement {
      *
      * @return {@code true} if this run is a data generation run; otherwise, {@code false}.
      */
-    @Input
     @DSLProperty
     Property<Boolean> getIsDataGenerator();
 
@@ -83,7 +81,6 @@ interface Type extends BaseDSLElement<Type>, NamedDSLElement {
      *
      * @return {@code true} if this run is a game test run; otherwise, {@code false}.
      */
-    @Input
     @DSLProperty
     Property<Boolean> getIsGameTest();
 
