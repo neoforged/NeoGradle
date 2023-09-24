@@ -11,6 +11,5 @@ public final class UrlConstants {
 
     public static final String MOJANG_MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest.json";
     public static final String NEO_FORGE_MAVEN = "https://maven.neoforged.net/releases/";
-    public static final String MCF_FORGE_MAVEN = "https://maven.minecraftforge.net/";
     public static final String MOJANG_MAVEN = "https://libraries.minecraft.net/";
 }

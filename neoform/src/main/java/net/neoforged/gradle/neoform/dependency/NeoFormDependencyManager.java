@@ -54,7 +54,7 @@ public final class NeoFormDependencyManager {
                                 builder -> builder.setVersion(runtimeDefinition.getSpecification().getNeoFormArtifact().getVersion()),
                                 runtimeDefinition::setReplacedDependency,
                                 runtimeDefinition::onRepoWritten,
-                                () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider())
+                                () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider())
                 ));
             });
         });

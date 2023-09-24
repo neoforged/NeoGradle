@@ -102,10 +102,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         return mcpRuntimeDefinition.getNativesTaskProvider();
     }
 
-    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
-        return mcpRuntimeDefinition.getDebuggingMappingsTaskProvider();
-    }
-
     @Override
     public @NotNull Map<String, String> getMappingVersionData() {
         return mcpRuntimeDefinition.getMappingVersionData();
@@ -114,7 +110,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     @Override
     public void configureRun(RunImpl run) {
         super.configureRun(run);
-        run.getClasspath().from(getDebuggingMappingsTaskProvider());
         run.dependsOn(this.minecraftClasspathSerializer);
     }
 

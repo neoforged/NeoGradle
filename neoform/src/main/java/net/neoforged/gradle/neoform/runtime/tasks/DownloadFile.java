@@ -13,7 +13,7 @@ public abstract class DownloadFile extends DefaultRuntime {
 
     public DownloadFile() {
         getDownloadInfo().finalizeValueOnRead();
-        isOffline().convention(getProject().getGradle().getStartParameter().isOffline());
+        getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
     }
 
     @TaskAction
@@ -29,7 +29,7 @@ public abstract class DownloadFile extends DefaultRuntime {
     protected void doDownloadFrom(FileDownloadingUtils.DownloadInfo info) throws IOException {
         final File outputFile = ensureFileWorkspaceReady(getOutput());
 
-        FileDownloadingUtils.downloadTo(isOffline().get(), info, outputFile);
+        FileDownloadingUtils.downloadTo(getIsOffline().get(), info, outputFile);
 
         setDidWork(true);
     }
@@ -40,6 +40,6 @@ public abstract class DownloadFile extends DefaultRuntime {
     
     @Input
     @Optional
-    public abstract Property<Boolean> isOffline();
+    public abstract Property<Boolean> getIsOffline();
 
 }

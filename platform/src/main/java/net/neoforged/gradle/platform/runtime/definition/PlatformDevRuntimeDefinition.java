@@ -54,10 +54,6 @@ public final class PlatformDevRuntimeDefinition extends CommonRuntimeDefinition<
         return joinedNeoFormRuntimeDefinition.getNativesTaskProvider();
     }
 
-    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
-        return joinedNeoFormRuntimeDefinition.getDebuggingMappingsTaskProvider();
-    }
-
     @Override
     public @NotNull Map<String, String> getMappingVersionData() {
         return joinedNeoFormRuntimeDefinition.getMappingVersionData();
@@ -66,7 +62,6 @@ public final class PlatformDevRuntimeDefinition extends CommonRuntimeDefinition<
     @Override
     public void configureRun(RunImpl run) {
         super.configureRun(run);
-        run.getClasspath().from(getDebuggingMappingsTaskProvider());
     }
 
     @NotNull

@@ -2,6 +2,11 @@ package net.neoforged.gradle.vanilla.runtime.steps;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
+import net.neoforged.gradle.common.util.MappingUtils;
+import net.neoforged.gradle.common.util.TaskDependencyUtils;
+import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.RenameConstants;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
@@ -11,6 +16,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class RenameStep implements IStep {
 
@@ -37,7 +44,7 @@ public class RenameStep implements IStep {
                 definition.getSpecification().getProject(), "mapGame", taskName -> CommonRuntimeUtils.buildTaskName(definition.getSpecification(), taskName), artifact, definition.getGameArtifactProvidingTasks(), mappingVersionData, additionalTasks, definition
         );
 
-        final TaskProvider<? extends Runtime> namingTask = context.getNamingChannel().getJarDeobfuscatingTaskBuilder().get().build(context);
+        final TaskProvider<? extends Runtime> namingTask = buildApplyCompiledMappingsTask(context);
         additionalTasks.forEach(additionalTaskConfigurator);
 
         namingTask.configure(
@@ -48,6 +55,48 @@ public class RenameStep implements IStep {
         );
 
         return namingTask;
+    }
+    
+    private @NotNull TaskProvider<? extends Runtime> buildApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
+        final String ApplyTaskName = CommonRuntimeUtils.buildTaskName(context.getInputTask(), "deobfuscate");
+        
+        if (!context.getRuntimeDefinition().isPresent())
+            throw new IllegalArgumentException("Cannot apply compiled mappings without a runtime definition");
+        
+        final TaskProvider<? extends WithOutput> librariesTask = context.getLibrariesTask();
+        
+        if (librariesTask == null) {
+            throw new IllegalArgumentException("Cannot apply compiled mappings without a libraries task");
+        }
+        
+        final TaskProvider<ApplyOfficialMappingsToCompiledJar> applyTask = context.getProject().getTasks().register(ApplyTaskName, ApplyOfficialMappingsToCompiledJar.class, task -> {
+            task.setGroup("mappings/official");
+            task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
+            
+            if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
+                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()), context.getProject())));
+            } else {
+                task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
+                    try {
+                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
+                    } catch (MultipleDefinitionsFoundException e) {
+                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
+                    }
+                }));
+            }
+            
+            task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
+            task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName).orElse(context.getInputTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getName)))));
+            task.getLibraries().set(librariesTask.flatMap(WithOutput::getOutput));
+            task.getMappings().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
+            
+            task.dependsOn(context.getInputTask());
+            task.dependsOn(librariesTask);
+        });
+        
+        context.getInputTask().configure(task -> task.finalizedBy(applyTask));
+        
+        return applyTask;
     }
 
     @Override

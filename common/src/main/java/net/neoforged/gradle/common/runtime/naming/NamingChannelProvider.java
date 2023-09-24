@@ -41,9 +41,6 @@ public abstract class NamingChannelProvider implements NamingChannel, Configurab
     public NamingChannelProvider(Project project, String name) {
         this.project = project;
         this.name = name;
-
-        getMinecraftVersionExtractor().convention(project.getProviders().provider(() -> data -> data.get(NamingConstants.Version.VERSION)));
-        getDeobfuscationGroupSupplier().convention("");
     }
 
     @Override

@@ -2,6 +2,7 @@ package net.neoforged.gradle.neoform
 
 import net.neoforged.gradle.util.UrlConstants
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
+import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
 
 class NeoFormPluginTests extends BuilderBasedTestSpecification {
@@ -18,7 +19,11 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
         }
 
         when:
-        def run = project.run { it.tasks 'tasks' }
+        def run = project.run {
+            it.tasks 'tasks'
+            it.log(Runtime.LogLevel.INFO)
+            it.arguments('-s')
+        }
 
         then:
         run.task(":tasks").outcome == TaskOutcome.SUCCESS;
@@ -80,6 +85,5 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
         run.task(":repositoryUrls").outcome == TaskOutcome.SUCCESS
         run.output.contains(UrlConstants.MOJANG_MAVEN)
         run.output.contains(UrlConstants.NEO_FORGE_MAVEN)
-        run.output.contains(UrlConstants.MCF_FORGE_MAVEN)
     }
 }

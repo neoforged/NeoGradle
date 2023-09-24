@@ -6,6 +6,8 @@ import org.gradle.testkit.runner.TaskOutcome
 
 class FunctionalTests extends BuilderBasedTestSpecification {
 
+    private static final String NEOFORM_VERSION = "1.20.2-20230921.152923"
+
     @Override
     protected void configurePluginUnderTest() {
         pluginUnderTest = "net.neoforged.gradle.neoform";
@@ -23,7 +25,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraft:neoform_client:+'
+                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)
         }
@@ -52,7 +54,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraft:neoform_client:+'
+                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)
             it.file("src/main/java/net/neoforged/gradle/neoform/FunctionalTests.java", """
@@ -86,7 +88,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraft:neoform_client:+'
+                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)
 

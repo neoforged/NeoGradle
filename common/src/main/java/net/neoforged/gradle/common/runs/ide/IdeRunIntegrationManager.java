@@ -1,16 +1,17 @@
 package net.neoforged.gradle.common.runs.ide;
 
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
-import net.neoforged.gradle.common.extensions.ProjectHolderExtension;
 import net.neoforged.gradle.common.runs.ide.extensions.IdeaRunExtensionImpl;
 import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
-import net.neoforged.gradle.dsl.common.runs.run.Runs;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
@@ -51,11 +52,10 @@ public class IdeRunIntegrationManager {
 
         @Override
         public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
-            final Runs runs = project.getExtensions().getByType(Runs.class);
-            runs.configureEach(run -> {
+            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
                 final IdeaRunExtensionImpl impls = project.getObjects().newInstance(IdeaRunExtensionImpl.class, project, run);
                 run.getExtensions().add(IdeaRunExtension.class, "idea", impls);
-            });
+            }));
         }
 
         @Override
@@ -72,14 +72,13 @@ public class IdeRunIntegrationManager {
         @Override
         public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
             final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
-            final Runs runs = project.getExtensions().getByType(Runs.class);
-
-            runs.getAsMap().forEach((name, run) -> {
-                final String runName = StringUtils.capitalize(project.getName() + ": " + name);
-
+            
+            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(name));
+                
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
-
+                
                 final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
                     for (SourceSet sourceSet : run.getModSources().get()) {
                         final Project sourceSetProject = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
@@ -94,7 +93,7 @@ public class IdeRunIntegrationManager {
                         });
                     });
                 }
-
+                
                 ideaRuns.register(runName, Application.class, ideaRun -> {
                     runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
                     
@@ -104,10 +103,10 @@ public class IdeRunIntegrationManager {
                     ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
                     ideaRun.setProgramParameters(String.join(" ", runImpl.getProgramArguments().get()));
                     ideaRun.setEnvs(runImpl.getEnvironmentVariables().get());
-
+                    
                     ideaRun.beforeRun(beforeRuns -> {
                         beforeRuns.create("Build", Make.class);
-
+                        
                         if (ideBeforeRunTask != null) {
                             beforeRuns.create("Prepare Run", GradleTask.class, gradleTask -> {
                                 gradleTask.setTask(ideBeforeRunTask.get());
@@ -115,7 +114,9 @@ public class IdeRunIntegrationManager {
                         }
                     });
                 });
-            });
+            }));
+            
+            
         }
 
         @Override

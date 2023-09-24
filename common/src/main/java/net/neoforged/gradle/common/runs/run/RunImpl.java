@@ -3,23 +3,19 @@ package net.neoforged.gradle.common.runs.run;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
-
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.ProjectUtils;
-import net.neoforged.gradle.dsl.common.runs.run.DependencyHandler;
+import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.Type;
-import net.neoforged.gradle.dsl.common.runs.type.Types;
+import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 
 import javax.inject.Inject;
@@ -53,7 +49,10 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.systemProperties = this.project.getObjects().mapProperty(String.class, String.class);
 
         getIsSingleInstance().convention(true);
-        getIsClient().convention(true);
+        getIsClient().convention(false);
+        getIsServer().convention(false);
+        getIsDataGenerator().convention(false);
+        getIsGameTest().convention(false);
         getShouldBuildAllProjects().convention(false);
         getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project));
 
@@ -105,9 +104,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    public abstract Property<Boolean> getIsSingleInstance();
-
-    @Override
     public MapProperty<String, String> getSystemProperties() {
         return systemProperties;
     }
@@ -115,30 +111,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     public void overrideSystemProperties(MapProperty<String, String> systemProperties) {
         this.systemProperties = systemProperties;
     }
-
-    @Override
-    public abstract DirectoryProperty getWorkingDirectory();
-
-    @Override
-    public abstract Property<Boolean> getIsClient();
-
-    @Override
-    public abstract ListProperty<SourceSet> getModSources();
-
-    @Override
-    public abstract ConfigurableFileCollection getClasspath();
-
-    @Override
-    public abstract Property<DependencyHandler> getDependencies();
-
-    @Override
-    public abstract Property<Boolean> getConfigureAutomatically();
-
-    @Override
-    public abstract Property<Boolean> getConfigureFromTypeWithName();
-
-    @Override
-    public abstract Property<Boolean> getConfigureFromDependencies();
 
     @Internal
     public Set<TaskProvider<? extends Task>> getTaskDependencies() {
@@ -155,10 +127,11 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @NotNull
     public final void configure(final String name) {
         ProjectUtils.afterEvaluate(getProject(), () -> {
-            final Types types = getProject().getExtensions().getByType(Types.class);
-            if (types.getNames().contains(name)) {
-                configureInternally(types.getByName(name));
-            }
+            project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<Type>>) types -> {
+                if (types.getNames().contains(name)) {
+                    configureInternally(types.getByName(name));
+                }
+            });
         });
     }
 
@@ -179,13 +152,20 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @NotNull
     public void configureInternally(final Type spec) {
         getEnvironmentVariables().putAll(spec.getEnvironmentVariables());
-        getMainClass().set(spec.getMainClass());
+        getMainClass().convention(spec.getMainClass());
         getProgramArguments().addAll(spec.getArguments());
         getJvmArguments().addAll(spec.getJvmArguments());
-        getIsSingleInstance().set(spec.getIsSingleInstance());
+        getIsSingleInstance().convention(spec.getIsSingleInstance());
         getSystemProperties().putAll(spec.getSystemProperties());
-        getIsClient().set(spec.getIsClient());
+        getIsClient().convention(spec.getIsClient());
+        getIsServer().convention(spec.getIsServer());
+        getIsDataGenerator().convention(spec.getIsDataGenerator());
+        getIsGameTest().convention(spec.getIsGameTest());
         getClasspath().from(spec.getClasspath());
+        
+        if (spec.getRunAdapter().isPresent()) {
+            spec.getRunAdapter().get().adapt(this);
+        }
     }
 
     @NotNull

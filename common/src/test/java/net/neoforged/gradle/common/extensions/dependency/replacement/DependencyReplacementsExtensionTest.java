@@ -37,8 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -198,7 +197,7 @@ public class DependencyReplacementsExtensionTest {
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
         );
 
-        verify(repository, never()).withDependency(any(), any(), any(), any());
+        verify(repository, never()).withDependency(any(), any(), any(), any(), anyBoolean());
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
@@ -514,7 +513,7 @@ public class DependencyReplacementsExtensionTest {
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
         );
 
-        verify(repository).withDependency(any(), any(), any(), any());
+        verify(repository).withDependency(any(), any(), any(), any(), anyBoolean());
     }
 
     @Test
@@ -551,7 +550,7 @@ public class DependencyReplacementsExtensionTest {
             Action<RepositoryEntry.Builder<?, ?, ?>> configurator = invocation.getArgument(0);
             actions.add(configurator);
             return null;
-        }).when(repository).withDependency(any(), any(), any(), any());
+        }).when(repository).withDependency(any(), any(), any(), any(), anyBoolean());
         when(dependency.getGroup()).thenReturn("group");
         when(dependency.getName()).thenReturn("name");
         when(dependency.getVersion()).thenReturn("version");
@@ -625,7 +624,7 @@ public class DependencyReplacementsExtensionTest {
             Action<RepositoryEntry.Builder<?, ?, ?>> configurator = invocation.getArgument(0);
             actions.add(configurator);
             return null;
-        }).when(repository).withDependency(any(), any(), any(), any());
+        }).when(repository).withDependency(any(), any(), any(), any(), anyBoolean());
         when(dependency.getGroup()).thenReturn("group");
         when(dependency.getName()).thenReturn("name");
         when(dependency.getVersion()).thenReturn("version");

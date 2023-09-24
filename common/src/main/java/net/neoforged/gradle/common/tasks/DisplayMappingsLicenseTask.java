@@ -22,7 +22,11 @@ public abstract class DisplayMappingsLicenseTask extends NeoGradleBase {
             if (task instanceof DisplayMappingsLicenseTask)
                 return;
 
-            task.dependsOn(this);
+            try {
+                task.dependsOn(this);
+            } catch (IllegalStateException exception) {
+                //This triggers for example when you run :tasks, which is a dynamic task added during runtime.
+            }
         });
 
         this.setOnlyIf(task -> {

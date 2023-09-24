@@ -31,6 +31,12 @@ public abstract class TypeImpl implements ConfigurableDSLElement<Type>, Type {
     public TypeImpl(Project project, String name) {
         this.project = project;
         this.name = name;
+        
+        getIsSingleInstance().convention(true);
+        getIsClient().convention(false);
+        getIsServer().convention(false);
+        getIsDataGenerator().convention(false);
+        getIsGameTest().convention(false);
     }
 
     @Override
@@ -69,16 +75,21 @@ public abstract class TypeImpl implements ConfigurableDSLElement<Type>, Type {
 
     @Override
     public void copyTo(Type other) {
-        other.getIsSingleInstance().set(getIsSingleInstance().get());
-        other.getMainClass().set(getMainClass().get());
-        other.getArguments().set(getArguments().get());
-        other.getJvmArguments().set(getJvmArguments().get());
-        other.getIsClient().set(getIsClient().get());
-        other.getEnvironmentVariables().set(getEnvironmentVariables().get());
-        other.getSystemProperties().set(getSystemProperties().get());
+        other.getIsSingleInstance().set(getIsSingleInstance());
+        other.getMainClass().set(getMainClass());
+        other.getArguments().set(getArguments());
+        other.getJvmArguments().set(getJvmArguments());
+        other.getIsClient().set(getIsClient());
+        other.getEnvironmentVariables().set(getEnvironmentVariables());
+        other.getSystemProperties().set(getSystemProperties());
         other.getClasspath().from(getClasspath());
     }
-
+    
+    @Override
+    public void from(Type other) {
+        other.copyTo(this);
+    }
+    
     public static final class Serializer extends GradleGsonTypeAdapter<Type> {
 
         public static Serializer scoped(final Project project) {

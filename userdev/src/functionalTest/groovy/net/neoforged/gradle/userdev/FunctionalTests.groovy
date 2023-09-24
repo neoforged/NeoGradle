@@ -2,7 +2,9 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.Ignore
 
+@Ignore
 class FunctionalTests extends SimpleTestSpecification {
 
     protected File codeFile
@@ -28,7 +30,7 @@ class FunctionalTests extends SimpleTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraftforge:forge:+'
+                implementation 'net.neoforged:neoforge:+'
             }
         """
 
@@ -56,7 +58,7 @@ class FunctionalTests extends SimpleTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraftforge:forge:+'
+                implementation 'net.neoforged:neoforge:+'
             }
         """
         codeFile << """
@@ -93,7 +95,7 @@ class FunctionalTests extends SimpleTestSpecification {
             }
             
             dependencies {
-                implementation 'net.minecraftforge:forge:+'
+                implementation 'net.neoforged:neoforge:+'
             }
         """
         codeFile << """

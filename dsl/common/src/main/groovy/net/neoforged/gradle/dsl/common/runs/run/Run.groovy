@@ -1,35 +1,38 @@
 package net.neoforged.gradle.dsl.common.runs.run
 
-
-import groovy.transform.CompileStatic;
-import groovyjarjarantlr4.v4.runtime.misc.NotNull
+import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
-import net.minecraftforge.gdi.NamedDSLElement;
+import net.minecraftforge.gdi.NamedDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import net.minecraftforge.gdi.annotations.DefaultMethods
+import net.minecraftforge.gdi.annotations.ProjectGetter
 import net.neoforged.gradle.dsl.common.runs.type.Type
-import org.gradle.api.Task;
+import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.MapProperty;
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.*
+import org.jetbrains.annotations.NotNull
 
 /**
  * Defines an object which represents a single configuration for running the game.
  * Gradle tasks, IDE run configurations, and other run configurations are all created from this object.
  */
 @CompileStatic
-interface Run extends BaseDSLElement<Run>, NamedDSLElement {
+@DefaultMethods
+trait Run implements BaseDSLElement<Run>, NamedDSLElement {
 
+    /**
+     * The project which holds the extension.
+     *
+     * @return The project.
+     */
+    @ProjectGetter
+    abstract Project getProject();
 
     /**
      * Defines the environment variables that are passed to the JVM when running the game.
@@ -38,7 +41,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    MapProperty<String, String> getEnvironmentVariables();
+    abstract MapProperty<String, String> getEnvironmentVariables();
 
     /**
      * Defines the main class that is executed when the game is started.
@@ -47,7 +50,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    Property<String> getMainClass();
+    abstract Property<String> getMainClass();
 
     /**
      * Indicates if all the projects in the current Gradle project should be build ahead of running the game.
@@ -56,7 +59,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    Property<Boolean> getShouldBuildAllProjects();
+    abstract Property<Boolean> getShouldBuildAllProjects();
 
     /**
      * Defines the program arguments that are passed to the application when running the game.
@@ -65,7 +68,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    ListProperty<String> getProgramArguments();
+    abstract ListProperty<String> getProgramArguments();
 
     /**
      * Defines the JVM arguments that are passed to the JVM when running the game.
@@ -74,7 +77,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    ListProperty<String> getJvmArguments();
+    abstract ListProperty<String> getJvmArguments();
 
     /**
      * Indicates if this run is a single instance run.
@@ -84,7 +87,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    Property<Boolean> getIsSingleInstance();
+    abstract Property<Boolean> getIsSingleInstance();
 
     /**
      * Defines the system properties that are passed to the JVM when running the game.
@@ -93,7 +96,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    MapProperty<String, String> getSystemProperties();
+    abstract MapProperty<String, String> getSystemProperties();
 
     /**
      * Defines the working directory that is used when running the game.
@@ -102,7 +105,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @OutputDirectory
     @DSLProperty
-    DirectoryProperty getWorkingDirectory();
+    abstract DirectoryProperty getWorkingDirectory();
 
     /**
      * Indicates if this run is a client run.
@@ -111,7 +114,38 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Input
     @DSLProperty
-    Property<Boolean> getIsClient();
+    @Optional
+    abstract Property<Boolean> getIsClient();
+
+    /**
+     * Indicates if this run is a server run.
+     *
+     * @return {@code true} if this run is a server run; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    abstract Property<Boolean> getIsServer();
+
+    /**
+     * Indicates if this run is a data generation run.
+     *
+     * @return {@code true} if this run is a data generation run; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    abstract Property<Boolean> getIsDataGenerator();
+
+    /**
+     * Indicates if this run is a game test run.
+     *
+     * @return {@code true} if this run is a game test run; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    abstract Property<Boolean> getIsGameTest();
 
     /**
      * Defines the source sets that are used as a mod.
@@ -120,7 +154,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Internal
     @DSLProperty
-    ListProperty<SourceSet> getModSources();
+    abstract ListProperty<SourceSet> getModSources();
 
     /**
      * Gives access to the classpath for this run.
@@ -132,7 +166,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @InputFiles
     @Classpath
     @DSLProperty
-    ConfigurableFileCollection getClasspath();
+    abstract ConfigurableFileCollection getClasspath();
 
     /**
      * Defines the custom dependency handler for each run.
@@ -141,7 +175,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Nested
     @DSLProperty
-    Property<DependencyHandler> getDependencies();
+    abstract Property<DependencyHandler> getDependencies();
 
     /**
      * Indicates if this run should automatically be configured.
@@ -151,7 +185,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Input
     @DSLProperty
     @Optional
-    Property<Boolean> getConfigureAutomatically();
+    abstract Property<Boolean> getConfigureAutomatically();
 
     /**
      * Indicates if this run should automatically be configured by the type of the same name.
@@ -161,7 +195,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Input
     @DSLProperty
     @Optional
-    Property<Boolean> getConfigureFromTypeWithName();
+    abstract Property<Boolean> getConfigureFromTypeWithName();
 
     /**
      * Indicates if this run should automatically be configured by its dependent runtimes.
@@ -171,14 +205,14 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Input
     @DSLProperty
     @Optional
-    Property<Boolean> getConfigureFromDependencies();
+    abstract Property<Boolean> getConfigureFromDependencies();
 
 
     /**
      * Configures the run using the type with the same name.
      * Throwing an exception if no type could be found.
      */
-    void configure();
+    abstract void configure();
 
     /**
      * Configures the run using the type with the specified name.
@@ -186,14 +220,24 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @param type The name of the type to use to configure the run.
      */
-    void configure(@NotNull final String type);
+    abstract void configure(@NotNull final String type);
 
     /**
      * Configures the run using the given type.
      *
      * @param type The type to use to configure the run.
      */
-    void configure(@NotNull final Type type);
+    abstract void configure(@NotNull final Type type);
+
+    /**
+     * Configures the run using the given type provider.
+     * This will realise the provider to query the values of the type.
+     *
+     * @param typeProvider The type provider to realise and configure with.
+     */
+    void configure(@NotNull final Provider<Type> typeProvider) {
+        configure(typeProvider.get());
+    }
 
     /**
      * Configures the run to execute the given tasks before running the run.
@@ -201,5 +245,5 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      * @param tasks The tasks to depend on.
      */
     @SafeVarargs
-    void dependsOn(@NotNull final TaskProvider<? extends Task>... tasks);
+    abstract void dependsOn(@NotNull final TaskProvider<? extends Task>... tasks);
 }

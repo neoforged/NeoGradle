@@ -30,7 +30,7 @@ public abstract class ClientExtraJar extends NeoGradleBase implements WithOutput
 
         outputJar.getParentFile().mkdirs();
 
-        final FileTree inputTree = getProject().zipTree(clientJar);
+        final FileTree inputTree = getArchiveOperations().zipTree(clientJar);
         final FileTree filteredInput = inputTree.matching(filter -> {
             filter.exclude("**/*.class");
         });

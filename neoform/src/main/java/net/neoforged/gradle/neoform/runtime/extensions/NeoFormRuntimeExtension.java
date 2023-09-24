@@ -12,7 +12,6 @@ import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
@@ -346,14 +345,5 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             task.getInput().set(recompileTask.flatMap(WithOutput::getOutput));
             task.dependsOn(recompileTask);
         });
-
-        final GenerationTaskBuildingContext generationTaskBuildingContext = new GenerationTaskBuildingContext(
-                spec.getProject(), String.format("generateDebuggingMappingsFor%s", StringUtils.capitalize(spec.getVersionedName())), taskName -> CommonRuntimeUtils.buildTaskName(spec, taskName), definition.getGameArtifactProvidingTasks(), definition
-        );
-
-        final TaskProvider<? extends Runtime> generateDebuggingMappingsTask = generationTaskBuildingContext.getNamingChannel().getGenerateDebuggingMappingsJarTaskBuilder().get().build(generationTaskBuildingContext);
-        generateDebuggingMappingsTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, data, task));
-        taskOutputs.put(generateDebuggingMappingsTask.getName(), generateDebuggingMappingsTask);
-        definition.setDebuggingMappingsTaskProvider(generateDebuggingMappingsTask);
     }
 }

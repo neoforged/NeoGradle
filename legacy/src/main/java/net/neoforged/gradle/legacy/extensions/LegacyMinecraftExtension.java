@@ -19,9 +19,6 @@ public abstract class LegacyMinecraftExtension extends MinecraftExtension {
     @Inject
     public LegacyMinecraftExtension(Project project) {
         super(project);
-
-        //final AccessTransformers accessTransformers = getAccessTransformers();
-        //accessTransformers.getFiles().from(getAccessTransformer().orElse(project.getLayout().getBuildDirectory().file("tmp/unknown_at.cfg")));
     }
 
     @Deprecated

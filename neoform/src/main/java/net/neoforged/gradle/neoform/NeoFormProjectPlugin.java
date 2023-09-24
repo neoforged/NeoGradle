@@ -29,6 +29,7 @@ import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 
 import javax.annotation.Nonnull;
 
@@ -49,18 +50,7 @@ public class NeoFormProjectPlugin implements Plugin<Project> {
         //Add Known repos
         project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.NEO_FORGE_MAVEN);
-            e.metadataSources(m -> {
-                m.mavenPom();
-                m.artifact();
-            });
-        });
-
-        project.getRepositories().maven(e -> {
-            e.setUrl(UrlConstants.MCF_FORGE_MAVEN);
-            e.metadataSources(m -> {
-                m.mavenPom();
-                m.artifact();
-            });
+            e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
         });
     }
 }

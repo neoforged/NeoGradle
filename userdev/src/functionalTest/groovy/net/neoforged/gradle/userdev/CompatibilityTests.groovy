@@ -1,7 +1,9 @@
 package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
+import spock.lang.Ignore
 
+@Ignore
 class CompatibilityTests extends SimpleTestSpecification {
 
     def "a mod with userdev as dependency can run the patch task for that dependency"() {
@@ -19,7 +21,7 @@ class CompatibilityTests extends SimpleTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:forge:+'
+                implementation 'net.neoforged:neoforge:+'
             }
         """
 

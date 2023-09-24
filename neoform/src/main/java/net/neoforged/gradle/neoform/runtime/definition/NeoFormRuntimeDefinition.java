@@ -25,12 +25,11 @@ import java.util.function.Consumer;
  * Represents a configured and registered runtime for Mcp.
  */
 public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRuntimeSpecification> implements NeoFormDefinition<NeoFormRuntimeSpecification> {
-    private final File unpackedMcpZipDirectory;
-    private final NeoFormConfigConfigurationSpecV2 mcpConfig;
+    private final File unpackedneoformZipDirectory;
+    private final NeoFormConfigConfigurationSpecV2 neoform;
 
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
-    private TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider;
 
     public NeoFormRuntimeDefinition(@NotNull NeoFormRuntimeSpecification specification,
                                     @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
@@ -39,13 +38,13 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
                                     @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
                                     @NotNull Configuration minecraftDependenciesConfiguration,
                                     @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
-                                    @NotNull File unpackedMcpZipDirectory,
-                                    @NotNull NeoFormConfigConfigurationSpecV2 mcpConfig,
+                                    @NotNull File unpackedneoformZipDirectory,
+                                    @NotNull NeoFormConfigConfigurationSpecV2 neoform,
                                     @NotNull TaskProvider<DownloadAssets> assetsTaskProvider,
                                     @NotNull TaskProvider<ExtractNatives> nativesTaskProvider) {
         super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
-        this.unpackedMcpZipDirectory = unpackedMcpZipDirectory;
-        this.mcpConfig = mcpConfig;
+        this.unpackedneoformZipDirectory = unpackedneoformZipDirectory;
+        this.neoform = neoform;
         this.assetsTaskProvider = assetsTaskProvider;
         this.nativesTaskProvider = nativesTaskProvider;
     }
@@ -54,13 +53,13 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
     @Override
     @NotNull
     public File getUnpackedNeoFormZipDirectory() {
-        return unpackedMcpZipDirectory;
+        return unpackedneoformZipDirectory;
     }
 
     @Override
     @NotNull
     public NeoFormConfigConfigurationSpecV2 getNeoFormConfig() {
-        return mcpConfig;
+        return neoform;
     }
 
     @Override
@@ -71,15 +70,15 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
 
         NeoFormRuntimeDefinition that = (NeoFormRuntimeDefinition) o;
 
-        if (!unpackedMcpZipDirectory.equals(that.unpackedMcpZipDirectory)) return false;
-        return mcpConfig.equals(that.mcpConfig);
+        if (!unpackedneoformZipDirectory.equals(that.unpackedneoformZipDirectory)) return false;
+        return neoform.equals(that.neoform);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + unpackedMcpZipDirectory.hashCode();
-        result = 31 * result + mcpConfig.hashCode();
+        result = 31 * result + unpackedneoformZipDirectory.hashCode();
+        result = 31 * result + neoform.hashCode();
         return result;
     }
 
@@ -93,26 +92,17 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         return nativesTaskProvider;
     }
 
-    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
-        return debuggingMappingsTaskProvider;
-    }
-
-    public void setDebuggingMappingsTaskProvider(TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider) {
-        this.debuggingMappingsTaskProvider = debuggingMappingsTaskProvider;
-    }
-
     @Override
     public void configureRun(RunImpl run) {
         super.configureRun(run);
-        run.getClasspath().from(this.getDebuggingMappingsTaskProvider());
     }
 
     @Override
     public Map<String, String> buildRunInterpolationData() {
         final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData());
 
-        interpolationData.put("mcp_version", mcpConfig.getVersion());
-        interpolationData.put("mcp_mappings", new File(unpackedMcpZipDirectory, "config/joined.srg").getAbsolutePath());
+        interpolationData.put("mcp_version", neoform.getVersion());
+        interpolationData.put("mcp_mappings", new File(unpackedneoformZipDirectory, "config/joined.srg").getAbsolutePath());
 
         return interpolationData;
     }

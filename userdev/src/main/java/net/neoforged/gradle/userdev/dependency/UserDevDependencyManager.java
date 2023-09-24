@@ -59,7 +59,7 @@ public final class UserDevDependencyManager {
                             builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
                             runtimeDefinition::setReplacedDependency,
                             runtimeDefinition::onRepoWritten,
-                            () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider(), runtimeDefinition.getDebuggingMappingsTaskProvider()))
+                            () -> Sets.newHashSet(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider()))
             );
         }));
     }

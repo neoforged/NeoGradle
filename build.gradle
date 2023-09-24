@@ -6,7 +6,8 @@ plugins {
 }
 
 //HARDCODED VERSION FOR NOW!
-version = gradleutils.getTagOffsetBranchVersion("next/neo");
+//If somebody knows how to teach GU the way of the land with respects to snapshots I am all for it :D
+version = "7.0.0-SNAPSHOT"
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
@@ -27,7 +28,7 @@ tasks.register('info') {
 }
 
 changelog {
-    fromTag '5.0'
+    fromTag '7.0'
     disableAutomaticPublicationRegistration()
 }
 
@@ -119,7 +120,7 @@ subprojects.forEach { subProject ->
 subprojects.forEach { subProject ->
     subProject.afterEvaluate { Project evalSubProject ->
         if (!evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
-            return;
+            return
         }
 
         //Custom source set.
@@ -141,7 +142,7 @@ subprojects.forEach { subProject ->
         evalSubProject.dependencies.functionalTestImplementation "net.neoforged:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
 
         //Configure the plugin metadata, so we can publish it.
-        evalSubProject.gradlePlugin.plugins { org.gradle.api.NamedDomainObjectContainer<PluginDeclaration> plugins ->
+        evalSubProject.gradlePlugin.plugins { NamedDomainObjectContainer<PluginDeclaration> plugins ->
             plugins.register(evalSubProject.name.toLowerCase()) {
 
                 //Determine the class name and package of the plugin.
@@ -150,7 +151,7 @@ subprojects.forEach { subProject ->
                         .first()
 
                 //We need to handle the case of a fresh new project, no files exist yet, so the pluginFile object will be null.
-                def pluginClassName = "unknown";
+                def pluginClassName = "unknown"
                 if (pluginFile != null) {
                     pluginClassName = evalSubProject.file('src/main/java/').toPath().relativize(pluginFile.toPath()).toString().replace('/', '.').replace('\\', '.').replace(".java", "")
                 }

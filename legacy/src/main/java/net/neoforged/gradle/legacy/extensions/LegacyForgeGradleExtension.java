@@ -4,6 +4,7 @@ import groovy.lang.Closure;
 import net.neoforged.gradle.common.extensions.ForcedDependencyDeobfuscationExtension;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
+import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 
@@ -23,14 +24,8 @@ public abstract class LegacyForgeGradleExtension {
     }
 
     @Deprecated
-    public Dependency deobf(Object dependency, Closure<?> configure) {
-        final Dependency baseDependency = project.getDependencies().create(dependency, configure);
-
-        final ForcedDependencyDeobfuscationExtension forceExtension = project.getExtensions().getByType(ForcedDependencyDeobfuscationExtension.class);
-
-        forceExtension.forceDeobfuscation(baseDependency);
-
-        return baseDependency;
+    public Dependency deobf(Object dependency, @Nullable Closure<?> configure) {
+        return project.getDependencies().create(dependency, configure);
     }
 
 }

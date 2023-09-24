@@ -31,6 +31,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
         getAssetIndexFile().convention(getRegularFileInOutputDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
         getVersionJson().convention(getVersionJsonFile().map(TransformerUtils.guard(file -> VersionJson.get(file.getAsFile()))));
         getAssetRepository().convention("https://resources.download.minecraft.net/");
+        getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
     }
 
     @TaskAction
@@ -49,7 +50,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
             params.getShouldValidateHash().set(true);
             params.getSha1().set(assetIndexData.getSha1());
             params.getOutputFile().set(getAssetIndexFile());
-            params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
+            params.getIsOffline().set(getIsOffline());
         });
 
         executor.await();
@@ -67,7 +68,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
                     .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
 
             executor.submit(DownloadFileAction.class, params -> {
-                params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
+                params.getIsOffline().set(getIsOffline());
                 params.getShouldValidateHash().set(true);
                 params.getOutputFile().fileProvider(assetFile);
                 params.getUrl().set(assetUrl);
@@ -98,6 +99,9 @@ public abstract class DownloadAssets extends DefaultRuntime {
     @OutputFile
     public abstract RegularFileProperty getAssetIndexFile();
 
+    @Input
+    public abstract Property<Boolean> getIsOffline();
+    
     private static class AssetIndex {
         private Map<String, Asset> objects = Maps.newHashMap();
 

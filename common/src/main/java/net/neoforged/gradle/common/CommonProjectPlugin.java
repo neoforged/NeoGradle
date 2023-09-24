@@ -7,8 +7,7 @@ import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyR
 import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
-import net.neoforged.gradle.common.runs.run.RunsImpl;
-import net.neoforged.gradle.common.runs.type.TypesImpl;
+import net.neoforged.gradle.common.runs.type.TypeImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
@@ -16,14 +15,17 @@ import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
-import net.neoforged.gradle.dsl.common.runs.run.Runs;
-import net.neoforged.gradle.dsl.common.runs.type.Types;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.GradleInternalUtils;
 import net.neoforged.gradle.util.UrlConstants;
+import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
@@ -59,7 +61,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
-        project.getExtensions().create("forcedDeobfuscation", ForcedDependencyDeobfuscationExtension.class);
         project.getExtensions().create("clientExtraJarDependencyManager", ClientExtraJarDependencyManager.class, project);
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
@@ -91,14 +92,13 @@ public class CommonProjectPlugin implements Plugin<Project> {
                         .getExtensions().create(ProjectHolder.class, ProjectHolderExtension.NAME, ProjectHolderExtension.class, project));
 
         project.getExtensions().add(
-                Types.class,
                 RunsConstants.Extensions.RUN_TYPES,
-                project.getObjects().newInstance(TypesImpl.class, project)
+                project.getObjects().domainObjectContainer(Type.class, name -> project.getObjects().newInstance(TypeImpl.class, project, name))
         );
+        
         project.getExtensions().add(
-                Runs.class,
                 RunsConstants.Extensions.RUNS,
-                project.getObjects().newInstance(RunsImpl.class, project)
+                project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name))
         );
 
         IdeRunIntegrationManager.getInstance().apply(project);
@@ -129,12 +129,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
             dependencyReplacementsExtension.onPostDefinitionBakes(project);
         }
 
-        project.getExtensions().getByType(Runs.class).forEach(run -> {
+        project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.forEach(run -> {
             if (run instanceof RunImpl) {
                 if (run.getConfigureFromTypeWithName().get()) {
                     run.configure();
                 }
-
+                
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
                     runImpl.getModSources().get().forEach(sourceSet -> {
@@ -148,6 +148,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     });
                 }
             }
-        });
+        }));
     }
 }

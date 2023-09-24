@@ -8,6 +8,8 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 
 /**
  * Defines an object which holds the type of run.
@@ -59,6 +61,33 @@ interface Type extends BaseDSLElement<Type>, NamedDSLElement {
     Property<Boolean> getIsClient();
 
     /**
+     * Indicates if this run is a server run.
+     *
+     * @return {@code true} if this run is a server run; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty
+    Property<Boolean> getIsServer();
+
+    /**
+     * Indicates if this run is a data generation run.
+     *
+     * @return {@code true} if this run is a data generation run; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty
+    Property<Boolean> getIsDataGenerator();
+
+    /**
+     * Indicates if this run is a game test run.
+     *
+     * @return {@code true} if this run is a game test run; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty
+    Property<Boolean> getIsGameTest();
+
+    /**
      * Gives access to the key value pairs which are added as environment variables when an instance of this run type is executed.
      *
      * @return The property which holds the environment variables.
@@ -85,9 +114,25 @@ interface Type extends BaseDSLElement<Type>, NamedDSLElement {
     ConfigurableFileCollection getClasspath();
 
     /**
+     * An optional configurable run adapter which can be used to change the behaviour of already configured runs when the type is applied to them.
+     *
+     * @return The run adapter.
+     */
+    @DSLProperty
+    @Optional
+    Property<RunAdapter> getRunAdapter();
+
+    /**
      * Copies this run type into a new instance.
      *
      * @param other The other run type to copy into.
      */
     void copyTo(Type other);
+
+    /**
+     * Copies the data from the given other type into this type.
+     *
+     * @param other The type to copy from.
+     */
+    void from(Type other);
 }

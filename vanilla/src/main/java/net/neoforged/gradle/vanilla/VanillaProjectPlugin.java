@@ -6,6 +6,7 @@ import net.neoforged.gradle.vanilla.dependency.VanillaDependencyManager;
 import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 
 public class VanillaProjectPlugin implements Plugin<Project> {
     @Override
@@ -20,19 +21,7 @@ public class VanillaProjectPlugin implements Plugin<Project> {
         //Add Known repos, -> The default tools come from this repo.
         project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.NEO_FORGE_MAVEN);
-            e.metadataSources(m -> {
-                m.mavenPom();
-                m.artifact();
-            });
+            e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
         });
-
-        project.getRepositories().maven(e -> {
-            e.setUrl(UrlConstants.MCF_FORGE_MAVEN);
-            e.metadataSources(m -> {
-                m.mavenPom();
-                m.artifact();
-            });
-        });
-
     }
 }

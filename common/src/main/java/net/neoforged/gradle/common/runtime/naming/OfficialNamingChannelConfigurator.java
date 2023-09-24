@@ -1,52 +1,35 @@
 package net.neoforged.gradle.common.runtime.naming;
 
+import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
 import net.neoforged.gradle.common.util.MappingUtils;
 import net.neoforged.gradle.common.util.StreamUtils;
-import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.util.GradleInternalUtils;
-import net.neoforged.gradle.util.TransformerUtils;
-import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
-import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
-import net.neoforged.gradle.common.runtime.naming.tasks.GenerateDebuggingMappings;
-import net.neoforged.gradle.common.runtime.naming.tasks.UnapplyOfficialMappingsToCompiledJar;
-import net.neoforged.gradle.common.util.CacheableIMappingFile;
-import net.neoforged.gradle.common.util.TaskDependencyUtils;
-import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.runtime.naming.GenerationTaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import net.neoforged.gradle.util.GradleInternalUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.reflect.TypeOf;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class OfficialNamingChannelConfigurator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OfficialNamingChannelConfigurator.class);
     private static final OfficialNamingChannelConfigurator INSTANCE = new OfficialNamingChannelConfigurator();
 
     public static OfficialNamingChannelConfigurator getInstance() {
@@ -66,22 +49,13 @@ public final class OfficialNamingChannelConfigurator {
         hasAcceptedLicenseProperty.convention(false);
 
         minecraftExtension.getNamingChannels().register("official", namingChannelProvider -> {
-            namingChannelProvider.getMinecraftVersionExtractor().set(this::extractMinecraftVersion);
             namingChannelProvider.getApplySourceMappingsTaskBuilder().set(this::buildApplySourceMappingTask);
-            namingChannelProvider.getJarDeobfuscatingTaskBuilder().set(this::buildApplyCompiledMappingsTask);
-            namingChannelProvider.getUnapplyCompiledMappingsTaskBuilder().set(this::buildUnapplyCompiledMappingsTask);
-            namingChannelProvider.getGenerateDebuggingMappingsJarTaskBuilder().set(this::buildGenerateDebuggingMappingsJarTask);
             namingChannelProvider.getHasAcceptedLicense().convention(project.provider(() -> ((Property<Boolean>) mappingsExtension.getExtensions().getByName("acceptMojangEula")).get()));
             namingChannelProvider.getLicenseText().set(getLicenseText(project));
-            namingChannelProvider.getDependencyNotationVersionManager().set(new SimpleDependencyNotationVersionManager());
         });
         minecraftExtension.getMappings().getChannel().convention(minecraftExtension.getNamingChannels().named("official"));
     }
-
-    private String extractMinecraftVersion(Map<String, String> stringStringMap) {
-        return MappingUtils.getMinecraftVersion(stringStringMap);
-    }
-
+    
     private @NotNull TaskProvider<? extends Runtime> buildApplySourceMappingTask(@NotNull final TaskBuildingContext context) {
         final String mappingVersion = MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion());
 
@@ -98,90 +72,6 @@ public final class OfficialNamingChannelConfigurator {
             applyOfficialMappingsToSourceJar.dependsOn(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS));
             applyOfficialMappingsToSourceJar.dependsOn(context.getGameArtifactTask(GameArtifact.SERVER_MAPPINGS));
             applyOfficialMappingsToSourceJar.getStepName().set("applyOfficialMappings");
-        });
-    }
-
-    private @NotNull TaskProvider<? extends Runtime> buildUnapplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
-        final String unapplyTaskName = CommonRuntimeUtils.buildTaskName(context.getInputTask(), "obfuscate");
-
-        final TaskProvider<UnapplyOfficialMappingsToCompiledJar> unapplyTask = context.getProject().getTasks().register(unapplyTaskName, UnapplyOfficialMappingsToCompiledJar.class, task -> {
-            task.setGroup("mappings/official");
-            task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
-
-            if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
-                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()), context.getProject())));
-            } else {
-                task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
-                    try {
-                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
-                    } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
-                    }
-                }));
-            }
-
-            task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
-            task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName).orElse(context.getInputTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getName)))));
-        });
-
-        context.getInputTask().configure(task -> task.finalizedBy(unapplyTask));
-
-        return unapplyTask;
-    }
-
-    private @NotNull TaskProvider<? extends Runtime> buildApplyCompiledMappingsTask(@NotNull final TaskBuildingContext context) {
-        final String ApplyTaskName = CommonRuntimeUtils.buildTaskName(context.getInputTask(), "deobfuscate");
-
-        if (!context.getRuntimeDefinition().isPresent())
-            throw new IllegalArgumentException("Cannot apply compiled mappings without a runtime definition");
-
-        final TaskProvider<? extends WithOutput> librariesTask = context.getLibrariesTask();
-
-        if (librariesTask == null) {
-            throw new IllegalArgumentException("Cannot apply compiled mappings without a libraries task");
-        }
-
-        final TaskProvider<ApplyOfficialMappingsToCompiledJar> applyTask = context.getProject().getTasks().register(ApplyTaskName, ApplyOfficialMappingsToCompiledJar.class, task -> {
-            task.setGroup("mappings/official");
-            task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
-
-            if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
-                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()), context.getProject())));
-            } else {
-                task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
-                    try {
-                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
-                    } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
-                    }
-                }));
-            }
-
-            task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
-            task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName).orElse(context.getInputTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getName)))));
-            task.getLibraries().set(librariesTask.flatMap(WithOutput::getOutput));
-            task.getMappings().set(context.getGameArtifactTask(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
-
-            task.dependsOn(context.getInputTask());
-            task.dependsOn(librariesTask);
-        });
-
-        context.getInputTask().configure(task -> task.finalizedBy(applyTask));
-
-        return applyTask;
-    }
-
-    private @NotNull TaskProvider<? extends Runtime> buildGenerateDebuggingMappingsJarTask(@NotNull final GenerationTaskBuildingContext context) {
-        final String generateTaskName = context.getTaskNameBuilder().apply("generateDebuggingMappingsJar");
-
-        return context.getProject().getTasks().register(generateTaskName, GenerateDebuggingMappings.class, task -> {
-            task.setGroup("mappings/official");
-            task.setDescription("Generates a jar containing the official mappings for debugging purposes");
-
-            task.getMappingsFile().convention(context.getClientMappings().flatMap(WithOutput::getOutput)
-                    .map(TransformerUtils.guard(file -> IMappingFile.load(file.getAsFile())))
-                    .map(CacheableIMappingFile::new));
-            task.dependsOn(context.getClientMappings());
         });
     }
 

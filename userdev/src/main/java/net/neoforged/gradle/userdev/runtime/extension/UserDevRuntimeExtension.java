@@ -4,9 +4,11 @@ import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.constants.RunsConstants;
+import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
-import net.neoforged.gradle.dsl.common.runs.type.Types;
+import net.neoforged.gradle.dsl.common.runs.type.Type;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.Artifact;
@@ -15,17 +17,15 @@ import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
-import net.neoforged.gradle.neoform.runtime.tasks.DownloadArtifact;
-import net.neoforged.gradle.neoform.runtime.tasks.InjectCode;
-import net.neoforged.gradle.neoform.runtime.tasks.Patch;
-import net.neoforged.gradle.neoform.runtime.tasks.SideAnnotationStripper;
-import net.neoforged.gradle.neoform.runtime.tasks.UnpackZip;
+import net.neoforged.gradle.neoform.runtime.tasks.*;
 import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.neoforged.gradle.userdev.utils.UserDevConfigurationSpecUtils;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
+import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -48,6 +48,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         super(project);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
@@ -106,11 +107,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         });
 
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
-
-        final Types types = getProject().getExtensions().getByType(Types.class);
-        userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
-             types.registerWithPotentialPrefix(spec.getIdentifier(), name, type::copyTo);
-        });
+        
+        getProject().getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<Type>>) types -> userDevConfigurationSpec.getRunTypes().forEach((name, type) -> {
+            TypesUtil.registerWithPotentialPrefix(types, spec.getIdentifier(), name, type::copyTo);
+        }));
 
         return new UserDevRuntimeDefinition(
                 spec,
