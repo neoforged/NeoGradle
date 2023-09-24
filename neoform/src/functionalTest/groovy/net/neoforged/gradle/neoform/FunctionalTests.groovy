@@ -28,11 +28,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)
-            it.settings("""
-            plugins {
-                id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
-            }
-            """)
+            it.withToolchains()
         }
 
         when:
@@ -73,11 +69,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.settings("""
-            plugins {
-                id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
-            }
-            """)
+            it.withToolchains()
         }
 
         when:
@@ -113,11 +105,8 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.settings("""
-            plugins {
-                id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
-            }
-            """)
+            it.withToolchains()
+
 
             it.enableLocalBuildCache()
         }
