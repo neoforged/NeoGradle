@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.util;
 
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.gradle.api.Project;
 
 import java.io.File;

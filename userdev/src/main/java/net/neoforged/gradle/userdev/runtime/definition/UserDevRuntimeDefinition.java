@@ -1,6 +1,6 @@
 package net.neoforged.gradle.userdev.runtime.definition;
 
-import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
+import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
@@ -42,7 +42,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
         this.additionalUserDevDependencies.getDependencies().add(
                 this.getSpecification().getProject().getDependencies().create(
-                        ClientExtraJarDependencyManager.generateCoordinateFor(this.getSpecification().getMinecraftVersion())
+                        ExtraJarDependencyManager.generateClientCoordinateFor(this.getSpecification().getMinecraftVersion())
                 )
         );
 

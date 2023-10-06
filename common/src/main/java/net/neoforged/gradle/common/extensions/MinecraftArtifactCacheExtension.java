@@ -15,7 +15,6 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.HashFunction;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Project;
@@ -42,28 +41,25 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     private static final class TaskKey{
         private final Project project;
         private final String gameVersion;
+        private final DistributionType type;
 
-        private TaskKey(Project project, String gameVersion) {
+        private TaskKey(Project project, String gameVersion, DistributionType type) {
             this.project = project;
             this.gameVersion = gameVersion;
+            this.type = type;
         }
-
+        
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof TaskKey)) return false;
-
+            if (o == null || getClass() != o.getClass()) return false;
             TaskKey taskKey = (TaskKey) o;
-
-            if (!Objects.equals(project, taskKey.project)) return false;
-            return Objects.equals(gameVersion, taskKey.gameVersion);
+            return Objects.equals(project, taskKey.project) && Objects.equals(gameVersion, taskKey.gameVersion) && type == taskKey.type;
         }
-
+        
         @Override
         public int hashCode() {
-            int result = project != null ? project.hashCode() : 0;
-            result = 31 * result + (gameVersion != null ? gameVersion.hashCode() : 0);
-            return result;
+            return Objects.hash(project, gameVersion, type);
         }
     }
     private final Map<TaskKey, Map<GameArtifact, TaskProvider<? extends WithOutput>>> tasks = new ConcurrentHashMap<>();
@@ -115,7 +111,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, String gameVersion, final DistributionType side) {
         gameVersion = resolveVersion(gameVersion);
 
-        final TaskKey key = new TaskKey(project, gameVersion);
+        final TaskKey key = new TaskKey(project, gameVersion, side);
 
         final String finalGameVersion = gameVersion;
 

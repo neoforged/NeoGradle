@@ -16,4 +16,5 @@ dependencies {
     api project(':vanilla')
     api project(':neoform')
     api project(':userdev')
+    api project(':dsl-platform')
 }

@@ -82,7 +82,12 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 final String previous = i == 0 ? null : values.get(i - 1)
 
                 final List<String> substituted = ((Execute) this).interpolateVariableSubstitution(value, previous)
-                interpolated.addAll(substituted)
+
+                if (substituted.isEmpty()) {
+                    interpolated.removeAt(interpolated.size() - 1);
+                } else {
+                    interpolated.addAll(substituted)
+                }
             }
 
             return interpolated

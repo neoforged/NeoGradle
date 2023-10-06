@@ -35,12 +35,16 @@ import java.util.zip.ZipOutputStream;
 public abstract class RecompileSourceJar extends JavaCompile implements Runtime {
 
     private Property<JavaLanguageVersion> javaVersion;
+    private Provider<JavaToolchainService> javaToolchainService;
 
     public RecompileSourceJar() {
         super();
 
         this.javaVersion = getProject().getObjects().property(JavaLanguageVersion.class);
-
+        
+        final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
+        this.javaToolchainService = getProviderFactory().provider(() -> service);
+        
         getRuntimeName().orElse("unknown");
         getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
         getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
@@ -48,13 +52,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProject().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))));
+        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))));
         getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().map(d::file)));
 
         getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
             if (!getJavaVersion().isPresent()) {
-                return toolChain.launcherFor(new CurrentJvmToolchainSpec(getProject().getObjects()));
+                return toolChain.launcherFor(new CurrentJvmToolchainSpec(getObjectFactory()));
             }
 
             return toolChain.launcherFor(spec -> spec.getLanguageVersion().set(getJavaVersion()));
@@ -72,7 +76,6 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().getHeaderOutputDirectory().convention(getOutputDirectory().map(directory -> directory.dir("generated/sources/headers")));
 
         final JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
-        final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
 
         getModularity().getInferModulePath().convention(javaPluginExtension.getModularity().getInferModulePath());
         getJavaCompiler().convention(getJavaVersion().flatMap(javaVersion -> service.compilerFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(javaVersion))));
@@ -99,7 +102,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
                     //Add the compiled output.
                     RecompileSourceJar.this.getDestinationDirectory().getAsFileTree().visit(zipBuildingFileTreeVisitor);
                     //Add the original resources.
-                    RecompileSourceJar.this.getProject().zipTree(RecompileSourceJar.this.getInputJar()).matching(filter -> filter.exclude("**/*.java")).visit(zipBuildingFileTreeVisitor);
+                    RecompileSourceJar.this.getArchiveOperations().zipTree(RecompileSourceJar.this.getInputJar()).matching(filter -> filter.exclude("**/*.java")).visit(zipBuildingFileTreeVisitor);
                     outputZipStream.close();
                     fileOutputStream.close();
                 } catch (IOException e) {
@@ -119,7 +122,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     @Internal
     public final Provider<JavaToolchainService> getJavaToolChain() {
-        return getProject().provider(() -> getProject().getExtensions().getByType(JavaToolchainService.class));
+        return javaToolchainService;
     }
 
     @Nested

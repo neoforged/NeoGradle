@@ -2,7 +2,7 @@ package net.neoforged.gradle.userdev.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.DistributionType;

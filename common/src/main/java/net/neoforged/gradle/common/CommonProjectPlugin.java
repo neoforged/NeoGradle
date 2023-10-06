@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common;
 
-import net.neoforged.gradle.common.dependency.ClientExtraJarDependencyManager;
+import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
 import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
@@ -61,7 +61,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
-        project.getExtensions().create("clientExtraJarDependencyManager", ClientExtraJarDependencyManager.class, project);
+        project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
 

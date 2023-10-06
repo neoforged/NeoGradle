@@ -1,7 +1,7 @@
 package net.neoforged.gradle.userdev.dependency;
 
 import com.google.common.collect.Sets;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;

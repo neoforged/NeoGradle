@@ -3,7 +3,7 @@ package net.neoforged.gradle.common.runtime.tasks;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;

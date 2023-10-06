@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.runs.run;
 
-import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runs.run.RunDependency;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;

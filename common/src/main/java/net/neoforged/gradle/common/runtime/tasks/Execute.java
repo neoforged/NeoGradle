@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
@@ -36,7 +36,7 @@ public abstract class Execute extends DefaultRuntime implements net.neoforged.gr
         )));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
-        getMultiRuntimeArguments().convention(new HashMap<>());
+        getMultiRuntimeArguments().convention(getMultiArguments());
     }
 
     @TaskAction

@@ -25,6 +25,7 @@ subProject 'dsl-common'
 subProject 'dsl-neoform'
 subProject 'dsl-vanilla'
 subProject 'dsl-userdev'
+subProject 'dsl-platform'
 
 void subProject(final String name) {
     include name

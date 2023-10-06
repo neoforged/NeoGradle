@@ -2,7 +2,7 @@ package net.neoforged.gradle.neoform.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
@@ -33,6 +33,10 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
 
     public String getMinecraftVersion() {
         return getNeoFormArtifact().getVersion().substring(0, getNeoFormArtifact().getVersion().lastIndexOf("-"));
+    }
+    
+    public String getNeoFormVersion() {
+        return getNeoFormArtifact().getVersion().substring(getNeoFormArtifact().getVersion().lastIndexOf("-") + 1);
     }
 
     @Override

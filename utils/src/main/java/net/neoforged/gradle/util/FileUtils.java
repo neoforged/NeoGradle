@@ -282,4 +282,13 @@ public final class FileUtils {
             Files.deleteIfExists(file);
         }
     }
+    
+    public static String postFixClassifier(final File file, final String classifier) {
+        final String name = file.getName();
+        final int dotIndex = name.lastIndexOf('.');
+        if (dotIndex == -1) {
+            return name + "-" + classifier;
+        }
+        return name.substring(0, dotIndex) + "-" + classifier + name.substring(dotIndex);
+    }
 }

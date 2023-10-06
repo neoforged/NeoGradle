@@ -2,8 +2,8 @@ package net.neoforged.gradle.common.extensions;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.ArtifactDownloader;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
