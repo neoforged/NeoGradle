@@ -32,6 +32,16 @@ interface NamingChannel extends BaseDSLElement<NamingChannel> {
     Property<ApplyMappingsToSourceJarTaskBuilder> getApplySourceMappingsTaskBuilder();
 
     /**
+     * The builder which can construct a new task provider for a compiled jar mapping.
+     * Every time this is invoked the builder needs to produce a new task.
+     * However, the builder is allowed to reuse an old task if the inputs match.
+     *
+     * @return The builder property.
+     */
+    @DSLProperty
+    Property<ApplyMappingsToCompiledJarTaskBuilder> getApplyCompiledMappingsTaskBuilder();
+
+    /**
      * @return Indicates if the user has accepted this mappings license.
      */
     @DSLProperty

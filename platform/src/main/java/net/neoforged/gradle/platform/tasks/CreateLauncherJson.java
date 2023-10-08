@@ -5,7 +5,7 @@ import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.dsl.platform.model.LauncherProfile;
-import net.neoforged.gradle.platform.util.ProfileFiller;
+import net.neoforged.gradle.dsl.platform.util.LibraryCollector;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
@@ -32,14 +32,16 @@ public abstract class CreateLauncherJson extends DefaultRuntime implements WithO
         
         clone.getLibraries().addAll(
                 getProviderFactory().provider(() -> {
-                    final ProfileFiller profileFiller = new ProfileFiller(getObjectFactory());
+                    final LibraryCollector profileFiller = new LibraryCollector(getObjectFactory());
                     getLibraries().getAsFileTree().visit(profileFiller);
                     return profileFiller.getLibraries();
                 })
         );
         
+        final String json = gson.toJson(clone);
+        
         try {
-            Files.write(output.toPath(), gson.toJson(clone).getBytes());
+            Files.write(output.toPath(), json.getBytes());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

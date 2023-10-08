@@ -24,6 +24,19 @@ abstract class WithRules<TSelf extends WithRules<TSelf>> implements Configurable
     @DSLProperty
     abstract ListProperty<Rule> getRules();
 
+    @Override
+    int hashCode() {
+        return Objects.hash(getRules());
+    }
+
+    @Override
+    boolean equals(Object obj) {
+        if (obj === this) return true;
+        if (!(obj instanceof WithRules)) return false;
+        final WithRules other = (WithRules) obj;
+        return Objects.equals(getRules(), other.getRules());
+    }
+
     abstract static class Serializer<TResult extends WithRules<TResult>> implements JsonSerializer<TResult>, JsonDeserializer<TResult> {
 
         protected final ObjectFactory factory;

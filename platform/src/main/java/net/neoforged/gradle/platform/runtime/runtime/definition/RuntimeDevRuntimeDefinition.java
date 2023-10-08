@@ -21,27 +21,15 @@ import java.util.Map;
  */
 //TODO: Create DSL for runtime
 public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<RuntimeDevRuntimeSpecification> implements IDelegatingRuntimeDefinition<RuntimeDevRuntimeSpecification> {
-    private final NeoFormRuntimeDefinition clientNeoFormRuntimeDefinition;
-    private final NeoFormRuntimeDefinition serverNeoFormRuntimeDefinition;
     private final NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition;
     
-    public RuntimeDevRuntimeDefinition(@NotNull RuntimeDevRuntimeSpecification specification, NeoFormRuntimeDefinition clientNeoFormRuntimeDefinition, NeoFormRuntimeDefinition serverNeoFormRuntimeDefinition, NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider) {
+    public RuntimeDevRuntimeDefinition(@NotNull RuntimeDevRuntimeSpecification specification, NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider) {
         super(specification, joinedNeoFormRuntimeDefinition.getTasks(), sourcesProvider, joinedNeoFormRuntimeDefinition.getRawJarTask(), joinedNeoFormRuntimeDefinition.getGameArtifactProvidingTasks(), joinedNeoFormRuntimeDefinition.getMinecraftDependenciesConfiguration(), joinedNeoFormRuntimeDefinition::configureAssociatedTask);
-        this.clientNeoFormRuntimeDefinition = clientNeoFormRuntimeDefinition;
-        this.serverNeoFormRuntimeDefinition = serverNeoFormRuntimeDefinition;
         this.joinedNeoFormRuntimeDefinition = joinedNeoFormRuntimeDefinition;
     }
     
     public NeoFormRuntimeDefinition getJoinedNeoFormRuntimeDefinition() {
         return joinedNeoFormRuntimeDefinition;
-    }
-    
-    public NeoFormRuntimeDefinition getClientNeoFormRuntimeDefinition() {
-        return clientNeoFormRuntimeDefinition;
-    }
-    
-    public NeoFormRuntimeDefinition getServerNeoFormRuntimeDefinition() {
-        return serverNeoFormRuntimeDefinition;
     }
     
     @Override

@@ -18,6 +18,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 import java.io.File;
+import java.util.List;
 
 @CacheableTask
 public abstract class ApplyOfficialMappingsToCompiledJar extends Execute implements WithOutput {
@@ -26,7 +27,13 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
         super();
 
         getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.FART));
-        getProgramArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_PROGRAMM_ARGS));
+        getProgramArguments().set(getShouldReverseMappings().map(shouldReverse -> {
+            final List<String> result = Lists.newArrayList(RenameConstants.DEFAULT_PROGRAMM_ARGS);
+            if (shouldReverse) {
+                result.add("--reverse");
+            }
+            return result;
+        }));
         getJvmArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_JVM_ARGS));
         getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
 
@@ -35,6 +42,8 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
         getArguments().put("libraries", getLibraries().getAsFile().map(File::getAbsolutePath));
 
         getOutput().convention(getOutputDirectory().map(d -> d.file("output.jar")));
+        
+        getShouldReverseMappings().convention(true);
     }
 
     @Override
@@ -56,4 +65,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getLibraries();
+    
+    @Input
+    public abstract Property<Boolean> getShouldReverseMappings();
 }

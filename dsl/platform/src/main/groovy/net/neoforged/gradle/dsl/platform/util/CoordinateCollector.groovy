@@ -1,4 +1,4 @@
-package net.neoforged.gradle.dsl.platform.model
+package net.neoforged.gradle.dsl.platform.util
 
 import net.neoforged.gradle.dsl.platform.util.ModuleIdentificationVisitor
 import org.gradle.api.model.ObjectFactory

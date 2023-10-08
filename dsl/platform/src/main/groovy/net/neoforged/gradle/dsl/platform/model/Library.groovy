@@ -23,53 +23,25 @@ import java.lang.reflect.Type
 
 abstract class Library extends WithRules<Library> {
 
-    static Provider<Library> fromOutput(final TaskProvider<? extends WithOutput> producerTask, final Project project, final String classifier) {
+    static Provider<Library> fromOutput(final TaskProvider<? extends WithOutput> producerTask, final Project project, final String group, final String module, final String version, final String classifier) {
         return producerTask.map { task ->
             def result = project.getObjects().newInstance(Library.class)
             def download = project.getObjects().newInstance(LibraryDownload.class)
             def artifact = project.getObjects().newInstance(Artifact.class)
 
-            result.getName().set("${project.group}:${project.name}:${project.version}" + (classifier == '' ? '' : ':' + classifier))
+            result.getName().set("${group}:${module}:${version}" + (classifier == '' ? '' : ':' + classifier))
             result.getDownload().set(download)
 
             download.artifact.set(artifact)
 
-            artifact.path.set("${project.group.toString().replace('.', '/')}/${project.name}/${project.version}/${project.name}-${project.version}".toString() + (classifier == '' ? '' : '-' + classifier) + '.jar')
-            artifact.url.set(artifact.path.map { path ->
-                "https://maven.neoforged.net/releases/${path}"
-            })
+            artifact.path.set("${group.toString().replace('.', '/')}/${module}/${version}/${module}-${version}".toString() + (classifier == '' ? '' : '-' + classifier) + '.jar')
+            artifact.url.set(
+                "https://maven.neoforged.net/releases/${project.group.toString().replace('.', '/')}/${project.name}/${project.version}/${project.name}-${project.version.toString() + (classifier == '' ? '' : '-' + classifier)}" + '.jar'
+            )
             artifact.sha1.set(task.output.map { file ->
                 HashFunction.SHA1.hash(file.asFile)
             })
             artifact.size.set(task.output.map { file ->
-                file.asFile.length()
-            })
-
-            return result
-        }
-    }
-
-    static Provider<Library> fromJar(final TaskProvider<Jar> jarTask, final Project project) {
-        return jarTask.map { task ->
-            def result = project.getObjects().newInstance(Library.class)
-            def download = project.getObjects().newInstance(LibraryDownload.class)
-            def artifact = project.getObjects().newInstance(Artifact.class)
-
-            def classifier = task.archiveClassifier.get()
-
-            result.getName().set("${project.group}:${project.name}:${project.version}" + (classifier == '' ? '' : ':' + classifier))
-            result.getDownload().set(download)
-
-            download.artifact.set(artifact)
-
-            artifact.path.set("${project.group.toString().replace('.', '/')}/${project.name}/${project.version}/${project.name}-${project.version}".toString() + (classifier == '' ? '' : '-' + classifier) + '.jar')
-            artifact.url.set(artifact.path.map { path ->
-                "https://maven.neoforged.net/releases/${path}"
-            })
-            artifact.sha1.set(task.archiveFile.map { file ->
-                HashFunction.SHA1.hash(file.asFile)
-            })
-            artifact.size.set(task.archiveFile.map { file ->
                 file.asFile.length()
             })
 
@@ -86,6 +58,24 @@ abstract class Library extends WithRules<Library> {
     @DSLProperty
     @Optional
     abstract Property<LibraryDownload> getDownload();
+
+    @Override
+    int hashCode() {
+        def result = super.hashCode()
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0)
+        result = 31 * result + (getDownload() != null ? getDownload().hashCode() : 0)
+        return result
+    }
+
+    @Override
+    boolean equals(Object obj) {
+        if (obj === this) return true;
+        if (!(obj instanceof Library)) return false;
+        final Library other = (Library) obj;
+        return super.equals(obj) &&
+                (getName() != null ? getName() == other.getName() : other.getName() == null) &&
+                (getDownload() != null ? getDownload() == other.getDownload() : other.getDownload() == null);
+    }
 
     static class Serializer extends WithRules.Serializer<Library> {
 

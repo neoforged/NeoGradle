@@ -20,19 +20,12 @@ public final class RenameConstants {
      */
     public static final List<String> DEFAULT_PROGRAMM_ARGS = ImmutableList.<String>builder()
             .add(
-                    "--input",
-                    "{input}",
-                    "--output",
-                    "{output}",
-                    "--map",
-                    "{mappings}",
+                    "--input", "{input}",
+                    "--output", "{output}",
+                    "--names", "{mappings}",
                     "--cfg",
                     "{libraries}",
-                    "--ann-fix",
-                    "--ids-fix",
-                    "--src-fix",
-                    "--record-fix",
-                    "--reverse"
+                    "--ann-fix", "--ids-fix", "--src-fix", "--record-fix"
             ).build();
 
     /**

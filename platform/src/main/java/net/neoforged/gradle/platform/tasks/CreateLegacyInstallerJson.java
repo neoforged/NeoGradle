@@ -5,7 +5,7 @@ import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.dsl.platform.model.InstallerProfile;
-import net.neoforged.gradle.platform.util.ProfileFiller;
+import net.neoforged.gradle.dsl.platform.util.LibraryCollector;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
@@ -32,7 +32,7 @@ public abstract class CreateLegacyInstallerJson extends DefaultRuntime implement
         
         copy.getLibraries().addAll(
                 getProviderFactory().provider(() -> {
-                    final ProfileFiller profileFiller = new ProfileFiller(getObjectFactory());
+                    final LibraryCollector profileFiller = new LibraryCollector(getObjectFactory());
                     getLibraries().getAsFileTree().visit(profileFiller);
                     return profileFiller.getLibraries();
                 })

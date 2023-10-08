@@ -16,6 +16,8 @@ public abstract class WriteIMappingsFile extends DefaultRuntime implements WithO
 
     public WriteIMappingsFile() {
         super();
+        
+        getOutputFileName().set("mappings.txt");
     }
 
     @TaskAction

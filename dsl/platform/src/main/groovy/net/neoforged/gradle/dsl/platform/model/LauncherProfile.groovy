@@ -23,7 +23,7 @@ import static net.neoforged.gradle.dsl.common.util.PropertyUtils.*
 abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile> {
 
     static Gson createGson(ObjectFactory factory) {
-        final GsonBuilder builder = new GsonBuilder();
+        final GsonBuilder builder = new GsonBuilder().disableHtmlEscaping();
 
         builder.registerTypeHierarchyAdapter(LauncherProfile.class, new Serializer(factory))
         builder.registerTypeHierarchyAdapter(Arguments.class, new Arguments.Serializer(factory))
@@ -97,7 +97,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
     @Optional
     abstract Property<Integer> getComplianceLevel();
 
-    @Input
+    @Nested
     @DSLProperty
     @Optional
     abstract MapProperty<String, LibraryDownload> getDownloads();

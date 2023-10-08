@@ -10,6 +10,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.util.GameArtifact
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -27,29 +28,9 @@ class TaskBuildingContext {
     private final @NotNull Function<String, String> taskNameBuilder;
     private final @NotNull TaskProvider<? extends WithOutput> taskOutputToModify;
     private final @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks;
-    private final @NotNull Map<String, String> versionData;
+    private final @NotNull Provider<Map<String, String>> versionData;
     private final @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks;
     private final @Nullable Definition<? extends Specification> runtimeDefinition;
-    private final @Nullable TaskProvider<? extends WithOutput> librariesTask;
-
-    TaskBuildingContext(
-            @NotNull Project project,
-            @NotNull String environmentName,
-            @NotNull Function<String, String> taskNameBuilder,
-            @NotNull TaskProvider<? extends WithOutput> taskOutputToModify,
-            @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
-            @NotNull Map<String, String> versionData,
-            @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks) {
-        this.project = project;
-        this.environmentName = environmentName;
-        this.taskNameBuilder = taskNameBuilder;
-        this.taskOutputToModify = taskOutputToModify;
-        this.gameArtifactTasks = gameArtifactTasks;
-        this.versionData = versionData;
-        this.additionalRuntimeTasks = additionalRuntimeTasks;
-        this.runtimeDefinition = null;
-        this.librariesTask = null;
-    }
 
     TaskBuildingContext(
             @NotNull Project project,
@@ -60,15 +41,16 @@ class TaskBuildingContext {
             @NotNull Map<String, String> versionData,
             @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks,
             @Nullable Definition<? extends Specification> runtimeDefinition) {
-        this.project = project
-        this.environmentName = environmentName
-        this.taskNameBuilder = taskNameBuilder
-        this.taskOutputToModify = taskOutputToModify
-        this.gameArtifactTasks = gameArtifactTasks
-        this.versionData = versionData
-        this.additionalRuntimeTasks = additionalRuntimeTasks
-        this.runtimeDefinition = runtimeDefinition
-        this.librariesTask = runtimeDefinition.getListLibrariesTaskProvider();
+        this(
+                project,
+                environmentName,
+                taskNameBuilder,
+                taskOutputToModify,
+                gameArtifactTasks,
+                project.provider(() -> versionData),
+                additionalRuntimeTasks,
+                runtimeDefinition
+        )
     }
 
     TaskBuildingContext(
@@ -77,10 +59,9 @@ class TaskBuildingContext {
             @NotNull Function<String, String> taskNameBuilder,
             @NotNull TaskProvider<? extends WithOutput> taskOutputToModify,
             @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
-            @NotNull Map<String, String> versionData,
+            @NotNull Provider<Map<String, String>> versionData,
             @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks,
-            @Nullable Definition<? extends Specification> runtimeDefinition,
-            @NotNull TaskProvider<? extends WithOutput> librariesTask) {
+            @Nullable Definition<? extends Specification> runtimeDefinition) {
         this.project = project
         this.environmentName = environmentName
         this.taskNameBuilder = taskNameBuilder
@@ -89,7 +70,6 @@ class TaskBuildingContext {
         this.versionData = versionData
         this.additionalRuntimeTasks = additionalRuntimeTasks
         this.runtimeDefinition = runtimeDefinition
-        this.librariesTask = librariesTask
     }
 
     /**
@@ -220,7 +200,7 @@ class TaskBuildingContext {
      *
      * @return The user configured mappings version information.
      */
-    @NotNull Map<String, String> getMappingVersion() {
+    @NotNull Provider<Map<String, String>> getMappingVersion() {
         return versionData;
     }
 
@@ -250,6 +230,6 @@ class TaskBuildingContext {
      */
     @Nullable
     TaskProvider<? extends WithOutput> getLibrariesTask() {
-        return librariesTask
+        return runtimeDefinition.getListLibrariesTaskProvider()
     }
 }

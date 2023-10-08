@@ -14,10 +14,7 @@ import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.util.stream.Collectors;
@@ -26,25 +23,33 @@ public abstract class GenerateBinaryPatches extends Execute implements WithOutpu
     public GenerateBinaryPatches() {
         getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.BINPATCHER));
         getProgramArguments().addAll("--clean", "{clean}", "--create", "{dirty}", "--output", "{output}",
-                "--patches", "{patches}");
+                "--patches", "{patches}", "--srg", "{srg}");
         
         getDistributionType().convention(DistributionType.JOINED);
         getOutputFileName().convention("output.lzma");
         
         getArguments().put("clean", getClean().<String>map(clean -> clean.getAsFile().getAbsolutePath()));
         getArguments().put("dirty", getPatched().<String>map(patched -> patched.getAsFile().getAbsolutePath()));
+        getArguments().put("srg", getMappings().<String>map(mappings -> mappings.getAsFile().getAbsolutePath()));
         
         getMultiArguments().put("patches", getProject().provider(() -> getPatches().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toList())));
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getClean();
 
     @InputFile
+    @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getPatched();
 
     @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getPatches();
+    
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract RegularFileProperty getMappings();
 
     @Input
     @Optional

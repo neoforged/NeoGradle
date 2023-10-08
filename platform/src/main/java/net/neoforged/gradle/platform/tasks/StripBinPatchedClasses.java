@@ -43,8 +43,12 @@ public abstract class StripBinPatchedClasses extends DefaultRuntime implements W
             final FilteringZipBuildingFileTreeVisitor visitor = new FilteringZipBuildingFileTreeVisitor(
                     zipOutputStream,
                     details -> !cleanedDirectories.contains(details.getRelativePath().getPathString()),
-                    details -> !cleanedFiles.contains(details.getRelativePath().getPathString())
-            );
+                    details -> {
+                        return !cleanedFiles.contains(details.getRelativePath().getPathString().contains("$") ?
+                                                                  details.getRelativePath().getPathString().substring(0, details.getRelativePath().getPathString().indexOf("$")) + ".class" :
+                                                                  details.getRelativePath().getPathString()
+                        );
+                    });
             getArchiveOperations().zipTree(getCompiled().get().getAsFile()).getAsFileTree().visit(visitor);
         }
     }

@@ -73,18 +73,21 @@ public class RenameStep implements IStep {
             task.setGroup("mappings/official");
             task.setDescription("Unapplies the Official mappings and re-obfuscates a compiled jar");
             
-            if (context.getMappingVersion().containsKey(NamingConstants.Version.VERSION) || context.getMappingVersion().containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
-                task.getMinecraftVersion().convention(context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(context.getMappingVersion()), context.getProject())));
-            } else {
-                task.getMinecraftVersion().convention(context.getInputTask().map(t -> {
-                    try {
-                        return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
-                    } catch (MultipleDefinitionsFoundException e) {
-                        throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
-                    }
-                }));
-            }
-            
+            task.getMinecraftVersion()
+                    .set(context.getMappingVersion().flatMap(versionData -> {
+                        if (versionData.containsKey(NamingConstants.Version.VERSION) || versionData.containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
+                            return context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(versionData), context.getProject()));
+                        } else {
+                            return context.getInputTask().map(t -> {
+                                try {
+                                    return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
+                                } catch (MultipleDefinitionsFoundException e) {
+                                    throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
+                                }
+                            });
+                        }
+                    }));
+
             task.getInput().set(context.getInputTask().flatMap(WithOutput::getOutput));
             task.getOutput().set(context.getProject().getLayout().getBuildDirectory().dir("obfuscation/" + context.getInputTask().getName()).flatMap(directory -> directory.file(context.getInputTask().flatMap(WithOutput::getOutputFileName).orElse(context.getInputTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(File::getName)))));
             task.getLibraries().set(librariesTask.flatMap(WithOutput::getOutput));

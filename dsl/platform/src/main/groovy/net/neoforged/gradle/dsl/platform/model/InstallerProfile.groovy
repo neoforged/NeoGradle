@@ -8,17 +8,17 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import com.google.gson.reflect.TypeToken
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.ClosureEquivalent
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils
-import net.neoforged.gradle.dsl.common.util.PropertyUtils
+import net.neoforged.gradle.dsl.platform.util.CoordinateCollector
+import net.neoforged.gradle.dsl.platform.util.LibraryCollector
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -31,7 +31,8 @@ import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.lang.reflect.Type
-import java.util.function.Consumer
+import java.util.function.BiConsumer
+import java.util.function.BiFunction
 
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeBool
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeList
@@ -49,6 +50,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
 
     static Gson createGson(ObjectFactory factory) {
         return new Gson().newBuilder()
+                .disableHtmlEscaping()
                 .registerTypeHierarchyAdapter(InstallerProfile.class, new Serializer(factory))
                 .registerTypeHierarchyAdapter(Processor.class, new Processor.Serializer(factory))
                 .registerTypeHierarchyAdapter(DataFile.class, new DataFile.Serializer(factory))
@@ -158,9 +160,11 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
 
     @ClosureEquivalent
     void processor(Project project, Action<Processor> configurator) {
-        getProcessors().add(getObjectFactory().newInstance(Processor.class).configure(new Action<Processor>() {
+        final Processor processor = getObjectFactory().newInstance(Processor.class).configure(new Action<Processor>() {
             @Override
             void execute(Processor processor) {
+                configurator.execute(processor)
+
                 processor.getClasspath().set(processor.getJar().map(tool -> {
                     final Configuration detached = ConfigurationUtils.temporaryConfiguration(
                             project,
@@ -168,19 +172,35 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                     )
 
                     final CoordinateCollector filler = new CoordinateCollector(project.getObjects())
-                    detached.getAsFileTree().visit(filler)
+                    detached.getAsFileTree().visit filler
                     return filler.getCoordinates()
                 }))
-
-                configurator.execute(processor)
             }
-        }))
+        });
+
+        getProcessors().add(processor)
+
+        getLibraries().addAll project.providers.zip(
+                processor.getClasspath(), processor.getJar(), new BiFunction<Set<String>, String, Iterable<Library>>() {
+            @Override
+            Iterable<Library> apply(Set<String> classPath, String tool) {
+                final Set<String> dependencyCoordinates = new HashSet<>(classPath)
+                dependencyCoordinates.add(tool)
+
+                final Dependency[] dependencies = dependencyCoordinates.stream().map { coord -> project.getDependencies().create(coord) }.toArray(Dependency[]::new)
+                final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project, dependencies)
+
+                final LibraryCollector collector = new LibraryCollector(project.getObjects())
+                configuration.getAsFileTree().visit collector
+                return collector.getLibraries()
+            }
+        })
     }
 
     @Input
     @DSLProperty
     @Optional
-    abstract ListProperty<Library> getLibraries();
+    abstract SetProperty<Library> getLibraries();
 
     @Input
     @DSLProperty
@@ -218,7 +238,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
             deserializeBool(instance.getShouldHideExtract(), payload, "hideExtract")
             deserializeMap(instance.getData(), payload, "data", DataFile.class, jsonDeserializationContext)
             deserializeList(instance.getProcessors(), payload, "processors", Processor.class, jsonDeserializationContext)
-            deserializeList(instance.getLibraries(), payload, "libraries", Library.class, jsonDeserializationContext)
+            deserializeSet(instance.getLibraries(), payload, "libraries", Library.class, jsonDeserializationContext)
             deserializeString(instance.getServerJarPath(), payload, "serverJarPath")
 
             return instance
@@ -244,7 +264,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
             serializeBool(installerProfile.getShouldHideExtract(), object, "hideExtract")
             serializeMap(installerProfile.getData(), object, "data", jsonSerializationContext)
             serializeList(installerProfile.getProcessors(), object, "processors", jsonSerializationContext)
-            serializeList(installerProfile.getLibraries(), object, "libraries", jsonSerializationContext)
+            serializeSet(installerProfile.getLibraries(), object, "libraries", jsonSerializationContext)
             serializeString(installerProfile.getServerJarPath(), object, "serverJarPath")
 
             return object

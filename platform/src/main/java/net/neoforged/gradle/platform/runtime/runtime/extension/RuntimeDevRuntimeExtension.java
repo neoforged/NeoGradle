@@ -37,23 +37,6 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
         
         final File workingDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("platform/%s", spec.getIdentifier())).get().getAsFile();
         
-        
-        final NeoFormRuntimeDefinition clientNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormArtifact(neoFormArtifact)
-                    .withDistributionType(DistributionType.CLIENT)
-                    .withAdditionalDependencies(spec.getAdditionalDependencies());
-            
-            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
-        });
-        
-        final NeoFormRuntimeDefinition serverNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormArtifact(neoFormArtifact)
-                    .withDistributionType(DistributionType.SERVER)
-                    .withAdditionalDependencies(spec.getAdditionalDependencies());
-            
-            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(spec.getProject(), builder);
-        });
-        
         final NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
             builder.withNeoFormArtifact(neoFormArtifact)
                     .withDistributionType(DistributionType.JOINED)
@@ -78,8 +61,6 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
         
         return new RuntimeDevRuntimeDefinition(
                 spec,
-                clientNeoFormRuntimeDefinition,
-                serverNeoFormRuntimeDefinition,
                 joinedNeoFormRuntimeDefinition,
                 sourcesProvider
         );

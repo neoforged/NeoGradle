@@ -42,6 +42,11 @@ public class ArtifactPathsCollector extends ModuleIdentificationVisitor {
     
     @Override
     public String toString() {
-        return builder.toString();
+        final String result = builder.toString();
+        if (result.endsWith(separator)) {
+            return result.substring(0, result.length() - separator.length());
+        } else {
+            return result;
+        }
     }
 }
