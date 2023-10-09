@@ -1,5 +1,6 @@
 package net.neoforged.gradle.dsl.platform.util
 
+import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.platform.model.Artifact
 import net.neoforged.gradle.dsl.platform.model.Library
 import net.neoforged.gradle.dsl.platform.model.LibraryDownload
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.Nullable
 
 import java.nio.file.Files
 
+@CompileStatic
 class LibraryCollector extends ModuleIdentificationVisitor {
 
     private final ObjectFactory objectFactory;

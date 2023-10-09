@@ -4,9 +4,8 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
-import net.minecraftforge.gdi.annotations.DefaultMethods
 import net.minecraftforge.gdi.annotations.ProjectGetter
-import net.neoforged.gradle.dsl.common.runs.type.Type
+import net.neoforged.gradle.dsl.common.runs.type.RunType
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
@@ -226,7 +225,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @param type The type to use to configure the run.
      */
-    abstract void configure(@NotNull final Type type);
+    abstract void configure(@NotNull final RunType type);
 
     /**
      * Configures the run using the given type provider.
@@ -234,7 +233,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @param typeProvider The type provider to realise and configure with.
      */
-    void configure(@NotNull final Provider<Type> typeProvider);
+    void configure(@NotNull final Provider<RunType> typeProvider);
 
     /**
      * Configures the run to execute the given tasks before running the run.

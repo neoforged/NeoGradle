@@ -7,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
@@ -17,6 +18,7 @@ import org.gradle.api.tasks.Optional
 
 import java.lang.reflect.Type
 
+@CompileStatic
 abstract class OsCondition implements ConfigurableDSLElement<OsCondition> {
 
     @Input
@@ -34,6 +36,7 @@ abstract class OsCondition implements ConfigurableDSLElement<OsCondition> {
     @Optional
     abstract Property<String> getVersion();
 
+    @CompileStatic
     static class Serializer implements JsonSerializer<OsCondition>, JsonDeserializer<OsCondition> {
 
         private final ObjectFactory factory;

@@ -24,13 +24,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.neoforged.gradle.dsl.common.configuration.VersionedConfiguration;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
-import net.neoforged.gradle.dsl.common.runs.type.Type;
+import net.neoforged.gradle.dsl.common.runs.type.RunType;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Deprecated
 @SuppressWarnings({"unused", "FieldMayBeFinal", "FieldCanBeLocal"}) //This is a configuration specification class, stuff is defined here with defaults.
 public class UserDevConfigurationSpecV1 extends VersionedConfiguration {
 
@@ -52,7 +53,7 @@ public class UserDevConfigurationSpecV1 extends VersionedConfiguration {
     private List<String> libraries = Lists.newArrayList();
     @Nullable
     private String inject;
-    private Map<String, Type> runs = Maps.newHashMap();
+    private Map<String, RunType> runs = Maps.newHashMap();
     private String sourceCompatibility = "1.8";
     private String targetCompatibility = "1.8";
 
@@ -153,7 +154,7 @@ public class UserDevConfigurationSpecV1 extends VersionedConfiguration {
     /**
      * {@return The map of run configuration specifications that this configuration defines.}
      */
-    public Map<String, Type> getRunTypes() {
+    public Map<String, RunType> getRunTypes() {
         return runs;
     }
 

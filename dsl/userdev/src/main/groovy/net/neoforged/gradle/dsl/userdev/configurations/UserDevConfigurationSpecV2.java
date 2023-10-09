@@ -27,6 +27,10 @@ import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfiguration
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+/**
+ * @deprecated This class is only used to read them, not to write them, which already uses its replacement
+ */
+@Deprecated()
 @SuppressWarnings({"unused", "FieldMayBeFinal", "FieldCanBeLocal"}) //This is a configuration specification class, stuff is defined here with defaults.
 public class UserDevConfigurationSpecV2 extends UserDevConfigurationSpecV1 {
 

@@ -7,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
@@ -34,6 +35,7 @@ abstract class FileReference<TSelf extends FileReference<TSelf>> implements Conf
     @Optional
     abstract Property<String> getUrl();
 
+    @CompileStatic
     abstract static class Serializer<TResult extends FileReference<TResult>> implements JsonSerializer<TResult>, JsonDeserializer<TResult> {
 
         private final ObjectFactory factory

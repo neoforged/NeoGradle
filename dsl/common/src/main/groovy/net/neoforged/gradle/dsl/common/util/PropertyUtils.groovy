@@ -221,6 +221,7 @@ class PropertyUtils {
         )
     }
 
+
     static <T> void deserializeNamedMap(final MapProperty<String, T> property, JsonObject object, String key, Type valueType, JsonDeserializationContext context, Function<T, Property<String>> nameExtractor) {
         deserializeMap(
                 property,
@@ -241,6 +242,15 @@ class PropertyUtils {
         if (property.isPresent()) {
             object.add(key, writer.apply(property.get()))
         }
+    }
+
+    static <T> void serialize(final Property<T> property, JsonObject object, String key, JsonSerializationContext context) {
+        serialize(property, object, key, new Function<T, JsonElement>() {
+            @Override
+            JsonElement apply(T t) {
+                return context.serialize(t)
+            }
+        })
     }
 
     static <T> void serialize(final ListProperty<T> property, JsonObject object, String key, Function<List<T>, JsonElement> writer) {

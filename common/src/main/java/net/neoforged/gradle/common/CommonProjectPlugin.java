@@ -7,7 +7,7 @@ import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyR
 import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
-import net.neoforged.gradle.common.runs.type.TypeImpl;
+import net.neoforged.gradle.common.runs.type.RunTypeImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
@@ -20,7 +20,7 @@ import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.common.runs.type.Type;
+import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.GradleInternalUtils;
 import net.neoforged.gradle.util.UrlConstants;
@@ -93,7 +93,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().add(
                 RunsConstants.Extensions.RUN_TYPES,
-                project.getObjects().domainObjectContainer(Type.class, name -> project.getObjects().newInstance(TypeImpl.class, project, name))
+                project.getObjects().domainObjectContainer(RunType.class, name -> project.getObjects().newInstance(RunTypeImpl.class, project, name))
         );
         
         project.getExtensions().add(

@@ -207,6 +207,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     @Optional
     abstract Property<String> getServerJarPath();
 
+    @CompileStatic
     static class Serializer implements JsonSerializer<InstallerProfile>, JsonDeserializer<InstallerProfile> {
 
         private final ObjectFactory factory
@@ -271,6 +272,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         }
     }
 
+    @CompileStatic
     abstract static class Processor implements ConfigurableDSLElement<Processor> {
         @Input
         @DSLProperty
@@ -309,6 +311,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         @Optional
         abstract MapProperty<String, String> getOutputs();
 
+        @CompileStatic
         static class Serializer implements JsonSerializer<Processor>, JsonDeserializer<Processor> {
 
             private final ObjectFactory factory
@@ -349,6 +352,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         }
     }
 
+    @CompileStatic
     abstract static class DataFile implements ConfigurableDSLElement<DataFile> {
         @Input
         @DSLProperty
@@ -360,6 +364,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         @Optional
         abstract Property<String> getServer()
 
+        @CompileStatic
         static class Serializer implements JsonSerializer<DataFile>, JsonDeserializer<DataFile> {
 
             private final ObjectFactory factory

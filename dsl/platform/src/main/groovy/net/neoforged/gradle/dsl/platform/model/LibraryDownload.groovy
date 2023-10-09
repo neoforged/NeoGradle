@@ -7,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
@@ -17,6 +18,7 @@ import org.gradle.api.tasks.Optional
 
 import java.lang.reflect.Type
 
+@CompileStatic
 abstract class LibraryDownload implements ConfigurableDSLElement<LibraryDownload> {
 
     @Nested
@@ -24,6 +26,7 @@ abstract class LibraryDownload implements ConfigurableDSLElement<LibraryDownload
     @Optional
     abstract Property<Artifact> getArtifact();
 
+    @CompileStatic
     static class Serializer implements JsonSerializer<LibraryDownload>, JsonDeserializer<LibraryDownload> {
 
         private final ObjectFactory factory;

@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
+import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
 import org.gradle.api.model.ObjectFactory
@@ -21,6 +22,7 @@ abstract class Artifact extends FileReference<Artifact> {
     @Optional
     abstract Property<String> getPath();
 
+    @CompileStatic
     static class Serializer extends FileReference.Serializer<Artifact> {
 
         Serializer(ObjectFactory factory) {

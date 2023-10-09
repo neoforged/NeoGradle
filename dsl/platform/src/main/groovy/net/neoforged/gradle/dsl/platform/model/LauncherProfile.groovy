@@ -117,6 +117,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
     @Optional
     abstract Property<LoggingConfiguration> getLoggingConfiguration();
 
+    @CompileStatic
     static class Serializer implements JsonSerializer<LauncherProfile>, JsonDeserializer<LauncherProfile> {
 
         private final ObjectFactory factory;
@@ -174,6 +175,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         }
     }
 
+    @CompileStatic
     abstract static class Arguments implements ConfigurableDSLElement<Arguments> {
 
         @Inject
@@ -217,6 +219,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
             return argument;
         }
 
+        @CompileStatic
         static class Serializer implements JsonSerializer<Arguments>, JsonDeserializer<Arguments> {
 
             private final ObjectFactory factory
@@ -251,7 +254,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         }
     }
 
-
+    @CompileStatic
     abstract static class Argument extends WithRules<Argument> {
 
         @Input
@@ -259,6 +262,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         @Optional
         abstract Property<String> getValue();
 
+        @CompileStatic
         static class Serializer extends WithRules.Serializer<Argument> {
 
             Serializer(ObjectFactory factory) {
@@ -296,6 +300,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
 
     }
 
+    @CompileStatic
     abstract static class AssetIndex extends FileReference<AssetIndex> {
 
         @Input
@@ -308,6 +313,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         @Optional
         abstract Property<Integer> getTotalSize();
 
+        @CompileStatic
         static class Serializer extends FileReference.Serializer<AssetIndex> {
 
             Serializer(ObjectFactory factory) {
@@ -336,8 +342,10 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         }
     }
 
+    @CompileStatic
     abstract static class Download extends FileReference<Download> {
 
+        @CompileStatic
         static class Serializer extends FileReference.Serializer<Download> {
 
             Serializer(ObjectFactory factory) {
@@ -346,7 +354,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         }
     }
 
-
+    @CompileStatic
     abstract static class NamedFile extends FileReference<NamedFile> implements ConfigurableDSLElement<NamedFile> {
 
         @Input
@@ -354,6 +362,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         @Optional
         abstract Property<String> getId();
 
+        @CompileStatic
         static class Serializer extends FileReference.Serializer<NamedFile> {
 
             Serializer(ObjectFactory factory) {
@@ -380,6 +389,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         }
     }
 
+    @CompileStatic
     abstract static class JavaVersion implements ConfigurableDSLElement<JavaVersion> {
 
         @Input
@@ -392,6 +402,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         @Optional
         abstract Property<Integer> getMajorVersion();
 
+        @CompileStatic
         static class Serializer implements JsonSerializer<JavaVersion>, JsonDeserializer<JavaVersion> {
 
             private final ObjectFactory factory;
@@ -426,6 +437,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         }
     }
 
+    @CompileStatic
     abstract static class LoggingConfiguration implements ConfigurableDSLElement<LoggingConfiguration> {
 
         @Input
@@ -443,6 +455,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         @Optional
         abstract Property<String> getType();
 
+        @CompileStatic
         static class Serializer implements JsonSerializer<LoggingConfiguration>, JsonDeserializer<LoggingConfiguration> {
 
             private final ObjectFactory factory;

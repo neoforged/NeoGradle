@@ -16,12 +16,13 @@ import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.common.runs.type.Type;
+import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.dsl.platform.model.*;
+import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
 import net.neoforged.gradle.neoform.naming.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -52,7 +53,6 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
-import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -269,7 +269,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 clientExtraConfiguration
         );
         
-        project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<Type>>) types -> types.all(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
+        project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> types.all(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.all(run -> configureRun(project, run, runtimeDefinition)));
         
         final LauncherProfile launcherProfile = project.getExtensions().create(LauncherProfile.class, "launcherProfile", LauncherProfile.class);
@@ -638,6 +638,67 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             task.dependsOn(installerJar);
         });
+        
+        final UserdevProfile userdevProfile = project.getExtensions().create("userdevProfile", UserdevProfile.class);
+        //Note the following runtypes are for now hardcoded, in the future they should be pulled from the runtime definition
+        userdevProfile.runType(
+                "client", type -> {
+                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
+                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+                    
+                    type.client();
+                    type.gameTest();
+                    
+                    type.argument("--launchTarget");
+                    type.argument("forgeclientuserdev");
+                    type.argument("--version");
+                    type.argument(project.getVersion().toString());
+                    type.argument("--assetIndex");
+                    type.argument("{asset_index}");
+                    type.argument("--assetsDir");
+                    type.argument("{assets_root}");
+                }
+        );
+        userdevProfile.runType(
+                "server", type -> {
+                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
+                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+
+                    type.server();
+                    
+                    type.argument("--launchTarget");
+                    type.argument("forgeserveruserdev");
+                }
+        );
+        
+        userdevProfile.runType(
+                "gameTestServer", type -> {
+                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
+                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+
+                    type.server();
+                    type.gameTest();
+                    
+                    type.argument("--launchTarget");
+                    type.argument("forgegametestserveruserdev");
+                }
+        );
+        
+        userdevProfile.runType(
+                "data", type -> {
+                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
+                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+
+                    type.dataGenerator();
+                    
+                    type.argument("--launchTarget");
+                    type.argument("forgedatauserdev");
+                    type.argument("--assetIndex");
+                    type.argument("{asset_index}");
+                    type.argument("--assetsDir");
+                    type.argument("{assets_root}");
+                }
+        );
     }
     
     private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {
@@ -664,33 +725,33 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         return projectSetup;
     }
     
-    private void configureRunType(final Project project, final Type type, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration, RuntimeDevRuntimeDefinition runtimeDefinition) {
+    private void configureRunType(final Project project, final RunType runType, final Configuration moduleOnlyConfiguration, final Configuration gameLayerLibraryConfiguration, final Configuration pluginLayerLibraryConfiguration, RuntimeDevRuntimeDefinition runtimeDefinition) {
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
         
         final Configuration runtimeClasspath = project.getConfigurations().getByName(mainSourceSet.getRuntimeClasspathConfigurationName());
         
-        type.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
+        runType.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
         
-        type.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
-        type.getJvmArguments().addAll("-p", moduleOnlyConfiguration.getAsPath());
+        runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
+        runType.getJvmArguments().addAll("-p", moduleOnlyConfiguration.getAsPath());
         
-        type.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
-        type.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
-        type.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
-        type.getSystemProperties().put("fml.gameLayerLibraries", collectFileNames(gameLayerLibraryConfiguration, project));
-        type.getSystemProperties().put("legacyClassPath", project.getConfigurations().getByName("runtimeClasspath").getAsPath());
-        type.getJvmArguments().addAll("--add-modules", "ALL-MODULE-PATH");
-        type.getJvmArguments().addAll("--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler");
-        type.getJvmArguments().addAll("--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler");
-        type.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
-        type.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
+        runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
+        runType.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
+        runType.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
+        runType.getSystemProperties().put("fml.gameLayerLibraries", collectFileNames(gameLayerLibraryConfiguration, project));
+        runType.getSystemProperties().put("legacyClassPath", project.getConfigurations().getByName("runtimeClasspath").getAsPath());
+        runType.getJvmArguments().addAll("--add-modules", "ALL-MODULE-PATH");
+        runType.getJvmArguments().addAll("--add-opens", "java.base/java.util.jar=cpw.mods.securejarhandler");
+        runType.getJvmArguments().addAll("--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler");
+        runType.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
+        runType.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
         
-        type.getEnvironmentVariables().put("FORGE_SPEC", project.getVersion().toString());
+        runType.getEnvironmentVariables().put("FORGE_SPEC", project.getVersion().toString());
         
-        type.getClasspath().from(runtimeClasspath);
+        runType.getClasspath().from(runtimeClasspath);
         
-        type.getRunAdapter().set(run -> {
+        runType.getRunAdapter().set(run -> {
             if (run.getIsClient().get()) {
                 run.getProgramArguments().addAll("--username", "Dev");
                 run.getProgramArguments().addAll("--version", project.getName());

@@ -7,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
@@ -17,6 +18,7 @@ import org.gradle.api.tasks.Optional
 
 import java.lang.reflect.Type
 
+@CompileStatic
 abstract class WithRules<TSelf extends WithRules<TSelf>> implements ConfigurableDSLElement<TSelf> {
 
     @Input
@@ -37,6 +39,7 @@ abstract class WithRules<TSelf extends WithRules<TSelf>> implements Configurable
         return Objects.equals(getRules(), other.getRules());
     }
 
+    @CompileStatic
     abstract static class Serializer<TResult extends WithRules<TResult>> implements JsonSerializer<TResult>, JsonDeserializer<TResult> {
 
         protected final ObjectFactory factory;

@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
+import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
@@ -21,6 +22,7 @@ import org.gradle.jvm.tasks.Jar
 
 import java.lang.reflect.Type
 
+@CompileStatic
 abstract class Library extends WithRules<Library> {
 
     static Provider<Library> fromOutput(final TaskProvider<? extends WithOutput> producerTask, final Project project, final String group, final String module, final String version, final String classifier) {
@@ -77,6 +79,7 @@ abstract class Library extends WithRules<Library> {
                 (getDownload() != null ? getDownload() == other.getDownload() : other.getDownload() == null);
     }
 
+    @CompileStatic
     static class Serializer extends WithRules.Serializer<Library> {
 
         Serializer(ObjectFactory factory) {

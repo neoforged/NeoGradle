@@ -6,7 +6,7 @@ import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.common.runs.type.Type;
+import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -21,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
@@ -126,7 +125,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @NotNull
     public final void configure(final String name) {
         ProjectUtils.afterEvaluate(getProject(), () -> {
-            project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<Type>>) types -> {
+            project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> {
                 if (types.getNames().contains(name)) {
                     configureInternally(types.getByName(name));
                 }
@@ -136,14 +135,14 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     @Override
     @NotNull
-    public final void configure(final Type type) {
+    public final void configure(final RunType runType) {
         ProjectUtils.afterEvaluate(getProject(), () -> {
-            configureInternally(type);
+            configureInternally(runType);
         });
     }
     
     @Override
-    public void configure(@NotNull Provider<Type> typeProvider) {
+    public void configure(@NotNull Provider<RunType> typeProvider) {
         configure(typeProvider.get());
     }
     
@@ -154,7 +153,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @NotNull
-    public void configureInternally(final Type spec) {
+    public void configureInternally(final RunType spec) {
         getEnvironmentVariables().putAll(spec.getEnvironmentVariables());
         getMainClass().convention(spec.getMainClass());
         getProgramArguments().addAll(spec.getArguments());
