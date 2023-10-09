@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
-import net.neoforged.gradle.common.runs.type.RunTypeImpl;
 import org.gradle.api.Project;
 
 import java.io.File;
@@ -19,7 +18,7 @@ public final class UserDevConfigurationSpecUtils {
 
     public static UserDevConfigurationSpecV2 get(final Project project, final File userDevConfigFile) {
         final Gson gson = new GsonBuilder()
-                .registerTypeAdapter(RunType.class, new RunTypeImpl.Serializer(project.getObjects()))
+                .registerTypeAdapter(RunType.class, new RunType.Serializer(project.getObjects()))
                 .create();
 
         try {

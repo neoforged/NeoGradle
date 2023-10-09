@@ -44,11 +44,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @DSLProperty
     abstract ListProperty<String> getAccessTransformerFiles()
 
-    accessTransformer(final String at) {
+    void accessTransformer(final String at) {
         getAccessTransformerFiles().add(at)
     }
 
-    accessTransformer(final Provider<String> at) {
+    void accessTransformer(final Provider<String> at) {
         getAccessTransformerFiles().add(at)
     }
 
@@ -56,11 +56,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @DSLProperty
     abstract ListProperty<String> getSideAnnotationStripperFiles()
 
-    sideAnnotationStripper(final String sas) {
+    void sideAnnotationStripper(final String sas) {
         getSideAnnotationStripperFiles().add(sas)
     }
 
-    sideAnnotationStripper(final Provider<String> sas) {
+    void sideAnnotationStripper(final Provider<String> sas) {
         getSideAnnotationStripperFiles().add(sas)
     }
 
@@ -92,11 +92,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @DSLProperty
     abstract ListProperty<String> getAdditionalDependencyArtifactCoordinates();
 
-    library(final String library) {
+    void library(final String library) {
         getAdditionalDependencyArtifactCoordinates().add(library)
     }
 
-    library(final Provider<String> library) {
+    void library(final Provider<String> library) {
         getAdditionalDependencyArtifactCoordinates().add(library)
     }
 
@@ -110,7 +110,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     abstract MapProperty<String, RunType> getRunTypes();
 
     @ClosureEquivalent
-    runType(final String name, Action<RunType> configurer) {
+    void runType(final String name, Action<RunType> configurer) {
         final RunType runType = objectFactory.newInstance(RunType.class, name)
         configurer.execute(runType)
         runTypes.put(name, runType)
@@ -120,11 +120,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @DSLProperty
     abstract ListProperty<String> getModules();
 
-    module(final String module) {
-        getModules().add(module)
-    }
-
-    module(final Provider<String> module) {
+    void module(final Provider<String> module) {
         getModules().add(module)
     }
 

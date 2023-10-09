@@ -31,14 +31,14 @@ abstract class Library extends WithRules<Library> {
             def download = project.getObjects().newInstance(LibraryDownload.class)
             def artifact = project.getObjects().newInstance(Artifact.class)
 
-            result.getName().set("${group}:${module}:${version}" + (classifier == '' ? '' : ':' + classifier))
+            result.getName().set(("${group}:${module}:${version}" + (classifier == '' ? '' : ':' + classifier)).toString())
             result.getDownload().set(download)
 
             download.artifact.set(artifact)
 
             artifact.path.set("${group.toString().replace('.', '/')}/${module}/${version}/${module}-${version}".toString() + (classifier == '' ? '' : '-' + classifier) + '.jar')
             artifact.url.set(
-                "https://maven.neoforged.net/releases/${project.group.toString().replace('.', '/')}/${project.name}/${project.version}/${project.name}-${project.version.toString() + (classifier == '' ? '' : '-' + classifier)}" + '.jar'
+                    ("https://maven.neoforged.net/releases/${project.group.toString().replace('.', '/')}/${project.name}/${project.version}/${project.name}-${project.version.toString() + (classifier == '' ? '' : '-' + classifier)}" + '.jar').toString()
             )
             artifact.sha1.set(task.output.map { file ->
                 HashFunction.SHA1.hash(file.asFile)

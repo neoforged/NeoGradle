@@ -7,7 +7,6 @@ import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyR
 import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
-import net.neoforged.gradle.common.runs.type.RunTypeImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
@@ -93,7 +92,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().add(
                 RunsConstants.Extensions.RUN_TYPES,
-                project.getObjects().domainObjectContainer(RunType.class, name -> project.getObjects().newInstance(RunTypeImpl.class, project, name))
+                project.getObjects().domainObjectContainer(RunType.class, name -> project.getObjects().newInstance(RunType.class, name))
         );
         
         project.getExtensions().add(

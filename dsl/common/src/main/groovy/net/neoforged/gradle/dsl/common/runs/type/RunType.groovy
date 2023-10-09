@@ -76,11 +76,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract ListProperty<String> getArguments();
 
-    argument(final String value) {
-        arguments.add(value)
-    }
-
-    argument(final Provider<String> value) {
+    void argument(final Provider<String> value) {
         arguments.add(value)
     }
 
@@ -100,7 +96,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract Property<Boolean> getIsClient();
 
-    client() {
+    void client() {
         isClient.set(true)
     }
 
@@ -112,7 +108,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract Property<Boolean> getIsServer();
 
-    server() {
+    void server() {
         getIsServer().set(true)
     }
 
@@ -124,7 +120,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract Property<Boolean> getIsDataGenerator();
 
-    dataGenerator() {
+    void dataGenerator() {
         getIsDataGenerator().set(true)
     }
 
@@ -136,9 +132,9 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract Property<Boolean> getIsGameTest();
 
-    gameTest() {
+    void gameTest() {
         getIsGameTest().set(true)
-        systemProperty("forge.enableGameTest", "true")
+        getSystemProperties().put("forge.enableGameTest", "true")
     }
 
     /**
@@ -149,11 +145,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract MapProperty<String, String> getEnvironmentVariables();
 
-    environmentVariable(final String name, final String value) {
-        environmentVariables.put(name, value)
-    }
-
-    environmentVariable(final String name, final Provider<String> value) {
+    void environmentVariable(final String name, final Provider<String> value) {
         environmentVariables.put(name, value)
     }
 
@@ -165,11 +157,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract MapProperty<String, String> getSystemProperties();
 
-    systemProperty(final String name, final String value) {
-        systemProperties.put(name, value)
-    }
-
-    systemProperty(final String name, final Provider<String> value) {
+    void systemProperty(final String name, final Provider<String> value) {
         systemProperties.put(name, value)
     }
 
