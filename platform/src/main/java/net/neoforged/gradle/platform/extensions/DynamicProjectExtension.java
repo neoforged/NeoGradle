@@ -12,6 +12,7 @@ import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
+import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
@@ -559,15 +560,12 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             profile.getMirrorList().set("https://mirrors.neoforged.net");
             profile.getWelcome().set("Welcome to the simple installer for " + project.getName());
         });
-        
+
         final TaskProvider<CreateLegacyInstallerJson> createLegacyInstallerJson = project.getTasks().register("createLegacyInstallerJson", CreateLegacyInstallerJson.class, task -> {
             task.getProfile().set(installerProfile);
             task.getLibraries().from(installerLibrariesConfiguration);
             
             task.dependsOn(signUniversalJar);
-            
-            clientExtraConfiguration.getDependencies().getBuildDependencies().getDependencies(null).forEach(task::dependsOn);
-            serverExtraConfiguration.getDependencies().getBuildDependencies().getDependencies(null).forEach(task::dependsOn);
             
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         });
@@ -643,60 +641,60 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         //Note the following runtypes are for now hardcoded, in the future they should be pulled from the runtime definition
         userdevProfile.runType(
                 "client", type -> {
-                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
-                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+                    type.env("MOD_CLASSES", "{source_roots}");
+                    type.env("MCP_MAPPINGS", "{mcp_mappings}");
                     
                     type.client();
                     type.gameTest();
                     
-                    type.argument("--launchTarget");
-                    type.argument("forgeclientuserdev");
-                    type.argument("--version");
-                    type.argument(project.getVersion().toString());
-                    type.argument("--assetIndex");
-                    type.argument("{asset_index}");
-                    type.argument("--assetsDir");
-                    type.argument("{assets_root}");
+                    type.arg("--launchTarget");
+                    type.arg("forgeclientuserdev");
+                    type.arg("--version");
+                    type.arg(project.getVersion().toString());
+                    type.arg("--assetIndex");
+                    type.arg("{asset_index}");
+                    type.arg("--assetsDir");
+                    type.arg("{assets_root}");
                 }
         );
         userdevProfile.runType(
                 "server", type -> {
-                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
-                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+                    type.env("MOD_CLASSES", "{source_roots}");
+                    type.env("MCP_MAPPINGS", "{mcp_mappings}");
 
                     type.server();
                     
-                    type.argument("--launchTarget");
-                    type.argument("forgeserveruserdev");
+                    type.arg("--launchTarget");
+                    type.arg("forgeserveruserdev");
                 }
         );
         
         userdevProfile.runType(
                 "gameTestServer", type -> {
-                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
-                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+                    type.env("MOD_CLASSES", "{source_roots}");
+                    type.env("MCP_MAPPINGS", "{mcp_mappings}");
 
                     type.server();
                     type.gameTest();
                     
-                    type.argument("--launchTarget");
-                    type.argument("forgegametestserveruserdev");
+                    type.arg("--launchTarget");
+                    type.arg("forgegametestserveruserdev");
                 }
         );
         
         userdevProfile.runType(
                 "data", type -> {
-                    type.environmentVariable("MOD_CLASSES", "{source_roots}");
-                    type.environmentVariable("MCP_MAPPINGS", "{mcp_mappings}");
+                    type.env("MOD_CLASSES", "{source_roots}");
+                    type.env("MCP_MAPPINGS", "{mcp_mappings}");
 
                     type.dataGenerator();
                     
-                    type.argument("--launchTarget");
-                    type.argument("forgedatauserdev");
-                    type.argument("--assetIndex");
-                    type.argument("{asset_index}");
-                    type.argument("--assetsDir");
-                    type.argument("{assets_root}");
+                    type.arg("--launchTarget");
+                    type.arg("forgedatauserdev");
+                    type.arg("--assetIndex");
+                    type.arg("{asset_index}");
+                    type.arg("--assetsDir");
+                    type.arg("{assets_root}");
                 }
         );
     }

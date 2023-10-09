@@ -76,7 +76,11 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract ListProperty<String> getArguments();
 
-    void argument(final Provider<String> value) {
+    void arg(final String value) {
+        arguments.add(value)
+    }
+
+    void arg(final Provider<String> value) {
         arguments.add(value)
     }
 
@@ -87,6 +91,14 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      */
     @DSLProperty
     abstract ListProperty<String> getJvmArguments();
+
+    void jvmArg(final String value) {
+        jvmArguments.add(value)
+    }
+
+    void jvmArg(final Provider<String> value) {
+        jvmArguments.add(value)
+    }
 
     /**
      * Indicates if this run type is for the client.
@@ -145,7 +157,11 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract MapProperty<String, String> getEnvironmentVariables();
 
-    void environmentVariable(final String name, final Provider<String> value) {
+    void env(final String name, final String value) {
+        environmentVariables.put(name, value)
+    }
+
+    void env(final String name, final Provider<String> value) {
         environmentVariables.put(name, value)
     }
 
@@ -157,7 +173,11 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     abstract MapProperty<String, String> getSystemProperties();
 
-    void systemProperty(final String name, final Provider<String> value) {
+    void sysProp(final String name, final String value) {
+        systemProperties.put(name, value)
+    }
+
+    void sysProp(final String name, final Provider<String> value) {
         systemProperties.put(name, value)
     }
 
