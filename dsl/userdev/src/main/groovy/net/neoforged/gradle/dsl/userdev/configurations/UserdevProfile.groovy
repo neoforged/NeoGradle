@@ -7,6 +7,7 @@ import net.minecraftforge.gdi.annotations.ClosureEquivalent
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runs.type.RunType
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -107,13 +108,13 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
     @Nested
     @DSLProperty
-    abstract MapProperty<String, RunType> getRunTypes();
+    abstract NamedDomainObjectCollection<RunType> getRunTypes();
 
     @ClosureEquivalent
     void runType(final String name, Action<RunType> configurer) {
         final RunType runType = objectFactory.newInstance(RunType.class, name)
         configurer.execute(runType)
-        runTypes.put(name, runType)
+        runTypes.add(runType)
     }
 
     @Input
@@ -152,7 +153,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
             deserializeString(instance.universalJarArtifactCoordinate, object, "universal")
             deserializeList(instance.additionalDependencyArtifactCoordinates, object, "libraries", String.class, jsonDeserializationContext)
             deserializeString(instance.injectedFilesDirectory, object, "inject")
-            deserializeMap(instance.runTypes, object, "runs", new BiFunction<String, JsonElement, RunType>() {
+            deserializeNamedDomainCollection(instance.runTypes, object, "runs", new BiFunction<String, JsonElement, RunType>() {
                 @Override
                 RunType apply(String s, JsonElement element) {
                     if (!element.isJsonObject())
@@ -187,7 +188,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
             serializeString(userdevProfile.universalJarArtifactCoordinate, object, "universal")
             serializeList(userdevProfile.additionalDependencyArtifactCoordinates, object, "libraries", jsonSerializationContext)
             serializeString(userdevProfile.injectedFilesDirectory, object, "inject")
-            serializeMap(userdevProfile.runTypes, object, "runs", new Function<RunType, JsonElement>() {
+            serializeNamedDomainCollection(userdevProfile.runTypes, object, "runs", new Function<RunType, JsonElement>() {
                 @Override
                 JsonElement apply(RunType v) {
                     return RunType.Serializer.serializedNamed(v, jsonSerializationContext)

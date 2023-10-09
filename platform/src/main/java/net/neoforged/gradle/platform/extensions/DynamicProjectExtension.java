@@ -52,8 +52,13 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.Bundling;
+import org.gradle.api.attributes.Category;
+import org.gradle.api.attributes.LibraryElements;
+import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -249,7 +254,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final Configuration moduleOnlyConfiguration = project.getConfigurations().create("moduleOnly").setTransitive(false);
         final Configuration gameLayerLibraryConfiguration = project.getConfigurations().create("gameLayerLibrary").setTransitive(false);
         final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary").setTransitive(false);
-        
+
         clientExtraConfiguration.getDependencies().add(project.getDependencies().create(
                 ExtraJarDependencyManager.generateClientCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion()))
         );
@@ -895,7 +900,16 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         });
     }
-    
+
+    private void configureUserdevRunType(final RunType runType, Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
+        runType.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
+
+        runType.sysProp("java.net.preferIPv6Addresses", "system");
+        runType.sysProp("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
+
+
+    }
+
     @NotNull
     public DynamicProjectType getType() {
         if (type == null)

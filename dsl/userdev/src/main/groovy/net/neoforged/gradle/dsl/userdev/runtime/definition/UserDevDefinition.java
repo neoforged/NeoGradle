@@ -15,6 +15,7 @@ public interface UserDevDefinition<S extends UserDevSpecification> extends Defin
 
     File getUnpackedUserDevJarDirectory();
 
+    @SuppressWarnings("deprecation")
     UserDevConfigurationSpecV2 getUserdevConfiguration();
 
     Configuration getAdditionalUserDevDependencies();

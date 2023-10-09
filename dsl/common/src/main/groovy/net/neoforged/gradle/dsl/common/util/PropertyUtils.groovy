@@ -8,6 +8,7 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.reflect.TypeToken
 import groovy.transform.CompileStatic
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -52,6 +53,13 @@ class PropertyUtils {
         property.set(supplier.get())
     }
 
+    static <V> void setIf(final NamedDomainObjectCollection<V> property, Supplier<List<V>> supplier, BooleanSupplier predicate) {
+        if (!predicate.asBoolean)
+            return
+
+        property.addAll(supplier.get())
+    }
+
     static <T> void deserialize(final Property<T> property, JsonObject object, String key, Function<JsonElement, T> parser) {
         setIf(
                 property,
@@ -94,6 +102,23 @@ class PropertyUtils {
 
 
     static <K, I, V> void deserializeMap(final MapProperty<K, V> property, JsonObject object, String key, BiFunction<String, JsonElement, I> parser, Function<I, V> finalizer, Function<I, K> keyExtractor) {
+        setIf(
+                property,
+                () -> {
+                    JsonObject map = object.get(key).getAsJsonObject()
+                    map.entrySet().stream()
+                            .map {entry -> parser.apply(entry.key, entry.value)}
+                            .collect(Collectors.toMap(
+                                    (I entry) -> keyExtractor.apply(entry),
+                                    (I entry) -> finalizer.apply(entry)
+                            ))
+                },
+                () -> object.has(key)
+        )
+    }
+
+
+    static <I, V> void deserializeNamedDomainCollection(final NamedDomainObjectCollection<V> property, JsonObject object, String key, BiFunction<String, JsonElement, I> parser, Function<I, V> finalizer, Function<I, String> keyExtractor) {
         setIf(
                 property,
                 () -> {
@@ -191,6 +216,23 @@ class PropertyUtils {
         )
     }
 
+
+
+    static <V> void deserializeNamedDomainCollection(final NamedDomainObjectCollection<V> property, JsonObject object, String key, BiFunction<String, JsonElement, V> parser) {
+        deserializeNamedDomainCollection(
+                property,
+                object,
+                key,
+                (name, element) -> {
+                    return Tuple.<String, V>tuple(name, parser.apply(name, element))
+                },
+                (Tuple2<String, V> tuple) -> {
+                    return tuple.v2;
+                },
+                (Tuple2<String, V> tuple) -> tuple.v1
+        )
+    }
+
     static <V> void deserializeMap(final MapProperty<String, V> property, JsonObject object, String key, Function<JsonElement, V> parser) {
         deserializeMap(
                 property,
@@ -271,6 +313,12 @@ class PropertyUtils {
         }
     }
 
+    static <V> void serialize(final NamedDomainObjectCollection<V> property, JsonObject object, String key, Function<List<V>, JsonElement> writer) {
+        if (!property.isEmpty()) {
+            object.add(key, writer.apply(property.asList()))
+        }
+    }
+
     static void serializeString(final Property<String> property, JsonObject object, String key) {
         serialize(property, object, key, value -> new JsonPrimitive(value))
     }
@@ -309,6 +357,23 @@ class PropertyUtils {
 
                     map.forEach { k, v ->
                         result.add(keyWriter.apply(k), valueWriter.apply(v))
+                    }
+
+                    return result
+                }
+        )
+    }
+
+    static <V> void serializeNamedDomainCollection(final NamedDomainObjectCollection<V> property, JsonObject object, String key, Function<V, JsonElement> valueWriter) {
+        serialize(
+                property,
+                object,
+                key,
+                (List<V> map) -> {
+                    def result = new JsonObject()
+
+                    map.forEach { v ->
+                        result.add(property.namer.determineName(v), valueWriter.apply(v))
                     }
 
                     return result
