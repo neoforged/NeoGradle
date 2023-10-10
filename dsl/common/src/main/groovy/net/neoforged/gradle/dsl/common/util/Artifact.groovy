@@ -87,6 +87,11 @@ class Artifact implements Comparable<Artifact>, Serializable {
         return new Artifact(group, name, version, classifier, ext);
     }
 
+    static Artifact from(Project project, @Nullable String classifier, @Nullable String ext) {
+        return new Artifact(project.getGroup().toString(), project.getName().toString(), project.getVersion().toString(), classifier, ext);
+    }
+
+
     static Artifact from(final Dependency dependency) {
         if (dependency instanceof ExternalModuleDependency) {
             final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;

@@ -12,7 +12,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -29,8 +28,8 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
     public static Gson createGson(ObjectFactory objectFactory) {
         return new GsonBuilder().disableHtmlEscaping()
-                .registerTypeAdapter(UserdevProfile.class, new Serializer(objectFactory))
-                .registerTypeAdapter(ToolExecution.class, new ToolExecution.Serializer(objectFactory))
+                .registerTypeHierarchyAdapter(UserdevProfile.class, new Serializer(objectFactory))
+                .registerTypeHierarchyAdapter(ToolExecution.class, new ToolExecution.Serializer(objectFactory))
                 .create()
     }
 
@@ -43,27 +42,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
     @Input
     @DSLProperty
-    abstract ListProperty<String> getAccessTransformerFiles()
-
-    void accessTransformer(final String at) {
-        getAccessTransformerFiles().add(at)
-    }
-
-    void accessTransformer(final Provider<String> at) {
-        getAccessTransformerFiles().add(at)
-    }
+    abstract Property<String> getAccessTransformerDirectory()
 
     @Input
     @DSLProperty
-    abstract ListProperty<String> getSideAnnotationStripperFiles()
-
-    void sideAnnotationStripper(final String sas) {
-        getSideAnnotationStripperFiles().add(sas)
-    }
-
-    void sideAnnotationStripper(final Provider<String> sas) {
-        getSideAnnotationStripperFiles().add(sas)
-    }
+    abstract Property<String> getSideAnnotationStripperDirectory()
 
     @Input
     @DSLProperty
@@ -93,14 +76,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @DSLProperty
     abstract ListProperty<String> getAdditionalDependencyArtifactCoordinates();
 
-    void library(final String library) {
-        getAdditionalDependencyArtifactCoordinates().add(library)
-    }
-
-    void library(final Provider<String> library) {
-        getAdditionalDependencyArtifactCoordinates().add(library)
-    }
-
     @Input
     @DSLProperty
     @Optional
@@ -121,10 +96,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @DSLProperty
     abstract ListProperty<String> getModules();
 
-    void module(final Provider<String> module) {
-        getModules().add(module)
-    }
-
     @CompileStatic
     static class Serializer implements JsonSerializer<UserdevProfile>, JsonDeserializer<UserdevProfile> {
 
@@ -144,8 +115,8 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
             final UserdevProfile instance = objectFactory.newInstance(UserdevProfile.class)
 
             deserializeString(instance.neoForm, object, "mcp")
-            deserializeList(instance.accessTransformerFiles, object, "ats", String.class, jsonDeserializationContext)
-            deserializeList(instance.sideAnnotationStripperFiles, object, "sass", String.class, jsonDeserializationContext)
+            deserializeString(instance.accessTransformerDirectory, object, "ats")
+            deserializeString(instance.sideAnnotationStripperDirectory, object, "sass")
             deserializeString(instance.binaryPatchFile, object, "binpatches")
             deserialize(instance.binaryPatcher, object, "binpatcher", ToolExecution.class, jsonDeserializationContext)
             deserializeString(instance.sourcePatchesDirectory, object, "patches")
@@ -160,7 +131,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                         throw new JsonSyntaxException("Expected object, found " + element.getClass().getSimpleName());
 
                     return RunType.Serializer.deserializeNamed(
-                            objectFactory,
+                            UserdevProfile.Serializer.this.objectFactory,
                             s,
                             element.getAsJsonObject(),
                             jsonDeserializationContext
@@ -179,8 +150,8 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
             object.addProperty("spec", 2);
 
             serializeString(userdevProfile.neoForm, object, "mcp")
-            serializeList(userdevProfile.accessTransformerFiles, object, "ats", jsonSerializationContext)
-            serializeList(userdevProfile.sideAnnotationStripperFiles, object, "sass", jsonSerializationContext)
+            serializeString(userdevProfile.accessTransformerDirectory, object, "ats")
+            serializeString(userdevProfile.sideAnnotationStripperDirectory, object, "sass")
             serializeString(userdevProfile.binaryPatchFile, object, "binpatches")
             serialize(userdevProfile.binaryPatcher, object, "binpatcher", jsonSerializationContext)
             serializeString(userdevProfile.sourcePatchesDirectory, object, "patches")
@@ -201,7 +172,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     }
 
     @CompileStatic
-    static abstract class ToolExecution implements ConfigurableDSLElement<UserdevProfile> {
+    static abstract class ToolExecution implements ConfigurableDSLElement<ToolExecution> {
 
         @Input
         @DSLProperty
@@ -209,11 +180,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
         @Input
         @DSLProperty
-        abstract ListProperty<String> getArgs();
+        abstract ListProperty<String> getArguments();
 
         @Input
         @DSLProperty
-        abstract ListProperty<String> getJvmArgs();
+        abstract ListProperty<String> getJvmArguments();
 
         @Input
         @DSLProperty
@@ -237,8 +208,8 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 final ToolExecution instance = objectFactory.newInstance(ToolExecution.class)
 
                 deserializeString(instance.tool, object, "version")
-                deserializeList(instance.args, object, "args", String.class, jsonDeserializationContext)
-                deserializeList(instance.jvmArgs, object, "jvmArgs", String.class, jsonDeserializationContext)
+                deserializeList(instance.arguments, object, "args", String.class, jsonDeserializationContext)
+                deserializeList(instance.jvmArguments, object, "jvmArgs", String.class, jsonDeserializationContext)
                 deserializeMap(instance.data, object, "data", String.class, jsonDeserializationContext)
 
                 return instance
@@ -249,8 +220,8 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 final JsonObject object = new JsonObject();
 
                 serializeString(toolExecution.tool, object, "version")
-                serializeList(toolExecution.args, object, "args", jsonSerializationContext)
-                serializeList(toolExecution.jvmArgs, object, "jvmArgs", jsonSerializationContext)
+                serializeList(toolExecution.arguments, object, "args", jsonSerializationContext)
+                serializeList(toolExecution.jvmArguments, object, "jvmArgs", jsonSerializationContext)
                 serializeMap(toolExecution.data, object, "data", jsonSerializationContext)
 
                 return object

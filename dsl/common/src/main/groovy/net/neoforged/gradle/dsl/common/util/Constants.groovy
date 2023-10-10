@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Constants {
 
-    public static final String BINPATCHER_VERSION =  "1.+";
+    public static final String BINPATCHER_VERSION =  "1.1.1";
     public static final String BINPATCHER_VERSION_INTERPOLATION = "net.minecraftforge:binarypatcher:%s:fatjar";
     public static final String BINPATCHER = String.format(BINPATCHER_VERSION_INTERPOLATION, BINPATCHER_VERSION);
     public static final String ACCESSTRANSFORMER_VERSION = "8.0.+";

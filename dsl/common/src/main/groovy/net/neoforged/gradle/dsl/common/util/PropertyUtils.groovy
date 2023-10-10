@@ -118,17 +118,15 @@ class PropertyUtils {
     }
 
 
-    static <I, V> void deserializeNamedDomainCollection(final NamedDomainObjectCollection<V> property, JsonObject object, String key, BiFunction<String, JsonElement, I> parser, Function<I, V> finalizer, Function<I, String> keyExtractor) {
+    static <I, V> void deserializeNamedDomainCollection(final NamedDomainObjectCollection<V> property, JsonObject object, String key, BiFunction<String, JsonElement, I> parser, Function<I, V> finalizer) {
         setIf(
                 property,
                 () -> {
                     JsonObject map = object.get(key).getAsJsonObject()
                     map.entrySet().stream()
                             .map {entry -> parser.apply(entry.key, entry.value)}
-                            .collect(Collectors.toMap(
-                                    (I entry) -> keyExtractor.apply(entry),
-                                    (I entry) -> finalizer.apply(entry)
-                            ))
+                            .map {it -> finalizer.apply(it) }
+                            .collect(Collectors.toList())
                 },
                 () -> object.has(key)
         )
@@ -224,12 +222,12 @@ class PropertyUtils {
                 object,
                 key,
                 (name, element) -> {
-                    return Tuple.<String, V>tuple(name, parser.apply(name, element))
+                    return Tuple.<String, V> tuple(name, parser.apply(name, element))
                 },
                 (Tuple2<String, V> tuple) -> {
                     return tuple.v2;
-                },
-                (Tuple2<String, V> tuple) -> tuple.v1
+                }
+
         )
     }
 

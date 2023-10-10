@@ -18,6 +18,10 @@ import java.nio.file.Files;
 @CacheableTask
 public abstract class CreateUserdevJson  extends DefaultRuntime implements WithOutput, WithWorkspace {
     
+    public CreateUserdevJson() {
+        getOutputFileName().set("config.json");
+    }
+    
     @TaskAction
     public void doTask() throws Exception {
         final Gson gson = UserdevProfile.createGson(getObjectFactory());

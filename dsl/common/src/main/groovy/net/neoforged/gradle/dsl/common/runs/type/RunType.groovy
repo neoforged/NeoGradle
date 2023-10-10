@@ -2,19 +2,16 @@ package net.neoforged.gradle.dsl.common.runs.type
 
 import com.google.gson.*
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.Named
-import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.*
 
 import javax.inject.Inject
 import java.lang.reflect.Type
@@ -57,6 +54,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      *
      * @return The property which indicates if this is a single instance run type.
      */
+    @Input
     @DSLProperty
     abstract Property<Boolean> getIsSingleInstance();
 
@@ -66,6 +64,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return The property which holds the main class name.
      */
     @DSLProperty
+    @Input
     abstract Property<String> getMainClass();
 
     /**
@@ -74,15 +73,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return The property which holds the application arguments.
      */
     @DSLProperty
+    @Input
     abstract ListProperty<String> getArguments();
-
-    void arg(final String value) {
-        arguments.add(value)
-    }
-
-    void arg(final Provider<String> value) {
-        arguments.add(value)
-    }
 
     /**
      * Gives access to the JVM arguments for the run type.
@@ -90,15 +82,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return The property which holds the JVM arguments.
      */
     @DSLProperty
+    @Input
     abstract ListProperty<String> getJvmArguments();
-
-    void jvmArg(final String value) {
-        jvmArguments.add(value)
-    }
-
-    void jvmArg(final Provider<String> value) {
-        jvmArguments.add(value)
-    }
 
     /**
      * Indicates if this run type is for the client.
@@ -106,11 +91,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return The property which indicates if this is a client run type.
      */
     @DSLProperty
+    @Input
     abstract Property<Boolean> getIsClient();
-
-    void client() {
-        isClient.set(true)
-    }
 
     /**
      * Indicates if this run is a server run.
@@ -118,11 +100,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return {@code true} if this run is a server run; otherwise, {@code false}.
      */
     @DSLProperty
+    @Input
     abstract Property<Boolean> getIsServer();
-
-    void server() {
-        getIsServer().set(true)
-    }
 
     /**
      * Indicates if this run is a data generation run.
@@ -130,24 +109,17 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return {@code true} if this run is a data generation run; otherwise, {@code false}.
      */
     @DSLProperty
+    @Input
     abstract Property<Boolean> getIsDataGenerator();
-
-    void dataGenerator() {
-        getIsDataGenerator().set(true)
-    }
 
     /**
      * Indicates if this run is a game test run.
      *
      * @return {@code true} if this run is a game test run; otherwise, {@code false}.
      */
+    @Input
     @DSLProperty
     abstract Property<Boolean> getIsGameTest();
-
-    void gameTest() {
-        getIsGameTest().set(true)
-        getSystemProperties().put("forge.enableGameTest", "true")
-    }
 
     /**
      * Gives access to the key value pairs which are added as environment variables when an instance of this run type is executed.
@@ -155,15 +127,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return The property which holds the environment variables.
      */
     @DSLProperty
+    @Input
     abstract MapProperty<String, String> getEnvironmentVariables();
-
-    void env(final String name, final String value) {
-        environmentVariables.put(name, value)
-    }
-
-    void env(final String name, final Provider<String> value) {
-        environmentVariables.put(name, value)
-    }
 
     /**
      * Gives access to the key value pairs which are added as system properties when an instance of this run type is executed.
@@ -171,15 +136,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return The property which holds the system properties.
      */
     @DSLProperty
+    @Input
     abstract MapProperty<String, String> getSystemProperties();
-
-    void sysProp(final String name, final String value) {
-        systemProperties.put(name, value)
-    }
-
-    void sysProp(final String name, final Provider<String> value) {
-        systemProperties.put(name, value)
-    }
 
     /**
      * Gives access to the classpath for this run type.
@@ -189,6 +147,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return The property which holds the classpath.
      */
     @DSLProperty
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
     abstract ConfigurableFileCollection getClasspath();
 
     /**
@@ -196,8 +156,8 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      *
      * @return The run adapter.
      */
+    @Internal
     @DSLProperty
-    @Optional
     abstract Property<RunAdapter> getRunAdapter();
 
     /**
