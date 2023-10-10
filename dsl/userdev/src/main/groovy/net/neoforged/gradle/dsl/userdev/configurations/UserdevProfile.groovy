@@ -46,10 +46,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
     @Input
     @DSLProperty
-    abstract Property<String> getSideAnnotationStripperDirectory()
-
-    @Input
-    @DSLProperty
     @Optional
     abstract Property<String> getBinaryPatchFile();
 
@@ -116,7 +112,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
             deserializeString(instance.neoForm, object, "mcp")
             deserializeString(instance.accessTransformerDirectory, object, "ats")
-            deserializeString(instance.sideAnnotationStripperDirectory, object, "sass")
             deserializeString(instance.binaryPatchFile, object, "binpatches")
             deserialize(instance.binaryPatcher, object, "binpatcher", ToolExecution.class, jsonDeserializationContext)
             deserializeString(instance.sourcePatchesDirectory, object, "patches")
@@ -151,7 +146,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
             serializeString(userdevProfile.neoForm, object, "mcp")
             serializeString(userdevProfile.accessTransformerDirectory, object, "ats")
-            serializeString(userdevProfile.sideAnnotationStripperDirectory, object, "sass")
             serializeString(userdevProfile.binaryPatchFile, object, "binpatches")
             serialize(userdevProfile.binaryPatcher, object, "binpatcher", jsonSerializationContext)
             serializeString(userdevProfile.sourcePatchesDirectory, object, "patches")

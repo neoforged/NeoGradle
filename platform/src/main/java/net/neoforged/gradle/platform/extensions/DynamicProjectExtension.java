@@ -11,8 +11,10 @@ import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
+import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
@@ -21,8 +23,9 @@ import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.*;
-import net.neoforged.gradle.dsl.common.util.Artifact;
-import net.neoforged.gradle.dsl.platform.model.*;
+import net.neoforged.gradle.dsl.platform.model.InstallerProfile;
+import net.neoforged.gradle.dsl.platform.model.LauncherProfile;
+import net.neoforged.gradle.dsl.platform.model.Library;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
 import net.neoforged.gradle.neoform.naming.tasks.WriteIMappingsFile;
@@ -52,6 +55,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -74,8 +78,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static net.neoforged.gradle.dsl.common.util.Artifact.from;
 
 @SuppressWarnings("unchecked")
 public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicProjectExtension> {
@@ -197,7 +199,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final TaskProvider<? extends Jar> compiledJarProvider = project.getTasks().named(mainSource.getJarTaskName(), Jar.class);
 
         javaPluginExtension.withSourcesJar();
-        
+
         final EnumMap<DistributionType, TaskProvider<GenerateBinaryPatches>> binaryPatchGenerators = new EnumMap<>(DistributionType.class);
         for (DistributionType distribution : DistributionType.values()) {
             final TaskProvider<? extends WithOutput> cleanProvider = cleanProviders.get(distribution);
@@ -542,7 +544,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         userdevProfile.getInjectedFilesDirectory().set("inject/");
         userdevProfile.getSourcePatchesDirectory().set("patches/");
         userdevProfile.getAccessTransformerDirectory().set("ats/");
-        userdevProfile.getSideAnnotationStripperDirectory().set("sass/");
         userdevProfile.getBinaryPatchFile().set("joined.lzma");
         userdevProfile.getBinaryPatcher().set(project.getObjects().newInstance(UserdevProfile.ToolExecution.class).configure((Action<UserdevProfile.ToolExecution>) tool -> {
             tool.getTool().set(Constants.BINPATCHER);
@@ -558,10 +559,51 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         });
-        
+
+        final TaskProvider<AccessTransformerFileGenerator> generateAts = project.getTasks().register("generateAccessTransformers", AccessTransformerFileGenerator.class, task -> {
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+        });
+
+        final TaskProvider<PackZip> packPatches = project.getTasks().register("packPatches", PackZip.class, task -> {
+            task.getInputFiles().from(project.fileTree(patches).matching(filterable -> {
+                filterable.include("**/*.patch");
+            }));
+
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+        });
+
+        final TaskProvider<BakePatches> bakePatches = project.getTasks().register("bakePatches", BakePatches.class, task -> {
+            task.getInput().set(packPatches.flatMap(WithOutput::getOutput));
+
+            CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+        });
+
+        final AccessTransformers accessTransformers = project.getExtensions().getByType(AccessTransformers.class);
         final TaskProvider<Jar> userdevJar = project.getTasks().register("userdevJar", Jar.class, task -> {
-        
-        })
+            task.getArchiveClassifier().set("userdev");
+            task.getArchiveAppendix().set("userdev");
+            task.getArchiveVersion().set(project.getVersion().toString());
+            task.getArchiveBaseName().set(project.getName());
+            task.getDestinationDirectory().set(project.getLayout().getBuildDirectory().dir("libs"));
+            task.getArchiveFileName().set(project.provider(() -> String.format("%s-%s-userdev.jar", project.getName(), project.getVersion())));
+
+
+            task.from(createUserdevJson.flatMap(WithOutput::getOutput), spec -> {
+                spec.rename(name -> "config.json");
+            });
+            task.from(generateAts.flatMap(WithOutput::getOutput), spec -> {
+                spec.into("ats/");
+            });
+            task.from(accessTransformers.getFiles(), spec -> {
+                spec.into("ats/");
+            });
+            task.from(binaryPatchGenerators.get(DistributionType.JOINED).flatMap(WithOutput::getOutput), spec -> {
+                spec.rename(name -> "joined.lzma");
+            });
+            task.from(bakePatches.flatMap(bake -> bake.getOutput().map(file -> bake.getArchiveOperations().zipTree(file))), spec -> {
+                spec.into("patches/");
+            });
+        });
     }
     
     private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {

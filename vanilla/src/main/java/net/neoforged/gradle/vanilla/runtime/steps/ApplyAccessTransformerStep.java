@@ -37,8 +37,6 @@ public class ApplyAccessTransformerStep implements IStep {
                 definition,
                 "user",
                 workingDirectory,
-                gameArtifactTasks,
-                definition.getMappingVersionData(),
                 additionalTaskConfigurator,
                 new ArrayList<>(accessTransformerFiles.getFiles().getFiles()),
                 accessTransformerFiles.getEntries().get()

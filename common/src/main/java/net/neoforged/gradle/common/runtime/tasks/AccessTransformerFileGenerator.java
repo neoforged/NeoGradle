@@ -25,6 +25,8 @@ public abstract class AccessTransformerFileGenerator extends DefaultRuntime impl
                 getProject().getExtensions().getByType(AccessTransformers.class)
                         .getEntries()
         );
+
+        getOutputFileName().set(String.format("_script_%s.cfg", getProject().getName()));
     }
 
     @TaskAction
@@ -37,8 +39,5 @@ public abstract class AccessTransformerFileGenerator extends DefaultRuntime impl
     @Input
     @Optional
     public abstract ListProperty<String> getAdditionalTransformers();
-
-    @OutputFile
-    public abstract RegularFileProperty getOutput();
 
 }

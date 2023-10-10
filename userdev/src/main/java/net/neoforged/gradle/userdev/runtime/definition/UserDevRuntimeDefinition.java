@@ -9,7 +9,7 @@ import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.userdev.configurations.UserDevConfigurationSpecV2;
+import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<UserDevRuntimeSpecification> implements UserDevDefinition<UserDevRuntimeSpecification>, IDelegatingRuntimeDefinition<UserDevRuntimeSpecification> {
     private final NeoFormRuntimeDefinition mcpRuntimeDefinition;
     private final File unpackedUserDevJarDirectory;
-    private final UserDevConfigurationSpecV2 userdevConfiguration;
+    private final UserdevProfile userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
     private final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer;
 
-    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition mcpRuntimeDefinition, File unpackedUserDevJarDirectory, UserDevConfigurationSpecV2 userdevConfiguration, Configuration additionalUserDevDependencies) {
+    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition mcpRuntimeDefinition, File unpackedUserDevJarDirectory, UserdevProfile userdevConfiguration, Configuration additionalUserDevDependencies) {
         super(specification, mcpRuntimeDefinition.getTasks(), mcpRuntimeDefinition.getSourceJarTask(), mcpRuntimeDefinition.getRawJarTask(), mcpRuntimeDefinition.getGameArtifactProvidingTasks(), mcpRuntimeDefinition.getMinecraftDependenciesConfiguration(), mcpRuntimeDefinition::configureAssociatedTask);
         this.mcpRuntimeDefinition = mcpRuntimeDefinition;
         this.unpackedUserDevJarDirectory = unpackedUserDevJarDirectory;
@@ -68,7 +68,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
-    public UserDevConfigurationSpecV2 getUserdevConfiguration() {
+    public UserdevProfile getUserdevConfiguration() {
         return userdevConfiguration;
     }
 
@@ -128,7 +128,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     protected Map<String, String> buildRunInterpolationData() {
         final Map<String, String> interpolationData = mcpRuntimeDefinition.buildRunInterpolationData();
 
-        if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().isEmpty()) {
+        if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
             final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
             final Configuration modulesCfg;
             if (getSpecification().getProject().getConfigurations().getNames().contains(name)) {
@@ -137,7 +137,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
             else {
                 modulesCfg = getSpecification().getProject().getConfigurations().create(name);
                 modulesCfg.setCanBeResolved(true);
-                userdevConfiguration.getModules().forEach(m -> modulesCfg.getDependencies().add(getSpecification().getProject().getDependencies().create(m)));
+                userdevConfiguration.getModules().get().forEach(m -> modulesCfg.getDependencies().add(getSpecification().getProject().getDependencies().create(m)));
             }
 
             interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
