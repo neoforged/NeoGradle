@@ -21,12 +21,12 @@ mixin {
 minecraft {
     mappings {
         channel = official()
-        version.put "minecraft", "1.20.1"
+        version.put "minecraft", "1.20.2"
     }
 }
 
 dependencies {
-    implementation 'net.neoforged:forge:1.20.1-47.1.70'
+    implementation 'net.neoforged:forge:20.2.1'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
