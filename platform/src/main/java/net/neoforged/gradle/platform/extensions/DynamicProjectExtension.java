@@ -79,7 +79,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@SuppressWarnings("unchecked")
 public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicProjectExtension> {
     
     private final Project project;
