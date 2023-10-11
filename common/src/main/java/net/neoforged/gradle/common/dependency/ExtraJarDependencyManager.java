@@ -78,7 +78,7 @@ public abstract class ExtraJarDependencyManager {
         return replacements.computeIfAbsent(minecraftVersion, (v) -> {
             final MinecraftArtifactCache minecraftArtifactCacheExtension = project.getExtensions().getByType(MinecraftArtifactCache.class);
 
-            final TaskProvider<GenerateExtraJar> extraJarTaskProvider = project.getTasks().register("create" + minecraftVersion + StringUtils.capitalize(dependency.getName()) + "EntryJar", GenerateExtraJar.class, task -> {
+            final TaskProvider<GenerateExtraJar> extraJarTaskProvider = project.getTasks().register("create" + minecraftVersion + StringUtils.capitalize(dependency.getName()) + "ExtraJar", GenerateExtraJar.class, task -> {
                 task.getOriginalJar().set(minecraftArtifactCacheExtension.cacheVersionArtifact(minecraftVersion, DistributionType.CLIENT));
                 task.getOutput().set(project.getLayout().getBuildDirectory().dir("jars/extra/" + dependency.getName()).map(cacheDir -> cacheDir.dir(Objects.requireNonNull(minecraftVersion)).file( dependency.getName() + "-extra.jar")));
             });
