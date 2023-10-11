@@ -51,7 +51,7 @@ public abstract class CreateClasspathFiles extends DefaultRuntime implements Tok
         
         final FileTree serverRawTree = getArchiveOperations().zipTree(getServer().get());
         final File joinedServerClasspathFile = serverRawTree.filter(spec -> {
-            return spec.getPath().endsWith("META-INF/classpath-joined");
+            return spec.getPath().endsWith("META-INF" + File.separator + "classpath-joined");
         }).getSingleFile();
         
         final String joinedServerClasspath = Files.readAllLines(joinedServerClasspathFile.toPath()).stream()
