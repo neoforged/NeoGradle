@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.neoforged.gradle.platform.tasks;
+package net.neoforged.gradle.common.tasks;
 
 import com.google.common.collect.Maps;
 import groovy.lang.Closure;

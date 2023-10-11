@@ -121,7 +121,7 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
 
     @Override
     public boolean isDynamicDependency(ModuleDependency dependency) {
-        return dependency.getGroup() != null && dependency.getGroup().startsWith(IvyDummyRepositoryEntry.FG_DUMMY_FG_MARKER);
+        return dependency.getGroup() != null && dependency.getGroup().startsWith(IvyDummyRepositoryEntry.NG_DUMMY_NG_MARKER);
     }
 
     private void processDependency(Action<RepositoryEntry.Builder<?,?,?>> configurator, Action<RepositoryEntry<?,?>> configuredEntryConsumer) {

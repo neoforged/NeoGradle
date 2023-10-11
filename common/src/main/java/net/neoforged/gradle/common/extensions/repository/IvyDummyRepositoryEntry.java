@@ -33,7 +33,7 @@ import java.util.function.Consumer;
  */
 public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<IvyDummyRepositoryEntry>, RepositoryEntry<IvyDummyRepositoryEntry, IvyDummyRepositoryReference>, Serializable, ProjectAssociatedDSLElement {
 
-    public static final String FG_DUMMY_FG_MARKER = "fg_dummy_fg";
+    public static final String NG_DUMMY_NG_MARKER = "ng_dummy_ng";
     private static final long serialVersionUID = 4025734172533096653L;
 
     private transient final Project project;
@@ -73,10 +73,10 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
     @Override
     public String getFullGroup() {
         if (getGroup() == null) {
-            return FG_DUMMY_FG_MARKER;
+            return NG_DUMMY_NG_MARKER;
         }
 
-        return String.format("%s.%s", FG_DUMMY_FG_MARKER, getGroup());
+        return String.format("%s.%s", NG_DUMMY_NG_MARKER, getGroup());
     }
 
     @Override

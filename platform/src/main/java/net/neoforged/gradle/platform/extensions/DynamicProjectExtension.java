@@ -12,6 +12,7 @@ import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
+import net.neoforged.gradle.common.tasks.PotentiallySignJar;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
@@ -55,7 +56,6 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -150,7 +150,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         project.getPlugins().apply(PlatformDevProjectPlugin.class);
         
-        final String group = project.getGroup().toString();
         final JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
         

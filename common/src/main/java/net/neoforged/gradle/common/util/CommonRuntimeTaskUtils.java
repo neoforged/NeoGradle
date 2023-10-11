@@ -12,10 +12,7 @@ import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.tasks.TaskProvider;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 public final class CommonRuntimeTaskUtils {
@@ -26,12 +23,18 @@ public final class CommonRuntimeTaskUtils {
 
     public static TaskProvider<? extends AccessTransformer> createAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, Iterable<File> files, Collection<String> data) {
         final Collection<TaskProvider<? extends WithOutput>> fileProducingTasks = new ArrayList<>();
+        final Map<String, Integer> indexes = new HashMap<>();
         for (File file : files) {
-            final TaskProvider<? extends WithOutput> provider = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerProvider" + file.getName()), ArtifactProvider.class, task -> {
+            indexes.compute(file.getName(), (s, index) -> index == null ? 0 : index + 1);
+            final int index = indexes.get(file.getName());
+            
+            final String name = CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerProvider" + file.getName() + (index == 0 ? "" : "_" + index));
+            
+            final TaskProvider<? extends WithOutput> provider = definition.getSpecification().getProject().getTasks().register(name, ArtifactProvider.class, task -> {
                 task.getInput().set(file);
                 task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + namePreFix + "/" + file.getName()));
             });
-
+            
             fileProducingTasks.add(provider);
         }
 
