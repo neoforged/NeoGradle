@@ -115,45 +115,9 @@ public abstract class IdeManagementExtension {
      * @param toPerform the actions to perform
      */
     public void apply(final IdeImportAction toPerform) {
-        //When the IDEA plugin is available, configure it
-        project.getPlugins().withType(IdeaExtPlugin.class, plugin -> {
-            if (!isIdeaImport()) {
-                //No IDEA import even though the plugin is available, so don't configure it.
-                return;
-            }
-
-            //Grab the idea runtime model so we can extend it. -> This is done from the root project, so that the model is available to all subprojects.
-            //And so that post sync tasks are only ran once for all subprojects.
-            final IdeaModel model = rootProject.getExtensions().findByType(IdeaModel.class);
-            if (model == null || model.getProject() == null) {
-                return;
-            }
-
-            //Locate the project settings on the model and then configure them and then pass them to the action so that it can configure it.
-            final ProjectSettings ideaExt = ((ExtensionAware) model.getProject()).getExtensions().getByType(ProjectSettings.class);
-
-            //Configure the project, passing the model, extension, and the relevant project. Which does not need to be the root, but can be.
-            toPerform.idea(project, model, ideaExt);
-        });
-
-        //When the Eclipse plugin is available, configure it
-        project.getPlugins().withType(EclipsePlugin.class, plugin -> {
-            //Do not configure the eclipse plugin if we are not importing.
-            if (!isEclipseImport()) {
-                return;
-            }
-
-            //Grab the eclipse model so we can extend it. -> Done on the root project so that the model is available to all subprojects.
-            //And so that post sync tasks are only ran once for all subprojects.
-            final EclipseModel model = rootProject.getExtensions().findByType(EclipseModel.class);
-            if (model == null) {
-                //No model configured!
-                return;
-            }
-
-            //Configure the project, passing the model and the relevant project. Which does not need to be the root, but can be.
-            toPerform.eclipse(project, model);
-        });
+        onIdea(toPerform);
+        onEclipse(toPerform);
+        onGradle(toPerform);
     }
     
     /**
@@ -165,7 +129,26 @@ public abstract class IdeManagementExtension {
      * @param toPerform the actions to perform
      */
     public void onIdea(final IdeaIdeImportAction toPerform) {
-    
+        //When the IDEA plugin is available, configure it
+        project.getPlugins().withType(IdeaExtPlugin.class, plugin -> {
+            if (!isIdeaImport()) {
+                //No IDEA import even though the plugin is available, so don't configure it.
+                return;
+            }
+            
+            //Grab the idea runtime model so we can extend it. -> This is done from the root project, so that the model is available to all subprojects.
+            //And so that post sync tasks are only ran once for all subprojects.
+            final IdeaModel model = rootProject.getExtensions().findByType(IdeaModel.class);
+            if (model == null || model.getProject() == null) {
+                return;
+            }
+            
+            //Locate the project settings on the model and then configure them and then pass them to the action so that it can configure it.
+            final ProjectSettings ideaExt = ((ExtensionAware) model.getProject()).getExtensions().getByType(ProjectSettings.class);
+            
+            //Configure the project, passing the model, extension, and the relevant project. Which does not need to be the root, but can be.
+            toPerform.idea(project, model, ideaExt);
+        });
     }
     
     /**
@@ -177,7 +160,45 @@ public abstract class IdeManagementExtension {
      * @param toPerform the actions to perform
      */
     public void onEclipse(final EclipseIdeImportAction toPerform) {
+        //When the Eclipse plugin is available, configure it
+        project.getPlugins().withType(EclipsePlugin.class, plugin -> {
+            //Do not configure the eclipse plugin if we are not importing.
+            if (!isEclipseImport()) {
+                return;
+            }
+            
+            //Grab the eclipse model so we can extend it. -> Done on the root project so that the model is available to all subprojects.
+            //And so that post sync tasks are only ran once for all subprojects.
+            final EclipseModel model = rootProject.getExtensions().findByType(EclipseModel.class);
+            if (model == null) {
+                //No model configured!
+                return;
+            }
+            
+            //Configure the project, passing the model and the relevant project. Which does not need to be the root, but can be.
+            toPerform.eclipse(project, model);
+        });
+    }
     
+    /**
+     * Applies the specified configuration action to configure gradle run projects only.
+     *
+     * @param toPerform the actions to perform
+     */
+    public void onGradle(final GradleIdeImportAction toPerform) {
+        if (!isEclipseImport() && !isIdeaImport()) {
+            toPerform.gradle(project);
+        }
+    }
+    
+    public interface GradleIdeImportAction {
+        
+        /**
+         * Configure a gradle project.
+         *
+         * @param project the project being imported
+         */
+        default void gradle(Project project) {}
     }
     
     /**
@@ -212,5 +233,5 @@ public abstract class IdeManagementExtension {
     /**
      * A configuration action for IDE projects.
      */
-    public interface IdeImportAction extends IdeaIdeImportAction, EclipseIdeImportAction { }
+    public interface IdeImportAction extends IdeaIdeImportAction, EclipseIdeImportAction, GradleIdeImportAction { }
 }

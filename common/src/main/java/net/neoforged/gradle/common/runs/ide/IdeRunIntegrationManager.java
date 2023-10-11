@@ -39,31 +39,40 @@ public class IdeRunIntegrationManager {
      * @param project The project to configure.
      */
     public void apply(final Project project) {
-        project.afterEvaluate(evaluatedProject -> {
-            final IdeManagementExtension ideManager = evaluatedProject.getExtensions().getByType(IdeManagementExtension.class);
-            ideManager.apply(new RunsImportAction());
-        });
-
         final IdeManagementExtension ideManager = project.getExtensions().getByType(IdeManagementExtension.class);
         ideManager.apply(new RegisterIdeRunExtensions());
+        
+        project.afterEvaluate(evaluatedProject -> {
+            ideManager.apply(new RunsImportAction());
+        });
     }
 
     private static final class RegisterIdeRunExtensions implements IdeManagementExtension.IdeImportAction {
 
         @Override
         public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
+            registerIdeaExtension(project);
+        }
+        
+        private static void registerIdeaExtension(Project project) {
             project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
-                final IdeaRunExtensionImpl impls = project.getObjects().newInstance(IdeaRunExtensionImpl.class, project, run);
-                run.getExtensions().add(IdeaRunExtension.class, "idea", impls);
+                run.getExtensions().create(IdeaRunExtension.class, "idea", IdeaRunExtensionImpl.class, project, run);
             }));
         }
-
+        
         @Override
         public void eclipse(Project project, EclipseModel eclipse) {
             //TODO:
             // There is for now no native API, or library, yet which allows generating native
             // launch-files for eclipse without having to resort to unspecified launch arguments
             // when one becomes available we should implement that asap.
+        }
+        
+        @Override
+        public void gradle(Project project) {
+            registerIdeaExtension(project);
+            //TODO:
+            // Implement eclipse registration if needed.
         }
     }
 

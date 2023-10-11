@@ -199,6 +199,12 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final TaskProvider<? extends Jar> compiledJarProvider = project.getTasks().named(mainSource.getJarTaskName(), Jar.class);
 
         javaPluginExtension.withSourcesJar();
+        final TaskProvider<? extends Jar> sourcesJarProvider = project.getTasks().named(mainSource.getSourcesJarTaskName(), Jar.class);
+        sourcesJarProvider.configure(task ->  {
+            task.exclude("net/minecraft/**");
+            task.exclude("com/**");
+            task.exclude("mcp/**");
+        });
 
         final EnumMap<DistributionType, TaskProvider<GenerateBinaryPatches>> binaryPatchGenerators = new EnumMap<>(DistributionType.class);
         for (DistributionType distribution : DistributionType.values()) {
@@ -541,7 +547,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             configureUserdevRunType(type, moduleOnlyConfiguration, pluginLayerLibraryConfiguration, gameLayerLibraryConfiguration, project);
         });
         userdevProfile.getNeoForm().set(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString());
-        userdevProfile.getInjectedFilesDirectory().set("inject/");
         userdevProfile.getSourcePatchesDirectory().set("patches/");
         userdevProfile.getAccessTransformerDirectory().set("ats/");
         userdevProfile.getBinaryPatchFile().set("joined.lzma");
@@ -603,6 +608,14 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             task.from(bakePatches.flatMap(bake -> bake.getOutput().map(file -> bake.getArchiveOperations().zipTree(file))), spec -> {
                 spec.into("patches/");
             });
+        });
+        
+        final TaskProvider<?> assembleTask = project.getTasks().named("assemble");
+        assembleTask.configure(task -> {
+            task.dependsOn(signInstallerJar);
+            task.dependsOn(signUniversalJar);
+            task.dependsOn(userdevJar);
+            task.dependsOn(sourcesJarProvider);
         });
     }
     
