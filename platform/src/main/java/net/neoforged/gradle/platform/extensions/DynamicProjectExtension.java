@@ -558,6 +558,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final TaskProvider<CreateUserdevJson> createUserdevJson = project.getTasks().register("createUserdevJson", CreateUserdevJson.class, task -> {
             task.getProfile().set(userdevProfile);
             task.getLibraries().from(installerLibrariesConfiguration);
+            task.getLibraries().from(gameLayerLibraryConfiguration);
+            task.getLibraries().from(pluginLayerLibraryConfiguration);
+            task.getLibraries().from(moduleOnlyConfiguration);
             task.getModules().from(moduleOnlyConfiguration);
             
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
