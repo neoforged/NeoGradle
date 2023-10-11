@@ -4,9 +4,6 @@ import com.google.gson.Gson;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
-import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
-import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
@@ -14,10 +11,17 @@ import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import net.neoforged.gradle.dsl.common.util.Artifact;
+import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
-import net.neoforged.gradle.neoform.runtime.tasks.*;
+import net.neoforged.gradle.neoform.runtime.tasks.Download;
+import net.neoforged.gradle.neoform.runtime.tasks.InjectCode;
+import net.neoforged.gradle.neoform.runtime.tasks.Patch;
+import net.neoforged.gradle.neoform.runtime.tasks.UnpackZip;
 import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
@@ -154,16 +158,13 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     
     private Provider<TaskTreeAdapter> createInjectionAdapter(final Provider<String> injectionDirectory, final File unpackedForgeUserDevDirectory) {
         return injectionDirectory.map(s -> {
-            return new TaskTreeAdapter() {
-                @Nullable
-                @Override
-                public TaskProvider<? extends Runtime> adapt(Definition<?> definition, Provider<? extends WithOutput> previousTasksOutput, File runtimeWorkspace, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts, Map<String, String> mappingVersionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler) {
-                    return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "injectUserDev"), InjectCode.class, task -> {
+            File directory = new File(unpackedForgeUserDevDirectory, s);
+            if (!directory.exists()) return null;
+            return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) ->
+                    definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "injectUserDev"), InjectCode.class, task -> {
                         task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-                        task.getInjectionDirectory().fileValue(new File(unpackedForgeUserDevDirectory, s));
+                        task.getInjectionDirectory().fileValue(directory);
                     });
-                }
-            };
         });
     }
     
