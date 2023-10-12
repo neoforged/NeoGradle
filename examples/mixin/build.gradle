@@ -1,6 +1,6 @@
 plugins {
-    id 'net.neoforged.gradle.userdev' version '7.0.13-next-neo'
-    id 'net.neoforged.gradle.mixin' version '7.0.13-next-neo'
+    id 'net.neoforged.gradle.userdev' version '7.0-SNAPSHOT'
+    id 'net.neoforged.gradle.mixin' version '7.0-SNAPSHOT'
 }
 
 version = '1.0'
@@ -11,8 +11,6 @@ java {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
-
-sourceSets.main.ext.refMap = "examplemod.refmap.json"
 
 mixin {
     config 'examplemod.mixins.json'
@@ -25,13 +23,18 @@ minecraft {
     }
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
     implementation 'net.neoforged:forge:20.2.1'
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 runs {
     client {
-        modSources.add(project.sourceSets.main)
+        systemProperty 'forge.logging.console.level', 'debug'
+        systemProperty 'forge.logging.markers', 'CORE,LOADING,SCAN,SPLASH'
+        modSource project.sourceSets.main
     }
 }

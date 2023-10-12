@@ -13,11 +13,6 @@ public abstract class MixinExtension implements Mixin, ConfigurableDSLElement<Mi
     @Inject
     public MixinExtension(Project project) {
         this.project = project;
-        getDisableTargetValidator().convention(false);
-        getDisableTargetExport().convention(false);
-        getDisableOverwriteChecker().convention(false);
-        getQuiet().convention(false);
-        getShowMessageTypes().convention(false);
     }
 
     @Override
