@@ -34,7 +34,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         this.name = name
 
         getIsSingleInstance().convention(getIsServer().zip(getIsDataGenerator().zip(getIsGameTest(), RunType::or), RunType::or))
-        getIsClient().convention(true)
+        getIsClient().convention(false)
         getIsServer().convention(false)
         getIsDataGenerator().convention(false)
         getIsGameTest().convention(false)

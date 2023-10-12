@@ -692,9 +692,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             }
             
             if (run.getIsDataGenerator().get()) {
-                run.getSystemProperties().put("--launchTarget", "forgedatadev");
+                run.getProgramArguments().addAll("--launchTarget", "forgedatadev");
                 
                 run.getProgramArguments().addAll("--flat", "--all", "--validate");
+                run.getProgramArguments().add("--output");
+                run.getProgramArguments().add(project.getRootProject().file("src/generated/resources/").getAbsolutePath());
                 mainSourceSet.getResources().getSrcDirs().forEach(file -> {
                     run.getProgramArguments().addAll("--existing", file.getAbsolutePath());
                 });
