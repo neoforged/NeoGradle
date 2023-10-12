@@ -39,8 +39,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.project = project;
         this.name = name;
 
-        getWorkingDirectory().convention(project.getLayout().getProjectDirectory().dir("run"));
-
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
         this.programArguments = this.project.getObjects().listProperty(String.class);
@@ -57,6 +55,8 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getConfigureAutomatically().convention(true);
         getConfigureFromTypeWithName().convention(getConfigureAutomatically());
         getConfigureFromDependencies().convention(getConfigureAutomatically());
+        
+        getWorkingDirectory().convention(project.getLayout().getProjectDirectory().dir("runs").dir(getName()));
     }
 
     @Override

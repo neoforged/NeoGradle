@@ -542,7 +542,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             type.getArguments().add("{assets_root}");
         });
         userdevProfile.getRunTypes().configureEach(type -> {
-            configureUserdevRunType(type, moduleOnlyConfiguration, pluginLayerLibraryConfiguration, gameLayerLibraryConfiguration, project);
+            configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
         });
         userdevProfile.getNeoForm().set(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString());
         userdevProfile.getSourcePatchesDirectory().set("patches/");
@@ -803,6 +803,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     
     private void configureUserdevRunType(final RunType runType, Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
         runType.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
+        
+        runType.getArguments().addAll("--gameDir", ".");
         
         runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
         runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
