@@ -156,6 +156,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final RuntimeDevRuntimeExtension runtimeDevRuntimeExtension = project.getExtensions().getByType(RuntimeDevRuntimeExtension.class);
         final RuntimeDevRuntimeDefinition runtimeDefinition = runtimeDevRuntimeExtension.create(builder -> builder.withNeoFormVersion(neoFormVersion).withPatchesDirectory(patches).withRejectsDirectory(rejects).withDistributionType(DistributionType.JOINED).isUpdating(getIsUpdating()));
         
+        final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
+        ideManagementExtension.registerTaskToRun(runtimeDefinition.getAssetsTaskProvider());
+        ideManagementExtension.registerTaskToRun(runtimeDefinition.getNativesTaskProvider());
+        
         final File workingDirectory = getProject().getLayout().getBuildDirectory().dir(String.format("platform/%s", runtimeDefinition.getSpecification().getIdentifier())).get().getAsFile();
         
         final EnumMap<DistributionType, TaskProvider<? extends WithOutput>> cleanProviders = new EnumMap<>(DistributionType.class);
