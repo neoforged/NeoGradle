@@ -12,6 +12,7 @@ import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
+import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.tasks.PotentiallySignJar;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
@@ -673,6 +674,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         runType.getClasspath().from(runtimeClasspath);
         
+        Provider<String> assetsDir = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getOutputDirectory).map(Directory::getAsFile).map(File::getAbsolutePath);
+        Provider<String> assetIndex = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetIndexFile).map(RegularFile::getAsFile).map(File::getName).map(name -> name.substring(0, name.lastIndexOf('.')));
+
         runType.getRunAdapter().set(run -> {
             if (run.getIsClient().get()) {
                 run.getProgramArguments().addAll("--username", "Dev");
@@ -704,9 +708,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             if (run.getIsDataGenerator().get() || run.getIsClient().get()) {
                 run.getProgramArguments().add("--assetsDir");
-                run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+                run.getProgramArguments().add(assetsDir);
                 run.getProgramArguments().add("--assetIndex");
-                run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
+                run.getProgramArguments().add(assetIndex);
             }
         });
     }
