@@ -40,42 +40,16 @@ public class IdeRunIntegrationManager {
      */
     public void apply(final Project project) {
         final IdeManagementExtension ideManager = project.getExtensions().getByType(IdeManagementExtension.class);
-        ideManager.apply(new RegisterIdeRunExtensions());
+        project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
+            run.getExtensions().create(IdeaRunExtension.class, "idea", IdeaRunExtensionImpl.class, project, run);
+        }));
+        //TODO: Apply eclipse run extension
         
         project.afterEvaluate(evaluatedProject -> {
             ideManager.apply(new RunsImportAction());
         });
     }
-
-    private static final class RegisterIdeRunExtensions implements IdeManagementExtension.IdeImportAction {
-
-        @Override
-        public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
-            registerIdeaExtension(project);
-        }
-        
-        private static void registerIdeaExtension(Project project) {
-            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
-                run.getExtensions().create(IdeaRunExtension.class, "idea", IdeaRunExtensionImpl.class, project, run);
-            }));
-        }
-        
-        @Override
-        public void eclipse(Project project, EclipseModel eclipse) {
-            //TODO:
-            // There is for now no native API, or library, yet which allows generating native
-            // launch-files for eclipse without having to resort to unspecified launch arguments
-            // when one becomes available we should implement that asap.
-        }
-        
-        @Override
-        public void gradle(Project project) {
-            registerIdeaExtension(project);
-            //TODO:
-            // Implement eclipse registration if needed.
-        }
-    }
-
+    
     private static final class RunsImportAction implements IdeManagementExtension.IdeImportAction {
 
         @Override
