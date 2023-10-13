@@ -676,10 +676,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 run.getProgramArguments().addAll("--accessToken", "0");
                 run.getProgramArguments().addAll("--userrun", "mojang");
                 run.getProgramArguments().addAll("--versionrun", "release");
-                run.getProgramArguments().add("--assetsDir");
-                run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
-                run.getProgramArguments().add("--assetIndex");
-                run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
                 run.getProgramArguments().addAll("--launchTarget", "forgeclientdev");
             }
             
@@ -700,6 +696,13 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 mainSourceSet.getResources().getSrcDirs().forEach(file -> {
                     run.getProgramArguments().addAll("--existing", file.getAbsolutePath());
                 });
+            }
+            
+            if (run.getIsDataGenerator().get() || run.getIsClient().get()) {
+                run.getProgramArguments().add("--assetsDir");
+                run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+                run.getProgramArguments().add("--assetIndex");
+                run.getProgramArguments().add(runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, runtimeDefinition.getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
             }
         });
     }
