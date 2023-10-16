@@ -27,7 +27,10 @@ public abstract class IdeManagementExtension {
     public IdeManagementExtension(Project project) {
         this.project = project;
         this.rootProject = project.getRootProject();
-
+        
+        project.getPlugins().apply(IdeaExtPlugin.class);
+        project.getPlugins().apply(EclipsePlugin.class);
+        
         if (project != rootProject) {
             rootProject.getPlugins().apply(IdeaExtPlugin.class);
             rootProject.getPlugins().apply(EclipsePlugin.class);
@@ -169,9 +172,9 @@ public abstract class IdeManagementExtension {
             
             //Grab the eclipse model so we can extend it. -> Done on the root project so that the model is available to all subprojects.
             //And so that post sync tasks are only ran once for all subprojects.
-            final EclipseModel model = rootProject.getExtensions().findByType(EclipseModel.class);
+            EclipseModel model = project.getExtensions().findByType(EclipseModel.class);
             if (model == null) {
-                //No model configured!
+                model = rootProject.getExtensions().findByType(EclipseModel.class);
                 return;
             }
             

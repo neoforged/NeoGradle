@@ -180,7 +180,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             task.getVersionJson().set(versionJson);
 
             configureCommonRuntimeTaskParameters(task, data, "downloadAssets", specification, runtimeDirectory);
-            task.getOutputDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("downloadAssets")));
+            task.getAssetsDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("downloadAssets")));
         });
     }
 
@@ -189,7 +189,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             task.getVersionJson().set(versionJson);
 
             configureCommonRuntimeTaskParameters(task, data, "extractNatives", specification, runtimeDirectory);
-            task.getOutputDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("downloadAssets")));
+            task.getOutputDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("extractNatives")));
         });
     }
 }

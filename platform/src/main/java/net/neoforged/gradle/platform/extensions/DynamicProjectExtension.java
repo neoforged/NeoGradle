@@ -674,8 +674,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         runType.getClasspath().from(runtimeClasspath);
         
-        Provider<String> assetsDir = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getOutputDirectory).map(Directory::getAsFile).map(File::getAbsolutePath);
-        Provider<String> assetIndex = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetIndexFile).map(RegularFile::getAsFile).map(File::getName).map(name -> name.substring(0, name.lastIndexOf('.')));
+        Provider<String> assetsDir = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetsDirectory).map(Directory::getAsFile).map(File::getAbsolutePath);
+        Provider<String> assetIndex = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetIndex);
 
         runType.getRunAdapter().set(run -> {
             if (run.getIsClient().get()) {

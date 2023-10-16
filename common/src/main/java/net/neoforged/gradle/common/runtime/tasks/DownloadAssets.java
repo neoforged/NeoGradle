@@ -5,17 +5,11 @@ import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.common.util.VersionJson;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
@@ -27,7 +21,9 @@ import java.util.Map;
 public abstract class DownloadAssets extends DefaultRuntime {
 
     public DownloadAssets() {
-        getAssetIndexFileName().convention("asset-index.json");
+        getOutputDirectory().convention(getAssetsDirectory());
+        getAssetIndex().convention("asset-index");
+        getAssetIndexFileName().convention(getAssetIndex().map(index -> index + ".json"));
         getAssetIndexFile().convention(getRegularFileInOutputDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
         getVersionJson().convention(getVersionJsonFile().map(TransformerUtils.guard(file -> VersionJson.get(file.getAsFile()))));
         getAssetRepository().convention("https://resources.download.minecraft.net/");
@@ -91,6 +87,9 @@ public abstract class DownloadAssets extends DefaultRuntime {
     public abstract Property<VersionJson> getVersionJson();
 
     @Input
+    public abstract Property<String> getAssetIndex();
+    
+    @Input
     public abstract Property<String> getAssetIndexFileName();
 
     @Input
@@ -101,6 +100,10 @@ public abstract class DownloadAssets extends DefaultRuntime {
 
     @Input
     public abstract Property<Boolean> getIsOffline();
+    
+    @InputDirectory
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract DirectoryProperty getAssetsDirectory();
     
     private static class AssetIndex {
         private Map<String, Asset> objects = Maps.newHashMap();

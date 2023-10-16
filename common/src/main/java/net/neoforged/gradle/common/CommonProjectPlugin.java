@@ -99,8 +99,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 RunsConstants.Extensions.RUNS,
                 project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name))
         );
-
-        IdeRunIntegrationManager.getInstance().apply(project);
+        
+        IdeRunIntegrationManager.getInstance().setup(project);
     }
 
     private void applyAfterEvaluate(final Project project) {
@@ -148,5 +148,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 }
             }
         }));
+        
+        IdeRunIntegrationManager.getInstance().apply(project);
     }
 }

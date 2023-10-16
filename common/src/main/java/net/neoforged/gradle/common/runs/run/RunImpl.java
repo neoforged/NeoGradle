@@ -152,7 +152,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.dependencies.addAll(Arrays.asList(tasks));
     }
 
-    @NotNull
     public void configureInternally(final RunType spec) {
         getEnvironmentVariables().putAll(spec.getEnvironmentVariables());
         getMainClass().convention(spec.getMainClass());
