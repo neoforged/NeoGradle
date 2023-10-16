@@ -45,13 +45,13 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
     }
 
     @Override
-    public @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
-        return joinedNeoFormRuntimeDefinition.getAssetsTaskProvider();
+    public @NotNull TaskProvider<DownloadAssets> getAssets() {
+        return joinedNeoFormRuntimeDefinition.getAssets();
     }
 
     @Override
-    public @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
-        return joinedNeoFormRuntimeDefinition.getNativesTaskProvider();
+    public @NotNull TaskProvider<ExtractNatives> getNatives() {
+        return joinedNeoFormRuntimeDefinition.getNatives();
     }
 
     @Override

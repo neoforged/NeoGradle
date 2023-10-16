@@ -18,7 +18,6 @@ import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
-import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
@@ -78,7 +77,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicProjectExtension> {
     
@@ -91,6 +89,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     public DynamicProjectExtension(Project project) {
         this.project = project;
         this.getIsUpdating().convention(getProviderFactory().gradleProperty("updating").map(Boolean::valueOf).orElse(false));
+        
+        //All dynamic projects expose information from themselves as a library. Cause they are.
+        project.getPlugins().apply("java-library");
     }
     
     @ProjectGetter
@@ -157,9 +158,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final RuntimeDevRuntimeExtension runtimeDevRuntimeExtension = project.getExtensions().getByType(RuntimeDevRuntimeExtension.class);
         final RuntimeDevRuntimeDefinition runtimeDefinition = runtimeDevRuntimeExtension.create(builder -> builder.withNeoFormVersion(neoFormVersion).withPatchesDirectory(patches).withRejectsDirectory(rejects).withDistributionType(DistributionType.JOINED).isUpdating(getIsUpdating()));
         
+        project.getExtensions().add("runtime", runtimeDefinition);
+        
         final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
-        ideManagementExtension.registerTaskToRun(runtimeDefinition.getAssetsTaskProvider());
-        ideManagementExtension.registerTaskToRun(runtimeDefinition.getNativesTaskProvider());
+        ideManagementExtension.registerTaskToRun(runtimeDefinition.getAssets());
+        ideManagementExtension.registerTaskToRun(runtimeDefinition.getNatives());
         
         final File workingDirectory = getProject().getLayout().getBuildDirectory().dir(String.format("platform/%s", runtimeDefinition.getSpecification().getIdentifier())).get().getAsFile();
         
@@ -247,11 +250,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         installerLibrariesConfiguration.extendsFrom(installerConfiguration);
         installerLibrariesConfiguration.getDependencies().add(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toDependency(project));
         
-        project.getConfigurations().getByName(mainSource.getImplementationConfigurationName()).extendsFrom(gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, installerConfiguration);
+        project.getConfigurations().getByName(mainSource.getApiConfigurationName()).extendsFrom(gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, installerConfiguration);
         project.getConfigurations().getByName(mainSource.getRuntimeClasspathConfigurationName()).extendsFrom(clientExtraConfiguration);
         
-        project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> types.all(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
-        project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.all(run -> configureRun(project, run, runtimeDefinition)));
+        project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> types.configureEach(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
+        project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> configureRun(run, runtimeDefinition)));
         
         final LauncherProfile launcherProfile = project.getExtensions().create(LauncherProfile.class, "launcherProfile", LauncherProfile.class);
         launcherProfile.configure((Action<LauncherProfile>) profile -> {
@@ -625,7 +628,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
     }
     
-    private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration runtimeDefinition1) {
+    private TaskProvider<SetupProjectFromRuntime> configureSetupTasks(Provider<RegularFile> rawJarProvider, SourceSet mainSource, Configuration minecraftDependencies) {
         final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
         
         final TaskProvider<? extends Task> ideImportTask = ideManagementExtension.getOrCreateIdeImportTask();
@@ -635,8 +638,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             task.dependsOn(ideImportTask);
         });
         
-        final Configuration implementation = project.getConfigurations().getByName(mainSource.getImplementationConfigurationName());
-        runtimeDefinition1.getAllDependencies().forEach(dep -> implementation.getDependencies().add(dep));
+        final Configuration apiConfiguration = project.getConfigurations().getByName(mainSource.getApiConfigurationName());
+        minecraftDependencies.getAllDependencies().forEach(dep -> apiConfiguration.getDependencies().add(dep));
         
         final Project rootProject = project.getRootProject();
         if (!rootProject.getTasks().getNames().contains("setup")) {
@@ -674,8 +677,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         runType.getClasspath().from(runtimeClasspath);
         
-        Provider<String> assetsDir = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetsDirectory).map(Directory::getAsFile).map(File::getAbsolutePath);
-        Provider<String> assetIndex = runtimeDefinition.getAssetsTaskProvider().flatMap(DownloadAssets::getAssetIndex);
+        Provider<String> assetsDir = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetsDirectory).map(Directory::getAsFile).map(File::getAbsolutePath);
+        Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
 
         runType.getRunAdapter().set(run -> {
             if (run.getIsClient().get()) {
@@ -758,24 +761,14 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
     }
     
-    private void configureRun(final Project project, final Run run, final RuntimeDevRuntimeDefinition runtimeDefinition) {
-        final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
-        final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
-        
+    private void configureRun(final Run run, final RuntimeDevRuntimeDefinition runtimeDefinition) {
         run.getConfigureAutomatically().set(true);
         run.getConfigureFromDependencies().set(false);
         run.getConfigureFromTypeWithName().set(true);
         
-        run.getModSources().add(mainSourceSet);
-        
         if (run.getIsClient().get()) {
-            run.dependsOn(runtimeDefinition.getAssetsTaskProvider(), runtimeDefinition.getNativesTaskProvider());
+            run.dependsOn(runtimeDefinition.getAssets(), runtimeDefinition.getNatives());
         }
-        
-        project.getExtensions().getByType(IdeManagementExtension.class).onIdea((project1, idea, ideaExtension) -> run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().convention(mainSourceSet));
-        
-        //TODO: Deal with the lazy component of this, we might in the future move all of this into the run definition.
-        run.getEnvironmentVariables().put("MOD_CLASSES", Stream.concat(run.getModSources().get().stream().map(source -> source.getOutput().getResourcesDir()), run.getModSources().get().stream().map(source -> source.getOutput().getClassesDirs().getFiles()).flatMap(Collection::stream)).map(File::getAbsolutePath).map(path -> String.format("minecraft%%%%%s", path)).collect(Collectors.joining(File.pathSeparator)));
     }
     
     private TaskProvider<? extends WithOutput> createCleanProvider(final TaskProvider<? extends WithOutput> jarProvider, final RuntimeDevRuntimeDefinition runtimeDefinition, File workingDirectory) {

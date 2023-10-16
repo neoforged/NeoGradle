@@ -42,6 +42,14 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
         this.project = project;
         this.accessTransformers = project.getExtensions().getByType(AccessTransformers.class);
         this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannel.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
+        
+        final String baseName = project.getName().replace(":", "_");
+        this.getModIdentifier().convention(project.provider(() -> {
+            if (baseName.startsWith("_"))
+                return baseName.substring(1);
+            
+            return baseName;
+        }));
     }
 
     @Override

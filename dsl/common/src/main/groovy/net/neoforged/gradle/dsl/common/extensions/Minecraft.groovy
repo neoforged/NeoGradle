@@ -5,10 +5,19 @@ import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.provider.Property
 import org.jetbrains.annotations.NotNull
 
 @CompileStatic
 interface Minecraft extends BaseDSLElement<Minecraft> {
+
+    /**
+     * The mod identifier of the current project.
+     *
+     * @return The mod identifier of the current project.
+     */
+    @DSLProperty
+    Property<String> getModIdentifier();
 
     /**
      * Gives access to all naming channels that are known in the current project.

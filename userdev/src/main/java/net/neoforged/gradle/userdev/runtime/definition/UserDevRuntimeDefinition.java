@@ -93,13 +93,13 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
-    public @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
-        return mcpRuntimeDefinition.getAssetsTaskProvider();
+    public @NotNull TaskProvider<DownloadAssets> getAssets() {
+        return mcpRuntimeDefinition.getAssets();
     }
 
     @Override
-    public @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
-        return mcpRuntimeDefinition.getNativesTaskProvider();
+    public @NotNull TaskProvider<ExtractNatives> getNatives() {
+        return mcpRuntimeDefinition.getNatives();
     }
 
     @Override

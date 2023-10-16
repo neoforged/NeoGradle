@@ -1,22 +1,18 @@
 package net.neoforged.gradle.common.runtime.definition;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
-import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
+import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
-import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.ListProperty;
@@ -30,7 +26,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -161,26 +156,23 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     }
 
     @NotNull
-    public abstract TaskProvider<DownloadAssets> getAssetsTaskProvider();
+    public abstract TaskProvider<DownloadAssets> getAssets();
 
     @NotNull
-    public abstract TaskProvider<ExtractNatives> getNativesTaskProvider();
+    public abstract TaskProvider<ExtractNatives> getNatives();
 
     public void configureRun(RunImpl run) {
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
-        workingInterpolationData.put("source_roots",  Stream.concat(
-                run.getModSources().get().stream().map(source -> source.getOutput().getResourcesDir()),
-                run.getModSources().get().stream().map(source -> source.getOutput().getClassesDirs().getFiles()).flatMap(Collection::stream)
-        ).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
+        workingInterpolationData.put("source_roots", RunsUtil.buildModClasses(run.getModSources()).get());
 
         run.overrideJvmArguments(interpolate(run.getJvmArguments(), workingInterpolationData));
         run.overrideProgramArguments(interpolate(run.getProgramArguments(), workingInterpolationData));
         run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), workingInterpolationData));
         run.overrideSystemProperties(interpolate(run.getSystemProperties(), workingInterpolationData));
 
-        run.dependsOn(getAssetsTaskProvider(), getNativesTaskProvider());
+        run.dependsOn(getAssets(), getNatives());
     }
 
     protected Map<String, String> buildRunInterpolationData() {
@@ -188,9 +180,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
         interpolationData.put("runtime_name", specification.getVersionedName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
-        interpolationData.put("assets_root", getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
-        interpolationData.put("asset_index", getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
-        interpolationData.put("natives", getNativesTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("assets_root", getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("asset_index", getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
+        interpolationData.put("natives", getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
 
         return interpolationData;
     }

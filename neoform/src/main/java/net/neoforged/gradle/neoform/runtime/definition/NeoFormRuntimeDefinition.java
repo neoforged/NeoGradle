@@ -83,12 +83,12 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
     }
 
     @Override
-    public @NotNull TaskProvider<DownloadAssets> getAssetsTaskProvider() {
+    public @NotNull TaskProvider<DownloadAssets> getAssets() {
         return assetsTaskProvider;
     }
 
     @Override
-    public @NotNull TaskProvider<ExtractNatives> getNativesTaskProvider() {
+    public @NotNull TaskProvider<ExtractNatives> getNatives() {
         return nativesTaskProvider;
     }
 

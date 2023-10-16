@@ -54,13 +54,13 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
 
     @Override
     @NotNull
-    public TaskProvider<DownloadAssets> getAssetsTaskProvider() {
+    public TaskProvider<DownloadAssets> getAssets() {
         return assetsTaskProvider;
     }
 
     @Override
     @NotNull
-    public TaskProvider<ExtractNatives> getNativesTaskProvider() {
+    public TaskProvider<ExtractNatives> getNatives() {
         return nativesTaskProvider;
     }
 
@@ -85,12 +85,12 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
         final String fgVersion = this.getClass().getPackage().getImplementationVersion();
 
         interpolationData.put(InterpolationConstants.VERSION_NAME, getSpecification().getMinecraftVersion());
-        interpolationData.put(InterpolationConstants.ASSETS_ROOT, getAssetsTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
-        interpolationData.put(InterpolationConstants.ASSETS_INDEX_NAME, getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssetsTaskProvider().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
+        interpolationData.put(InterpolationConstants.ASSETS_ROOT, getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put(InterpolationConstants.ASSETS_INDEX_NAME, getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         interpolationData.put(InterpolationConstants.AUTH_ACCESS_TOKEN, "0");
         interpolationData.put(InterpolationConstants.USER_TYPE, "legacy");
         interpolationData.put(InterpolationConstants.VERSION_TYPE, getVersionJson().getType());
-        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, getNativesTaskProvider().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
         interpolationData.put(InterpolationConstants.LAUNCHER_NAME, "NeoGradle-Vanilla");
         interpolationData.put(InterpolationConstants.LAUNCHER_VERSION, fgVersion == null ? "DEV" : fgVersion);
 
