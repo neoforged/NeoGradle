@@ -87,8 +87,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.afterEvaluate(this::applyAfterEvaluate);
 
         project.getExtensions().getByType(SourceSetContainer.class)
-                .configureEach(sourceSet -> sourceSet
-                        .getExtensions().create(ProjectHolder.class, ProjectHolderExtension.NAME, ProjectHolderExtension.class, project));
+                .configureEach(sourceSet -> {
+                    sourceSet
+                            .getExtensions().create(ProjectHolder.class, ProjectHolderExtension.NAME, ProjectHolderExtension.class, project);
+                    sourceSet
+                            .getExtensions().create(RunnableSourceSet.NAME, RunnableSourceSet.class);
+                });
 
         project.getExtensions().add(
                 RunsConstants.Extensions.RUN_TYPES,

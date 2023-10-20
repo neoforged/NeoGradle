@@ -111,6 +111,7 @@ public class IdeRunIntegrationManager {
                     ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
                     ideaRun.setProgramParameters(String.join(" ", runImpl.getProgramArguments().get()));
                     ideaRun.setEnvs(adaptEnvironment(runImpl, RunsUtil::buildRunWithIdeaModClasses));
+                    ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
                     
                     ideaRun.beforeRun(beforeRuns -> {
                         beforeRuns.create("Build", Make.class);

@@ -4,8 +4,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.tasks.RunExec;
-import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
+import net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
@@ -16,9 +16,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
-import org.gradle.plugins.ide.eclipse.model.EclipseProject;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
-import org.jetbrains.gradle.ext.IdeaExtPlugin;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -103,10 +101,10 @@ public class RunsUtil {
     
     public static Provider<String> buildGradleModClasses(final ListProperty<SourceSet> sourceSetsProperty, final Function<SourceSet, Stream<File>> directoryBuilder) {
         return sourceSetsProperty.map(sourceSets -> {
-            final Multimap<String, SourceSet> sourceSetsByProject = HashMultimap.create();
-            sourceSets.forEach(sourceSet -> sourceSetsByProject.put(sourceSet.getExtensions().getByType(ProjectHolder.class).getProject().getExtensions().getByType(Minecraft.class).getModIdentifier().get(), sourceSet));
+            final Multimap<String, SourceSet> sourceSetsByRunId = HashMultimap.create();
+            sourceSets.forEach(sourceSet -> sourceSetsByRunId.put(sourceSet.getExtensions().getByType(RunnableSourceSet.class).getModIdentifier().get(), sourceSet));
             
-            return sourceSetsByProject.entries()
+            return sourceSetsByRunId.entries()
                            .stream().flatMap(entry -> directoryBuilder.apply(entry.getValue())
                                                               .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath())))
                            .collect(Collectors.joining(File.pathSeparator));
