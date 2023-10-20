@@ -9,6 +9,7 @@ import net.neoforged.gradle.common.runs.ide.extensions.IdeaRunExtensionImpl;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
+import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
@@ -18,6 +19,8 @@ import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
@@ -30,6 +33,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * A simple manager which configures runs based on the IDE it is attached to.
@@ -105,7 +110,7 @@ public class IdeRunIntegrationManager {
                     ideaRun.setJvmArgs(String.join(" ", runImpl.realiseJvmArguments()));
                     ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
                     ideaRun.setProgramParameters(String.join(" ", runImpl.getProgramArguments().get()));
-                    ideaRun.setEnvs(runImpl.getEnvironmentVariables().get());
+                    ideaRun.setEnvs(adaptEnvironment(runImpl, RunsUtil::buildRunWithIdeaModClasses));
                     
                     ideaRun.beforeRun(beforeRuns -> {
                         beforeRuns.create("Build", Make.class);
@@ -157,7 +162,7 @@ public class IdeRunIntegrationManager {
                                         .workingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath())
                                         .vmArgs(runImpl.realiseJvmArguments().toArray(new String[0]))
                                         .args(runImpl.getProgramArguments().get().toArray(new String[0]))
-                                        .envVar(runImpl.getEnvironmentVariables().get())
+                                        .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                                         .build(runImpl.getMainClass().get());
                         
                         final String debugName = ".Run " + runName;
@@ -195,6 +200,15 @@ public class IdeRunIntegrationManager {
             catch (XMLStreamException e) {
                 throw new RuntimeException("Failed to write launch file: " + fileName, e);
             }
+        }
+        
+        private static Map<String, String> adaptEnvironment(
+                final RunImpl run,
+                final Function<ListProperty<SourceSet>, Provider<String>> modClassesProvider
+                ) {
+            final Map<String, String> environment = run.getEnvironmentVariables().get();
+            environment.put("MOD_CLASSES", modClassesProvider.apply(run.getModSources()).get());
+            return environment;
         }
     }
 }

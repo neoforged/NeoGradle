@@ -141,7 +141,7 @@ public abstract class IdeManagementExtension {
             
             //Grab the idea runtime model so we can extend it. -> This is done from the root project, so that the model is available to all subprojects.
             //And so that post sync tasks are only ran once for all subprojects.
-            final IdeaModel model = rootProject.getExtensions().findByType(IdeaModel.class);
+            final IdeaModel model = project.getExtensions().findByType(IdeaModel.class);
             if (model == null || model.getProject() == null) {
                 return;
             }

@@ -6,17 +6,23 @@ import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.tasks.RunExec;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
+import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.Project;
-import org.gradle.api.Transformer;
+import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.plugins.ide.eclipse.model.EclipseModel;
+import org.gradle.plugins.ide.eclipse.model.EclipseProject;
+import org.gradle.plugins.ide.idea.model.IdeaModel;
+import org.jetbrains.gradle.ext.IdeaExtPlugin;
 
+import javax.annotation.Nonnull;
 import java.io.File;
-import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,19 +47,68 @@ public class RunsUtil {
             run.getTaskDependencies().forEach(task::dependsOn);
         }));
         
-        run.getEnvironmentVariables().put("MOD_CLASSES", buildModClasses(run.getModSources()));
+        run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(run.getModSources()));
         
         return run;
     }
     
-    public static Provider<String> buildModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+    public static Provider<String> buildGradleModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+        return buildGradleModClasses(
+                sourceSetsProperty,
+                sourceSet -> Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream())
+        );
+    }
+    
+    public static Provider<String> buildRunWithIdeaModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+        return buildGradleModClasses(
+                sourceSetsProperty,
+                sourceSet -> {
+                    final Project project = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
+                    final IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
+                    final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) ideaModel
+                                                                  .getProject())
+                                                                  .getExtensions().getByType(IdeaRunsExtension.class);
+                    
+                    if (ideaRunsExtension.getRunWithIdea().get()) {
+                        final File parentDir = ideaRunsExtension.getOutDirectory().get().getAsFile();
+                        final File sourceSetDir = new File(parentDir, getIntellijOutName(sourceSet));
+                        return Stream.of(new File(sourceSetDir, "resources"), new File(sourceSetDir, "classes"));
+                    }
+                    
+                    return Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream());
+                }
+        );
+    }
+    
+    public static Provider<String> buildRunWithEclipseModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+        return buildGradleModClasses(
+                sourceSetsProperty,
+                sourceSet -> {
+                    final Project project = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
+                    final EclipseModel eclipseModel = project.getExtensions().getByType(EclipseModel.class);
+                    
+                    final File conventionsDir = new File(project.getProjectDir(), "bin");
+                    eclipseModel.getClasspath().getBaseSourceOutputDir().convention(project.provider(() -> conventionsDir));
+                    
+                    final File parentDir = eclipseModel.getClasspath().getBaseSourceOutputDir().get();
+                    final File sourceSetDir = new File(parentDir, sourceSet.getName());
+                    return Stream.of(sourceSetDir);
+                }
+        );
+    }
+    
+    public static String getIntellijOutName(@Nonnull final SourceSet sourceSet) {
+        return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "production" : sourceSet.getName();
+    }
+    
+    public static Provider<String> buildGradleModClasses(final ListProperty<SourceSet> sourceSetsProperty, final Function<SourceSet, Stream<File>> directoryBuilder) {
         return sourceSetsProperty.map(sourceSets -> {
             final Multimap<String, SourceSet> sourceSetsByProject = HashMultimap.create();
             sourceSets.forEach(sourceSet -> sourceSetsByProject.put(sourceSet.getExtensions().getByType(ProjectHolder.class).getProject().getExtensions().getByType(Minecraft.class).getModIdentifier().get(), sourceSet));
             
             return sourceSetsByProject.entries()
-                           .stream().flatMap(entry -> Stream.concat(Stream.of(entry.getValue().getOutput().getResourcesDir()), entry.getValue().getOutput().getClassesDirs().getFiles().stream())
-                                          .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath())))
+                           .stream().flatMap(entry -> directoryBuilder.apply(entry.getValue())
+                                                              .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath())))
                            .collect(Collectors.joining(File.pathSeparator));
         });
         

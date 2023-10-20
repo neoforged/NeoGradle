@@ -22,13 +22,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecification> implements Definition<S> {
 
@@ -165,7 +163,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
-        workingInterpolationData.put("source_roots", RunsUtil.buildModClasses(run.getModSources()).get());
+        workingInterpolationData.put("source_roots", RunsUtil.buildGradleModClasses(run.getModSources()).get());
 
         run.overrideJvmArguments(interpolate(run.getJvmArguments(), workingInterpolationData));
         run.overrideProgramArguments(interpolate(run.getProgramArguments(), workingInterpolationData));

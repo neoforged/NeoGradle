@@ -45,7 +45,7 @@ subprojects.forEach { subProject ->
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version
     subProject.group = 'net.neoforged.gradle'
-    subProject.archivesBaseName = "fg-${subProject.name.toLowerCase()}"
+    subProject.archivesBaseName = "ng-${subProject.name.toLowerCase()}"
 
     //Setup the java toolchain
     subProject.java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_version)
