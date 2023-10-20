@@ -1,6 +1,7 @@
 package net.neoforged.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
+import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.minecraftforge.gdi.annotations.ProjectGetter
 import org.gradle.api.Project
@@ -9,21 +10,31 @@ import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 @CompileStatic
-abstract class RunnableSourceSet {
+abstract class RunnableSourceSet implements BaseDSLElement<RunnableSourceSet> {
 
     public static final String NAME = "runs"
 
-    RunnableSourceSet() {
+    private final Project project;
+    private final Property<String> modIdentifier;
+
+    @Inject
+    RunnableSourceSet(final Project project) {
         super()
+        this.project = project;
+        this.modIdentifier = project.getObjects().property(String.class)
+
         getModIdentifier().convention(
-                getProject().getExtensions().getByType(Minecraft.class).getModIdentifier()
+                project.getExtensions().getByType(Minecraft.class).getModIdentifier()
         )
     }
 
-    @Inject
-    @ProjectGetter
-    abstract Project getProject();
+    @Override
+    Project getProject() {
+        return project;
+    }
 
     @DSLProperty
-    abstract Property<String> getModIdentifier();
+    Property<String> getModIdentifier() {
+        return modIdentifier;
+    }
 }

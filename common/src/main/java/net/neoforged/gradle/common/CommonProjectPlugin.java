@@ -91,7 +91,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     sourceSet
                             .getExtensions().create(ProjectHolder.class, ProjectHolderExtension.NAME, ProjectHolderExtension.class, project);
                     sourceSet
-                            .getExtensions().create(RunnableSourceSet.NAME, RunnableSourceSet.class);
+                            .getExtensions().create(RunnableSourceSet.NAME, RunnableSourceSet.class, project);
                 });
 
         project.getExtensions().add(
