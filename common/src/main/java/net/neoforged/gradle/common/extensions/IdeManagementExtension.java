@@ -141,9 +141,14 @@ public abstract class IdeManagementExtension {
             
             //Grab the idea runtime model so we can extend it. -> This is done from the root project, so that the model is available to all subprojects.
             //And so that post sync tasks are only ran once for all subprojects.
-            final IdeaModel model = project.getExtensions().findByType(IdeaModel.class);
+            IdeaModel model = project.getExtensions().findByType(IdeaModel.class);
             if (model == null || model.getProject() == null) {
-                return;
+                model = rootProject.getExtensions().findByType(IdeaModel.class);
+            }
+            
+            //If we still don't have a model, throw an exception:
+            if (model == null || model.getProject() == null) {
+                throw new IllegalStateException("IDEA model is null, even though the IDEA plugin is applied.");
             }
             
             //Locate the project settings on the model and then configure them and then pass them to the action so that it can configure it.

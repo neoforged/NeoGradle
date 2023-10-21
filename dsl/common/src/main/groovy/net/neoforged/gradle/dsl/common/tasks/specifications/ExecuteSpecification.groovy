@@ -101,7 +101,8 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The interpolated runtime arguments.
      */
-    @Internal
+    @Input
+    @PathSensitive(PathSensitivity.NONE)
     MapProperty<String, Provider<String>> getRuntimeArguments();
 
 
@@ -110,6 +111,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The interpolated runtime arguments.
      */
-    @Internal
+    @Input
+    @PathSensitive(PathSensitivity.NONE)
     MapProperty<String, Provider<List<String>>> getMultiRuntimeArguments();
 }

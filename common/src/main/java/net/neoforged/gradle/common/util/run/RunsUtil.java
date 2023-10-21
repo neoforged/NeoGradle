@@ -62,8 +62,8 @@ public class RunsUtil {
                 sourceSetsProperty,
                 sourceSet -> {
                     final Project project = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
-                    final IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
-                    final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) ideaModel
+                    final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
+                    final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) rootIdeaModel
                                                                   .getProject())
                                                                   .getExtensions().getByType(IdeaRunsExtension.class);
                     

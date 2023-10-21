@@ -12,18 +12,33 @@ import javax.inject.Inject
 @CompileStatic
 abstract class IdeaRunsExtension implements BaseDSLElement<IdeaRunsExtension> {
 
-    IdeaRunsExtension() {
+    private final Project project;
+    private final Property<Boolean> runWithIdea;
+    private final DirectoryProperty outDirectory;
+
+    @Inject
+    IdeaRunsExtension(final Project project) {
+        this.project = project;
+
+        this.runWithIdea = project.getObjects().property(Boolean);
+        this.outDirectory = project.getObjects().directoryProperty();
+
         getRunWithIdea().convention(false);
         getOutDirectory().convention(getProject().getLayout().getProjectDirectory().dir("out"))
     }
 
-    @Inject
     @Override
-    abstract Project getProject();
+    Project getProject() {
+        return project;
+    }
 
     @DSLProperty
-    abstract Property<Boolean> getRunWithIdea();
+    Property<Boolean> getRunWithIdea() {
+        return runWithIdea;
+    }
 
     @DSLProperty
-    abstract DirectoryProperty getOutDirectory();
+    DirectoryProperty getOutDirectory() {
+        return outDirectory;
+    }
 }

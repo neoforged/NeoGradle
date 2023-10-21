@@ -12,6 +12,7 @@ import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
+import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
+import org.gradle.plugins.ide.idea.model.IdeaProject;
 import org.jetbrains.gradle.ext.*;
 
 import javax.xml.stream.XMLStreamException;
@@ -33,6 +35,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -57,10 +60,17 @@ public class IdeRunIntegrationManager {
      * @param project The project to configure.
      */
     public void setup(final Project project) {
-        final IdeManagementExtension ideManager = project.getExtensions().getByType(IdeManagementExtension.class);
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
             run.getExtensions().create(IdeaRunExtension.class, "idea", IdeaRunExtensionImpl.class, project, run);
         }));
+        
+        final Project rootProject = project.getRootProject();
+        final IdeaModel ideaModel = rootProject.getExtensions().getByType(IdeaModel.class);
+        final IdeaProject ideaProject = ideaModel.getProject();
+        final ExtensionAware extensionAware = (ExtensionAware) ideaProject;
+        if (extensionAware.getExtensions().findByType(IdeaRunsExtension.class) == null) {
+            extensionAware.getExtensions().create("runs", IdeaRunsExtension.class, project);
+        }
     }
     
     /**
@@ -155,7 +165,7 @@ public class IdeRunIntegrationManager {
                                                                          .tasks(ideBeforeRunTask.get().getName())
                                                                          .build();
                         
-                        final String gradleName = ".Prepare " + runName;
+                        final String gradleName = "Prepare " + runName;
                         writeLaunchToFile(project, gradleName, idePreRunTask);
                         
                         final JavaApplicationLaunchConfig debugRun =
@@ -164,9 +174,10 @@ public class IdeRunIntegrationManager {
                                         .vmArgs(runImpl.realiseJvmArguments().toArray(new String[0]))
                                         .args(runImpl.getProgramArguments().get().toArray(new String[0]))
                                         .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
+                                        .useArgumentsFile()
                                         .build(runImpl.getMainClass().get());
                         
-                        final String debugName = ".Run " + runName;
+                        final String debugName = "Run " + runName;
                         writeLaunchToFile(project, debugName, debugRun);
                         
                         writeLaunchToFile(project, runName,
@@ -190,7 +201,7 @@ public class IdeRunIntegrationManager {
         }
         
         private static void writeLaunchToFile(Project project, String fileName, LaunchConfig config) {
-            final File file = project.file(String.format("eclipse/runs/%s.launch", fileName));
+            final File file = project.file(String.format(".eclipse/configurations/%s.launch", fileName));
             file.getParentFile().mkdirs();
             try (FileWriter writer = new FileWriter(file, false)) {
                 config.write(writer);
@@ -207,7 +218,7 @@ public class IdeRunIntegrationManager {
                 final RunImpl run,
                 final Function<ListProperty<SourceSet>, Provider<String>> modClassesProvider
                 ) {
-            final Map<String, String> environment = run.getEnvironmentVariables().get();
+            final Map<String, String> environment = new HashMap<>(run.getEnvironmentVariables().get());
             environment.put("MOD_CLASSES", modClassesProvider.apply(run.getModSources()).get());
             return environment;
         }

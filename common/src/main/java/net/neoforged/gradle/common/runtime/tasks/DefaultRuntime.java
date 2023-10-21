@@ -74,7 +74,7 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
     @Internal
     public abstract MapProperty<String, File> getRuntimeData();
 
-    @Internal
+    @Input
     public abstract MapProperty<String, Provider<String>> getRuntimeArguments();
 
     protected void buildRuntimeArguments(final Map<String, Provider<String>> arguments) {
