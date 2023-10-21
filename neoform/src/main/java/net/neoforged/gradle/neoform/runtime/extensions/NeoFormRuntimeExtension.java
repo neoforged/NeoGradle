@@ -17,6 +17,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import net.neoforged.gradle.dsl.common.tasks.specifications.OutputSpecification;
 import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
@@ -135,7 +136,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 }
 
                 dependentTask.ifPresent(taskForArguments::dependsOn);
-                dependentTask.ifPresent(task -> arguments.putFile(key, task.map(t -> t.getOutput().get().getAsFile())));
+                dependentTask.ifPresent(task -> arguments.putRegularFile(key, task.flatMap(OutputSpecification::getOutput)));
             } else {
                 arguments.put(key, spec.getProject().provider(() -> value));
             }

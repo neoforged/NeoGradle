@@ -1,9 +1,8 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import net.neoforged.gradle.dsl.common.runtime.tasks.NamedDirectory;
-import net.neoforged.gradle.dsl.common.runtime.tasks.NamedFileRef;
-import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeData;
-import net.neoforged.gradle.dsl.common.runtime.tasks.NamedFile;
+import net.neoforged.gradle.dsl.common.runtime.tasks.*;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 
@@ -54,8 +53,18 @@ public abstract class RuntimeDataImpl implements RuntimeData {
     }
     
     @Override
-    public void putDirectory(String input, Provider<File> fileProvider) {
-        getFiles().add(fileProvider.map(file -> new NamedDirectory(input, file)));
+    public void putRegularFile(String input, Provider<RegularFile> fileProvider) {
+        getFiles().add(new NamedRegularFile(input, fileProvider));
+    }
+    
+    @Override
+    public void putDirectoryFile(String input, Provider<File> fileProvider) {
+        getFiles().add(fileProvider.map(file -> new NamedDirectoryFile(input, file)));
+    }
+    
+    @Override
+    public void putDirectory(String input, Provider<Directory> fileProvider) {
+        getFiles().add(new NamedDirectory(input, fileProvider));
     }
     
     @Override
@@ -68,7 +77,7 @@ public abstract class RuntimeDataImpl implements RuntimeData {
     @Override
     public void putAllDirectories(Map<String, File> files) {
         files.forEach((key, file) -> {
-            getFiles().add(providerFactory.provider(() -> new NamedDirectory(key, file)));
+            getFiles().add(providerFactory.provider(() -> new NamedDirectoryFile(key, file)));
         });
     }
 }

@@ -94,8 +94,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The interpolated runtime data.
      */
-    @InputFiles
-    @PathSensitive(PathSensitivity.NONE)
+    @Internal
     MapProperty<String, Provider<File>> getRuntimeData();
 
     /**
@@ -103,8 +102,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The interpolated runtime arguments.
      */
-    @Input
-    @PathSensitive(PathSensitivity.NONE)
+    @Internal
     MapProperty<String, Provider<String>> getRuntimeArguments();
 
 
@@ -113,7 +111,6 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The interpolated runtime arguments.
      */
-    @Input
-    @PathSensitive(PathSensitivity.NONE)
+    @Internal
     MapProperty<String, Provider<List<String>>> getMultiRuntimeArguments();
 }

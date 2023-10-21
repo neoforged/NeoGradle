@@ -1,20 +1,19 @@
 package net.neoforged.gradle.dsl.common.runtime.tasks
 
 import groovy.transform.CompileStatic
-import org.gradle.api.file.Directory
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 
 @CompileStatic
-class NamedDirectory implements NamedFileRef {
+class NamedDirectoryFile implements NamedFileRef {
 
     private final String name;
-    private final Provider<Directory> file;
+    private final File file;
 
-    NamedDirectory(String name, Provider<Directory> file) {
+    NamedDirectoryFile(String name, File file) {
         this.name = name
         this.file = file
     }
@@ -27,6 +26,6 @@ class NamedDirectory implements NamedFileRef {
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
     File getFile() {
-        return file.get().asFile
+        return file
     }
 }

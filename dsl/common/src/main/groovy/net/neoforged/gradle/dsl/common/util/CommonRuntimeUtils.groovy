@@ -128,7 +128,7 @@ final class CommonRuntimeUtils {
                 }
 
                 dependentTask.ifPresent(taskForArguments::dependsOn);
-                dependentTask.ifPresent(task -> arguments.putFile(key, task.flatMap(t -> t.getOutput().getAsFile())));
+                dependentTask.ifPresent(task -> arguments.putRegularFile(key, task.flatMap(t -> t.getOutput())));
             } else {
                 arguments.put(key, providerBuilder.apply(value));
             }

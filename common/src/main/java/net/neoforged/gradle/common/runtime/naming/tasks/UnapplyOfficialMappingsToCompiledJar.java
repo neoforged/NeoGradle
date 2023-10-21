@@ -25,8 +25,8 @@ public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
         getProgramArguments().set(Lists.newArrayList("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}", "--live", "-r"));
         getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
 
-        getArguments().putFile("input", getInput().getAsFile());
-        getArguments().putFile("mappings", getMappings().getAsFile());
+        getArguments().putRegularFile("input", getInput());
+        getArguments().putRegularFile("mappings", getMappings());
     }
 
     @Override
