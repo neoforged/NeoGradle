@@ -28,11 +28,12 @@ public abstract class GenerateBinaryPatches extends Execute implements WithOutpu
         getDistributionType().convention(DistributionType.JOINED);
         getOutputFileName().convention("output.lzma");
         
-        getArguments().put("clean", getClean().<String>map(clean -> clean.getAsFile().getAbsolutePath()));
-        getArguments().put("dirty", getPatched().<String>map(patched -> patched.getAsFile().getAbsolutePath()));
-        getArguments().put("srg", getMappings().<String>map(mappings -> mappings.getAsFile().getAbsolutePath()));
+        getArguments().putFile("clean", getClean().getAsFile());
+        getArguments().putFile("dirty", getPatched().getAsFile());
+        getArguments().putFile("srg", getMappings().getAsFile());
         
-        getMultiArguments().put("patches", getProject().provider(() -> getPatches().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toList())));
+        getMultiArguments().putFiles("patches",
+                getPatches());
     }
 
     @InputFile

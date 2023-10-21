@@ -30,7 +30,7 @@ public class DecompileStep implements IStep {
             task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), decompiler));
             task.getJvmArguments().addAll(DecompileUtils.DEFAULT_JVM_ARGS);
             task.getProgramArguments().addAll(DecompileUtils.DEFAULT_PROGRAMM_ARGS);
-            task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask)));
+            CommonRuntimeUtils.buildArguments(task.getArguments(), definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask));
         });
     }
 

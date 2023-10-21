@@ -24,7 +24,7 @@ public class ExtractBundledServerStep implements IStep {
 
         return definition.getSpecification().getProject().getTasks().register(getTaskName(definition), ExtractBundledServerTask.class, task -> {
             task.getInput().set(artifact.flatMap(WithOutput::getOutput));
-            task.getArguments().putAll(CommonRuntimeUtils.buildArguments(definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask)));
+            CommonRuntimeUtils.buildArguments(task.getArguments(), definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask));
             task.getMinecraftVersion().set(CacheableMinecraftVersion.from(definition.getSpecification().getMinecraftVersion(), definition.getSpecification().getProject()));
             
             task.dependsOn(artifact);

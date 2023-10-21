@@ -9,6 +9,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -93,8 +94,9 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The interpolated runtime data.
      */
-    @Internal
-    MapProperty<String, File> getRuntimeData();
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    MapProperty<String, Provider<File>> getRuntimeData();
 
     /**
      * The interpolated runtime arguments that will be used to interpolate the arguments.

@@ -22,6 +22,14 @@ import static net.neoforged.gradle.dsl.common.util.PropertyUtils.*
 @CompileStatic
 abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile> {
 
+    @Inject
+    public LauncherProfile(ObjectFactory factory) {
+        this.getArguments().set(factory.newInstance(Arguments.class))
+        this.getAssetIndex().set(factory.newInstance(AssetIndex.class))
+        this.getJavaVersion().set(factory.newInstance(JavaVersion.class))
+        this.getLoggingConfiguration().set(factory.newInstance(LoggingConfiguration.class))
+    }
+
     static Gson createGson(ObjectFactory factory) {
         final GsonBuilder builder = new GsonBuilder().disableHtmlEscaping();
 

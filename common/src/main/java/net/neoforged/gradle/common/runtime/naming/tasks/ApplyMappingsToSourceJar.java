@@ -38,7 +38,7 @@ import java.util.zip.ZipOutputStream;
 
 
 @CacheableTask
-public abstract class ApplyMappingsToSourceJar extends DefaultRuntime implements Runtime {
+public abstract class ApplyMappingsToSourceJar extends DefaultRuntime {
 
     public ApplyMappingsToSourceJar() {
         getRemapJavadocs().convention(false);

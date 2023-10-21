@@ -13,7 +13,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 @CacheableTask
-public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSourceJar implements Runtime {
+public abstract class ApplyOfficialMappingsToSourceJar extends ApplyMappingsToSourceJar {
 
     public ApplyOfficialMappingsToSourceJar() {
         getSourceRenamer().convention(

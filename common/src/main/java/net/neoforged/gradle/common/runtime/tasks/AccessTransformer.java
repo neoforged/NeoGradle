@@ -23,7 +23,6 @@ public abstract class AccessTransformer extends Execute {
 
         setDescription("Runs the access transformer on the decompiled sources.");
 
-        getData().set(Collections.emptyMap());
         getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.ACCESSTRANSFORMER));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {

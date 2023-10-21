@@ -37,9 +37,9 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
         getJvmArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_JVM_ARGS));
         getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
 
-        getArguments().put("input", getInput().getAsFile().map(File::getAbsolutePath));
-        getArguments().put("mappings", getMappings().getAsFile().map(File::getAbsolutePath));
-        getArguments().put("libraries", getLibraries().getAsFile().map(File::getAbsolutePath));
+        getArguments().putFile("input", getInput().getAsFile());
+        getArguments().putFile("mappings", getMappings().getAsFile());
+        getArguments().putFile("libraries", getLibraries().getAsFile());
 
         getOutput().convention(getOutputDirectory().map(d -> d.file("output.jar")));
         

@@ -25,7 +25,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
     default List<String> interpolateVariableSubstitution(String value, String previous) {
         final Map<String, Provider<String>> runtimeArguments = getRuntimeArguments().get()
         final Map<String, Provider<List<String>>> multiRuntimeArguments = getMultiRuntimeArguments().get()
-        final Map<String, File> data = getRuntimeData().get()
+        final Map<String, Provider<File>> data = getRuntimeData().get()
 
         Matcher matcher = RegexUtils.REPLACE_PATTERN.matcher(value)
         if (!matcher.find()) return Lists.newArrayList(value) // Not a replaceable string
@@ -61,9 +61,9 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
             }
 
 
-            File dataElement = data.get(argName)
+            Provider<File> dataElement = data.get(argName)
             if (dataElement != null) {
-                return Lists.newArrayList(dataElement.getAbsolutePath())
+                return Lists.newArrayList(dataElement.get().getAbsolutePath())
             }
         }
 

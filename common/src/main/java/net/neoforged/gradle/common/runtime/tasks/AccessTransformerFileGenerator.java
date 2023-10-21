@@ -16,7 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 
 @CacheableTask
-public abstract class AccessTransformerFileGenerator extends DefaultRuntime implements Runtime {
+public abstract class AccessTransformerFileGenerator extends DefaultRuntime {
 
     public AccessTransformerFileGenerator() {
         super();

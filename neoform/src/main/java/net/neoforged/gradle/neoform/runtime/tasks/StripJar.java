@@ -29,7 +29,7 @@ public abstract class StripJar extends DefaultRuntime {
     public StripJar() {
         super();
 
-        getMappingsFile().fileProvider(getRuntimeData().map(data -> data.get("mappings")));
+        getMappingsFile().fileProvider(getRuntimeData().flatMap(data -> data.get("mappings")));
         getIsWhitelistMode().convention(true);
         getFilters().convention(
                 getMappingsFile().map(

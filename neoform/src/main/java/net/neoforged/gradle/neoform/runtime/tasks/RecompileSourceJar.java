@@ -1,5 +1,11 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
+import net.neoforged.gradle.common.runtime.tasks.RuntimeArgumentsImpl;
+import net.neoforged.gradle.common.runtime.tasks.RuntimeDataImpl;
+import net.neoforged.gradle.common.runtime.tasks.RuntimeMultiArgumentsImpl;
+import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeData;
+import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
+import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import org.gradle.api.Action;
@@ -36,10 +42,17 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     private Property<JavaLanguageVersion> javaVersion;
     private Provider<JavaToolchainService> javaToolchainService;
+    private final RuntimeData data;
+    private final RuntimeArguments arguments;
+    private final RuntimeMultiArguments multiArguments;
 
     public RecompileSourceJar() {
         super();
-
+        
+        data = getObjectFactory().newInstance(RuntimeDataImpl.class, getProviderFactory());
+        arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
+        multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
+        
         this.javaVersion = getProject().getObjects().property(JavaLanguageVersion.class);
         
         final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
@@ -52,7 +65,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-        getOutputFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension))));
+        getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension)));
         getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().map(d::file)));
 
         getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
@@ -113,7 +126,22 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         getInputJar().finalizeValueOnRead();
     }
-
+    
+    @Override
+    public RuntimeData getData() {
+        return data;
+    }
+    
+    @Override
+    public RuntimeArguments getArguments() {
+        return arguments;
+    }
+    
+    @Override
+    public RuntimeMultiArguments getMultiArguments() {
+        return multiArguments;
+    }
+    
     @Override
     public String getGroup() {
         final String name = getRuntimeName().getOrElse("unknown");

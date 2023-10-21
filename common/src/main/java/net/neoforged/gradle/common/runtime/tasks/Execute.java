@@ -1,11 +1,6 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.util.TransformerUtils;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -13,7 +8,6 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -24,10 +18,10 @@ public abstract class Execute extends DefaultRuntime implements net.neoforged.gr
     public Execute() {
         super();
         
-        getLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("log", getProviderFactory().provider(() -> "log.log"))).orElse("log.log"));
+        getLogFileName().convention(getArguments().getOrDefault("log", getProviderFactory().provider(() -> "log.log")).orElse("log.log"));
         getLogFile().convention(getOutputDirectory().flatMap(d -> getLogFileName().map(d::file)));
 
-        getConsoleLogFileName().convention(getArguments().flatMap(arguments -> arguments.getOrDefault("console.log", getProviderFactory().provider(() -> "console.log"))));
+        getConsoleLogFileName().convention(getArguments().getOrDefault("console.log", getProviderFactory().provider(() -> "console.log")));
         getConsoleLogFile().convention(getOutputDirectory().flatMap(d -> getConsoleLogFileName().map(d::file)));
 
         getMainClass().convention(getExecutingJar().map(TransformerUtils.guardWithResource(
@@ -36,7 +30,7 @@ public abstract class Execute extends DefaultRuntime implements net.neoforged.gr
         )));
 
         getRuntimeProgramArguments().convention(getProgramArguments());
-        getMultiRuntimeArguments().convention(getMultiArguments());
+        getMultiRuntimeArguments().convention(getMultiArguments().AsMap());
     }
 
     @TaskAction

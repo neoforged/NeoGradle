@@ -29,7 +29,7 @@ public abstract class InjectCode extends DefaultRuntime {
     public InjectCode() {
         super();
 
-        getInjectionDirectory().fileProvider(getRuntimeData().map(data -> data.get("inject")));
+        getInjectionDirectory().fileProvider(getRuntimeData().flatMap(data -> data.get("inject")));
     }
 
     @TaskAction

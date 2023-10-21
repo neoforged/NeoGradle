@@ -20,7 +20,7 @@ public abstract class Patch extends DefaultRuntime {
     public Patch() {
         super();
 
-        getPatchDirectory().fileProvider(getRuntimeData().map(data -> data.get("patches")));
+        getPatchDirectory().fileProvider(getRuntimeData().flatMap(data -> data.get("patches")));
         getRejectsFile().fileProvider(getFileInOutputDirectory("rejects.zip"));
         getIsVerbose().convention(false);
     }

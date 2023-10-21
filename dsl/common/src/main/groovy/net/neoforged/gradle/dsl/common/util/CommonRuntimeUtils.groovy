@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
+import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Task
@@ -109,15 +110,13 @@ final class CommonRuntimeUtils {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    static <T extends Definition<? extends Specification>> Map<String, Provider<String>> buildArguments(final T definition, Map<String, String> values, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
-        return buildArguments(value -> getInputTaskForTaskFrom(definition.getSpecification(), value, tasks), value -> definition.getSpecification().getProject().provider(() -> value), values, taskForArguments, alternativeInputProvider);
+    static <T extends Definition<? extends Specification>> void buildArguments(final RuntimeArguments arguments, final T definition, Map<String, String> values, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
+        buildArguments(arguments, value -> getInputTaskForTaskFrom(definition.getSpecification(), value, tasks), value -> definition.getSpecification().getProject().provider(() -> value), values, taskForArguments, alternativeInputProvider);
     }
 
     @CompileDynamic
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    static Map<String, Provider<String>> buildArguments(final Function<String, Optional<TaskProvider<? extends WithOutput>>> inputBuilder, final Function<String, Provider<String>> providerBuilder, Map<String, String> values, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
-        final Map<String, Provider<String>> arguments = new HashMap<>();
-
+    static void buildArguments(final RuntimeArguments arguments, final Function<String, Optional<TaskProvider<? extends WithOutput>>> inputBuilder, final Function<String, Provider<String>> providerBuilder, Map<String, String> values, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         for (final String key in values.keySet()) {
             final String value = values.get(key);
             if (value.startsWith("{") && value.endsWith("}")) {
@@ -129,12 +128,10 @@ final class CommonRuntimeUtils {
                 }
 
                 dependentTask.ifPresent(taskForArguments::dependsOn);
-                dependentTask.ifPresent(task -> arguments.put(key, task.flatMap(t -> t.getOutput().getAsFile().map(File::getAbsolutePath))));
+                dependentTask.ifPresent(task -> arguments.putFile(key, task.flatMap(t -> t.getOutput().getAsFile())));
             } else {
                 arguments.put(key, providerBuilder.apply(value));
             }
         }
-
-        return arguments;
     }
 }

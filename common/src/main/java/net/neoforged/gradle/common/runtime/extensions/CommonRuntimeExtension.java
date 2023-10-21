@@ -20,6 +20,7 @@ import net.neoforged.gradle.util.GradleInternalUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.Directory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -35,13 +36,16 @@ import java.util.stream.Collectors;
 public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecification, B extends CommonRuntimeSpecification.Builder<S, B>, D extends CommonRuntimeDefinition<S>> implements CommonRuntimes<S, B, D> {
     protected final Map<String, D> runtimes = Maps.newHashMap();
     private final Project project;
-
+    private boolean baked = false;
+    private boolean bakedDelegates = false;
+    
     protected CommonRuntimeExtension(Project project) {
         this.project = project;
     }
 
-    public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, File> data, String step, Specification spec, File runtimeDirectory) {
-        runtimeTask.getData().set(data);
+    public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, File> dataFiles, Map<String, File> dataDirectories, String step, Specification spec, File runtimeDirectory) {
+        runtimeTask.getData().putAllFiles(dataFiles);
+        runtimeTask.getData().putAllDirectories(dataDirectories);
         runtimeTask.getStepName().set(step);
         runtimeTask.getDistribution().set(spec.getDistribution());
         runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion(), spec.getProject()));
@@ -50,8 +54,9 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
     }
 
-    public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> data, String step, DistributionType distributionType, String minecraftVersion, Project project, File runtimeDirectory) {
-        mcpRuntimeTask.getData().set(data);
+    public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> dataFiles, Map<String, File> dataDirectories, String step, DistributionType distributionType, String minecraftVersion, Project project, File runtimeDirectory) {
+        mcpRuntimeTask.getData().putAllFiles(dataFiles);
+        mcpRuntimeTask.getData().putAllDirectories(dataDirectories);
         mcpRuntimeTask.getStepName().set(step);
         mcpRuntimeTask.getDistribution().set(distributionType);
         mcpRuntimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(minecraftVersion, project));
@@ -65,7 +70,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     }
     
     private static void configureCommonRuntimeTaskParameters(Runtime runtime, CommonRuntimeSpecification specification, File workingDirectory) {
-        configureCommonRuntimeTaskParameters(runtime, new HashMap<>(), runtime.getName(), specification, workingDirectory);
+        configureCommonRuntimeTaskParameters(runtime, new HashMap<>(), new HashMap<>(), runtime.getName(), specification, workingDirectory);
     }
     
     public static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final Specification spec) {
@@ -145,6 +150,11 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     protected abstract void bakeDefinition(D definition);
 
     public final void bakeDefinitions() {
+        if (this.baked)
+            return;
+        
+        baked = true;
+        
         this.runtimes.values()
                 .stream()
                 .filter(def -> !(def instanceof IDelegatingRuntimeDefinition))
@@ -152,6 +162,14 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     }
 
     public final void bakeDelegateDefinitions() {
+        if (!this.baked)
+            throw new IllegalStateException("Cannot bake delegate definitions before baking normal definitions");
+
+        if (this.bakedDelegates)
+            return;
+        
+        bakedDelegates = true;
+        
         this.runtimes.values()
                 .stream()
                 .filter(def -> def instanceof IDelegatingRuntimeDefinition)
@@ -175,20 +193,24 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                 .collect(Collectors.toSet());
     }
 
-    protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final VersionJson versionJson) {
+    protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Map<String, File> dataFiles, final Map<String, File> dataDirectories, final File runtimeDirectory, final VersionJson versionJson) {
         return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "downloadAssets"), DownloadAssets.class, task -> {
             task.getVersionJson().set(versionJson);
 
-            configureCommonRuntimeTaskParameters(task, data, "downloadAssets", specification, runtimeDirectory);
-            task.getAssetsDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("downloadAssets")));
+            configureCommonRuntimeTaskParameters(task, dataFiles, dataDirectories, "downloadAssets", specification, runtimeDirectory);
+            task.getAssetsDirectory().set(task.getStepsDirectory().map(dir -> {
+                final Directory directory = dir.dir("downloadAssets");
+                directory.getAsFile().mkdirs();
+                return directory;
+            }));
         });
     }
 
-    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final Map<String, File> data, final File runtimeDirectory, final VersionJson versionJson) {
+    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final Map<String, File> dataFiles, final Map<String, File> dataDirectories, final File runtimeDirectory, final VersionJson versionJson) {
         return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "extractNatives"), ExtractNatives.class, task -> {
             task.getVersionJson().set(versionJson);
 
-            configureCommonRuntimeTaskParameters(task, data, "extractNatives", specification, runtimeDirectory);
+            configureCommonRuntimeTaskParameters(task, dataFiles, dataDirectories, "extractNatives", specification, runtimeDirectory);
             task.getOutputDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("extractNatives")));
         });
     }

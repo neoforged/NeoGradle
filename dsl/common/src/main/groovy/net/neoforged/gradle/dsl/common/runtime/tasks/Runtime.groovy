@@ -8,9 +8,7 @@ import net.neoforged.gradle.dsl.common.tasks.WithWorkspace
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion
 import net.neoforged.gradle.dsl.common.util.DistributionType
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -83,27 +81,27 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
      *
      * @return The custom pipeline file pointer data.
      */
-    @Input
+    @Nested
     @DSLProperty
-    abstract MapProperty<String, File> getData();
+    abstract RuntimeData getData();
 
     /**
      * The arguments for this step.
      *
      * @return The arguments for this step.
      */
-    @Input
+    @Nested
     @DSLProperty
-    abstract MapProperty<String, Provider<String>> getArguments();
+    abstract RuntimeArguments getArguments();
 
     /**
      * The multi statement arguments for this step.
      *
      * @return The arguments for this step.
      */
-    @Input
+    @Nested
     @DSLProperty
-    abstract MapProperty<String, Provider<List<String>>> getMultiArguments();
+    abstract RuntimeMultiArguments getMultiArguments();
 
     /**
      * The name of the output file name for this step.

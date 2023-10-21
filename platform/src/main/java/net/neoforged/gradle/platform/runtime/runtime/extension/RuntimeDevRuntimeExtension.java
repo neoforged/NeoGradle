@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 
 public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<RuntimeDevRuntimeSpecification, RuntimeDevRuntimeSpecification.Builder, RuntimeDevRuntimeDefinition> {
@@ -51,7 +52,7 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
             task.getRejects().set(spec.getRejectsDirectory());
             task.getPatchMode().set(spec.isUpdating() ? PatchMode.FUZZY : PatchMode.ACCESS);
             task.getShouldFailOnPatchFailure().set(!spec.isUpdating());
-            configureCommonRuntimeTaskParameters(task, new HashMap<>(), "applyPatches", spec, workingDirectory);
+            configureCommonRuntimeTaskParameters(task, Collections.emptyMap(), Collections.emptyMap(), "applyPatches", spec, workingDirectory);
         });
         
         final TaskProvider<ArtifactProvider> sourcesProvider = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "sourceFromAppliedPatches"), ArtifactProvider.class, task -> {
