@@ -62,7 +62,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final ResolvedConfiguration resolvedUserDevConfiguration = userDevConfiguration.getResolvedConfiguration();
         final File userDevJar = resolvedUserDevConfiguration.getFiles().iterator().next();
         
-        final File forgeDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("forge/%s", spec.getIdentifier())).get().getAsFile();
+        final File forgeDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForge/%s", spec.getIdentifier())).get().getAsFile();
         final File unpackedForgeDirectory = new File(forgeDirectory, "unpacked");
         
         unpackedForgeDirectory.mkdirs();

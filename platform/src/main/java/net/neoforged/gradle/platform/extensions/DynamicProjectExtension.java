@@ -158,8 +158,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final RuntimeDevRuntimeExtension runtimeDevRuntimeExtension = project.getExtensions().getByType(RuntimeDevRuntimeExtension.class);
         final RuntimeDevRuntimeDefinition runtimeDefinition = runtimeDevRuntimeExtension.create(builder -> builder.withNeoFormVersion(neoFormVersion).withPatchesDirectory(patches).withRejectsDirectory(rejects).withDistributionType(DistributionType.JOINED).isUpdating(getIsUpdating()));
         
-        final NeoFormRuntimeExtension neoFormRuntimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
-        
         project.getExtensions().add("runtime", runtimeDefinition);
         
         final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
@@ -333,9 +331,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 task.from(project.zipTree(strippedJar.flatMap(WithOutput::getOutput)));
                 task.manifest(manifest -> {
-                    manifest.attributes(ImmutableMap.of("FML-System-Mods", "forge"));
-                    manifest.attributes(ImmutableMap.of("Specification-Title", "Forge", "Specification-Vendor", "NeoForge", "Specification-Version", project.getVersion().toString().substring(0, project.getVersion().toString().lastIndexOf(".")), "Implementation-Title", project.getGroup(), "Implementation-Version", project.getVersion(), "Implementation-Vendor", "NeoForge"), "net/minecraftforge/versions/forge/");
-                    manifest.attributes(ImmutableMap.of("Specification-Title", "Minecraft", "Specification-Vendor", "Mojang", "Specification-Version", runtimeDefinition.getSpecification().getMinecraftVersion(), "Implementation-Title", "MCP", "Implementation-Version", runtimeDefinition.getSpecification().getVersion(), "Implementation-Vendor", "Forge"), "net/minecraftforge/versions/mcp/");
+                    manifest.attributes(ImmutableMap.of("FML-System-Mods", "neoforge"));
+                    manifest.attributes(ImmutableMap.of("Specification-Title", "NeoForge", "Specification-Vendor", "NeoForge", "Specification-Version", project.getVersion().toString().substring(0, project.getVersion().toString().lastIndexOf(".")), "Implementation-Title", project.getGroup(), "Implementation-Version", project.getVersion(), "Implementation-Vendor", "NeoForged"), "net/neoforged/neoforge/internal/versions/neoforge/");
+                    manifest.attributes(ImmutableMap.of("Specification-Title", "Minecraft", "Specification-Vendor", "Mojang", "Specification-Version", runtimeDefinition.getSpecification().getMinecraftVersion(), "Implementation-Title", "MCP", "Implementation-Version", runtimeDefinition.getSpecification().getVersion(), "Implementation-Vendor", "NeoForged"), "net/neoforged/neoforge/versions/neoform/");
                 });
             });
             
@@ -360,7 +358,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 profile.data("MC_SLIM", String.format("[net.minecraft:client:%s:slim]", neoFormVersion), String.format("[net.minecraft:server:%s:slim]", neoFormVersion));
                 profile.data("MC_EXTRA", String.format("[net.minecraft:client:%s:extra]", neoFormVersion), String.format("[net.minecraft:server:%s:extra]", neoFormVersion));
                 profile.data("MC_SRG", String.format("[net.minecraft:client:%s:srg]", neoFormVersion), String.format("[net.minecraft:server:%s:srg]", neoFormVersion));
-                profile.data("PATCHED", String.format("[%s:%s:%s:client]", "net.neoforged", "forge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion()), String.format("[%s:%s:%s:server]", "net.neoforged", "forge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion()));
+                profile.data("PATCHED", String.format("[%s:%s:%s:client]", "net.neoforged", "neoforge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion()), String.format("[%s:%s:%s:server]", "net.neoforged", "neoforge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion()));
                 profile.data("MCP_VERSION", String.format("'%s'", neoFormVersion), String.format("'%s'", neoFormVersion));
                 profile.processor(project, processor -> {
                     processor.server();
@@ -418,7 +416,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     processor.arguments("--clean", "{MC_SRG}", "--output", "{PATCHED}", "--apply", "{BINPATCH}");
                 });
                 
-                profile.getLibraries().add(Library.fromOutput(signUniversalJar, project, "net.neoforged", "forge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion(), "universal"));
+                profile.getLibraries().add(Library.fromOutput(signUniversalJar, project, "net.neoforged", "neoforge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion(), "universal"));
                 
                 profile.getIcon().set(project.provider(() -> {
                     final File icon = new File(project.getRootProject().getProjectDir(), "docs/assets/neoforged.ico");
@@ -490,8 +488,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 if (project.getProperties().containsKey("neogradle.runtime.platform.installer.debug") && Boolean.parseBoolean(project.getProperties().get("neogradle.runtime.platform.installer.debug").toString())) {
                     task.from(signUniversalJar.flatMap(WithOutput::getOutput), spec -> {
-                        spec.into("/maven/net/neoforged/forge/" + runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion() + "/");
-                        spec.rename(name -> "forge-" + runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion() + "-universal.jar");
+                        spec.into("/maven/net/neoforged/neoforge/" + runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion() + "/");
+                        spec.rename(name -> "neoforge-" + runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion() + "-universal.jar");
                     });
                 }
             });
@@ -510,7 +508,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 type.getIsClient().set(true);
                 type.getIsGameTest().set(true);
-                type.getSystemProperties().put("forge.enableGameTest", "true");
+                type.getSystemProperties().put("neoforge.enableGameTest", "true");
                 
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgeclientuserdev");
@@ -536,7 +534,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 type.getIsServer().set(true);
                 type.getIsGameTest().set(true);
-                type.getSystemProperties().put("forge.enableGameTest", "true");
+                type.getSystemProperties().put("neoforge.enableGameTest", "true");
                 
                 
                 type.getArguments().add("--launchTarget");
@@ -680,7 +678,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         runType.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
         runType.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
         
-        runType.getEnvironmentVariables().put("FORGE_SPEC", project.getVersion().toString());
+        runType.getEnvironmentVariables().put("NEOFORGE_SPEC", project.getVersion().toString());
         
         runType.getClasspath().from(runtimeClasspath);
         
@@ -702,7 +700,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             }
             
             if (run.getIsGameTest().get()) {
-                run.getSystemProperties().put("forge.enableGameTest", "true");
+                run.getSystemProperties().put("neoforge.enableGameTest", "true");
             }
             
             if (run.getIsDataGenerator().get()) {
