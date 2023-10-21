@@ -31,7 +31,7 @@ public final class UserDevDependencyManager {
 
     public void apply(final Project project) {
         final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
-        dependencyReplacer.getReplacementHandlers().create("forge", dependencyReplacementHandler -> dependencyReplacementHandler.getReplacer().set(context -> {
+        dependencyReplacer.getReplacementHandlers().create("neoForge", dependencyReplacementHandler -> dependencyReplacementHandler.getReplacer().set(context -> {
             if (isNotAMatchingDependency(context.getDependency())) {
                 return Optional.empty();
             }

@@ -30,7 +30,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
     private String minecraftVersion = null;
 
     public UserDevRuntimeSpecification(Project project, String version, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String forgeGroup, String forgeName, String forgeVersion) {
-        super(project, "forge", version, distribution, preTaskTypeAdapters, postTypeAdapters, UserDevRuntimeExtension.class);
+        super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, UserDevRuntimeExtension.class);
         this.forgeGroup = forgeGroup;
         this.forgeName = forgeName;
         this.forgeVersion = forgeVersion;
