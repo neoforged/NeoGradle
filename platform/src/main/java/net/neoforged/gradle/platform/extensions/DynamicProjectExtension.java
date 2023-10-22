@@ -484,7 +484,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.getUnixServerArgs().set(createUnixServerArgsFile.flatMap(WithOutput::getOutput));
                 task.getData().from(project.getRootProject().fileTree("server_files/").exclude("args.txt"));
                 
-                
                 configureInstallerTokens(task, runtimeDefinition, Lists.newArrayList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration), pluginLayerLibraryConfiguration, gameLayerLibraryConfiguration);
                 
                 final String neoForgePublishingVersion = runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion();

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import org.apache.tools.ant.filters.ReplaceTokens;
+import org.gradle.api.Transformer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.file.FileTree;
@@ -16,6 +17,7 @@ import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.util.Map;
 
 @CacheableTask
 public abstract class CreateLegacyInstaller extends Zip implements WithOutput, WithWorkspace, TokenizedTask {
@@ -55,7 +57,13 @@ public abstract class CreateLegacyInstaller extends Zip implements WithOutput, W
         getUrlIcon().fileValue(getProject().getRootProject().file("src/main/resources/url.png"));
         from(getData(), spec -> {
             spec.into("data");
-            spec.filter(ImmutableMap.of("tokens", getTokens().get()), ReplaceTokens.class);
+            spec.filter(s -> {
+                final Map<String, Object> tokens = getTokens().get();
+                for (Map.Entry<String, Object> entry : tokens.entrySet()) {
+                    s = s.replace(String.format("@%s@", entry.getKey()), entry.getValue().toString());
+                }
+                return s;
+            });
         });
     }
     
