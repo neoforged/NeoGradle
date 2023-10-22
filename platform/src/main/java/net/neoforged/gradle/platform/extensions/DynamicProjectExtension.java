@@ -57,6 +57,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
@@ -189,7 +190,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         final LauncherProfile launcherProfile = project.getExtensions().create(LauncherProfile.class, "launcherProfile", LauncherProfile.class);
         final InstallerProfile installerProfile = project.getExtensions().create("installerProfile", InstallerProfile.class);
-        final UserdevProfile userdevProfile = project.getExtensions().create("userdevProfile", UserdevProfile.class);
+        final UserdevProfile userdevProfile = project.getExtensions().create("userdevProfile", UserdevProfile.class, project.getObjects());
         
         final TaskProvider<SetupProjectFromRuntime> setupTask = configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
         setupTask.configure(task -> task.getShouldLockDirectories().set(false));
@@ -484,12 +485,15 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.getUnixServerArgs().set(createUnixServerArgsFile.flatMap(WithOutput::getOutput));
                 task.getData().from(project.getRootProject().fileTree("server_files/").exclude("args.txt"));
                 
+                
                 configureInstallerTokens(task, runtimeDefinition, Lists.newArrayList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration), pluginLayerLibraryConfiguration, gameLayerLibraryConfiguration);
+                
+                final String neoForgePublishingVersion = runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion();
                 
                 if (project.getProperties().containsKey("neogradle.runtime.platform.installer.debug") && Boolean.parseBoolean(project.getProperties().get("neogradle.runtime.platform.installer.debug").toString())) {
                     task.from(signUniversalJar.flatMap(WithOutput::getOutput), spec -> {
-                        spec.into("/maven/net/neoforged/neoforge/" + runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion() + "/");
-                        spec.rename(name -> "neoforge-" + runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion() + "-universal.jar");
+                        spec.into(String.format("/maven/net/neoforged/neoforge/%s/", neoForgePublishingVersion));
+                        spec.rename(name -> String.format("neoforge-%s-universal.jar", neoForgePublishingVersion));
                     });
                 }
             });
@@ -502,6 +506,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             
             //Note the following runtypes are for now hardcoded, in the future they should be pulled from the runtime definition
+            //Note: We can not use a 'configureEach' here, because this causes issues with the config cache.
             userdevProfile.runType("client", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
                 type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
@@ -518,6 +523,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("{asset_index}");
                 type.getArguments().add("--assetsDir");
                 type.getArguments().add("{assets_root}");
+                
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
             });
             userdevProfile.runType("server", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -527,6 +534,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgeserveruserdev");
+                
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
             });
             userdevProfile.runType("gameTestServer", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -539,6 +548,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgegametestserveruserdev");
+                
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
             });
             userdevProfile.runType("data", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -552,10 +563,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("{asset_index}");
                 type.getArguments().add("--assetsDir");
                 type.getArguments().add("{assets_root}");
-            });
-            userdevProfile.getRunTypes().configureEach(type -> {
+                
                 configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
             });
+            
             userdevProfile.getNeoForm().set(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString());
             userdevProfile.getSourcePatchesDirectory().set("patches/");
             userdevProfile.getAccessTransformerDirectory().set("ats/");
@@ -597,6 +608,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             
             final AccessTransformers accessTransformers = project.getExtensions().getByType(AccessTransformers.class);
+            
             final TaskProvider<Jar> userdevJar = project.getTasks().register("userdevJar", Jar.class, task -> {
                 task.getArchiveClassifier().set("userdev");
                 task.getArchiveAppendix().set("userdev");
@@ -605,7 +617,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.getDestinationDirectory().set(project.getLayout().getBuildDirectory().dir("libs"));
                 task.getArchiveFileName().set(project.provider(() -> String.format("%s-%s-userdev.jar", project.getName(), project.getVersion())));
                 
-                
+                //We need to get a raw file tree here, because else we capture the task reference in copy spec.
+                final FileTree bakedPatches = project.zipTree(bakePatches.get().getOutput().get().getAsFile());
                 task.from(createUserdevJson.flatMap(WithOutput::getOutput), spec -> {
                     spec.rename(name -> "config.json");
                 });
@@ -618,7 +631,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.from(binaryPatchGenerators.get(DistributionType.JOINED).flatMap(WithOutput::getOutput), spec -> {
                     spec.rename(name -> "joined.lzma");
                 });
-                task.from(bakePatches.flatMap(bake -> bake.getOutput().map(file -> bake.getArchiveOperations().zipTree(file))), spec -> {
+                task.from(bakedPatches, spec -> {
                     spec.into("patches/");
                 });
             });

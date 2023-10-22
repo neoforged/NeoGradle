@@ -26,6 +26,13 @@ import static net.neoforged.gradle.dsl.common.util.PropertyUtils.*
 @CompileStatic
 abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> {
 
+    private final ObjectFactory factory;
+
+    @Inject
+    UserdevProfile(ObjectFactory factory) {
+        this.factory = factory
+    }
+
     public static Gson createGson(ObjectFactory objectFactory) {
         return new GsonBuilder().disableHtmlEscaping()
                 .registerTypeHierarchyAdapter(UserdevProfile.class, new Serializer(objectFactory))
@@ -33,15 +40,14 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 .create()
     }
 
-    @Inject
-    abstract ObjectFactory getObjectFactory();
-
     @Input
     @DSLProperty
+    @Optional
     abstract Property<String> getNeoForm()
 
     @Input
     @DSLProperty
+    @Optional
     abstract Property<String> getAccessTransformerDirectory()
 
     @Input
@@ -56,6 +62,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
     @Input
     @DSLProperty
+    @Optional
     abstract Property<String> getSourcePatchesDirectory();
 
     @Input
@@ -70,6 +77,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
     @Input
     @DSLProperty
+    @Optional
     abstract ListProperty<String> getAdditionalDependencyArtifactCoordinates();
 
     @Input
@@ -79,17 +87,19 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
     @Nested
     @DSLProperty
+    @Optional
     abstract NamedDomainObjectCollection<RunType> getRunTypes();
 
     @ClosureEquivalent
     void runType(final String name, Action<RunType> configurer) {
-        final RunType runType = objectFactory.newInstance(RunType.class, name)
+        final RunType runType = factory.newInstance(RunType.class, name)
         configurer.execute(runType)
         runTypes.add(runType)
     }
 
     @Input
     @DSLProperty
+    @Optional
     abstract ListProperty<String> getModules();
 
     @CompileStatic
@@ -170,18 +180,22 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
 
         @Input
         @DSLProperty
+        @Optional
         abstract Property<String> getTool();
 
         @Input
         @DSLProperty
+        @Optional
         abstract ListProperty<String> getArguments();
 
         @Input
         @DSLProperty
+        @Optional
         abstract ListProperty<String> getJvmArguments();
 
         @Input
         @DSLProperty
+        @Optional
         abstract MapProperty<String, String> getData();
 
         @CompileStatic
