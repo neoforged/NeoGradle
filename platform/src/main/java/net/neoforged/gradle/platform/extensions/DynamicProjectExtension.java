@@ -345,7 +345,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.dependsOn(universalJar);
             });
             
-            
             installerProfile.configure((Consumer<InstallerProfile>) profile -> {
                 profile.getProfile().set(project.getName());
                 profile.getVersion().set(launcherProfile.getId());
@@ -616,6 +615,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.getArchiveBaseName().set(project.getName());
                 task.getDestinationDirectory().set(project.getLayout().getBuildDirectory().dir("libs"));
                 task.getArchiveFileName().set(project.provider(() -> String.format("%s-%s-userdev.jar", project.getName(), project.getVersion())));
+                
+                task.dependsOn(bakePatches);
                 
                 //We need to get a raw file tree here, because else we capture the task reference in copy spec.
                 final FileTree bakedPatches = project.zipTree(bakePatches.get().getOutput().get().getAsFile());
