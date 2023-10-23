@@ -280,7 +280,12 @@ class PropertyUtils {
 
     static <T> void serialize(final Property<T> property, JsonObject object, String key, Function<T, JsonElement> writer) {
         if (property.isPresent()) {
-            object.add(key, writer.apply(property.get()))
+            final JsonElement element = writer.apply(property.get());
+            if (element.isJsonObject() && element.getAsJsonObject().entrySet().isEmpty()) {
+                return;
+            }
+
+            object.add(key, element)
         }
     }
 
