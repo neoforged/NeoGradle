@@ -782,7 +782,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     private void configureRun(final Run run, final RuntimeDevRuntimeDefinition runtimeDefinition) {
         run.getConfigureAutomatically().set(true);
         run.getConfigureFromDependencies().set(false);
-        run.getConfigureFromTypeWithName().set(true);
         
         if (run.getIsClient().get()) {
             run.dependsOn(runtimeDefinition.getAssets(), runtimeDefinition.getNatives());
