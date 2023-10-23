@@ -124,6 +124,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     @NotNull
     public final void configure(final String name) {
+        getConfigureAutomatically().set(false); // Don't re-configure
         ProjectUtils.afterEvaluate(getProject(), () -> {
             project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> {
                 if (types.getNames().contains(name)) {
@@ -136,6 +137,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     @NotNull
     public final void configure(final RunType runType) {
+        getConfigureAutomatically().set(false); // Don't re-configure
         ProjectUtils.afterEvaluate(getProject(), () -> {
             configureInternally(runType);
         });
