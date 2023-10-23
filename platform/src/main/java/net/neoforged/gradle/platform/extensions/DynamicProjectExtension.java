@@ -542,10 +542,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getIsServer().set(true);
                 type.getIsGameTest().set(true);
                 type.getSystemProperties().put("neoforge.enableGameTest", "true");
+                type.getSystemProperties().put("neoforge.gameTestServer", "true");
                 
                 
                 type.getArguments().add("--launchTarget");
-                type.getArguments().add("forgegametestserveruserdev");
+                type.getArguments().add("forgeserveruserdev");
                 
                 configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
             });
