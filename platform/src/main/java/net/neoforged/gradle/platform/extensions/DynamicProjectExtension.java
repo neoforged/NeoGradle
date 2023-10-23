@@ -714,6 +714,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             if (run.getIsGameTest().get()) {
                 run.getSystemProperties().put("neoforge.enableGameTest", "true");
+
+                if (run.getIsServer().get()) {
+                    run.getSystemProperties().put("neoforge.gameTestServer", "true");
+                }
             }
             
             if (run.getIsDataGenerator().get()) {
