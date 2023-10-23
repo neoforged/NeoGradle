@@ -40,8 +40,6 @@ public class PlatformProjectPlugin implements Plugin<Project> {
         final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
         
         run.getConfigureAutomatically().set(false);
-        run.getConfigureFromDependencies().set(false);
-        run.getConfigureFromTypeWithName().set(false);
         
         run.getModSources().add(mainSourceSet);
         
