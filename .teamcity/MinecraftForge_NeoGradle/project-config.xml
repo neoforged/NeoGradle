@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" parent-id="MinecraftForge" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2021.1/project-config.xsd">
+  <name>NeoGradle</name>
+  <parameters>
+    <param name="docker_gradle_version" value="8.1.1" spec="text label='Gradle version' description='The version of Gradle to use during execution of Gradle tasks.' display='hidden' validationMode='not_empty'" />
+    <param name="docker_jdk_version" value="8" spec="text label='JDK version' description='The version of the JDK to use during execution of tasks in a JDK.' display='hidden' validationMode='not_empty'" />
+    <param name="env.PUBLISHED_JAVA_ARTIFACT_ID" value="NeoGradle" spec="text label='Published artifact id' description='The maven coordinate artifact id that has been published by this build. Can not be empty.' validationMode='not_empty'" />
+    <param name="env.PUBLISHED_JAVA_GROUP" value="net.neoforged" spec="text label='Published group' description='The maven coordinate group that has been published by this build. Can not be empty.' validationMode='not_empty'" />
+    <param name="git_branch_spec" value="+:refs/heads/(FG_*)" spec="text label='The branch specification of the repository' description='By default all main branches are build by the configuration. Modify this value to adapt the branches build.' display='hidden' validationMode='any'" />
+    <param name="git_main_branch" value="FG_6.0" spec="text label='Git Main Branch' description='The git main or default branch to use in VCS operations.' display='hidden' validationMode='not_empty'" />
+    <param name="github_repository_name" value="NeoGradle" spec="text label='The github repository name. Used to connect to it in VCS Roots.' description='This is the repository slug on github. So for example `ForgeGradle` or `MinecraftForge`. It is interpolated into the global VCS Roots.' display='hidden' validationMode='not_empty'" />
+  </parameters>
+  <project-extensions>
+    <extension id="NeoGradle__IssueTracker" type="IssueTracker">
+      <parameters>
+        <param name="authType" value="anonymous" />
+        <param name="name" value="NeoForged/NeoGradle" />
+        <param name="pattern" value="#(\d+)" />
+        <param name="repository" value="https://github.com/NeoForged/NeoGradle" />
+        <param name="secure:accessToken" value="" />
+        <param name="secure:password" value="" />
+        <param name="type" value="GithubIssues" />
+        <param name="username" value="" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_1" type="versionedSettings">
+      <parameters>
+        <param name="buildSettings" value="PREFER_VCS" />
+        <param name="credentialsStorageType" value="credentialsJSON" />
+        <param name="enabled" value="true" />
+        <param name="rootId" value="MinecraftForge_NeoGradle_HttpsGithubComNeoforgedNeoGradleRefsHeadsFg60" />
+        <param name="showChanges" value="true" />
+      </parameters>
+    </extension>
+  </project-extensions>
+  <cleanup />
+</project>
+
