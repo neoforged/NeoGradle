@@ -12,6 +12,18 @@ To apply the patch, change the root project
 accordingly, and delete the patch script.
 */
 changeProject(DslContext.projectId) {
+    params {
+        expect {
+            text("git_branch_spec", "+:refs/heads/(FG_*)", label = "The branch specification of the repository", description = "By default all main branches are build by the configuration. Modify this value to adapt the branches build.", display = ParameterDisplay.HIDDEN, allowEmpty = true)
+        }
+        update {
+            text("git_branch_spec", """
+                +:refs/heads/(FG_*)
+                +:refs/heads/(NG_*)
+            """.trimIndent(), label = "The branch specification of the repository", description = "By default all main branches are build by the configuration. Modify this value to adapt the branches build.", display = ParameterDisplay.HIDDEN, allowEmpty = true)
+        }
+    }
+
     features {
         val feature1 = find<GitHubIssueTracker> {
             githubIssues {
