@@ -105,8 +105,8 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     public final D create(final Action<B> configurator) {
         final S spec = createSpec(configurator);
 
-        if (project.getExtensions().getByType(RuntimesExtension.class).findDefinitionByNameOrIdentifier(spec.getIdentifier()) != null)
-            throw new IllegalArgumentException(String.format("Runtime with name '%s' already exists", spec.getName()));
+        if (project.getExtensions().getByType(RuntimesExtension.class).definitionExists(spec.getIdentifier()))
+            throw new IllegalArgumentException(String.format("Runtime with identifier '%s' already exists", spec.getIdentifier()));
 
         final D runtime = doCreate(spec);
         runtimes.put(spec.getIdentifier(), runtime);

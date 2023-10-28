@@ -33,6 +33,15 @@ public abstract class RuntimesExtension {
         return definitions;
     }
 
+    public boolean definitionExists(String identifier) {
+        for (CommonRuntimeExtension<?,?,?> runtimeExtension : runtimeExtensions) {
+            if (runtimeExtension.runtimes.containsKey(identifier)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public <T extends CommonRuntimeDefinition<?>> T findDefinitionByNameOrIdentifier(String name) {
         for (CommonRuntimeExtension<?,?,?> runtimeExtension : runtimeExtensions) {
             CommonRuntimeDefinition<?> definition = runtimeExtension.findByNameOrIdentifier(name);

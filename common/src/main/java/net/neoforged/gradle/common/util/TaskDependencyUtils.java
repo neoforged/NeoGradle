@@ -15,7 +15,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.internal.tasks.AbstractTaskDependencyResolveContext;
 import org.gradle.api.internal.tasks.TaskDependencyContainer;
-import org.gradle.api.plugins.ExtraPropertiesExtension;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -176,49 +176,56 @@ public final class TaskDependencyUtils {
                 return;
             }
             if (dependency instanceof CommonRuntimeDefinition<?>) {
-                found.add((CommonRuntimeDefinition<?>) dependency);
+                this.found.add((CommonRuntimeDefinition<?>) dependency);
             } else if (dependency instanceof SourceSet) {
-                SourceSet sourceSet = (SourceSet) dependency;
-                ExtraPropertiesExtension extraProperties = sourceSet.getExtensions().getExtraProperties();
-                Object runtimeDefinition;
-                if (extraProperties.has("runtimeDefinition") && (runtimeDefinition = extraProperties.get("runtimeDefinition")) != null) {
-                    this.add(runtimeDefinition);
-                } else {
-                    Set<CommonRuntimeDefinition<?>> tmp = new HashSet<>(this.found);
-                    this.found.clear();
-                    this.add(sourceSet.getCompileClasspath());
-                    if (this.found.size() == 1) {
-                        extraProperties.set("runtimeDefinition", this.found.iterator().next());
-                    }
-                    this.found.addAll(tmp);
-                }
+                this.processSourceSet((SourceSet) dependency);
             } else if (dependency instanceof SourceDirectorySet) {
-                sourceSets.stream()
-                        .filter(sourceSet ->
-                                sourceSet.getAllJava() == dependency ||
-                                sourceSet.getResources() == dependency ||
-                                sourceSet.getJava() == dependency ||
-                                sourceSet.getAllSource() == dependency)
-                        .forEach(this::add);
+                this.processSourceDirectorySet((SourceDirectorySet) dependency);
             } else if (dependency instanceof JavaCompile) {
                 this.add(((JavaCompile) dependency).getClasspath());
             } else if (dependency instanceof Configuration) {
-                DependencySet dependencies = ((Configuration) dependency).getAllDependencies();
-                runtimes.stream()
-                        .filter(runtime -> {
-                            org.gradle.api.artifacts.Dependency replacedDependency;
-                            try {
-                                replacedDependency = runtime.getReplacedDependency();
-                            } catch (IllegalStateException e) {
-                                return false;
-                            }
-                            return dependencies.contains(replacedDependency);
-                        })
-                        .map(runtime -> (CommonRuntimeDefinition<?>) runtime)
-                        .forEach(this::add);
+                this.processConfiguration((Configuration) dependency);
             } else if (dependency instanceof TaskDependencyContainer) {
-                TaskDependencyContainer container = (TaskDependencyContainer)dependency;
-                container.visitDependencies(this);
+                ((TaskDependencyContainer) dependency).visitDependencies(this);
+            }
+        }
+
+        private void processConfiguration(Configuration configuration) {
+            DependencySet dependencies = configuration.getAllDependencies();
+            this.runtimes.stream().filter(runtime -> {
+                try {
+                    return dependencies.contains(runtime.getReplacedDependency());
+                } catch (IllegalStateException e) {
+                    return false;
+                }
+            }).forEach(this::add);
+        }
+
+        private void processSourceDirectorySet(SourceDirectorySet sourceDirectorySet) {
+            for (SourceSet sourceSet : this.sourceSets) {
+                if (
+                    sourceSet.getAllJava() == sourceDirectorySet || 
+                    sourceSet.getResources() == sourceDirectorySet ||
+                    sourceSet.getJava() == sourceDirectorySet ||
+                    sourceSet.getAllSource() == sourceDirectorySet
+                ) {
+                    this.add(sourceSet);
+                }
+            }
+        }
+
+        private void processSourceSet(SourceSet sourceSet) {
+            Property<CommonRuntimeDefinition<?>> runtimeDefinition = (Property<CommonRuntimeDefinition<?>>) sourceSet.getExtensions().getByName("runtimeDefinition");
+            if (runtimeDefinition.isPresent()) {
+                this.add(runtimeDefinition.get());
+            } else {
+                Set<CommonRuntimeDefinition<?>> tmp = new HashSet<>(this.found);
+                this.found.clear();
+                this.add(sourceSet.getCompileClasspath());
+                if (this.found.size() == 1) {
+                    runtimeDefinition.set(this.found.iterator().next());
+                }
+                this.found.addAll(tmp);
             }
         }
 
