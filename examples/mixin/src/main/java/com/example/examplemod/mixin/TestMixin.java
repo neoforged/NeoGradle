@@ -9,8 +9,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RedstoneLampBlock.class)
 public class TestMixin {
-    @Inject(method = "neighborChanged", at = @At("HEAD"))
+    @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstructed(CallbackInfo ci) {
+        ExampleMod.LOGGER.info("Hello from RedstoneLampBlock constructor!");
+    }
+
+    @Inject(method = "neighborChanged", at = @At("HEAD"))
+    private void onNeighborChanged(CallbackInfo ci) {
         ExampleMod.LOGGER.info("Hello from RedstoneLampBlock neighbor changed!");
+        System.err.println("Hello from RedstoneLampBlock neighbor changed!");
     }
 }

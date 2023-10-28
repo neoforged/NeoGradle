@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'net.neoforged:forge:20.2.1'
+    implementation 'net.neoforged:neoforge:20.2.1'
 }
 
 runs {
