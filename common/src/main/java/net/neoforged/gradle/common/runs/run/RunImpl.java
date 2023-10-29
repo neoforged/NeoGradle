@@ -116,14 +116,12 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    @NotNull
     public final void configure() {
         configure(getName());
     }
 
     @Override
-    @NotNull
-    public final void configure(final String name) {
+    public final void configure(final @NotNull String name) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
         ProjectUtils.afterEvaluate(getProject(), () -> {
             project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> {
@@ -135,26 +133,25 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    @NotNull
-    public final void configure(final RunType runType) {
+    public final void configure(final @NotNull RunType runType) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
         ProjectUtils.afterEvaluate(getProject(), () -> {
             configureInternally(runType);
         });
     }
-    
+
     @Override
     public void configure(@NotNull Provider<RunType> typeProvider) {
         configure(typeProvider.get());
     }
-    
+
     @SafeVarargs
     @Override
     public final void dependsOn(TaskProvider<? extends Task>... tasks) {
         this.dependencies.addAll(Arrays.asList(tasks));
     }
 
-    public void configureInternally(final RunType spec) {
+    public void configureInternally(final @NotNull RunType spec) {
         getEnvironmentVariables().putAll(spec.getEnvironmentVariables());
         getMainClass().convention(spec.getMainClass());
         getProgramArguments().addAll(spec.getArguments());
@@ -166,7 +163,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsDataGenerator().convention(spec.getIsDataGenerator());
         getIsGameTest().convention(spec.getIsGameTest());
         getClasspath().from(spec.getClasspath());
-        
+
         if (spec.getRunAdapter().isPresent()) {
             spec.getRunAdapter().get().adapt(this);
         }

@@ -1,0 +1,40 @@
+plugins {
+    id 'net.neoforged.gradle.userdev' version '7.0-SNAPSHOT'
+    id 'net.neoforged.gradle.mixin' version '7.0-SNAPSHOT'
+}
+
+version = '1.0'
+
+java {
+    withSourcesJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+mixin {
+    config 'examplemod.mixins.json'
+}
+
+minecraft {
+    mappings {
+        channel = official()
+        version.put "minecraft", "1.20.2"
+    }
+}
+
+repositories {
+    mavenLocal()
+}
+
+dependencies {
+    implementation 'net.neoforged:neoforge:20.2.1'
+}
+
+runs {
+    client {
+        systemProperty 'forge.logging.console.level', 'debug'
+        systemProperty 'forge.logging.markers', 'CORE,LOADING,SCAN,SPLASH'
+        modSource project.sourceSets.main
+    }
+}

@@ -16,7 +16,6 @@ import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.util.GradleInternalUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -41,6 +40,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     
     protected CommonRuntimeExtension(Project project) {
         this.project = project;
+        this.project.getExtensions().getByType(RuntimesExtension.class).add(this);
     }
 
     public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, File> dataFiles, Map<String, File> dataDirectories, String step, Specification spec, File runtimeDirectory) {
@@ -105,11 +105,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     public final D create(final Action<B> configurator) {
         final S spec = createSpec(configurator);
 
-        if (GradleInternalUtils.getExtensions(project.getExtensions())
-                .stream()
-                .filter(CommonRuntimeExtension.class::isInstance)
-                .map(extension -> (CommonRuntimeExtension<?,?,?>) extension)
-                .anyMatch(ext -> ext.runtimes.containsKey(spec.getIdentifier())))
+        if (project.getExtensions().getByType(RuntimesExtension.class).definitionExists(spec.getIdentifier()))
             throw new IllegalArgumentException(String.format("Runtime with identifier '%s' already exists", spec.getIdentifier()));
 
         final D runtime = doCreate(spec);

@@ -52,5 +52,4 @@ public abstract class NamingChannelProvider implements NamingChannel, Configurab
     public String getName() {
         return name;
     }
-
 }
