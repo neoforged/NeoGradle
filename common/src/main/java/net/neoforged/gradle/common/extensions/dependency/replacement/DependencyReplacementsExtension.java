@@ -12,9 +12,7 @@ import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -190,14 +188,14 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         
         final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
         if (ideManagementExtension.isIdeImportInProgress()) {
-            ideReplacer.handle(targetConfigurations, dependency, result);
+            ideReplacer.handle(targetConfigurations, configuration, dependency, result);
         }
         
-        gradleReplacer.handle(targetConfigurations, dependency, result);
+        gradleReplacer.handle(targetConfigurations, configuration, dependency, result);
     }
 
-    private void handleDependencyReplacementForGradle(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result) {
-        createDependencyReplacementResult(configurations, dependency, result, (repoBaseDir, entry) -> {
+    private void handleDependencyReplacementForGradle(final List<Configuration> configurations, Configuration originalConfiguration, final Dependency dependency, final DependencyReplacementResult result) {
+        createDependencyReplacementResult(configurations, originalConfiguration, dependency, result, (repoBaseDir, entry) -> {
             final ModuleReference reference = entry.toModuleReference();
 
             final String artifactSelectionTaskName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
@@ -217,8 +215,8 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         });
     }
 
-    private void handleDependencyReplacementForIde(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result) {
-        createDependencyReplacementResult(configurations, dependency, result, ((repoBaseDir, entry) -> {
+    private void handleDependencyReplacementForIde(final List<Configuration> configurations, Configuration originalConfiguration, final Dependency dependency, final DependencyReplacementResult result) {
+        createDependencyReplacementResult(configurations, originalConfiguration, dependency, result, ((repoBaseDir, entry) -> {
             final ModuleReference reference = entry.toModuleReference();
 
             final String rawArtifactSelectorName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
@@ -255,7 +253,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     }
 
     @VisibleForTesting
-    void createDependencyReplacementResult(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result, final TaskProviderGenerator generator) {
+    void createDependencyReplacementResult(final List<Configuration> configurations, Configuration originalConfiguration, final Dependency dependency, final DependencyReplacementResult result, final TaskProviderGenerator generator) {
         if (!(dependency instanceof ExternalModuleDependency)) {
             return;
         }
@@ -269,7 +267,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
                     builder -> configureRepositoryReference(result, externalModuleDependency, builder),
                     reference -> processRepositoryReference(configurations, result, generator, repoBaseDir, reference),
                     builder -> configureRepositoryEntry(result, externalModuleDependency, builder),
-                    entry -> processRepositoryEntry(configurations, result, generator, repoBaseDir, entry),
+                    entry -> processRepositoryEntry(configurations, originalConfiguration, result, generator, repoBaseDir, entry),
                     result.getProcessImmediately()
             );
         } catch (XMLStreamException | IOException e) {
@@ -289,7 +287,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     }
 
 
-    private void processRepositoryEntry(List<Configuration> configurations, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
+    private void processRepositoryEntry(List<Configuration> configurations, Configuration originalConfiguration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
         final ModuleReference reference = entry.toModuleReference();
         if (configuredReferences.contains(reference))
             return;
@@ -298,7 +296,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
         final RepositoryEntryGenerationTasks entryGenerationTasks = generator.generate(repoBaseDir, entry);
         final Dependency replacedDependency = this.dependencyCreator.from(entryGenerationTasks.getRawJarProvider());
-        configurations.forEach(configuration -> configuration.getDependencies().add(replacedDependency));
+        originalConfiguration.getDependencies().add(replacedDependency);
         result.getOnRepoWritingTaskRegisteredCallback().accept(entryGenerationTasks.getRawJarProvider());
 
         afterDefinitionBake(projectAfterBake -> {
@@ -374,6 +372,6 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     @VisibleForTesting
     @FunctionalInterface
     interface DependencyReplacer {
-        void handle(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result);
+        void handle(final List<Configuration> configurations, Configuration originalConfiguration, final Dependency dependency, final DependencyReplacementResult result);
     }
 }

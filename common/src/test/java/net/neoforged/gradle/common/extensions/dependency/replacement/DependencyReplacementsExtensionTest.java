@@ -193,6 +193,7 @@ public class DependencyReplacementsExtensionTest {
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
                 Lists.<Configuration>newArrayList(configuration),
+                configuration,
                 mock(ProjectDependency.class),
                 mock(DependencyReplacementResult.class),
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
@@ -396,7 +397,7 @@ public class DependencyReplacementsExtensionTest {
                 gradleReplacementHandler
         );
 
-        verify(gradleReplacementHandler).handle(any(), any(), any());
+        verify(gradleReplacementHandler).handle(any(), any(), any(), any());
     }
 
     @Test
@@ -437,7 +438,7 @@ public class DependencyReplacementsExtensionTest {
                 mock(DependencyReplacementsExtension.DependencyReplacer.class)
         );
 
-        verify(ideReplacementHandler).handle(any(), any(), any());
+        verify(ideReplacementHandler).handle(any(), any(), any(), any());
     }
 
     @Test
@@ -478,7 +479,7 @@ public class DependencyReplacementsExtensionTest {
                 mock(DependencyReplacementsExtension.DependencyReplacer.class)
         );
 
-        verify(ideReplacementHandler, never()).handle(any(), any(), any());
+        verify(ideReplacementHandler, never()).handle(any(), any(), any(), any());
     }
 
     @Test
@@ -509,6 +510,7 @@ public class DependencyReplacementsExtensionTest {
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
                 Lists.<Configuration>newArrayList(configuration),
+                configuration,
                 mock(ExternalModuleDependency.class),
                 mock(DependencyReplacementResult.class),
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
@@ -570,6 +572,7 @@ public class DependencyReplacementsExtensionTest {
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
                 Lists.<Configuration>newArrayList(configuration),
+                configuration,
                 dependency,
                 result,
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
@@ -649,6 +652,7 @@ public class DependencyReplacementsExtensionTest {
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
                 Lists.<Configuration>newArrayList(configuration),
+                configuration,
                 dependency,
                 result,
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
