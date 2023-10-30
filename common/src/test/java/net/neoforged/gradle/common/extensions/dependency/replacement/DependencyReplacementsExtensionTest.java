@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.extensions.dependency.replacement;
 
+import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.dummy.DummyRepositoryEntry;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.dependency.creation.DependencyCreator;
@@ -191,7 +192,7 @@ public class DependencyReplacementsExtensionTest {
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
-                configuration,
+                Lists.<Configuration>newArrayList(configuration),
                 mock(ProjectDependency.class),
                 mock(DependencyReplacementResult.class),
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
@@ -507,7 +508,7 @@ public class DependencyReplacementsExtensionTest {
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
-                configuration,
+                Lists.<Configuration>newArrayList(configuration),
                 mock(ExternalModuleDependency.class),
                 mock(DependencyReplacementResult.class),
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
@@ -568,7 +569,7 @@ public class DependencyReplacementsExtensionTest {
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
-                configuration,
+                Lists.<Configuration>newArrayList(configuration),
                 dependency,
                 result,
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
@@ -647,7 +648,7 @@ public class DependencyReplacementsExtensionTest {
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
 
         dependencyReplacementsExtension.createDependencyReplacementResult(
-                configuration,
+                Lists.<Configuration>newArrayList(configuration),
                 dependency,
                 result,
                 mock(DependencyReplacementsExtension.TaskProviderGenerator.class)
