@@ -97,7 +97,6 @@ subprojects.forEach { subProject ->
         groovyOptions.optimizationOptions.indy = true
     }
 
-    subProject.publishing.repositories.maven gradleutils.getPublishingMaven()
     //noinspection ConfigurationAvoidance Due to how the eclipse plugin creates this task, tasks.named throws
     subProject.tasks.findByName('eclipseJdt')?.configure {
         doFirst {
@@ -201,17 +200,6 @@ subprojects.forEach { subProject ->
     subProject.afterEvaluate { Project evalSubProject ->
         evalSubProject.publishing.repositories { RepositoryHandler repositories ->
             maven gradleutils.getPublishingMaven()
-
-            if (project.hasProperty("ldtteamUsername") && project.hasProperty("ldtteamPassword")) {
-                maven {
-                    name 'LDTTeamJfrog'
-                    credentials {
-                        username project.ldtteamUsername
-                        password project.ldtteamPassword
-                    }
-                    url 'https://ldtteam.jfrog.io/ldtteam/neogradle-next'
-                }
-            }
         }
 
         if (evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
