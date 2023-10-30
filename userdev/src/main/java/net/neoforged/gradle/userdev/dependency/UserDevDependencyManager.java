@@ -51,6 +51,7 @@ public final class UserDevDependencyManager {
             return Optional.of(
                     new DependencyReplacementResult(
                             project,
+                            Optional.of(ConfigurationUtils.findReplacementConfigurations(project, context.getConfiguration())),
                             name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition.getNeoFormRuntimeDefinition(), name),
                             runtimeDefinition.getNeoFormRuntimeDefinition().getSourceJarTask(),
                             runtimeDefinition.getNeoFormRuntimeDefinition().getRawJarTask(),

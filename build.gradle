@@ -2,12 +2,10 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.neoforged.gradleutils' version '[2.0.16,)'
+    id 'net.neoforged.gradleutils' version '3.0.0-alpha.1'
 }
 
-//HARDCODED VERSION FOR NOW!
-//If somebody knows how to teach GU the way of the land with respects to snapshots I am all for it :D
-version = "7.0.0-SNAPSHOT"
+version = gradleutils.version.toString()
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
@@ -28,7 +26,7 @@ tasks.register('info') {
 }
 
 changelog {
-    fromTag '7.0'
+    from "7.0"
     disableAutomaticPublicationRegistration()
 }
 
@@ -99,7 +97,7 @@ subprojects.forEach { subProject ->
         groovyOptions.optimizationOptions.indy = true
     }
 
-    subProject.publishing.repositories.maven gradleutils.getPublishingForgeMaven()
+    subProject.publishing.repositories.maven gradleutils.getPublishingMaven()
     //noinspection ConfigurationAvoidance Due to how the eclipse plugin creates this task, tasks.named throws
     subProject.tasks.findByName('eclipseJdt')?.configure {
         doFirst {
@@ -202,7 +200,7 @@ subprojects.forEach { subProject ->
 subprojects.forEach { subProject ->
     subProject.afterEvaluate { Project evalSubProject ->
         evalSubProject.publishing.repositories { RepositoryHandler repositories ->
-            maven gradleutils.getPublishingForgeMaven()
+            maven gradleutils.getPublishingMaven()
 
             if (project.hasProperty("ldtteamUsername") && project.hasProperty("ldtteamPassword")) {
                 maven {

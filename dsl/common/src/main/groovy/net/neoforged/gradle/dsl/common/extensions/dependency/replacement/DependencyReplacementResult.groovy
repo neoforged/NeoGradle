@@ -20,6 +20,7 @@ import java.util.function.Supplier
 @CompileStatic
 final class DependencyReplacementResult {
     private final Project project;
+    private final Optional<List<Configuration>> targetConfiguration;
     private final Function<String, String> taskNameBuilder;
     private final TaskProvider<? extends WithOutput> sourcesJarTaskProvider;
     private final TaskProvider<? extends WithOutput> rawJarTaskProvider;
@@ -31,6 +32,35 @@ final class DependencyReplacementResult {
     private final Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback;
     private final Supplier<Set<TaskProvider>> additionalIdePostSyncTasks;
     private final Boolean processImmediately;
+
+    DependencyReplacementResult(
+            Project project,
+            Optional<List<Configuration>> targetConfiguration,
+            Function<String, String> taskNameBuilder,
+            TaskProvider<? extends WithOutput> sourcesJarTaskProvider,
+            TaskProvider<? extends WithOutput> rawJarTaskProvider,
+            Configuration additionalDependenciesConfiguration,
+            Consumer<RepositoryReference.Builder<?,?>> referenceConfigurator,
+            Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator,
+            Consumer<Dependency> onCreateReplacedDependencyCallback,
+            Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback,
+            Supplier<Set<TaskProvider>> additionalIdePostSyncTasks,
+            boolean processImmediately
+    ) {
+        this.project = project;
+        this.targetConfiguration = targetConfiguration;
+        this.taskNameBuilder = taskNameBuilder;
+        this.sourcesJarTaskProvider = sourcesJarTaskProvider;
+        this.rawJarTaskProvider = rawJarTaskProvider;
+        this.additionalDependenciesConfiguration = additionalDependenciesConfiguration;
+        this.referenceConfigurator = referenceConfigurator;
+        this.metadataConfigurator = metadataConfigurator;
+        this.onCreateReplacedDependencyCallback = onCreateReplacedDependencyCallback;
+        this.onRepoWritingTaskRegisteredCallback = onRepoWritingTaskRegisteredCallback;
+        this.additionalReplacements = Collections.emptyList();
+        this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
+        this.processImmediately = processImmediately;
+    }
 
     DependencyReplacementResult(
             Project project,
@@ -46,6 +76,7 @@ final class DependencyReplacementResult {
             boolean processImmediately
     ) {
         this.project = project;
+        this.targetConfiguration = Optional.empty();
         this.taskNameBuilder = taskNameBuilder;
         this.sourcesJarTaskProvider = sourcesJarTaskProvider;
         this.rawJarTaskProvider = rawJarTaskProvider;
@@ -58,6 +89,35 @@ final class DependencyReplacementResult {
         this.additionalIdePostSyncTasks = additionalIdePostSyncTasks;
         this.processImmediately = processImmediately;
     }
+
+    DependencyReplacementResult(
+            Project project,
+            Optional<List<Configuration>> targetConfiguration,
+            Function<String, String> taskNameBuilder,
+            TaskProvider<? extends WithOutput> sourcesJarTaskProvider,
+            TaskProvider<? extends WithOutput> rawJarTaskProvider,
+            Configuration additionalDependenciesConfiguration,
+            Consumer<RepositoryReference.Builder<?,?>> referenceConfigurator,
+            Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator,
+            Consumer<Dependency> onCreateReplacedDependencyCallback,
+            Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback,
+            Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
+        this(
+                project,
+                targetConfiguration,
+                taskNameBuilder,
+                sourcesJarTaskProvider,
+                rawJarTaskProvider,
+                additionalDependenciesConfiguration,
+                referenceConfigurator,
+                metadataConfigurator,
+                onCreateReplacedDependencyCallback,
+                onRepoWritingTaskRegisteredCallback,
+                additionalIdePostSyncTasks,
+                false
+        );
+    }
+
 
     DependencyReplacementResult(
             Project project,
@@ -93,6 +153,15 @@ final class DependencyReplacementResult {
     @NotNull
     Project getProject() {
         return project;
+    }
+
+    /**
+     * Defines the configuration in which the dependency is placed.
+     * @return
+     */
+    @NotNull
+    Optional<List<Configuration>> getTargetConfiguration() {
+        return targetConfiguration
     }
 
     /**

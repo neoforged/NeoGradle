@@ -12,7 +12,9 @@ import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -31,6 +33,8 @@ import org.jetbrains.annotations.VisibleForTesting;
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -178,17 +182,22 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result, DependencyReplacer ideReplacer, DependencyReplacer gradleReplacer) {
         configuration.getDependencies().remove(dependency);
 
+        final List<Configuration> targetConfigurations = result.getTargetConfiguration().orElseGet(() -> {
+            final List<Configuration> list = new ArrayList<>();
+            list.add(configuration);
+            return list;
+        });
+        
         final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
-
         if (ideManagementExtension.isIdeImportInProgress()) {
-            ideReplacer.handle(configuration, dependency, result);
+            ideReplacer.handle(targetConfigurations, dependency, result);
         }
-
-        gradleReplacer.handle(configuration, dependency, result);
+        
+        gradleReplacer.handle(targetConfigurations, dependency, result);
     }
 
-    private void handleDependencyReplacementForGradle(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result) {
-        createDependencyReplacementResult(configuration, dependency, result, (repoBaseDir, entry) -> {
+    private void handleDependencyReplacementForGradle(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result) {
+        createDependencyReplacementResult(configurations, dependency, result, (repoBaseDir, entry) -> {
             final ModuleReference reference = entry.toModuleReference();
 
             final String artifactSelectionTaskName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
@@ -208,8 +217,8 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         });
     }
 
-    private void handleDependencyReplacementForIde(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result) {
-        createDependencyReplacementResult(configuration, dependency, result, ((repoBaseDir, entry) -> {
+    private void handleDependencyReplacementForIde(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result) {
+        createDependencyReplacementResult(configurations, dependency, result, ((repoBaseDir, entry) -> {
             final ModuleReference reference = entry.toModuleReference();
 
             final String rawArtifactSelectorName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
@@ -246,7 +255,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     }
 
     @VisibleForTesting
-    void createDependencyReplacementResult(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result, final TaskProviderGenerator generator) {
+    void createDependencyReplacementResult(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result, final TaskProviderGenerator generator) {
         if (!(dependency instanceof ExternalModuleDependency)) {
             return;
         }
@@ -258,9 +267,9 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         try {
             extension.withDependency(
                     builder -> configureRepositoryReference(result, externalModuleDependency, builder),
-                    reference -> processRepositoryReference(configuration, result, generator, repoBaseDir, reference),
+                    reference -> processRepositoryReference(configurations, result, generator, repoBaseDir, reference),
                     builder -> configureRepositoryEntry(result, externalModuleDependency, builder),
-                    entry -> processRepositoryEntry(configuration, result, generator, repoBaseDir, entry),
+                    entry -> processRepositoryEntry(configurations, result, generator, repoBaseDir, entry),
                     result.getProcessImmediately()
             );
         } catch (XMLStreamException | IOException e) {
@@ -268,14 +277,19 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         }
     }
 
-    private void processRepositoryReference(Configuration configuration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryReference entry) {
+    private void processRepositoryReference(List<Configuration> configurations, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryReference entry) {
         final Dependency replacedDependency = entry.toGradle(project);
-        configuration.getDependencies().add(replacedDependency);
+        
+        configurations.forEach(configuration -> {
+            final Configuration container = project.getConfigurations().maybeCreate("ng_dummy_ng_" + configuration.getName());
+            container.getDependencies().add(replacedDependency);
+            configuration.extendsFrom(container);
+        });
         result.getOnCreateReplacedDependencyCallback().accept(replacedDependency);
     }
 
 
-    private void processRepositoryEntry(Configuration configuration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
+    private void processRepositoryEntry(List<Configuration> configurations, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
         final ModuleReference reference = entry.toModuleReference();
         if (configuredReferences.contains(reference))
             return;
@@ -283,8 +297,12 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         configuredReferences.add(reference);
 
         final RepositoryEntryGenerationTasks entryGenerationTasks = generator.generate(repoBaseDir, entry);
-
-        configuration.getDependencies().add(this.dependencyCreator.from(entryGenerationTasks.getRawJarProvider()));
+        final Dependency replacedDependency = this.dependencyCreator.from(entryGenerationTasks.getRawJarProvider());
+        configurations.forEach(configuration -> {
+            final Configuration container = project.getConfigurations().maybeCreate("ng_dummy_ng_" + configuration.getName());
+            container.getDependencies().add(replacedDependency);
+            configuration.extendsFrom(container);
+        });
         result.getOnRepoWritingTaskRegisteredCallback().accept(entryGenerationTasks.getRawJarProvider());
 
         afterDefinitionBake(projectAfterBake -> {
@@ -360,6 +378,6 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     @VisibleForTesting
     @FunctionalInterface
     interface DependencyReplacer {
-        void handle(final Configuration configuration, final Dependency dependency, final DependencyReplacementResult result);
+        void handle(final List<Configuration> configurations, final Dependency dependency, final DependencyReplacementResult result);
     }
 }

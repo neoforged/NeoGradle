@@ -216,6 +216,10 @@ class Artifact implements Comparable<Artifact>, Serializable {
         return (Dependency dep) -> group.equals(dep.getGroup()) && name.equals(dep.getName()) && version.equals(dep.getVersion());
     }
 
+    Predicate<Dependency> asDependencyMatcher() {
+        return (Dependency dep) -> group.equals(dep.getGroup()) && name.equals(dep.getName()) && version.equals(dep.getVersion());
+    }
+
     Predicate<ResolvedArtifact> asArtifactMatcher() {
         return (ResolvedArtifact art) -> {
             String theirClassifier;

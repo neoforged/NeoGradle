@@ -83,13 +83,10 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         return project;
     }
     
-    
-
     @Override
     public final Provider<Map<String, D>> getRuntimes() {
         return getProject().provider(() -> this.runtimes);
     }
-
     @Override
     @NotNull
     public final D maybeCreate(final Action<B> configurator) {

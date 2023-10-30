@@ -1,6 +1,7 @@
 package net.neoforged.gradle.neoform.dependency;
 
 import com.google.common.collect.Sets;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
@@ -9,6 +10,7 @@ import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Depende
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
@@ -46,6 +48,7 @@ public final class NeoFormDependencyManager {
                 return Optional.of(
                         new DependencyReplacementResult(
                                 project,
+                                Optional.of(ConfigurationUtils.findReplacementConfigurations(project, context.getConfiguration())),
                                 name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
                                 runtimeDefinition.getSourceJarTask(),
                                 runtimeDefinition.getRawJarTask(),

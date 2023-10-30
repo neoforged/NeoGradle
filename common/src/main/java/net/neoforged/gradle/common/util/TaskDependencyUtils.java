@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
+import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -166,8 +167,7 @@ public final class TaskDependencyUtils {
 
         public RuntimeFindingTaskDependencyResolveContext(Project project) {
             this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-            final CommonRuntimeExtension<?, ?, ? extends Definition<?>> runtimeExtension = project.getExtensions().getByType(CommonRuntimeExtension.class);
-            this.runtimes = runtimeExtension.getRuntimes().get().values();
+            this.runtimes = project.getExtensions().getByType(RuntimesExtension.class).getAllDefinitions();
         }
 
         @Override
@@ -191,14 +191,17 @@ public final class TaskDependencyUtils {
         }
 
         private void processConfiguration(Configuration configuration) {
-            DependencySet dependencies = configuration.getAllDependencies();
+            DependencySet dependencies = configuration.getDependencies();
             this.runtimes.stream().filter(runtime -> {
                 try {
-                    return dependencies.contains(runtime.getReplacedDependency());
+                    final Artifact artifact = Artifact.from(runtime.getReplacedDependency());
+                    return dependencies.stream().anyMatch(artifact.asDependencyMatcher());
                 } catch (IllegalStateException e) {
                     return false;
                 }
             }).forEach(this::add);
+            
+            configuration.getExtendsFrom().forEach(this::add);
         }
 
         private void processSourceDirectorySet(SourceDirectorySet sourceDirectorySet) {

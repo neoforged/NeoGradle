@@ -1,6 +1,7 @@
 package net.neoforged.gradle.vanilla.dependency;
 
 import com.google.common.collect.Sets;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
@@ -49,6 +50,7 @@ public final class VanillaDependencyManager {
                     return Optional.of(
                             new DependencyReplacementResult(
                                     project,
+                                    Optional.of(ConfigurationUtils.findReplacementConfigurations(project, context.getConfiguration())),
                                     name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
                                     runtimeDefinition.getSourceJarTask(),
                                     runtimeDefinition.getRawJarTask(),
