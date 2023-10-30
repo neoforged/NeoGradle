@@ -50,6 +50,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                 CommonRuntimeUtils.buildStepName(getSpecification(), "writeMinecraftClasspath"),
                 ClasspathSerializer.class,
                 task -> {
+                    this.additionalUserDevDependencies.getExtendsFrom().forEach(task.getInputFiles()::from);
                     task.getInputFiles().from(this.additionalUserDevDependencies);
                     task.getInputFiles().from(mcpRuntimeDefinition.getMinecraftDependenciesConfiguration());
                 }
