@@ -298,11 +298,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
         final RepositoryEntryGenerationTasks entryGenerationTasks = generator.generate(repoBaseDir, entry);
         final Dependency replacedDependency = this.dependencyCreator.from(entryGenerationTasks.getRawJarProvider());
-        configurations.forEach(configuration -> {
-            final Configuration container = project.getConfigurations().maybeCreate("ng_dummy_ng_" + configuration.getName());
-            container.getDependencies().add(replacedDependency);
-            configuration.extendsFrom(container);
-        });
+        configurations.forEach(configuration -> configuration.getDependencies().add(replacedDependency));
         result.getOnRepoWritingTaskRegisteredCallback().accept(entryGenerationTasks.getRawJarProvider());
 
         afterDefinitionBake(projectAfterBake -> {
