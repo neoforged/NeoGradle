@@ -21,6 +21,8 @@ import java.io.File;
 import java.net.URL;
 
 public abstract class DownloadFileAction implements WorkAction<DownloadFileAction.Params> {
+    private static final int MAX_ATTEMPTS = 10;
+    private static final int ATTEMPT_DELAY = 100;
     private static final Logger LOGGER = Logging.getLogger(DownloadFileAction.class);
 
     @Inject
@@ -67,14 +69,29 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
 
             final URL url = new URL(params.getUrl().get());
 
-            progress.setSize(UrlUtils.getFileSize(url));
+            // Try downloading multiple times with a small delay in case of blocked connections
+            for (int attempt = 0; attempt < MAX_ATTEMPTS; ++attempt) {
+                try {
+                    progress.setSize(UrlUtils.getFileSize(url));
 
-            FileUtil.copy(
-                    new URL(params.getUrl().get()),
-                    output,
-                    new Monitor(progress),
-                    Timeout.NONE
-            );
+                    FileUtil.copy(
+                            url,
+                            output,
+                            new Monitor(progress),
+                            Timeout.NONE
+                    );
+                } catch (Exception e) {
+                    if (attempt == MAX_ATTEMPTS - 1) {
+                        throw e;
+                    }
+
+                    try {
+                        Thread.sleep(ATTEMPT_DELAY);
+                    } catch (InterruptedException interruptedException) {
+                        throw new RuntimeException(interruptedException);
+                    }
+                }
+            }
 
             if (params.getShouldValidateHash().get()) {
                 final String hash = HashFunction.SHA1.hash(output);
