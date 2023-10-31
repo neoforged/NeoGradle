@@ -199,7 +199,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             final EnumMap<DistributionType, TaskProvider<? extends WithOutput>> cleanProviders = new EnumMap<>(DistributionType.class);
             cleanProviders.put(DistributionType.CLIENT, createCleanProvider(runtimeDefinition.getGameArtifactProvidingTasks().get(GameArtifact.CLIENT_JAR), runtimeDefinition, workingDirectory));
             cleanProviders.put(DistributionType.SERVER, createCleanProvider(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getTask("extractServer"), runtimeDefinition, workingDirectory));
-            cleanProviders.put(DistributionType.JOINED, runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getRawJarTask());
+            cleanProviders.put(DistributionType.JOINED, runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getTask("rename"));
             
             final EnumMap<DistributionType, TaskProvider<? extends WithOutput>> obfToMojMappingProviders = new EnumMap<>(DistributionType.class);
             final TaskProvider<? extends WithOutput> clientInverseMappings = createFlippedMojMapProvider(runtimeDefinition.getGameArtifactProvidingTasks().get(GameArtifact.CLIENT_MAPPINGS), runtimeDefinition, workingDirectory);
