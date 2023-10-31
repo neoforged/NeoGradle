@@ -80,6 +80,8 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
                             new Monitor(progress),
                             Timeout.NONE
                     );
+
+                    break; // Success
                 } catch (Exception e) {
                     if (attempt == MAX_ATTEMPTS - 1) {
                         throw e;
