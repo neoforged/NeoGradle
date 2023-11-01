@@ -2,9 +2,9 @@ package net.neoforged.gradle.common.util;
 
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
-import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.Buildable;
@@ -24,13 +24,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class TaskDependencyUtils {
@@ -78,38 +72,46 @@ public final class TaskDependencyUtils {
         getDependencies(queue, tasks);
     }
 
-    public static CommonRuntimeDefinition<?> realiseTaskAndExtractRuntimeDefinition(@NotNull Project project, TaskProvider<?> t) throws MultipleDefinitionsFoundException {
+    public static CommonRuntimeDefinition<?> realiseTaskAndExtractRuntimeDefinition(@NotNull Project project, TaskProvider<?> t) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         return extractRuntimeDefinition(project, t.get());
     }
 
-    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException {
+    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, Task t) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         return validateAndUnwrapDefinitions(project, "task", t.getName(), findRuntimes(project, t));
     }
 
-    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, TaskDependencyContainer files) throws MultipleDefinitionsFoundException {
+    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, TaskDependencyContainer files) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         return validateAndUnwrapDefinitions(project, "task dependency container", files.toString(), findRuntimes(project, files));
     }
 
-    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(Project project, SourceSet sourceSet) throws MultipleDefinitionsFoundException {
+    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(Project project, SourceSet sourceSet) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         return validateAndUnwrapDefinitions(project, "source set", sourceSet.getName(), findRuntimes(project, sourceSet));
     }
 
-    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(Project project, Collection<SourceSet> sourceSets) throws MultipleDefinitionsFoundException {
+    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(Project project, Collection<SourceSet> sourceSets) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         return validateAndUnwrapDefinitions(project, "source sets", sourceSets.stream().map(SourceSet::getName).collect(Collectors.joining(", ", "[", "]")), findRuntimes(project, sourceSets));
     }
+    
+    public static Optional<CommonRuntimeDefinition<?>> findRuntimeDefinition(Project project, SourceSet sourceSet) throws MultipleDefinitionsFoundException {
+        return unwrapDefinitions(project, findRuntimes(project, sourceSet));
+    }
 
-    private static CommonRuntimeDefinition<?> validateAndUnwrapDefinitions(@NotNull Project project, String type, String name, Collection<? extends CommonRuntimeDefinition<?>> definitions) throws MultipleDefinitionsFoundException {
+    private static CommonRuntimeDefinition<?> validateAndUnwrapDefinitions(@NotNull Project project, String type, String name, Collection<? extends CommonRuntimeDefinition<?>> definitions) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         if (definitions.isEmpty()) {
             throw new IllegalStateException(String.format("Could not find runtime definition for %s: %s", type, name));
         }
-        final List<CommonRuntimeDefinition<?>> undelegated = unwrapDelegation(project, definitions);
-
-        if (undelegated.size() != 1)
-            throw new MultipleDefinitionsFoundException(undelegated);
-
-        return undelegated.get(0);
+        return unwrapDefinitions(project, definitions).orElseThrow(NoDefinitionsFoundException::new);
     }
-
+    
+    private static Optional<CommonRuntimeDefinition<?>> unwrapDefinitions(@NotNull Project project, Collection<? extends CommonRuntimeDefinition<?>> definitions) throws MultipleDefinitionsFoundException {
+        final List<CommonRuntimeDefinition<?>> undelegated = unwrapDelegation(project, definitions);
+        
+        if (undelegated.size() > 1)
+            throw new MultipleDefinitionsFoundException(undelegated);
+        
+        return undelegated.isEmpty() ? Optional.empty() : Optional.of(undelegated.get(0));
+    }
+    
     private static Collection<? extends CommonRuntimeDefinition<?>> findRuntimes(Project project, Task t) {
         FileCollection files = t.getInputs().getFiles();
         if (files instanceof TaskDependencyContainer) {
@@ -157,7 +159,8 @@ public final class TaskDependencyUtils {
         output.addAll(noneDelegated);
         return output.stream().distinct().collect(Collectors.toList());
     }
-
+    
+    
     private static class RuntimeFindingTaskDependencyResolveContext extends AbstractTaskDependencyResolveContext {
         private final Set<Object> seen = new HashSet<>();
         private final Set<CommonRuntimeDefinition<?>> found = new HashSet<>();
