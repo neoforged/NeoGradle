@@ -3,6 +3,7 @@ package net.neoforged.gradle.neoform.runtime.definition;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.util.PathUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -112,8 +113,7 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData());
 
         interpolationData.put("mcp_version", neoform.getVersion());
-        interpolationData.put("mcp_mappings", new File(unpackedneoformZipDirectory, "config/joined.srg").getAbsolutePath());
-
+        interpolationData.put("mcp_mappings", PathUtils.quote(new File(unpackedneoformZipDirectory, "config/joined.srg").getAbsolutePath()));
         return interpolationData;
     }
 

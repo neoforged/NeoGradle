@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.util.PathUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
@@ -13,6 +14,7 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.ListProperty;
@@ -178,9 +180,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
         interpolationData.put("runtime_name", specification.getVersionedName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
-        interpolationData.put("assets_root", getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("assets_root", PathUtils.quote(getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
         interpolationData.put("asset_index", getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
-        interpolationData.put("natives", getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("natives", PathUtils.quote(getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
 
         return interpolationData;
     }
@@ -215,7 +217,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
         String result = input;
         for (final Map.Entry<String, String> entry : values.entrySet()) {
-            result = result.replace(patternPrefix + "{" + entry.getKey() + "}", "\"" + entry.getValue() + "\"");
+            result = result.replace(patternPrefix + "{" + entry.getKey() + "}", entry.getValue());
         }
         return result;
     }

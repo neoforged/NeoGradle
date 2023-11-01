@@ -11,6 +11,7 @@ import net.neoforged.gradle.common.util.StreamUtils;
 import net.neoforged.gradle.common.util.MappingUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
@@ -113,6 +114,8 @@ public final class OfficialNamingChannelConfigurator {
                                     return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
                                 } catch (MultipleDefinitionsFoundException e) {
                                     throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
+                                } catch (NoDefinitionsFoundException e) {
+                                    throw new RuntimeException("Could not determine the runtime definition to use. Within the renaming context, there is none defined!", e);
                                 }
                             });
                         }

@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.util.PathUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
@@ -85,12 +86,12 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
         final String fgVersion = this.getClass().getPackage().getImplementationVersion();
 
         interpolationData.put(InterpolationConstants.VERSION_NAME, getSpecification().getMinecraftVersion());
-        interpolationData.put(InterpolationConstants.ASSETS_ROOT, getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put(InterpolationConstants.ASSETS_ROOT, PathUtils.quote(getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
         interpolationData.put(InterpolationConstants.ASSETS_INDEX_NAME, getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         interpolationData.put(InterpolationConstants.AUTH_ACCESS_TOKEN, "0");
         interpolationData.put(InterpolationConstants.USER_TYPE, "legacy");
         interpolationData.put(InterpolationConstants.VERSION_TYPE, getVersionJson().getType());
-        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, PathUtils.quote(getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
         interpolationData.put(InterpolationConstants.LAUNCHER_NAME, "NeoGradle-Vanilla");
         interpolationData.put(InterpolationConstants.LAUNCHER_VERSION, fgVersion == null ? "DEV" : fgVersion);
 

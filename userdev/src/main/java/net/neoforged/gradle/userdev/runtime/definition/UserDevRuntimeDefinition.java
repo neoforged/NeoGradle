@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.util.PathUtils;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -141,10 +142,10 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                 userdevConfiguration.getModules().get().forEach(m -> modulesCfg.getDependencies().add(getSpecification().getProject().getDependencies().create(m)));
             }
 
-            interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
+            interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).map(PathUtils::quote).collect(Collectors.joining(File.pathSeparator)));
         }
 
-        interpolationData.put("minecraft_classpath_file", this.minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
+        interpolationData.put("minecraft_classpath_file", PathUtils.quote(this.minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath()));
 
         return interpolationData;
     }

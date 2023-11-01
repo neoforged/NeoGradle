@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToC
 import net.neoforged.gradle.common.util.MappingUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
+import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.RenameConstants;
@@ -83,6 +84,8 @@ public class RenameStep implements IStep {
                                     return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
                                 } catch (MultipleDefinitionsFoundException e) {
                                     throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
+                                } catch (NoDefinitionsFoundException e) {
+                                    throw new RuntimeException("Could not determine the runtime definition to use. No definitions were found.", e);
                                 }
                             });
                         }
