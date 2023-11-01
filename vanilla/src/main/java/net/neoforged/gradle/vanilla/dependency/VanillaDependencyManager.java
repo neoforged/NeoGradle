@@ -59,7 +59,7 @@ public final class VanillaDependencyManager {
                                     builder -> builder.setVersion(runtimeDefinition.getSpecification().getMinecraftVersion()),
                                     runtimeDefinition::setReplacedDependency,
                                     runtimeDefinition::onRepoWritten,
-                                    () -> Sets.newHashSet(runtimeDefinition.getAssets(), runtimeDefinition.getNatives())
+                                    Sets::newHashSet
                     ));
                 });
             }
