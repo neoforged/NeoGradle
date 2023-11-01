@@ -8,9 +8,9 @@ import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runs.ide.extensions.IdeaRunExtensionImpl;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.util.ProjectUtils;
+import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.RunsUtil;
-import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -96,22 +95,7 @@ public class IdeRunIntegrationManager {
                 
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
-                
-                final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
-                    for (SourceSet sourceSet : run.getModSources().get()) {
-                        final Project sourceSetProject = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
-                        task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
-                        task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
-                    }
-                });
-                if (!runImpl.getTaskDependencies().isEmpty()) {
-                    ideBeforeRunTask.configure(task -> {
-                        runImpl.getTaskDependencies().forEach(dep -> {
-                            //noinspection Convert2MethodRef Creates a compiler error regarding incompatible types.
-                            task.dependsOn(dep);
-                        });
-                    });
-                }
+                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
                 
                 ideaRuns.register(runName, Application.class, ideaRun -> {
                     runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
@@ -144,22 +128,7 @@ public class IdeRunIntegrationManager {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     
                     final RunImpl runImpl = (RunImpl) run;
-                    
-                    final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
-                        for (SourceSet sourceSet : run.getModSources().get()) {
-                            final Project sourceSetProject = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
-                            task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
-                        }
-                    });
-                    
-                    if (!runImpl.getTaskDependencies().isEmpty()) {
-                        ideBeforeRunTask.configure(task -> {
-                            runImpl.getTaskDependencies().forEach(dep -> {
-                                //noinspection Convert2MethodRef Creates a compiler error regarding incompatible types.
-                                task.dependsOn(dep);
-                            });
-                        });
-                    }
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
                     
                     try {
                         final GradleLaunchConfig idePreRunTask = GradleLaunchConfig.builder(eclipse.getProject().getName())
@@ -199,6 +168,27 @@ public class IdeRunIntegrationManager {
                     }
                 }));
             });
+        }
+        
+        private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
+            final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
+                for (SourceSet sourceSet : run.getModSources().get()) {
+                    final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
+                    task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
+                    task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
+                }
+            });
+            
+            if (!runImpl.getTaskDependencies().isEmpty()) {
+                ideBeforeRunTask.configure(task -> {
+                    runImpl.getTaskDependencies().forEach(dep -> {
+                        //noinspection Convert2MethodRef Creates a compiler error regarding incompatible types.
+                        task.dependsOn(dep);
+                    });
+                });
+            }
+            
+            return ideBeforeRunTask;
         }
         
         private static void writeLaunchToFile(Project project, String fileName, LaunchConfig config) {

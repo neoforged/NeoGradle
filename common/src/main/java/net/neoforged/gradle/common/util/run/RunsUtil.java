@@ -4,8 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.tasks.RunExec;
-import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
-import net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet;
+import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
@@ -61,7 +60,7 @@ public class RunsUtil {
         return buildGradleModClasses(
                 sourceSetsProperty,
                 sourceSet -> {
-                    final Project project = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
+                    final Project project = SourceSetUtils.getProject(sourceSet);
                     final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
                     final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) rootIdeaModel
                                                                   .getProject())
@@ -82,7 +81,7 @@ public class RunsUtil {
         return buildGradleModClasses(
                 sourceSetsProperty,
                 sourceSet -> {
-                    final Project project = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
+                    final Project project = SourceSetUtils.getProject(sourceSet);
                     final EclipseModel eclipseModel = project.getExtensions().getByType(EclipseModel.class);
                     
                     final File conventionsDir = new File(project.getProjectDir(), "bin");
@@ -102,15 +101,13 @@ public class RunsUtil {
     public static Provider<String> buildGradleModClasses(final ListProperty<SourceSet> sourceSetsProperty, final Function<SourceSet, Stream<File>> directoryBuilder) {
         return sourceSetsProperty.map(sourceSets -> {
             final Multimap<String, SourceSet> sourceSetsByRunId = HashMultimap.create();
-            sourceSets.forEach(sourceSet -> sourceSetsByRunId.put(sourceSet.getExtensions().getByType(RunnableSourceSet.class).getModIdentifier().get(), sourceSet));
+            sourceSets.forEach(sourceSet -> sourceSetsByRunId.put(SourceSetUtils.getModIdentifier(sourceSet), sourceSet));
             
             return sourceSetsByRunId.entries()
                            .stream().flatMap(entry -> directoryBuilder.apply(entry.getValue())
                                                               .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath())))
                            .collect(Collectors.joining(File.pathSeparator));
         });
-        
-        
     }
     
     private static String createTaskName(final String runName) {

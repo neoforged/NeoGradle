@@ -218,8 +218,8 @@ public final class TaskDependencyUtils {
         }
 
         private void processSourceSet(SourceSet sourceSet) {
-            Property<CommonRuntimeDefinition<?>> runtimeDefinition = (Property<CommonRuntimeDefinition<?>>) sourceSet.getExtensions().getByName("runtimeDefinition");
-            if (runtimeDefinition.isPresent()) {
+            Property<CommonRuntimeDefinition<?>> runtimeDefinition = (Property<CommonRuntimeDefinition<?>>) sourceSet.getExtensions().findByName("runtimeDefinition");
+            if (runtimeDefinition != null && runtimeDefinition.isPresent()) {
                 this.add(runtimeDefinition.get());
             } else {
                 Set<CommonRuntimeDefinition<?>> tmp = new HashSet<>(this.found);
