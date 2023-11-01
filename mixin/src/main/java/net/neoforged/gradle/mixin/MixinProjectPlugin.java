@@ -61,12 +61,12 @@ public class MixinProjectPlugin implements Plugin<Project> {
         final ListProperty<String> programArguments = run.getProgramArguments();
         
         for (String config : this.extension.getConfigs().get()) {
-            programArguments.addAll("--mixin.config", config);
+            programArguments.addAll("--fml.mixin", config);
         }
         
         final MixinExtension runExtension = run.getExtensions().getByType(MixinExtension.class);
         for(String config : runExtension.getConfigs().get()) {
-            programArguments.addAll("--mixin.config", config);
+            programArguments.addAll("--fml.mixin", config);
         }
     }
 }
