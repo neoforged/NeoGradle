@@ -174,8 +174,16 @@ public class IdeRunIntegrationManager {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
                 for (SourceSet sourceSet : run.getModSources().get()) {
                     final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
+                    
+                    //The following tasks are not guaranteed to be in the source sets build dependencies
+                    //We however need at least the classes as well as the resources of the source set to be run
                     task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
                     task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
+                    
+                    //There might be additional tasks that are needed to configure and run a source set.
+                    //Also run those
+                    sourceSet.getOutput().getBuildDependencies().getDependencies(null)
+                            .forEach(task::dependsOn);
                 }
             });
             
