@@ -27,7 +27,7 @@ public abstract class GenerateSourcePatches extends DefaultRuntime implements Wi
         getLineEnding().convention(System.lineSeparator());
         getShouldOutputVerboseLogging().convention(false);
         getContextLines().convention(-1);
-        getShouldCreateAutomaticHeader().convention(false);
+        getShouldCreateAutomaticHeader().convention(true);
         getShouldPrintSummary().convention(false);
     }
 
