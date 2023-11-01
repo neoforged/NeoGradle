@@ -172,7 +172,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), workingInterpolationData));
         run.overrideSystemProperties(interpolate(run.getSystemProperties(), workingInterpolationData));
 
-        run.dependsOn(getAssets(), getNatives());
+        if (run.getIsClient().get()) {
+            run.dependsOn(getAssets(), getNatives());
+        }
     }
 
     protected Map<String, String> buildRunInterpolationData() {
