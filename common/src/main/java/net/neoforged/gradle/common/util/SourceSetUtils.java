@@ -19,7 +19,7 @@ public class SourceSetUtils {
     public static Project getProject(final SourceSet sourceSet) {
         final ProjectHolder projectHolder = sourceSet.getExtensions().findByType(ProjectHolder.class);
         if (projectHolder != null) {
-            projectHolder.getProject();
+            return projectHolder.getProject();
         }
         
         final Iterable<? extends Task> tasks = sourceSet.getOutput().getBuildDependencies().getDependencies(null);
