@@ -32,8 +32,11 @@ public abstract class IdeManagementExtension {
         project.getPlugins().apply(EclipsePlugin.class);
         
         if (project != rootProject) {
-            rootProject.getPlugins().apply(IdeaExtPlugin.class);
-            rootProject.getPlugins().apply(EclipsePlugin.class);
+            if (!rootProject.getPlugins().hasPlugin(IdeaExtPlugin.class))
+                rootProject.getPlugins().apply(IdeaExtPlugin.class);
+            
+            if (!rootProject.getPlugins().hasPlugin(EclipsePlugin.class))
+                rootProject.getPlugins().apply(EclipsePlugin.class);
         }
     }
 
