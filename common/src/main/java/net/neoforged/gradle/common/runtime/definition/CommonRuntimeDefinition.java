@@ -172,7 +172,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), workingInterpolationData));
         run.overrideSystemProperties(interpolate(run.getSystemProperties(), workingInterpolationData));
 
-        if (run.getIsClient().get()) {
+        if (run.getIsClient().get() || run.getIsDataGenerator().get()) {
             run.dependsOn(getAssets(), getNatives());
         }
     }
