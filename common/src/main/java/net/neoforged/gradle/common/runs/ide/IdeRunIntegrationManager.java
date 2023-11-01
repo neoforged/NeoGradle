@@ -101,6 +101,7 @@ public class IdeRunIntegrationManager {
                     for (SourceSet sourceSet : run.getModSources().get()) {
                         final Project sourceSetProject = sourceSet.getExtensions().getByType(ProjectHolder.class).getProject();
                         task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
+                        task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
                     }
                 });
                 if (!runImpl.getTaskDependencies().isEmpty()) {
