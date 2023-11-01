@@ -215,7 +215,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
         String result = input;
         for (final Map.Entry<String, String> entry : values.entrySet()) {
-            result = result.replace(patternPrefix + "{" + entry.getKey() + "}", entry.getValue());
+            result = result.replace(patternPrefix + "{" + entry.getKey() + "}", "\"" + entry.getValue() + "\"");
         }
         return result;
     }
