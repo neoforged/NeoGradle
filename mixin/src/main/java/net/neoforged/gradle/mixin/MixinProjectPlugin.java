@@ -10,6 +10,9 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.bundling.Jar;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class MixinProjectPlugin implements Plugin<Project> {
 
     private Mixin extension;
@@ -20,23 +23,50 @@ public class MixinProjectPlugin implements Plugin<Project> {
             throw new IllegalStateException("The mixin extension requires the common plugin to be applied first.");
         }
         this.extension = project.getExtensions().create(Mixin.class, Mixin.EXTENSION_NAME, MixinExtension.class, project);
+        
+        project.getTasks().withType(Jar.class).configureEach(this::setupJarTask);
+        
+        project.getExtensions().<NamedDomainObjectContainer<Run>>configure(
+                RunsConstants.Extensions.RUNS,
+                runs -> runs.configureEach(MixinProjectPlugin.this::setupRun)
+        );
+        
         project.afterEvaluate(p -> {
             p.getTasks().withType(Jar.class).all(this::configureJarTask);
             p.getExtensions().<NamedDomainObjectContainer<Run>>configure(
                     RunsConstants.Extensions.RUNS,
-                    runs -> runs.all(MixinProjectPlugin.this::configureRun)
+                    runs -> runs.configureEach(MixinProjectPlugin.this::configureRun)
             );
         });
     }
-
-    private void configureJarTask(Jar jar) {
-        jar.getManifest().getAttributes().computeIfAbsent("MixinConfigs", $ -> String.join(",", this.extension.getConfigs().get()));
+    
+    private void setupJarTask(Jar jarTask) {
+        jarTask.getExtensions().create(Mixin.EXTENSION_NAME, MixinExtension.class, jarTask.getProject());
     }
 
+    private void configureJarTask(Jar jar) {
+        jar.getManifest().getAttributes().computeIfAbsent("MixinConfigs", $ -> {
+            final Set<String> configs = new HashSet<>(this.extension.getConfigs().get());
+            configs.addAll(jar.getExtensions().getByType(MixinExtension.class).getConfigs().get());
+            
+            return String.join(",", configs);
+        });
+    }
+    
+    private void setupRun(Run run) {
+        run.getExtensions().create(Mixin.EXTENSION_NAME, MixinExtension.class, run.getProject());
+    }
+    
     private void configureRun(Run run) {
         final ListProperty<String> programArguments = run.getProgramArguments();
+        
         for (String config : this.extension.getConfigs().get()) {
-            programArguments.addAll("--mixin.config", config);
+            programArguments.addAll("--fml.mixin", config);
+        }
+        
+        final MixinExtension runExtension = run.getExtensions().getByType(MixinExtension.class);
+        for(String config : runExtension.getConfigs().get()) {
+            programArguments.addAll("--fml.mixin", config);
         }
     }
 }
