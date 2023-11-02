@@ -81,4 +81,9 @@ public final class FileCacheUtils {
     public static DirectoryProperty getAssetsCacheDirectory(Project project) {
         return project.getObjects().directoryProperty().fileValue(new File(project.getGradle().getGradleUserHomeDir(), "caches/minecraft/assets"));
     }
+    
+    @NotNull
+    public static DirectoryProperty getLibrariesCacheDirectory(Project project) {
+        return project.getObjects().directoryProperty().fileValue(new File(project.getGradle().getGradleUserHomeDir(), "caches/minecraft/libraries"));
+    }
 }

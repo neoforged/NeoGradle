@@ -38,8 +38,9 @@ import org.jetbrains.gradle.ext.IdeaExtPlugin;
 import java.util.Optional;
 
 public class CommonProjectPlugin implements Plugin<Project> {
-
+    
     public static final String ASSETS_SERVICE = "ng_assets";
+    public static final String LIBRARIES_SERVICE = "ng_libraries";
     
     @Override
     public void apply(Project project) {
@@ -55,6 +56,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         
         //Register the assets service
         CentralCacheService.register(project, ASSETS_SERVICE, FileCacheUtils.getAssetsCacheDirectory(project));
+        CentralCacheService.register(project, LIBRARIES_SERVICE, FileCacheUtils.getLibrariesCacheDirectory(project));
         
         project.getExtensions().create("allRuntimes", RuntimesExtension.class);
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);

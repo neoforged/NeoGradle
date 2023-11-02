@@ -3,11 +3,15 @@ package net.neoforged.gradle.common.runtime.tasks;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
 
@@ -24,6 +28,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("UnstableApiUsage")
 @CacheableTask
 public abstract class ListLibraries extends DefaultRuntime {
     private static final Attributes.Name FORMAT = new Attributes.Name("Bundler-Format");
@@ -40,6 +45,9 @@ public abstract class ListLibraries extends DefaultRuntime {
         }));
         getOutputFileName().set("libraries.txt");
     }
+    
+    @ServiceReference(CommonProjectPlugin.LIBRARIES_SERVICE)
+    public abstract Property<CentralCacheService> getLibrariesCache();
     
     @TaskAction
     public void run() throws Exception {
@@ -118,7 +126,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     }
     
     private Set<File> unpackAndListBundleLibraries(FileSystem bundleFs) throws IOException {
-        final File outputDir = getOutputDirectory().get().getAsFile();
+        final File outputDir = getLibrariesCache().get().getParameters().getCacheDirectory().get().getAsFile();
         
         final Set<String> libraryPaths = listBundleLibraries(bundleFs);
         
@@ -137,7 +145,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     
     private Set<File> downloadAndListJsonLibraries() throws IOException {
         final Set<PathAndUrl> libraryCoordinates = listDownloadJsonLibraries();
-        final File outputDirectory = getOutputDirectory().get().getAsFile();
+        final File outputDirectory = getLibrariesCache().get().getParameters().getCacheDirectory().get().getAsFile();
         
         final Set<File> result = new HashSet<>();
         
