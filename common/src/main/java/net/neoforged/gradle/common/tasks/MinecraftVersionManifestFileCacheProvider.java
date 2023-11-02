@@ -25,8 +25,8 @@ public abstract class MinecraftVersionManifestFileCacheProvider extends FileCach
     public void doDownload() {
         downloadVersionManifestToCache();
     }
-    
-    @Nested
+
+    @Input
     @Optional
     public abstract Property<String> getMinecraftVersion();
     
