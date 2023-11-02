@@ -24,7 +24,7 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
     private final NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition;
     
     public RuntimeDevRuntimeDefinition(@NotNull RuntimeDevRuntimeSpecification specification, NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider) {
-        super(specification, joinedNeoFormRuntimeDefinition.getTasks(), sourcesProvider, joinedNeoFormRuntimeDefinition.getRawJarTask(), joinedNeoFormRuntimeDefinition.getGameArtifactProvidingTasks(), joinedNeoFormRuntimeDefinition.getMinecraftDependenciesConfiguration(), joinedNeoFormRuntimeDefinition::configureAssociatedTask);
+        super(specification, joinedNeoFormRuntimeDefinition.getTasks(), sourcesProvider, joinedNeoFormRuntimeDefinition.getRawJarTask(), joinedNeoFormRuntimeDefinition.getGameArtifactProvidingTasks(), joinedNeoFormRuntimeDefinition.getMinecraftDependenciesConfiguration(), joinedNeoFormRuntimeDefinition::configureAssociatedTask, joinedNeoFormRuntimeDefinition.getVersionJson());
         this.joinedNeoFormRuntimeDefinition = joinedNeoFormRuntimeDefinition;
     }
     

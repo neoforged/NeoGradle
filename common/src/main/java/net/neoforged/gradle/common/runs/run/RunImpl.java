@@ -174,7 +174,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         final List<String> args = new ArrayList<>(getJvmArguments().get());
 
         getSystemProperties().get().forEach((key, value) -> {
-            args.add(String.format("-D%s=%s", key, value));
+            args.add(String.format("-D%s=\"%s\"", key, value));
         });
 
         return args;

@@ -22,6 +22,8 @@ public abstract class RunExec extends JavaExec {
 
         getMainClass().convention(getRun().flatMap(Run::getMainClass));
 
+        doNotTrackState("This is a runnable task, which has no output.");
+        
         JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
         getJavaLauncher().convention(service.launcherFor(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain()));
     }

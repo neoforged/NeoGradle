@@ -77,6 +77,7 @@ public class RunsUtil {
         );
     }
     
+    @SuppressWarnings("UnstableApiUsage")
     public static Provider<String> buildRunWithEclipseModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
         return buildGradleModClasses(
                 sourceSetsProperty,

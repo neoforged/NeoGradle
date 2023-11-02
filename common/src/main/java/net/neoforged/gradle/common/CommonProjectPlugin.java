@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common;
 
+import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
@@ -11,6 +12,7 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
+import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
@@ -37,6 +39,8 @@ import java.util.Optional;
 
 public class CommonProjectPlugin implements Plugin<Project> {
 
+    public static final String ASSETS_SERVICE = "ng_assets";
+    
     @Override
     public void apply(Project project) {
         //Apply the evaluation extension to monitor immediate execution of indirect tasks when evaluation already happened.
@@ -48,7 +52,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(IdeaPlugin.class);
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
-
+        
+        //Register the assets service
+        CentralCacheService.register(project, ASSETS_SERVICE, FileCacheUtils.getAssetsCacheDirectory(project));
+        
         project.getExtensions().create("allRuntimes", RuntimesExtension.class);
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
@@ -101,7 +108,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         
         IdeRunIntegrationManager.getInstance().setup(project);
     }
-
+    
     private void applyAfterEvaluate(final Project project) {
         RuntimesExtension runtimesExtension = project.getExtensions().getByType(RuntimesExtension.class);
         runtimesExtension.bakeDefinitions();

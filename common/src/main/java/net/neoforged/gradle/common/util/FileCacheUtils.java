@@ -9,9 +9,11 @@ import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -73,5 +75,10 @@ public final class FileCacheUtils {
             
             taskOrdering.forEach(task::mustRunAfter);
         });
+    }
+    
+    @NotNull
+    public static DirectoryProperty getAssetsCacheDirectory(Project project) {
+        return project.getObjects().directoryProperty().fileValue(new File(project.getGradle().getGradleUserHomeDir(), "caches/minecraft/assets"));
     }
 }

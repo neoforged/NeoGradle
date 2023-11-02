@@ -37,6 +37,7 @@ import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A simple manager which configures runs based on the IDE it is attached to.
@@ -104,7 +105,10 @@ public class IdeRunIntegrationManager {
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
                     ideaRun.setJvmArgs(String.join(" ", runImpl.realiseJvmArguments()));
                     ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
-                    ideaRun.setProgramParameters(String.join(" ", runImpl.getProgramArguments().get()));
+                    ideaRun.setProgramParameters(runImpl.getProgramArguments().get()
+                                                                          .stream()
+                                                                          .map(arg -> "\"" + arg + "\"")
+                                                                          .collect(Collectors.joining(" ")));
                     ideaRun.setEnvs(adaptEnvironment(runImpl, RunsUtil::buildRunWithIdeaModClasses));
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
                     
@@ -142,7 +146,10 @@ public class IdeRunIntegrationManager {
                                 JavaApplicationLaunchConfig.builder(eclipse.getProject().getName())
                                         .workingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath())
                                         .vmArgs(runImpl.realiseJvmArguments().toArray(new String[0]))
-                                        .args(runImpl.getProgramArguments().get().toArray(new String[0]))
+                                        .args(runImpl.getProgramArguments().get()
+                                                      .stream()
+                                                      .map(arg -> "\"" + arg + "\"")
+                                                      .toArray(String[]::new))
                                         .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                                         .useArgumentsFile()
                                         .build(runImpl.getMainClass().get());
@@ -161,7 +168,7 @@ public class IdeRunIntegrationManager {
                                                        .enabled(true)
                                                        .adoptIfRunning(false)
                                                        .mode(LaunchGroup.Mode.DEBUG)
-                                                       .action(LaunchGroup.Action.waitForTermination()))
+                                                       .action(LaunchGroup.Action.none()))
                                         .build());
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to write launch files: " + runName, e);

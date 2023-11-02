@@ -1,15 +1,14 @@
 package net.neoforged.gradle.vanilla.runtime;
 
 import com.google.common.collect.Maps;
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
-import net.neoforged.gradle.common.util.PathUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.neoforged.gradle.vanilla.util.InterpolationConstants;
@@ -30,7 +29,6 @@ import java.util.function.Consumer;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<VanillaRuntimeSpecification> {
 
-    private final VersionJson versionJson;
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
     private final Optional<ServerLaunchInformation> serverLaunchInformation;
@@ -46,8 +44,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
                                     TaskProvider<DownloadAssets> assetsTaskProvider,
                                     TaskProvider<ExtractNatives> nativesTaskProvider,
                                     Optional<ServerLaunchInformation> serverLaunchInformation) {
-        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
-        this.versionJson = versionJson;
+        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer, versionJson);
         this.assetsTaskProvider = assetsTaskProvider;
         this.nativesTaskProvider = nativesTaskProvider;
         this.serverLaunchInformation = serverLaunchInformation;
@@ -71,10 +68,6 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
         return this.getTask("libraries");
     }
 
-    public VersionJson getVersionJson() {
-        return versionJson;
-    }
-
     public Optional<ServerLaunchInformation> getServerLaunchInformation() {
         return serverLaunchInformation;
     }
@@ -86,12 +79,12 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
         final String fgVersion = this.getClass().getPackage().getImplementationVersion();
 
         interpolationData.put(InterpolationConstants.VERSION_NAME, getSpecification().getMinecraftVersion());
-        interpolationData.put(InterpolationConstants.ASSETS_ROOT, PathUtils.quote(getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
+        interpolationData.put(InterpolationConstants.ASSETS_ROOT, getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
         interpolationData.put(InterpolationConstants.ASSETS_INDEX_NAME, getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         interpolationData.put(InterpolationConstants.AUTH_ACCESS_TOKEN, "0");
         interpolationData.put(InterpolationConstants.USER_TYPE, "legacy");
         interpolationData.put(InterpolationConstants.VERSION_TYPE, getVersionJson().getType());
-        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, PathUtils.quote(getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
+        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
         interpolationData.put(InterpolationConstants.LAUNCHER_NAME, "NeoGradle-Vanilla");
         interpolationData.put(InterpolationConstants.LAUNCHER_VERSION, fgVersion == null ? "DEV" : fgVersion);
 

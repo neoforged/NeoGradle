@@ -57,6 +57,7 @@ public class VersionJson implements Serializable {
         return GSON.fromJson(new InputStreamReader(stream), VersionJson.class);
     }
 
+    private String id;
     @Nullable
     private Arguments arguments;
     private AssetIndex assetIndex;
@@ -110,7 +111,11 @@ public class VersionJson implements Serializable {
                         return s;
                 }).collect(Collectors.toList());
     }
-
+    
+    public String getId() {
+        return id;
+    }
+    
     public Arguments getArguments() {
         return arguments == null ? new Arguments() : arguments;
     }

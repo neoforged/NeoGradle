@@ -1,6 +1,9 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Maps;
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.SerializationUtils;
@@ -9,6 +12,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
@@ -17,10 +21,19 @@ import javax.inject.Inject;
 import java.io.File;
 import java.util.Map;
 
+@SuppressWarnings({"UnstableApiUsage", "ResultOfMethodCallIgnored"})
 @CacheableTask
 public abstract class DownloadAssets extends DefaultRuntime {
 
     public DownloadAssets() {
+        getAssetsDirectory().convention(getAssetsCache().flatMap(cache -> cache.getParameters().getCacheDirectory()).orElse(FileCacheUtils.getAssetsCacheDirectory(getProject())).flatMap(assetsDir -> assetsDir.dir(getVersionJson().map(VersionJson::getId))).map(dir -> {
+            if (dir.getAsFile().exists()) {
+                return dir;
+            }
+
+            dir.getAsFile().mkdirs();
+            return dir;
+        }));
         getOutputDirectory().convention(getAssetsDirectory());
         getAssetIndex().convention("asset-index");
         getAssetIndexFileName().convention(getAssetIndex().map(index -> index + ".json"));
@@ -29,6 +42,9 @@ public abstract class DownloadAssets extends DefaultRuntime {
         getAssetRepository().convention("https://resources.download.minecraft.net/");
         getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
     }
+    
+    @ServiceReference(CommonProjectPlugin.ASSETS_SERVICE)
+    public abstract Property<CentralCacheService> getAssetsCache();
 
     @TaskAction
     public void run() {

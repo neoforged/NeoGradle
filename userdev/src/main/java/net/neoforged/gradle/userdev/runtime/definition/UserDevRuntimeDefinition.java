@@ -6,7 +6,7 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
-import net.neoforged.gradle.common.util.PathUtils;
+import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -28,15 +28,15 @@ import java.util.stream.Collectors;
  * Represents a configured and registered runtime for forges userdev environment.
  */
 public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<UserDevRuntimeSpecification> implements UserDevDefinition<UserDevRuntimeSpecification>, IDelegatingRuntimeDefinition<UserDevRuntimeSpecification> {
-    private final NeoFormRuntimeDefinition mcpRuntimeDefinition;
+    private final NeoFormRuntimeDefinition neoformRuntimeDefinition;
     private final File unpackedUserDevJarDirectory;
     private final UserdevProfile userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
     private final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer;
 
-    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition mcpRuntimeDefinition, File unpackedUserDevJarDirectory, UserdevProfile userdevConfiguration, Configuration additionalUserDevDependencies) {
-        super(specification, mcpRuntimeDefinition.getTasks(), mcpRuntimeDefinition.getSourceJarTask(), mcpRuntimeDefinition.getRawJarTask(), mcpRuntimeDefinition.getGameArtifactProvidingTasks(), mcpRuntimeDefinition.getMinecraftDependenciesConfiguration(), mcpRuntimeDefinition::configureAssociatedTask);
-        this.mcpRuntimeDefinition = mcpRuntimeDefinition;
+    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition neoformRuntimeDefinition, File unpackedUserDevJarDirectory, UserdevProfile userdevConfiguration, Configuration additionalUserDevDependencies) {
+        super(specification, neoformRuntimeDefinition.getTasks(), neoformRuntimeDefinition.getSourceJarTask(), neoformRuntimeDefinition.getRawJarTask(), neoformRuntimeDefinition.getGameArtifactProvidingTasks(), neoformRuntimeDefinition.getMinecraftDependenciesConfiguration(), neoformRuntimeDefinition::configureAssociatedTask, neoformRuntimeDefinition.getVersionJson());
+        this.neoformRuntimeDefinition = neoformRuntimeDefinition;
         this.unpackedUserDevJarDirectory = unpackedUserDevJarDirectory;
         this.userdevConfiguration = userdevConfiguration;
         this.additionalUserDevDependencies = additionalUserDevDependencies;
@@ -53,7 +53,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                 task -> {
                     this.additionalUserDevDependencies.getExtendsFrom().forEach(task.getInputFiles()::from);
                     task.getInputFiles().from(this.additionalUserDevDependencies);
-                    task.getInputFiles().from(mcpRuntimeDefinition.getMinecraftDependenciesConfiguration());
+                    task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
                 }
         );
         configureAssociatedTask(this.minecraftClasspathSerializer);
@@ -61,7 +61,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
     @Override
     public NeoFormRuntimeDefinition getNeoFormRuntimeDefinition() {
-        return mcpRuntimeDefinition;
+        return neoformRuntimeDefinition;
     }
 
     @Override
@@ -82,13 +82,13 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     @Override
     public void setReplacedDependency(@NotNull Dependency dependency) {
         super.setReplacedDependency(dependency);
-        mcpRuntimeDefinition.setReplacedDependency(dependency);
+        neoformRuntimeDefinition.setReplacedDependency(dependency);
     }
 
 
     @Override
     public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
-        mcpRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
+        neoformRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
         this.minecraftClasspathSerializer.configure(task -> {
             task.getInputFiles().from(finalRepoWritingTask);
         });
@@ -96,17 +96,17 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
     @Override
     public @NotNull TaskProvider<DownloadAssets> getAssets() {
-        return mcpRuntimeDefinition.getAssets();
+        return neoformRuntimeDefinition.getAssets();
     }
 
     @Override
     public @NotNull TaskProvider<ExtractNatives> getNatives() {
-        return mcpRuntimeDefinition.getNatives();
+        return neoformRuntimeDefinition.getNatives();
     }
 
     @Override
     public @NotNull Map<String, String> getMappingVersionData() {
-        return mcpRuntimeDefinition.getMappingVersionData();
+        return neoformRuntimeDefinition.getMappingVersionData();
     }
 
     @Override
@@ -118,7 +118,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     @NotNull
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
-        return mcpRuntimeDefinition.getListLibrariesTaskProvider();
+        return neoformRuntimeDefinition.getListLibrariesTaskProvider();
     }
 
     @NotNull
@@ -128,7 +128,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
     @Override
     protected Map<String, String> buildRunInterpolationData() {
-        final Map<String, String> interpolationData = mcpRuntimeDefinition.buildRunInterpolationData();
+        final Map<String, String> interpolationData = neoformRuntimeDefinition.buildRunInterpolationData();
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
             final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
@@ -145,13 +145,18 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
             interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
         }
 
-        interpolationData.put("minecraft_classpath_file", PathUtils.quote(this.minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath()));
+        interpolationData.put("minecraft_classpath_file", this.minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
 
         return interpolationData;
     }
 
     @Override
     public Definition<?> getDelegate() {
-        return mcpRuntimeDefinition;
+        return neoformRuntimeDefinition;
+    }
+    
+    @Override
+    public @NotNull VersionJson getVersionJson() {
+        return getNeoFormRuntimeDefinition().getVersionJson();
     }
 }

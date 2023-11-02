@@ -94,4 +94,5 @@ interface Definition<S extends Specification> {
      * @return The task which creates a file listing all the libraries used by the runtime.
      */
     @NotNull
-    abstract TaskProvider<? extends WithOutput> getListLibrariesTaskProvider(); }
+    abstract TaskProvider<? extends WithOutput> getListLibrariesTaskProvider();
+}

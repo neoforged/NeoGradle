@@ -1,10 +1,11 @@
 package net.neoforged.gradle.common.runtime.definition;
 
 import com.google.common.collect.Maps;
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
-import net.neoforged.gradle.common.util.PathUtils;
+import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
@@ -12,9 +13,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.ListProperty;
@@ -24,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -55,10 +55,13 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
     @NotNull
     private final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer;
+    
+    @NotNull
+    private final VersionJson versionJson;
 
     @Nullable
     private Dependency replacedDependency = null;
-
+    
     protected CommonRuntimeDefinition(
             @NotNull final S specification,
             @NotNull final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
@@ -66,7 +69,8 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
             @NotNull final TaskProvider<? extends ArtifactProvider> rawJarTask,
             @NotNull final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
             @NotNull final Configuration minecraftDependenciesConfiguration,
-            @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer) {
+            @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
+            @NotNull final VersionJson versionJson) {
         this.specification = specification;
         this.taskOutputs = taskOutputs;
         this.sourceJarTask = sourceJarTask;
@@ -74,6 +78,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.gameArtifactProvidingTasks = gameArtifactProvidingTasks;
         this.minecraftDependenciesConfiguration = minecraftDependenciesConfiguration;
         this.associatedTaskConsumer = associatedTaskConsumer;
+        this.versionJson = versionJson;
     }
 
     @Override
@@ -160,13 +165,22 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
     @NotNull
     public abstract TaskProvider<ExtractNatives> getNatives();
-
+    
+    @NotNull
+    public VersionJson getVersionJson() {
+        return versionJson;
+    }
+    
     public void configureRun(RunImpl run) {
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
         workingInterpolationData.put("source_roots", RunsUtil.buildGradleModClasses(run.getModSources()).get());
 
+        if (run.getIsClient().get()) {
+            getVersionJson().getPlatformJvmArgs().forEach(arg -> run.getJvmArguments().add(arg));
+        }
+        
         run.overrideJvmArguments(interpolate(run.getJvmArguments(), workingInterpolationData));
         run.overrideProgramArguments(interpolate(run.getProgramArguments(), workingInterpolationData));
         run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), workingInterpolationData));
@@ -182,9 +196,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
         interpolationData.put("runtime_name", specification.getVersionedName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
-        interpolationData.put("assets_root", PathUtils.quote(getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
+        interpolationData.put("assets_root", getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
         interpolationData.put("asset_index", getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
-        interpolationData.put("natives", PathUtils.quote(getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath()));
+        interpolationData.put("natives", getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
 
         return interpolationData;
     }

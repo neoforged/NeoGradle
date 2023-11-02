@@ -191,11 +191,6 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             task.getVersionJson().set(versionJson);
 
             configureCommonRuntimeTaskParameters(task, dataFiles, dataDirectories, "downloadAssets", specification, runtimeDirectory);
-            task.getAssetsDirectory().set(task.getStepsDirectory().map(dir -> {
-                final Directory directory = dir.dir("downloadAssets");
-                directory.getAsFile().mkdirs();
-                return directory;
-            }));
         });
     }
 

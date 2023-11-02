@@ -240,10 +240,10 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(neoFormDirectory, "raw.jar"));
         });
-
+        
         return new NeoFormRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
             configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, runtimeTask);
-        }), unpackedMcpZipDirectory, neoFormConfig, createDownloadAssetsTasks(spec, dataFiles, dataDirectories, neoFormDirectory, versionJson), createExtractNativesTasks(spec, dataFiles, dataDirectories, neoFormDirectory, versionJson));
+        }), versionJson, unpackedMcpZipDirectory, neoFormConfig, createDownloadAssetsTasks(spec, dataFiles, dataDirectories, neoFormDirectory, versionJson), createExtractNativesTasks(spec, dataFiles, dataDirectories, neoFormDirectory, versionJson));
     }
 
     @Override

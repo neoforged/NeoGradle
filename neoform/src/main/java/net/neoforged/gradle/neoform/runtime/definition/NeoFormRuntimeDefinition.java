@@ -1,9 +1,10 @@
 package net.neoforged.gradle.neoform.runtime.definition;
 
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
-import net.neoforged.gradle.common.util.PathUtils;
+import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -11,7 +12,6 @@ import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.dsl.neoform.runtime.definition.NeoFormDefinition;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
-import net.neoforged.gradle.common.runs.run.RunImpl;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
@@ -40,11 +40,12 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
                                     @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
                                     @NotNull Configuration minecraftDependenciesConfiguration,
                                     @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
+                                    @NotNull VersionJson versionJson,
                                     @NotNull File unpackedneoformZipDirectory,
                                     @NotNull NeoFormConfigConfigurationSpecV2 neoform,
                                     @NotNull TaskProvider<DownloadAssets> assetsTaskProvider,
                                     @NotNull TaskProvider<ExtractNatives> nativesTaskProvider) {
-        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer);
+        super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer, versionJson);
         this.unpackedneoformZipDirectory = unpackedneoformZipDirectory;
         this.neoform = neoform;
         this.assetsTaskProvider = assetsTaskProvider;
@@ -113,7 +114,7 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData());
 
         interpolationData.put("mcp_version", neoform.getVersion());
-        interpolationData.put("mcp_mappings", PathUtils.quote(new File(unpackedneoformZipDirectory, "config/joined.srg").getAbsolutePath()));
+        interpolationData.put("mcp_mappings", new File(unpackedneoformZipDirectory, "config/joined.srg").getAbsolutePath());
         return interpolationData;
     }
 
