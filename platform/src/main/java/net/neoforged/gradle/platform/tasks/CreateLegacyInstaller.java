@@ -35,6 +35,10 @@ public abstract class CreateLegacyInstaller extends Zip implements WithOutput, W
         from(getLauncherJson());
         from(getInstallerJson());
         from(getUrlIcon());
+        exclude("big_logo.png");
+        from(getInstallerLogo(), spec -> {
+            spec.rename(original -> "big_logo.png");
+        });
         
         from(getUnixServerArgs(), spec -> {
             spec.rename(name -> "data/unix_args.txt");
@@ -55,6 +59,7 @@ public abstract class CreateLegacyInstaller extends Zip implements WithOutput, W
         });
         
         getUrlIcon().fileValue(getProject().getRootProject().file("src/main/resources/url.png"));
+        getInstallerLogo().fileValue(getProject().getRootProject().file("src/main/resources/neoforged_logo.png"));
         from(getData(), spec -> {
             spec.into("data");
             spec.filter(s -> {
@@ -94,6 +99,10 @@ public abstract class CreateLegacyInstaller extends Zip implements WithOutput, W
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getUrlIcon();
+    
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract RegularFileProperty getInstallerLogo();
     
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
