@@ -6,6 +6,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
 
@@ -21,14 +22,14 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                 }
         );
     }
-    
-    @Nested
+
+    @Internal
     @Override
     public abstract Params getParameters();
     
     public interface Params extends BuildServiceParameters {
         
-        @OutputDirectory
+        @Internal
         DirectoryProperty getCacheDirectory();
     }
 }

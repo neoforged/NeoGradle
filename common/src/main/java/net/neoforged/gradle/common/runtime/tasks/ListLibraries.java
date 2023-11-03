@@ -5,10 +5,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.neoforged.gradle.common.CommonProjectPlugin;
 import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.util.FileCacheUtils;
+import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
@@ -37,6 +40,15 @@ public abstract class ListLibraries extends DefaultRuntime {
     public ListLibraries() {
         super();
         
+        getLibrariesDirectory().convention(getLibrariesCache().flatMap(cache -> cache.getParameters().getCacheDirectory()).orElse(FileCacheUtils.getAssetsCacheDirectory(getProject())).map(dir -> {
+            if (dir.getAsFile().exists()) {
+                return dir;
+            }
+            
+            dir.getAsFile().mkdirs();
+            return dir;
+        }));
+        
         getServerBundleFile().fileProvider(getRuntimeArguments().map(arguments -> {
             if (!arguments.containsKey("bundle"))
                 return null;
@@ -46,6 +58,7 @@ public abstract class ListLibraries extends DefaultRuntime {
         getOutputFileName().set("libraries.txt");
     }
     
+    @Internal
     @ServiceReference(CommonProjectPlugin.LIBRARIES_SERVICE)
     public abstract Property<CentralCacheService> getLibrariesCache();
     
@@ -126,7 +139,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     }
     
     private Set<File> unpackAndListBundleLibraries(FileSystem bundleFs) throws IOException {
-        final File outputDir = getLibrariesCache().get().getParameters().getCacheDirectory().get().getAsFile();
+        final File outputDir = getLibrariesDirectory().get().getAsFile();
         
         final Set<String> libraryPaths = listBundleLibraries(bundleFs);
         
@@ -145,7 +158,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     
     private Set<File> downloadAndListJsonLibraries() throws IOException {
         final Set<PathAndUrl> libraryCoordinates = listDownloadJsonLibraries();
-        final File outputDirectory = getLibrariesCache().get().getParameters().getCacheDirectory().get().getAsFile();
+        final File outputDirectory = getLibrariesDirectory().get().getAsFile();
         
         final Set<File> result = new HashSet<>();
         
@@ -167,6 +180,10 @@ public abstract class ListLibraries extends DefaultRuntime {
     @Optional
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getDownloadedVersionJsonFile();
+    
+    @InputDirectory
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract DirectoryProperty getLibrariesDirectory();
     
     private static class FileList {
         
