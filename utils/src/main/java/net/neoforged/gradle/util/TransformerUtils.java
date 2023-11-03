@@ -2,6 +2,8 @@ package net.neoforged.gradle.util;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.gradle.api.Transformer;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileSystemLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,6 +142,20 @@ public final class TransformerUtils {
             peakConsumer.apply(t);
             return t;
         };
+    }
+    
+    public static <V extends FileSystemLocation> Transformer<V, V> ensureExists() {
+        return guard(t -> {
+            if (!t.getAsFile().exists()) {
+                if (t instanceof Directory) {
+                    t.getAsFile().mkdirs();
+                } else {
+                    t.getAsFile().createNewFile();
+                }
+                
+            }
+            return t;
+        });
     }
 
     /**

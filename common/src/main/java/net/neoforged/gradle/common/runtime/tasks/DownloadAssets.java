@@ -26,14 +26,7 @@ import java.util.Map;
 public abstract class DownloadAssets extends DefaultRuntime {
 
     public DownloadAssets() {
-        getAssetsDirectory().convention(getAssetsCache().flatMap(cache -> cache.getParameters().getCacheDirectory()).orElse(FileCacheUtils.getAssetsCacheDirectory(getProject())).flatMap(assetsDir -> assetsDir.dir(getVersionJson().map(VersionJson::getId))).map(dir -> {
-            if (dir.getAsFile().exists()) {
-                return dir;
-            }
-
-            dir.getAsFile().mkdirs();
-            return dir;
-        }));
+        getAssetsDirectory().convention(FileCacheUtils.getAssetsCacheDirectory(getProject()).flatMap(assetsDir -> assetsDir.dir(getVersionJson().map(VersionJson::getId))).map(TransformerUtils.ensureExists()));
         getOutputDirectory().convention(getAssetsDirectory());
         getAssetIndex().convention("asset-index");
         getAssetIndexFileName().convention(getAssetIndex().map(index -> index + ".json"));

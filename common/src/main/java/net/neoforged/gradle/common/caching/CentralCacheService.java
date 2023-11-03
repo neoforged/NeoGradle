@@ -10,7 +10,12 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
 
-public abstract class CentralCacheService implements BuildService<CentralCacheService.Params> {
+/**
+ * This is a cache service, which holds no directory information, yet.
+ * I tried different ways of adding a directory property, but it always failed during isolation of the params.
+ * For now please make sure that consuming tasks have a directory property, which is set to their cache directory.
+ */
+public abstract class CentralCacheService implements BuildService<BuildServiceParameters.None> {
     
     public static void register(Project project, String name, Provider<Directory> cacheDirectory) {
         project.getGradle().getSharedServices().registerIfAbsent(
@@ -18,18 +23,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                 CentralCacheService.class,
                 spec -> {
                     spec.getMaxParallelUsages().set(1);
-                    spec.getParameters().getCacheDirectory().set(cacheDirectory);
                 }
         );
-    }
-
-    @Internal
-    @Override
-    public abstract Params getParameters();
-    
-    public interface Params extends BuildServiceParameters {
-        
-        @Internal
-        DirectoryProperty getCacheDirectory();
     }
 }

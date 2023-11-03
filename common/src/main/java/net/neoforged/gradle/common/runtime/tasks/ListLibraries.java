@@ -8,6 +8,7 @@ import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -40,15 +41,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     public ListLibraries() {
         super();
         
-        getLibrariesDirectory().convention(getLibrariesCache().flatMap(cache -> cache.getParameters().getCacheDirectory()).orElse(FileCacheUtils.getAssetsCacheDirectory(getProject())).map(dir -> {
-            if (dir.getAsFile().exists()) {
-                return dir;
-            }
-            
-            dir.getAsFile().mkdirs();
-            return dir;
-        }));
-        
+        getLibrariesDirectory().convention(FileCacheUtils.getAssetsCacheDirectory(getProject()).map(TransformerUtils.ensureExists()));
         getServerBundleFile().fileProvider(getRuntimeArguments().map(arguments -> {
             if (!arguments.containsKey("bundle"))
                 return null;
@@ -58,7 +51,6 @@ public abstract class ListLibraries extends DefaultRuntime {
         getOutputFileName().set("libraries.txt");
     }
     
-    @Internal
     @ServiceReference(CommonProjectPlugin.LIBRARIES_SERVICE)
     public abstract Property<CentralCacheService> getLibrariesCache();
     
