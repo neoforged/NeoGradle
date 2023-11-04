@@ -190,11 +190,9 @@ public class IdeRunIntegrationManager {
                 final BatchedLaunchWriter launchWriter = new BatchedLaunchWriter(WritingMode.MODIFY_CURRENT);
                 project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
-                    
                     final RunImpl runImpl = (RunImpl) run;
 
-                    // TODO: what is this and how to hook it in? tasks.json?
-                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+                    eclipse.autoBuildTasks(createIdeBeforeRunTask(project, name, run, runImpl));
 
                     launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
                         .createLaunchConfiguration()
