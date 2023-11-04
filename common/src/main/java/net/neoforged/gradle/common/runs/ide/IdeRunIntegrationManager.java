@@ -1,5 +1,9 @@
 package net.neoforged.gradle.common.runs.ide;
 
+import cz.nightenom.vsclaunch.BatchedLaunchWriter;
+import cz.nightenom.vsclaunch.attribute.PathLike;
+import cz.nightenom.vsclaunch.attribute.ShortCmdBehaviour;
+import cz.nightenom.vsclaunch.writer.WritingMode;
 import net.neoforged.elc.configs.GradleLaunchConfig;
 import net.neoforged.elc.configs.JavaApplicationLaunchConfig;
 import net.neoforged.elc.configs.LaunchConfig;
@@ -34,6 +38,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -176,7 +182,39 @@ public class IdeRunIntegrationManager {
                 }));
             });
         }
-        
+
+        @Override
+        public void vscode(Project project, EclipseModel eclipse)
+        {
+            ProjectUtils.afterEvaluate(project, () -> {
+                final BatchedLaunchWriter launchWriter = new BatchedLaunchWriter(WritingMode.MODIFY_CURRENT);
+                project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                    final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
+                    
+                    final RunImpl runImpl = (RunImpl) run;
+
+                    // TODO: what is this and how to hook it in? tasks.json?
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+
+                    launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
+                        .createLaunchConfiguration()
+                        .withAdditionalJvmArgs(runImpl.realiseJvmArgumentsVscode())
+                        .withArguments(runImpl.getProgramArguments().get())
+                        .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
+                        .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
+                        .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)
+                        .withMainClass(runImpl.getMainClass().get())
+                        .withProjectName(project.getName())
+                        .withName(runName);
+                }));
+                try {
+                    launchWriter.writeToLatestJson(project.getRootDir().toPath());
+                } catch (final IOException e) {
+                    throw new RuntimeException("Failed to write launch files", e);
+                }
+            });
+        }
+
         private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
                 for (SourceSet sourceSet : run.getModSources().get()) {

@@ -13,6 +13,8 @@ import org.jetbrains.gradle.ext.IdeaExtPlugin;
 import org.jetbrains.gradle.ext.ProjectSettings;
 import org.jetbrains.gradle.ext.TaskTriggersConfig;
 
+import java.nio.file.Files;
+import java.util.function.BiConsumer;
 import javax.inject.Inject;
 
 /**
@@ -111,6 +113,11 @@ public abstract class IdeManagementExtension {
                     //Register the task to run after the Eclipse import is complete, via its build-in support.
                     eclipse.synchronizationTasks(idePostSyncTask);
                 }
+
+                @Override
+                public void vscode(Project project, EclipseModel eclipse) {
+                    eclipse(project, eclipse);
+                }
             });
         }
         else {
@@ -130,8 +137,15 @@ public abstract class IdeManagementExtension {
      */
     public void apply(final IdeImportAction toPerform) {
         onIdea(toPerform);
-        onEclipse(toPerform);
+        if (isLikelyVscode(project)) onVscode(toPerform);
+        else onEclipse(toPerform);
         onGradle(toPerform);
+    }
+
+    private boolean isLikelyVscode(final Project project)
+    {
+        project.getLogger().lifecycle("" + Files.isDirectory(project.getRootDir().toPath().resolve(".vscode")) + " " + project.getRootDir().toPath().resolve(".vscode"));
+        return Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
     }
     
     /**
@@ -179,6 +193,14 @@ public abstract class IdeManagementExtension {
      * @param toPerform the actions to perform
      */
     public void onEclipse(final EclipseIdeImportAction toPerform) {
+        onCommonEclipse(toPerform::eclipse);
+    }
+
+    public void onVscode(final VscodeIdeImportAction toPerform) {
+        onCommonEclipse(toPerform::vscode);
+    }
+
+    private void onCommonEclipse(final BiConsumer<Project, EclipseModel> toPerform) {
         //When the Eclipse plugin is available, configure it
         project.getPlugins().withType(EclipsePlugin.class, plugin -> {
             //Do not configure the eclipse plugin if we are not importing.
@@ -195,7 +217,7 @@ public abstract class IdeManagementExtension {
             }
             
             //Configure the project, passing the model and the relevant project. Which does not need to be the root, but can be.
-            toPerform.eclipse(project, model);
+            toPerform.accept(project, model);
         });
     }
     
@@ -250,7 +272,21 @@ public abstract class IdeManagementExtension {
     }
     
     /**
+     * A configuration action for vscode IDE projects.
+     */
+    public interface VscodeIdeImportAction {
+        
+        /**
+         * Configure an vscode project.
+         *
+         * @param project the project being imported
+         * @param eclipse the eclipse project model to modify
+         */
+        void vscode(Project project, EclipseModel eclipse);
+    }
+    
+    /**
      * A configuration action for IDE projects.
      */
-    public interface IdeImportAction extends IdeaIdeImportAction, EclipseIdeImportAction, GradleIdeImportAction { }
+    public interface IdeImportAction extends IdeaIdeImportAction, EclipseIdeImportAction, VscodeIdeImportAction, GradleIdeImportAction { }
 }
