@@ -144,7 +144,6 @@ public abstract class IdeManagementExtension {
 
     private boolean isLikelyVscode(final Project project)
     {
-        project.getLogger().lifecycle("" + Files.isDirectory(project.getRootDir().toPath().resolve(".vscode")) + " " + project.getRootDir().toPath().resolve(".vscode"));
         return Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
     }
     
