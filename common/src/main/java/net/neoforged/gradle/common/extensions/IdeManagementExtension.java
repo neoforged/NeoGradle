@@ -116,6 +116,7 @@ public abstract class IdeManagementExtension {
 
                 @Override
                 public void vscode(Project project, EclipseModel eclipse) {
+                    // vscode ~= eclipse
                     eclipse(project, eclipse);
                 }
             });
@@ -142,6 +143,9 @@ public abstract class IdeManagementExtension {
         onGradle(toPerform);
     }
 
+    /**
+     * @return true if should rather perform VsCode setup instead of Eclipse setup.
+     */
     private boolean isLikelyVscode(final Project project)
     {
         return Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
@@ -182,15 +186,7 @@ public abstract class IdeManagementExtension {
             toPerform.idea(project, model, ideaExt);
         });
     }
-    
-    /**
-     * Applies the specified configuration action to configure eclipse IDE projects only.
-     *
-     * <p>This does not apply the eclipse IDEs' respective plugins, but will perform
-     * actions when those plugins are applied.</p>
-     *
-     * @param toPerform the actions to perform
-     */
+
     public void onEclipse(final EclipseIdeImportAction toPerform) {
         onCommonEclipse(toPerform::eclipse);
     }
@@ -199,6 +195,14 @@ public abstract class IdeManagementExtension {
         onCommonEclipse(toPerform::vscode);
     }
 
+    /**
+     * Applies the specified configuration action to configure eclipse IDE projects only.
+     *
+     * <p>This does not apply the eclipse IDEs' respective plugins, but will perform
+     * actions when those plugins are applied.</p>
+     *
+     * @param toPerform the actions to perform
+     */
     private void onCommonEclipse(final BiConsumer<Project, EclipseModel> toPerform) {
         //When the Eclipse plugin is available, configure it
         project.getPlugins().withType(EclipsePlugin.class, plugin -> {
