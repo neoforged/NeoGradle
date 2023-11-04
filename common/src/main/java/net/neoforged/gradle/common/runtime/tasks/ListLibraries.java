@@ -41,7 +41,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     public ListLibraries() {
         super();
         
-        getLibrariesDirectory().convention(FileCacheUtils.getAssetsCacheDirectory(getProject()).map(TransformerUtils.ensureExists()));
+        getLibrariesDirectory().convention(FileCacheUtils.getLibrariesCacheDirectory(getProject()).map(TransformerUtils.ensureExists()));
         getServerBundleFile().fileProvider(getRuntimeArguments().map(arguments -> {
             if (!arguments.containsKey("bundle"))
                 return null;
