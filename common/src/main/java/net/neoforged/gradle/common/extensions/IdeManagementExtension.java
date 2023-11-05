@@ -148,7 +148,11 @@ public abstract class IdeManagementExtension {
      */
     private boolean isLikelyVscode(final Project project)
     {
-        return Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
+        final boolean hasVscodeDirectory = Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
+        final boolean hasExtensionGradlePlugin = project.getPlugins().stream().anyMatch(p -> p.getClass().getName().equals("com.microsoft.gradle.GradlePlugin"));
+        project.getLogger().debug("vscode dir present - .vscode: " + hasVscodeDirectory);
+        project.getLogger().debug("vscode ext present - vscjava.vscode-gradle: " + hasExtensionGradlePlugin);
+        return hasVscodeDirectory || hasExtensionGradlePlugin;
     }
     
     /**
