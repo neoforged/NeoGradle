@@ -101,6 +101,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setFork(true);
         getOptions().setIncremental(true);
         getOptions().getIncrementalAfterFailure().set(true);
+        getOptions().getForkOptions().setMemoryMaximumSize(String.format("%dk", java.lang.Runtime.getRuntime().maxMemory() / 1000));
 
         //Leave this as an anon class, so that gradle is aware of this. Lambdas can not be used during task tree analysis.
         //noinspection Convert2Lambda

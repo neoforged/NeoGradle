@@ -129,6 +129,8 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 java.setWorkingDir(me.getOutputDirectory().get())
                 java.getMainClass().set(mainClass)
                 java.setStandardOutput(log_out)
+
+                java.setMaxHeapSize(String.format("%dk", Runtime.getRuntime().maxMemory() / 1000))
             }).rethrowFailure().assertNormalExitValue()
         }
     }
