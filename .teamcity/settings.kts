@@ -28,9 +28,6 @@ version = "2021.2"
 project {
 
     buildType(Build)
-    buildType(PullRequestsJava8)
-    buildType(PullRequestsJava11)
-    buildType(PullRequestsJava17)
 
     params {
         text("git_main_branch", "NG_7.0", label = "Git Main Branch", description = "The git main or default branch to use in VCS operations.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
@@ -58,33 +55,4 @@ object Build : BuildType({
     id("ForgeGradle__Build")
     name = "Build"
     description = "Builds and Publishes the main branches of the project."
-})
-
-object PullRequestsJava8 : BuildType({
-    templates(AbsoluteId("MinecraftForge_BuildPullRequests"), AbsoluteId("MinecraftForge_SetupGradleUtilsCiEnvironmen"), AbsoluteId("MinecraftForge_BuildWithDiscordNotifications"), AbsoluteId("MinecraftForge_BuildUsingGradle"))
-    id("ForgeGradle__PullRequests")
-    name = "Pull Requests (Java 8)"
-    description = "Builds pull requests for the project using Java 8"
-})
-
-object PullRequestsJava11 : BuildType({
-    templates(AbsoluteId("MinecraftForge_BuildPullRequests"), AbsoluteId("MinecraftForge_SetupGradleUtilsCiEnvironmen"), AbsoluteId("MinecraftForge_BuildWithDiscordNotifications"), AbsoluteId("MinecraftForge_BuildUsingGradle"))
-    id("ForgeGradle__PullRequests__Java11")
-    name = "Pull Requests (Java 11)"
-    description = "Builds pull requests for the project using Java 11"
-
-    params {
-        text("docker_jdk_version", "11", label = "JDK version", description = "The version of the JDK to use during execution of tasks in a JDK.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
-    }
-})
-
-object PullRequestsJava17 : BuildType({
-    templates(AbsoluteId("MinecraftForge_BuildPullRequests"), AbsoluteId("MinecraftForge_SetupGradleUtilsCiEnvironmen"), AbsoluteId("MinecraftForge_BuildWithDiscordNotifications"), AbsoluteId("MinecraftForge_BuildUsingGradle"))
-    id("ForgeGradle__PullRequests__Java17")
-    name = "Pull Requests (Java 17)"
-    description = "Builds pull requests for the project using Java 17"
-
-    params {
-        text("docker_jdk_version", "17", label = "JDK version", description = "The version of the JDK to use during execution of tasks in a JDK.", display = ParameterDisplay.HIDDEN, allowEmpty = false)
-    }
 })
