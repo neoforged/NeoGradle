@@ -4,7 +4,6 @@ import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Ignore
 
-@Ignore
 class FunctionalTests extends SimpleTestSpecification {
 
     protected File codeFile
@@ -17,11 +16,12 @@ class FunctionalTests extends SimpleTestSpecification {
 
     def "a mod with userdev as dependency can run the patch task for that dependency"() {
         given:
-        settingsFile << """
-        rootProject.name = 'test-project'
+        settingsFile.text = """
         plugins {
             id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
         }
+        ${settingsFile.text}
+        rootProject.name = 'test-project'
         """
         buildFile << """
             plugins {
@@ -50,11 +50,12 @@ class FunctionalTests extends SimpleTestSpecification {
 
     def "a mod with userdev as dependency and official mappings can compile through gradle"() {
         given:
-        settingsFile << """
-        rootProject.name = 'test-project'
+        settingsFile.text = """
         plugins {
             id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
         }
+        ${settingsFile.text}
+        rootProject.name = 'test-project'
         """
         buildFile << """
             plugins {
@@ -92,11 +93,12 @@ class FunctionalTests extends SimpleTestSpecification {
 
     def "the userdev runtime by default supports the build cache"() {
         given:
-        settingsFile << """
-        rootProject.name = 'test-project'
+        settingsFile.text = """
         plugins {
             id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
         }
+        ${settingsFile.text}
+        rootProject.name = 'test-project'
         """
         buildFile << """
             plugins {
