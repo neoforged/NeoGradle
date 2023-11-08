@@ -130,7 +130,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 java.getMainClass().set(mainClass)
                 java.setStandardOutput(log_out)
 
-                java.setMaxHeapSize(String.format("%dk", Runtime.getRuntime().maxMemory() / 1000))
+                java.setMaxHeapSize(String.format("%dm", Runtime.getRuntime().maxMemory().intdiv(1024 * 1024)))
             }).rethrowFailure().assertNormalExitValue()
         }
     }
