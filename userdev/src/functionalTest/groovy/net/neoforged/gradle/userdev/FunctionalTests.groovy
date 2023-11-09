@@ -71,7 +71,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         def run = project.run { it.tasks('build') }
 
         then:
-        run.output.output.contains('BUILD SUCCESSFUL')
+        run.output.contains('BUILD SUCCESSFUL')
     }
 
     def "the userdev runtime by default supports the build cache"() {
