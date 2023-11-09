@@ -358,7 +358,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 profile.data("MC_SLIM", String.format("[net.minecraft:client:%s:slim]", neoFormVersion), String.format("[net.minecraft:server:%s:slim]", neoFormVersion));
                 profile.data("MC_EXTRA", String.format("[net.minecraft:client:%s:extra]", neoFormVersion), String.format("[net.minecraft:server:%s:extra]", neoFormVersion));
                 profile.data("MC_SRG", String.format("[net.minecraft:client:%s:srg]", neoFormVersion), String.format("[net.minecraft:server:%s:srg]", neoFormVersion));
-                profile.data("PATCHED", String.format("[%s:%s:%s:client]", "net.neoforged", "neoforge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion()), String.format("[%s:%s:%s:server]", "net.neoforged", "neoforge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion()));
+                profile.data("PATCHED", String.format("[%s:%s:%s:client]", "net.neoforged", "neoforge", project.getVersion()), String.format("[%s:%s:%s:server]", "net.neoforged", "neoforge", project.getVersion()));
                 profile.data("MCP_VERSION", String.format("'%s'", neoFormVersion), String.format("'%s'", neoFormVersion));
                 profile.processor(project, processor -> {
                     processor.server();
@@ -416,7 +416,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     processor.arguments("--clean", "{MC_SRG}", "--output", "{PATCHED}", "--apply", "{BINPATCH}");
                 });
                 
-                profile.getLibraries().add(Library.fromOutput(signUniversalJar, project, "net.neoforged", "neoforge", runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + project.getVersion(), "universal"));
+                profile.getLibraries().add(Library.fromOutput(signUniversalJar, project, "net.neoforged", "neoforge", project.getVersion().toString(), "universal"));
                 
                 profile.getIcon().set(project.provider(() -> {
                     final File icon = new File(project.getRootProject().getProjectDir(), "docs/assets/neoforged.ico");
@@ -486,12 +486,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 configureInstallerTokens(task, runtimeDefinition, Lists.newArrayList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration), pluginLayerLibraryConfiguration, gameLayerLibraryConfiguration);
                 
-                final String neoForgePublishingVersion = runtimeDefinition.getSpecification().getMinecraftVersion() + "-" + getProject().getVersion();
-                
                 if (project.getProperties().containsKey("neogradle.runtime.platform.installer.debug") && Boolean.parseBoolean(project.getProperties().get("neogradle.runtime.platform.installer.debug").toString())) {
                     task.from(signUniversalJar.flatMap(WithOutput::getOutput), spec -> {
-                        spec.into(String.format("/maven/net/neoforged/neoforge/%s/", neoForgePublishingVersion));
-                        spec.rename(name -> String.format("neoforge-%s-universal.jar", neoForgePublishingVersion));
+                        spec.into(String.format("/maven/net/neoforged/neoforge/%s/", project.getVersion()));
+                        spec.rename(name -> String.format("neoforge-%s-universal.jar", project.getVersion()));
                     });
                 }
             });
