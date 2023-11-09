@@ -32,7 +32,16 @@ public final class CommonRuntimeTaskUtils {
             
             final TaskProvider<? extends WithOutput> provider = definition.getSpecification().getProject().getTasks().register(name, ArtifactProvider.class, task -> {
                 task.getInput().set(file);
-                task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + namePreFix + "/" + file.getName()));
+                String outputFileName = file.getName();
+                if (index > 0) {
+                    int extensionDot = outputFileName.lastIndexOf('.');
+                    if (extensionDot == -1) {
+                        outputFileName += "_" + index;
+                    } else {
+                        outputFileName = outputFileName.substring(0, extensionDot) + "_" + index + outputFileName.substring(extensionDot);
+                    }
+                }
+                task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + namePreFix + "/" + outputFileName));
             });
             
             fileProducingTasks.add(provider);
