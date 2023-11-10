@@ -32,6 +32,7 @@ import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"}) // API Design
 public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<NeoFormRuntimeSpecification, NeoFormRuntimeSpecification.Builder, NeoFormRuntimeDefinition> {
@@ -118,10 +120,32 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
     }
 
     private static TaskProvider<? extends Runtime> createExecute(final NeoFormRuntimeSpecification spec, final NeoFormConfigConfigurationSpecV1.Step step, final NeoFormConfigConfigurationSpecV1.Function function) {
-        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
-            task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
-            task.getJvmArguments().addAll(function.getJvmArgs());
-            task.getProgramArguments().addAll(function.getArgs());
+        Project project = spec.getProject();
+
+        return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
+            String version = function.getVersion();
+            List<String> jvmArgs = new ArrayList<>(function.getJvmArgs());
+            List<String> args = new ArrayList<>(function.getArgs());
+            Map<UserOverride, String> userOverrides = getUserOverrides(spec, step.getName(),
+                    UserOverride.MAX_MEMORY, UserOverride.VERSION);
+
+            // Allow the user to override the specific tool version per step
+            version = userOverrides.getOrDefault(UserOverride.VERSION, version);
+
+            // Allow the user to override the maximum memory per step
+            String maxMemoryOverride = userOverrides.get(UserOverride.MAX_MEMORY);
+            if (maxMemoryOverride != null) {
+                // Filter out existing memory options and append new max memory setting
+                jvmArgs = Stream.concat(
+                        jvmArgs.stream().filter(s -> !s.startsWith("-Xmx")),
+                        Stream.of("-Xmx" + maxMemoryOverride)
+                ).collect(Collectors.toList());
+            }
+            appendUserOverridesToDescription(task, userOverrides);
+
+            task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), version));
+            task.getJvmArguments().addAll(jvmArgs);
+            task.getProgramArguments().addAll(args);
         });
     }
 
@@ -354,6 +378,14 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     recompileSourceJar.getInputJar().set(remapTask.flatMap(WithOutput::getOutput));
                     recompileSourceJar.getCompileClasspath().setFrom(recompileDependencies);
                     recompileSourceJar.getStepName().set("recompile");
+
+                    // Allow user-overrides for the recompile task
+                    Map<UserOverride, String> userOverrides = getUserOverrides(spec, "recompile", UserOverride.MAX_MEMORY);
+                    String maxMemoryOverride = userOverrides.get(UserOverride.MAX_MEMORY);
+                    if (maxMemoryOverride != null) {
+                        recompileSourceJar.getOptions().getForkOptions().setMemoryMaximumSize(maxMemoryOverride);
+                    }
+                    appendUserOverridesToDescription(recompileSourceJar, userOverrides);
                 });
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, neoFormRuntimeTask));
 
@@ -367,5 +399,52 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             task.getInput().set(recompileTask.flatMap(WithOutput::getOutput));
             task.dependsOn(recompileTask);
         });
+    }
+
+    /**
+     * Get the map of property overrides set by the user for the given step.
+     */
+    private static Map<UserOverride, String> getUserOverrides(NeoFormRuntimeSpecification spec, String stepName, UserOverride... supportedOverrides) {
+        Project project = spec.getProject();
+        Map<UserOverride, String> userOverrides = new EnumMap<>(UserOverride.class);
+
+        for (UserOverride override : supportedOverrides) {
+            Object genericOverride = project.findProperty("neoform.all." + override.property);
+            if (genericOverride != null) {
+                userOverrides.put(override, genericOverride.toString());
+            }
+
+            Object stepOverride = project.findProperty("neoform." + stepName + "." + override.property);
+            if (stepOverride != null) {
+                userOverrides.put(override, stepOverride.toString());
+            }
+        }
+
+        return userOverrides;
+    }
+
+    private static void appendUserOverridesToDescription(Task task, Map<UserOverride, String> userOverrides) {
+        if (!userOverrides.isEmpty()) {
+            String descriptionText = "User overrides: " + userOverrides.entrySet().stream()
+                    .map(uo -> uo.getKey().property + ": " + uo.getValue())
+                    .collect(Collectors.joining(", "));
+
+            if (task.getDescription() != null) {
+                task.setDescription(task.getDescription() + " " + descriptionText);
+            } else {
+                task.setDescription(descriptionText);
+            }
+        }
+    }
+
+    enum UserOverride {
+        VERSION("version"),
+        MAX_MEMORY("maxMemory");
+
+        private final String property;
+
+        UserOverride(String property) {
+            this.property = property;
+        }
     }
 }
