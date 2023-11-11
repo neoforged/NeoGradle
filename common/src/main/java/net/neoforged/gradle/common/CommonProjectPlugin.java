@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
 import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
+import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
@@ -20,6 +21,7 @@ import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
@@ -74,6 +76,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         extensionManager.registerExtension("minecraft", Minecraft.class, (p) -> p.getObjects().newInstance(MinecraftExtension.class, p));
         extensionManager.registerExtension("mappings", Mappings.class, (p) -> p.getObjects().newInstance(MappingsExtension.class, p));
+        extensionManager.registerExtension("subsystems", Subsystems.class, (p) -> p.getObjects().newInstance(SubsystemsExtension.class, p));
 
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 
