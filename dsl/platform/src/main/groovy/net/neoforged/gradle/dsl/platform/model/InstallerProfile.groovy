@@ -302,10 +302,6 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         @Optional
         abstract ListProperty<String> getArguments();
 
-        void arguments(String... args) {
-            getArguments().addAll(args)
-        }
-
         @Input
         @DSLProperty
         @Optional
