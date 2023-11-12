@@ -38,6 +38,14 @@ public abstract class IdeManagementExtension {
             if (!rootProject.getPlugins().hasPlugin(EclipsePlugin.class))
                 rootProject.getPlugins().apply(EclipsePlugin.class);
         }
+
+        // Always pre-create the idePostSync task if IntelliJ is importing the project, since
+        // IntelliJ remembers to run the task post-sync even if the import fails. That will cause
+        // situations where import errors (i.e. dependency resolution errors) will be masked by
+        // the failed idePostSync task, since it was never created in that particular import.
+        if (isIdeaImport()) {
+            getOrCreateIdeImportTask();
+        }
     }
 
     /**
