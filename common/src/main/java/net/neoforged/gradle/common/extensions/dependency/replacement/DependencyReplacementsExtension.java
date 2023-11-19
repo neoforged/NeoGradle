@@ -15,6 +15,7 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.TransformerUtils;
+import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -143,9 +144,11 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
                         break;
                     }
                 } catch (Exception exception) {
-                    getProject().getLogger().info("Failed to process dependency replacement on handler: " + exception.getMessage(), exception);
+                    throw new GradleException("Uncaught exception while processing replacement of dependency " + dependency.getGroup() + ":" + dependency.getName()
+                            + " using handler " + handler + ": "  + exception.getMessage(), exception);
                 }
             }
+
             if (!dependencyReplacementInformation.contains(dependency, configuration)) {
                 dependencyReplacementInformation.put(dependency, configuration, candidate);
             }
