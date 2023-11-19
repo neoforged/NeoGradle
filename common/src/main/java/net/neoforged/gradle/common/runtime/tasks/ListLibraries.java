@@ -5,23 +5,21 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.neoforged.gradle.common.CommonProjectPlugin;
 import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.FileCacheUtils;
-import net.neoforged.gradle.common.util.VersionJson;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.util.HashFunction;
 import net.neoforged.gradle.util.TransformerUtils;
-import org.apache.commons.io.FileUtils;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
+import org.gradle.workers.WorkQueue;
+import org.gradle.workers.WorkerExecutor;
 
-import javax.swing.*;
+import javax.inject.Inject;
 import java.io.*;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -55,7 +53,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     public abstract Property<CentralCacheService> getLibrariesCache();
     
     @TaskAction
-    public void run() throws Exception {
+    public void run() throws IOException {
         final File output = ensureFileWorkspaceReady(getOutput());
         try (FileSystem bundleFs = !getServerBundleFile().isPresent() ? null : FileSystems.newFileSystem(getServerBundleFile().get().getAsFile().toPath(), this.getClass().getClassLoader())) {
             final Set<File> libraries;
@@ -75,7 +73,7 @@ public abstract class ListLibraries extends DefaultRuntime {
         }
     }
     
-    private Set<String> listBundleLibraries(FileSystem bundleFs) throws IOException {
+    private List<FileList.Entry> listBundleLibraries(FileSystem bundleFs) throws IOException {
         Path mfp = bundleFs.getPath("META-INF", "MANIFEST.MF");
         if (!Files.exists(mfp)) {
             throw new RuntimeException("Input archive does not contain META-INF/MANIFEST.MF");
@@ -93,13 +91,7 @@ public abstract class ListLibraries extends DefaultRuntime {
             throw new RuntimeException("Unsupported bundler format " + format + "; only 1.0 is supported");
         }
         
-        FileList libraries = FileList.read(bundleFs.getPath("META-INF", "libraries.list"));
-        Set<String> artifacts = new HashSet<>();
-        for (FileList.Entry entry : libraries.entries) {
-            artifacts.add(entry.path);
-        }
-        
-        return artifacts;
+        return FileList.read(bundleFs.getPath("META-INF", "libraries.list")).entries;
     }
     
     private Set<PathAndUrl> listDownloadJsonLibraries() throws IOException {
@@ -120,7 +112,8 @@ public abstract class ListLibraries extends DefaultRuntime {
                     artifacts.add(
                             new PathAndUrl(
                                     artifact.get("path").getAsString(),
-                                    artifact.get("url").getAsString()
+                                    artifact.get("url").getAsString(),
+                                    artifact.get("sha1").getAsString()
                             )
                     );
                 }
@@ -133,14 +126,16 @@ public abstract class ListLibraries extends DefaultRuntime {
     private Set<File> unpackAndListBundleLibraries(FileSystem bundleFs) throws IOException {
         final File outputDir = getLibrariesDirectory().get().getAsFile();
         
-        final Set<String> libraryPaths = listBundleLibraries(bundleFs);
+        final List<FileList.Entry> libraryPaths = listBundleLibraries(bundleFs);
         
         return libraryPaths.stream()
-                       .map(path -> String.format("META-INF/libraries/%s", path))
-                       .map(path -> {
+                       .map(entry -> {
+                           final String path = String.format("META-INF/libraries/%s", entry.path);
                            final File output = new File(outputDir, path);
-                           try (final InputStream stream = Files.newInputStream(bundleFs.getPath(path))) {
-                               FileUtils.copyInputStreamToFile(stream, output);
+                           try {
+                               if (!output.exists() || !HashFunction.SHA1.hash(output).equalsIgnoreCase(entry.hash)) {
+                                   Files.copy(bundleFs.getPath(path), output.toPath());
+                               }
                            } catch (IOException e) {
                                throw new UncheckedIOException(e);
                            }
@@ -153,15 +148,26 @@ public abstract class ListLibraries extends DefaultRuntime {
         final File outputDirectory = getLibrariesDirectory().get().getAsFile();
         
         final Set<File> result = new HashSet<>();
-        
+
+        final WorkQueue executor = getWorkerExecutor().noIsolation();
         for (PathAndUrl libraryCoordinate : libraryCoordinates) {
             final File outputFile = new File(outputDirectory, libraryCoordinate.path);
-            FileUtils.copyInputStreamToFile(new URL(libraryCoordinate.url).openStream(), outputFile);
+            executor.submit(DownloadFileAction.class, params -> {
+                params.getUrl().set(libraryCoordinate.url);
+                params.getShouldValidateHash().set(true);
+                params.getSha1().set(libraryCoordinate.hash);
+                params.getOutputFile().set(outputFile);
+                params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
+            });
             result.add(outputFile);
         }
+        executor.await();
         
         return result;
     }
+
+    @Inject
+    protected abstract WorkerExecutor getWorkerExecutor();
     
     @InputFile
     @Optional
@@ -248,13 +254,15 @@ public abstract class ListLibraries extends DefaultRuntime {
         }
     }
     
-    private final class PathAndUrl {
+    private static final class PathAndUrl {
         private final String path;
         private final String url;
+        private final String hash;
         
-        private PathAndUrl(String path, String url) {
+        private PathAndUrl(String path, String url, String hash) {
             this.path = path;
             this.url = url;
+            this.hash = hash;
         }
         
         public String getPath() {
@@ -263,6 +271,10 @@ public abstract class ListLibraries extends DefaultRuntime {
         
         public String getUrl() {
             return url;
+        }
+
+        public String getHash() {
+            return hash;
         }
     }
 }
