@@ -110,8 +110,8 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
     }
 
     @Override
-    public Map<String, String> buildRunInterpolationData() {
-        final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData());
+    public Map<String, String> buildRunInterpolationData(RunImpl run) {
+        final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData(run));
 
         interpolationData.put("mcp_version", neoform.getVersion());
         interpolationData.put("mcp_mappings", new File(unpackedneoformZipDirectory, "config/joined.srg").getAbsolutePath());

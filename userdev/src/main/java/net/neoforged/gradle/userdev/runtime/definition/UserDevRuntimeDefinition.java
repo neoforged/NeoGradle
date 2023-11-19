@@ -7,9 +7,11 @@ import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefiniti
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.common.util.VersionJson;
+import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -21,6 +23,8 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,7 +36,9 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     private final File unpackedUserDevJarDirectory;
     private final UserdevProfile userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
-    private final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer;
+    
+    private final List<TaskProvider<ClasspathSerializer>> classpathSerializers = new ArrayList<>();
+    private TaskProvider<? extends WithOutput> repoWritingTask = null;
 
     public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition neoformRuntimeDefinition, File unpackedUserDevJarDirectory, UserdevProfile userdevConfiguration, Configuration additionalUserDevDependencies) {
         super(specification, neoformRuntimeDefinition.getTasks(), neoformRuntimeDefinition.getSourceJarTask(), neoformRuntimeDefinition.getRawJarTask(), neoformRuntimeDefinition.getGameArtifactProvidingTasks(), neoformRuntimeDefinition.getMinecraftDependenciesConfiguration(), neoformRuntimeDefinition::configureAssociatedTask, neoformRuntimeDefinition.getVersionJson());
@@ -46,17 +52,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                         ExtraJarDependencyManager.generateClientCoordinateFor(this.getSpecification().getMinecraftVersion())
                 )
         );
-
-        this.minecraftClasspathSerializer = specification.getProject().getTasks().register(
-                CommonRuntimeUtils.buildStepName(getSpecification(), "writeMinecraftClasspath"),
-                ClasspathSerializer.class,
-                task -> {
-                    this.additionalUserDevDependencies.getExtendsFrom().forEach(task.getInputFiles()::from);
-                    task.getInputFiles().from(this.additionalUserDevDependencies);
-                    task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
-                }
-        );
-        configureAssociatedTask(this.minecraftClasspathSerializer);
     }
 
     @Override
@@ -89,9 +84,12 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     @Override
     public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
         neoformRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
-        this.minecraftClasspathSerializer.configure(task -> {
+        
+        classpathSerializers.forEach(taskProvider -> taskProvider.configure(task -> {
             task.getInputFiles().from(finalRepoWritingTask);
-        });
+        }));
+        classpathSerializers.clear();
+        this.repoWritingTask = finalRepoWritingTask;
     }
 
     @Override
@@ -108,27 +106,16 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     public @NotNull Map<String, String> getMappingVersionData() {
         return neoformRuntimeDefinition.getMappingVersionData();
     }
-
-    @Override
-    public void configureRun(RunImpl run) {
-        super.configureRun(run);
-        run.dependsOn(this.minecraftClasspathSerializer);
-    }
-
+    
     @NotNull
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
         return neoformRuntimeDefinition.getListLibrariesTaskProvider();
     }
 
-    @NotNull
-    public TaskProvider<ClasspathSerializer> getMinecraftClasspathSerializer() {
-        return minecraftClasspathSerializer;
-    }
-
     @Override
-    protected Map<String, String> buildRunInterpolationData() {
-        final Map<String, String> interpolationData = neoformRuntimeDefinition.buildRunInterpolationData();
+    protected Map<String, String> buildRunInterpolationData(RunImpl run) {
+        final Map<String, String> interpolationData = neoformRuntimeDefinition.buildRunInterpolationData(run);
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
             final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
@@ -144,9 +131,32 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
             interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
         }
+        
+        final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer = getSpecification().getProject().getTasks().register(
+                RunsUtil.createTaskName("writeMinecraftClasspath", run),
+                ClasspathSerializer.class,
+                task -> {
+                    this.additionalUserDevDependencies.getExtendsFrom().forEach(task.getInputFiles()::from);
+                    task.getInputFiles().from(this.additionalUserDevDependencies);
+                    task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
 
-        interpolationData.put("minecraft_classpath_file", this.minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
+                    run.getDependencies().get().getRuntime().get().forEach(runDependency -> task.getInputFiles().from(runDependency.getDependency()));
+                }
+        );
+        configureAssociatedTask(minecraftClasspathSerializer);
 
+        interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
+
+        run.dependsOn(minecraftClasspathSerializer);
+        
+        if (repoWritingTask == null) {
+            classpathSerializers.add(minecraftClasspathSerializer);
+        } else {
+            minecraftClasspathSerializer.configure(task -> {
+                task.getInputFiles().from(repoWritingTask);
+            });
+        }
+        
         return interpolationData;
     }
 

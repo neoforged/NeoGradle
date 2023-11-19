@@ -5,6 +5,7 @@ import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.ClosureEquivalent
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.Action
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
@@ -84,4 +85,12 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @return The run dependency.
      */
     RunDependency project(Map<String, ?> notation);
+
+    /**
+     * Creates a new run dependency from the given configuration notation.
+     *
+     * @param notation The configuration to use.
+     * @return The run dependency.
+     */
+    RunDependency configuration(Configuration notation);
 }

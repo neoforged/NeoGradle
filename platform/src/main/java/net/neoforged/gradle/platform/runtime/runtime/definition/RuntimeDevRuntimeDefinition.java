@@ -71,8 +71,8 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
     }
 
     @Override
-    protected Map<String, String> buildRunInterpolationData() {
-        final Map<String, String> interpolationData = joinedNeoFormRuntimeDefinition.buildRunInterpolationData();
+    protected Map<String, String> buildRunInterpolationData(RunImpl run) {
+        final Map<String, String> interpolationData = joinedNeoFormRuntimeDefinition.buildRunInterpolationData(run);
         return interpolationData;
     }
 
