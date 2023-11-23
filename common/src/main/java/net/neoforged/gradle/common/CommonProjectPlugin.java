@@ -35,7 +35,9 @@ import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public class CommonProjectPlugin implements Plugin<Project> {
     
@@ -136,13 +138,20 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
+                    
+                    final Set<CommonRuntimeDefinition<?>> definitionSet = new HashSet<>();
+                    
                     runImpl.getModSources().get().forEach(sourceSet -> {
                         try {
                             final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(project, sourceSet);
-                            definition.ifPresent(def -> def.configureRun(runImpl));
+                            definition.ifPresent(definitionSet::add);
                         } catch (MultipleDefinitionsFoundException e) {
                             throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
                         }
+                    });
+                    
+                    definitionSet.forEach(definition -> {
+                       definition.configureRun(runImpl);
                     });
                 }
             }

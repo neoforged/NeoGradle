@@ -13,6 +13,8 @@ import javax.inject.Inject;
 
 public abstract class ConfigurationRunDependencyImpl implements RunDependency {
 
+    private final Project project;
+    
     @Inject
     public ConfigurationRunDependencyImpl(Project project, Configuration dependency) {
         getIdentity().convention(dependency.toString());
@@ -21,8 +23,14 @@ public abstract class ConfigurationRunDependencyImpl implements RunDependency {
             final ConfigurableFileCollection files = project.files();
             return files.from(resolvedConfiguration.getFiles());
         }));
+        this.project = project;
     }
-
+    
+    @Override
+    public Project getProject() {
+        return project;
+    }
+    
     @Override
     public abstract ConfigurableFileCollection getDependency();
 
