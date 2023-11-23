@@ -130,10 +130,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.forEach(run -> {
             if (run instanceof RunImpl) {
-                if (run.getConfigureFromTypeWithName().get()) {
-                    run.configure();
-                }
-                
+                run.configure();
+
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
                     runImpl.getModSources().get().forEach(sourceSet -> {

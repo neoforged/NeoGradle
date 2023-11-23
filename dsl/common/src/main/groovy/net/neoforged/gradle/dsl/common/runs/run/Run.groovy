@@ -207,8 +207,9 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
 
 
     /**
-     * Configures the run using the type with the same name.
-     * Throwing an exception if no type could be found.
+     * Configures the run using the settings of the associated run type.
+     * <p/>
+     * Picks a run type using the name of this run, if no specific run type has been set.
      */
     abstract void configure();
 
