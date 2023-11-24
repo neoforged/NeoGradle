@@ -159,7 +159,9 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         int maxThreads = settings.getMaxThreads().getOrElse(0);
         String logLevel = settings.getLogLevel().getOrElse("INFO");
 
-        jvmArgs.addAll(settings.getJvmArgs().get());
+        if (settings.getJvmArgs().isPresent()) {
+            jvmArgs.addAll(settings.getJvmArgs().get());
+        }
         jvmArgs.add("-Xmx" + maxMemory);
         if (maxThreads > 0) {
             decompilerArgs.add(0, "-thr=" + maxThreads);
