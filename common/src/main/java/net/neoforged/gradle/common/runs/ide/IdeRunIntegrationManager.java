@@ -41,8 +41,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -278,6 +276,8 @@ public class IdeRunIntegrationManager {
                             sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
                         t.from(defaultProcessResources.get().getDestinationDir());
                         t.into(eclipse.getClasspath().getDefaultOutputDir().toPath().resolve(sourceSet.getName()));
+
+                        t.dependsOn(defaultProcessResources);
                     });
                 }
 
