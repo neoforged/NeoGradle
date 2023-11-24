@@ -170,11 +170,12 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @NotNull
-    public List<String> realiseJvmArguments() {
+    public List<String> realiseJvmArguments(final boolean quoteArguments) {
         final List<String> args = new ArrayList<>(getJvmArguments().get());
 
+        final String format = quoteArguments ? "-D%s=\"%s\"" : "-D%s=%s";
         getSystemProperties().get().forEach((key, value) -> {
-            args.add(String.format("-D%s=\"%s\"", key, value));
+            args.add(String.format(format, key, value));
         });
 
         return args;

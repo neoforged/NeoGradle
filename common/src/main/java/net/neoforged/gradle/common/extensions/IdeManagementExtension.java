@@ -13,6 +13,7 @@ import org.jetbrains.gradle.ext.IdeaExtPlugin;
 import org.jetbrains.gradle.ext.ProjectSettings;
 import org.jetbrains.gradle.ext.TaskTriggersConfig;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.util.function.BiConsumer;
 import javax.inject.Inject;
@@ -71,12 +72,38 @@ public abstract class IdeManagementExtension {
     }
 
     /**
+     * @return true if should rather perform VsCode setup instead of Eclipse setup.
+     * @implNote reinvestigate after https://github.com/microsoft/vscode-java-debug/issues/1106
+     */
+    private boolean isLikelyVscodeImport()
+    {
+        final boolean hasVscodeDirectory = Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
+        final boolean hasExtensionGradlePlugin = project.getPlugins().stream().anyMatch(p -> p.getClass().getName().equals("com.microsoft.gradle.GradlePlugin"));
+        project.getLogger().debug("vscode detection - dir .vscode: " + hasVscodeDirectory);
+        project.getLogger().debug("vscode detection - extension vscjava.vscode-gradle: " + hasExtensionGradlePlugin);
+        return hasVscodeDirectory || hasExtensionGradlePlugin;
+    }
+
+    /**
+     * @return true if must perform VsCode setup instead of Eclipse setup.
+     */
+    public static boolean isDefinitelyVscodeImport(final Project project)
+    {
+        final String pathToCheck = String.join(File.separator, new String[]{"data", "extensions", "vscjava.vscode-gradle"});
+        final boolean hasUserDirProperty = System.getProperty("user.dir").contains(pathToCheck); 
+        final boolean hasExtensionGradlePlugin = project.getPlugins().stream().anyMatch(p -> p.getClass().getName().equals("com.microsoft.gradle.GradlePlugin"));
+        project.getLogger().debug("vscode detection - user.dir contains " + pathToCheck + ": " + hasUserDirProperty);
+        project.getLogger().debug("vscode detection - extension vscjava.vscode-gradle: " + hasExtensionGradlePlugin);
+        return hasUserDirProperty || hasExtensionGradlePlugin;
+    }
+
+    /**
      * Indicates if an IDE import in any of the supported IDEs is ongoing.
      *
      * @return {@code true} if an IDE import is ongoing, {@code false} otherwise
      */
     public boolean isIdeImportInProgress() {
-        return isIdeaImport() || isEclipseImport();
+        return isIdeaImport() || isEclipseImport() || isDefinitelyVscodeImport(project);
     }
 
     /**
@@ -138,21 +165,10 @@ public abstract class IdeManagementExtension {
      */
     public void apply(final IdeImportAction toPerform) {
         onIdea(toPerform);
-        if (isLikelyVscode(project)) onVscode(toPerform);
+        // likely because we want to generate launch.json even if we don't have gradle extension
+        if (isLikelyVscodeImport()) onVscode(toPerform);
         else onEclipse(toPerform);
         onGradle(toPerform);
-    }
-
-    /**
-     * @return true if should rather perform VsCode setup instead of Eclipse setup.
-     */
-    private boolean isLikelyVscode(final Project project)
-    {
-        final boolean hasVscodeDirectory = Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
-        final boolean hasExtensionGradlePlugin = project.getPlugins().stream().anyMatch(p -> p.getClass().getName().equals("com.microsoft.gradle.GradlePlugin"));
-        project.getLogger().debug("vscode dir present - .vscode: " + hasVscodeDirectory);
-        project.getLogger().debug("vscode ext present - vscjava.vscode-gradle: " + hasExtensionGradlePlugin);
-        return hasVscodeDirectory || hasExtensionGradlePlugin;
     }
     
     /**
@@ -211,7 +227,7 @@ public abstract class IdeManagementExtension {
         //When the Eclipse plugin is available, configure it
         project.getPlugins().withType(EclipsePlugin.class, plugin -> {
             //Do not configure the eclipse plugin if we are not importing.
-            if (!isEclipseImport()) {
+            if (!isEclipseImport() && !isDefinitelyVscodeImport(project)) {
                 return;
             }
             
@@ -234,7 +250,7 @@ public abstract class IdeManagementExtension {
      * @param toPerform the actions to perform
      */
     public void onGradle(final GradleIdeImportAction toPerform) {
-        if (!isEclipseImport() && !isIdeaImport()) {
+        if (!isEclipseImport() && !isIdeaImport() && !isDefinitelyVscodeImport(project)) {
             toPerform.gradle(project);
         }
     }
