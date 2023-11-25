@@ -73,7 +73,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
     }
 
     @Override
-    protected Map<String, String> buildRunInterpolationData() {
+    protected Map<String, String> buildRunInterpolationData(RunImpl run) {
         final Map<String, String> interpolationData = Maps.newHashMap();
 
         final String fgVersion = this.getClass().getPackage().getImplementationVersion();
@@ -100,7 +100,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
             run.getIsClient().set(true);
             run.getIsSingleInstance().set(false);
             
-            final Map<String, String> interpolationData = Maps.newHashMap(buildRunInterpolationData());
+            final Map<String, String> interpolationData = Maps.newHashMap(buildRunInterpolationData(run));
 
             interpolationData.put(InterpolationConstants.GAME_DIRECTORY, run.getWorkingDirectory().get().getAsFile().getAbsolutePath());
             run.overrideJvmArguments(interpolate(run.getJvmArguments(), interpolationData, "$"));
