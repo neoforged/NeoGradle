@@ -35,6 +35,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -103,12 +104,9 @@ public class IdeRunIntegrationManager {
                     
                     ideaRun.setMainClass(runImpl.getMainClass().get());
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                    ideaRun.setJvmArgs(String.join(" ", runImpl.realiseJvmArguments()));
+                    ideaRun.setJvmArgs(quoteAndJoin(runImpl.realiseJvmArguments()));
                     ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
-                    ideaRun.setProgramParameters(runImpl.getProgramArguments().get()
-                                                                          .stream()
-                                                                          .map(arg -> "\"" + arg + "\"")
-                                                                          .collect(Collectors.joining(" ")));
+                    ideaRun.setProgramParameters(quoteAndJoin(runImpl.getProgramArguments().get()));
                     ideaRun.setEnvs(adaptEnvironment(runImpl, RunsUtil::buildRunWithIdeaModClasses));
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
                     
@@ -124,7 +122,11 @@ public class IdeRunIntegrationManager {
             
             
         }
-        
+
+        private static String quoteAndJoin(List<String> args) {
+            return args.stream().map(arg -> "\"" + arg + "\"").collect(Collectors.joining(" "));
+        }
+
         @Override
         public void eclipse(Project project, EclipseModel eclipse) {
             ProjectUtils.afterEvaluate(project, () -> {
@@ -176,7 +178,7 @@ public class IdeRunIntegrationManager {
                 }));
             });
         }
-        
+
         private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
                 for (SourceSet sourceSet : run.getModSources().get()) {
