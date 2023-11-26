@@ -46,7 +46,7 @@ public class PlatformSettingsPlugin implements Plugin<Settings> {
 
             final Optional<ProjectDescriptor> match = projectManagementExtension.getDynamicProjects().
                     stream()
-                    .filter(desc -> desc.getName().equals(project.getName()))
+                    .filter(desc -> desc.getPath().equals(project.getPath()))
                     .findFirst();
 
             match.ifPresent(desc -> project.getPlugins().apply(PlatformPlugin.class));
