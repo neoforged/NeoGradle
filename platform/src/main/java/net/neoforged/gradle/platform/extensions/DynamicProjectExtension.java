@@ -174,6 +174,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final Configuration moduleOnlyConfiguration = project.getConfigurations().create("moduleOnly").setTransitive(false);
         final Configuration gameLayerLibraryConfiguration = project.getConfigurations().create("gameLayerLibrary").setTransitive(false);
         final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary").setTransitive(false);
+        final Configuration userdevCompileOnlyConfiguration = project.getConfigurations().create("userdevCompileOnly").setTransitive(false);
         
         clientExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateClientCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
         
@@ -279,7 +280,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 arguments.game("forgeclient");
                 
                 arguments.jvm("-Djava.net.preferIPv6Addresses=system");
-                arguments.jvm(createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project).map(ignoreList -> "-DignoreList=" + ignoreList + ",${version_name}.jar"));
+                arguments.jvm(createIgnoreList(project, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration).map(ignoreList -> "-DignoreList=" + ignoreList + ",${version_name}.jar"));
                 arguments.jvm("-DmergeModules=jna-5.10.0.jar,jna-platform-5.10.0.jar");
                 arguments.jvm(collectFileNames(pluginLayerLibraryConfiguration, project).map(pluginLayerLibraries -> "-Dfml.pluginLayerLibraries=" + pluginLayerLibraries));
                 arguments.jvm(collectFileNames(gameLayerLibraryConfiguration, project).map(gameLayerLibraries -> "-Dfml.gameLayerLibraries=" + gameLayerLibraries));
@@ -520,7 +521,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--assetsDir");
                 type.getArguments().add("{assets_root}");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             userdevProfile.runType("server", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -531,7 +532,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgeserveruserdev");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             userdevProfile.runType("gameTestServer", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -546,7 +547,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgeserveruserdev");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             userdevProfile.runType("data", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -561,7 +562,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--assetsDir");
                 type.getArguments().add("{assets_root}");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             
             userdevProfile.getNeoForm().set(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString());
@@ -577,6 +578,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             final TaskProvider<CreateUserdevJson> createUserdevJson = project.getTasks().register("createUserdevJson", CreateUserdevJson.class, task -> {
                 task.getProfile().set(userdevProfile);
+                task.getLibraries().from(userdevCompileOnlyConfiguration);
                 task.getLibraries().from(installerLibrariesConfiguration);
                 task.getLibraries().from(gameLayerLibraryConfiguration);
                 task.getLibraries().from(pluginLayerLibraryConfiguration);
@@ -679,7 +681,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
         runType.getJvmArguments().addAll("-p", moduleOnlyConfiguration.getAsPath());
 
-        runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
+        runType.getSystemProperties().put("ignoreList", createIgnoreList(project, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration));
         runType.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
         runType.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
         runType.getSystemProperties().put("fml.gameLayerLibraries", collectFileNames(gameLayerLibraryConfiguration, project));
@@ -763,10 +765,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     }
 
     @NotNull
-    private static Provider<String> createIgnoreList(Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
+    private static Provider<String> createIgnoreList(Project project, Configuration... configurations) {
         return project.provider(() -> {
             StringBuilder ignoreList = new StringBuilder(1000);
-            for (Configuration cfg : Arrays.asList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration)) {
+            for (Configuration cfg : configurations) {
                 ignoreList.append(cfg.getFiles().stream().map(file -> (file.getName().startsWith("events") || file.getName().startsWith("core") ? file.getName() : file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))).collect(Collectors.joining(","))).append(",");
             }
             ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
@@ -827,13 +829,13 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
     }
 
-    private void configureUserdevRunType(final RunType runType, Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
+    private void configureUserdevRunType(final RunType runType, Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Configuration userdevCompileOnlyConfiguration, Project project) {
         runType.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
 
         runType.getArguments().addAll("--gameDir", ".");
 
         runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
-        runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
+        runType.getSystemProperties().put("ignoreList", createIgnoreList(project, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration));
 
         runType.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
         runType.getSystemProperties().put("fml.gameLayerLibraries", collectFileNames(gameLayerLibraryConfiguration, project));
