@@ -1,7 +1,7 @@
 package net.neoforged.gradle.userdev.jarjar;
 
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyFilter;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyVersionInformationHandler;
+import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
+import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
 import net.neoforged.gradle.userdev.tasks.JarJar;
 import org.gradle.api.Action;
 import org.gradle.api.Project;

@@ -1,7 +1,6 @@
-package net.neoforged.gradle.userdev.dependency;
+package net.neoforged.gradle.common.dependency;
 
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyFilter;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyManagementObject;
+import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedDependency;

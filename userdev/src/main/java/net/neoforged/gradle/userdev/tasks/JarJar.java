@@ -1,11 +1,10 @@
 package net.neoforged.gradle.userdev.tasks;
 
 import net.minecraftforge.jarjar.metadata.*;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyFilter;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyVersionInformationHandler;
-import net.neoforged.gradle.userdev.dependency.DefaultDependencyFilter;
-import net.neoforged.gradle.userdev.dependency.DefaultDependencyVersionInformationHandler;
-import net.neoforged.gradle.userdev.jarjar.JarJarExtension;
+import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
+import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
+import net.neoforged.gradle.common.dependency.DefaultDependencyFilter;
+import net.neoforged.gradle.common.dependency.DefaultDependencyVersionInformationHandler;
 import net.neoforged.gradle.userdev.manifest.DefaultInheritManifest;
 import net.neoforged.gradle.userdev.manifest.InheritManifest;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
