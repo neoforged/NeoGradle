@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.neoforged.gradle.userdev.manifest;
+package net.neoforged.gradle.common.manifest;
 
 import groovy.lang.Closure;
 import org.gradle.api.Action;
@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class DefaultInheritManifest implements InheritManifest {
 
-    private List<DefaultManifestMergeSpec> inheritMergeSpecs = new ArrayList<>();
+    private final List<DefaultManifestMergeSpec> inheritMergeSpecs = new ArrayList<>();
     private final FileResolver fileResolver;
     private final Manifest internalManifest;
 
