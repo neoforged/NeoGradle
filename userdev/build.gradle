@@ -7,9 +7,6 @@ dependencies {
     api project(':common')
     api project(':neoform')
     api project(':dsl-userdev')
-
-    api "net.minecraftforge:JarJarMetadata:${project.jarjar_version}"
-    api "net.minecraftforge:JarJarSelector:${project.jarjar_version}"
 }
 
 

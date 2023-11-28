@@ -1,4 +1,4 @@
-package net.neoforged.gradle.dsl.userdev.extension
+package net.neoforged.gradle.dsl.common.extensions
 
 import net.neoforged.gradle.dsl.common.dependency.DependencyFilter
 import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler
