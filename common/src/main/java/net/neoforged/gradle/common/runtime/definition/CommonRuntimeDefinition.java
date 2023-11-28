@@ -23,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -172,7 +171,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     }
     
     public void configureRun(RunImpl run) {
-        final Map<String, String> runtimeInterpolationData = buildRunInterpolationData();
+        final Map<String, String> runtimeInterpolationData = buildRunInterpolationData(run);
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
         workingInterpolationData.put("source_roots", RunsUtil.buildGradleModClasses(run.getModSources()).get());
@@ -191,7 +190,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         }
     }
 
-    protected Map<String, String> buildRunInterpolationData() {
+    protected Map<String, String> buildRunInterpolationData(RunImpl run) {
         final Map<String, String> interpolationData = Maps.newHashMap();
 
         interpolationData.put("runtime_name", specification.getVersionedName());

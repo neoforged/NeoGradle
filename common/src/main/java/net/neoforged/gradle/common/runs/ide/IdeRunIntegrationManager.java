@@ -42,9 +42,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A simple manager which configures runs based on the IDE it is attached to.
@@ -110,12 +112,9 @@ public class IdeRunIntegrationManager {
                     
                     ideaRun.setMainClass(runImpl.getMainClass().get());
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                    ideaRun.setJvmArgs(String.join(" ", runImpl.realiseJvmArguments(true)));
+                    ideaRun.setJvmArgs(quoteAndJoin(runImpl.realiseJvmArguments()));
                     ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
-                    ideaRun.setProgramParameters(runImpl.getProgramArguments().get()
-                                                                          .stream()
-                                                                          .map(arg -> "\"" + arg + "\"")
-                                                                          .collect(Collectors.joining(" ")));
+                    ideaRun.setProgramParameters(quoteAndJoin(runImpl.getProgramArguments().get()));
                     ideaRun.setEnvs(adaptEnvironment(runImpl, RunsUtil::buildRunWithIdeaModClasses));
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
                     
@@ -131,7 +130,7 @@ public class IdeRunIntegrationManager {
             
             
         }
-        
+
         @Override
         public void eclipse(Project project, EclipseModel eclipse) {
             ProjectUtils.afterEvaluate(project, () -> {
@@ -152,11 +151,8 @@ public class IdeRunIntegrationManager {
                         final JavaApplicationLaunchConfig debugRun =
                                 JavaApplicationLaunchConfig.builder(eclipse.getProject().getName())
                                         .workingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath())
-                                        .vmArgs(runImpl.realiseJvmArguments(true).toArray(new String[0]))
-                                        .args(runImpl.getProgramArguments().get()
-                                                      .stream()
-                                                      .map(arg -> "\"" + arg + "\"")
-                                                      .toArray(String[]::new))
+                                        .vmArgs(quoteStream(runImpl.realiseJvmArguments()).toArray(String[]::new))
+                                        .args(quoteStream(runImpl.getProgramArguments().get()).toArray(String[]::new))
                                         .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                                         .useArgumentsFile()
                                         .build(runImpl.getMainClass().get());
@@ -197,7 +193,7 @@ public class IdeRunIntegrationManager {
 
                     final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
                         .createLaunchConfiguration()
-                        .withAdditionalJvmArgs(runImpl.realiseJvmArguments(false))
+                        .withAdditionalJvmArgs(runImpl.realiseJvmArguments())
                         .withArguments(runImpl.getProgramArguments().get())
                         .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
                         .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
@@ -221,6 +217,25 @@ public class IdeRunIntegrationManager {
                     throw new RuntimeException("Failed to write launch files", e);
                 }
             });
+        }
+
+        private static String quoteAndJoin(List<String> args) {
+            return quoteStream(args).collect(Collectors.joining(" "));
+        }
+
+        private static Stream<String> quoteStream(List<String> args) {
+            return args.stream().map(RunsImportAction::quote);
+        }
+
+        /**
+         * This expects users to escape quotes in their system arguments on their own, which matches
+         * Gradles own behavior when used in JavaExec.
+         */
+        private static String quote(String arg) {
+            if (!arg.contains(" ")) {
+                return arg;
+            }
+            return "\"" + arg + "\"";
         }
 
         private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl, boolean addDefaultProcessResources) {

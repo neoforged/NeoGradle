@@ -29,6 +29,14 @@ public class RunsUtil {
         throw new IllegalStateException("Tried to create utility class!");
     }
     
+    public static String createTaskName(final Run run) {
+        return createTaskName(run.getName());
+    }
+    
+    public static String createTaskName(final String prefix, final Run run) {
+        return createTaskName(prefix, run.getName());
+    }
+    
     public static Run create(final Project project, final String name) {
         final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
         
@@ -112,11 +120,15 @@ public class RunsUtil {
     }
     
     private static String createTaskName(final String runName) {
+        return createTaskName("run", runName);
+    }
+    
+    private static String createTaskName(final String prefix, final String runName) {
         final String conventionTaskName = runName.replaceAll("[^a-zA-Z0-9\\-_]", "");
         if (conventionTaskName.startsWith("run")) {
             return conventionTaskName;
         }
         
-        return "run" + StringCapitalizationUtils.capitalize(conventionTaskName);
+        return prefix + StringCapitalizationUtils.capitalize(conventionTaskName);
     }
 }

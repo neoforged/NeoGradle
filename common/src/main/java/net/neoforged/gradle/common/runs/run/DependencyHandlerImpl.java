@@ -4,6 +4,7 @@ import net.neoforged.gradle.dsl.common.runs.run.DependencyHandler;
 import net.neoforged.gradle.dsl.common.runs.run.RunDependency;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 
 import javax.inject.Inject;
@@ -69,5 +70,10 @@ public abstract class DependencyHandlerImpl implements DependencyHandler {
     public RunDependency project(Map<String, ?> notation) {
         final Dependency dependency = project.getDependencies().project(notation);
         return project.getObjects().newInstance(RunDependencyImpl.class, project, dependency);
+    }
+    
+    @Override
+    public RunDependency configuration(Configuration notation) {
+        return project.getObjects().newInstance(ConfigurationRunDependencyImpl.class, project, notation);
     }
 }

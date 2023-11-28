@@ -170,13 +170,17 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @NotNull
-    public List<String> realiseJvmArguments(final boolean quoteArguments) {
+    public List<String> realiseJvmArguments() {
         final List<String> args = new ArrayList<>(getJvmArguments().get());
 
-        final String format = quoteArguments ? "-D%s=\"%s\"" : "-D%s=%s";
-        getSystemProperties().get().forEach((key, value) -> {
-            args.add(String.format(format, key, value));
-        });
+        // This mirrors the logic found in Gradle itself, which also does not quote key nor value
+        for (Map.Entry<String, String> entry : getSystemProperties().get().entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().isEmpty()) {
+                args.add("-D" + entry.getKey() + "=" + entry.getValue());
+            } else {
+                args.add("-D" + entry.getKey());
+            }
+        }
 
         return args;
     }

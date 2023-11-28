@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.runs.run;
 
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runs.run.RunDependency;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -11,16 +11,15 @@ import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
 
-public abstract class RunDependencyImpl implements RunDependency {
+public abstract class ConfigurationRunDependencyImpl implements RunDependency {
 
     private final Project project;
     
     @Inject
-    public RunDependencyImpl(Project project, Dependency dependency) {
+    public ConfigurationRunDependencyImpl(Project project, Configuration dependency) {
         getIdentity().convention(dependency.toString());
         getDependency().from(project.provider(() -> {
-            final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project, dependency);
-            final ResolvedConfiguration resolvedConfiguration = configuration.getResolvedConfiguration();
+            final ResolvedConfiguration resolvedConfiguration = dependency.getResolvedConfiguration();
             final ConfigurableFileCollection files = project.files();
             return files.from(resolvedConfiguration.getFiles());
         }));

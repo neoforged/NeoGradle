@@ -45,7 +45,7 @@ project {
         githubIssues {
             id = "ForgeGradle__IssueTracker"
             displayName = "NeoForged/NeoGradle"
-            repositoryURL = "https://github.com/NeoForge/NeoGradle"
+            repositoryURL = "https://github.com/NeoForged/NeoGradle"
         }
     }
 }
