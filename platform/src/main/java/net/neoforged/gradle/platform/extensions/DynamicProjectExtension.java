@@ -10,9 +10,11 @@ import net.minecraftforge.gdi.annotations.ProjectGetter;
 import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
+import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
+import net.neoforged.gradle.common.tasks.JarJar;
 import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.common.tasks.PotentiallySignJar;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
@@ -175,6 +177,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final Configuration gameLayerLibraryConfiguration = project.getConfigurations().create("gameLayerLibrary").setTransitive(false);
         final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary").setTransitive(false);
         final Configuration userdevCompileOnlyConfiguration = project.getConfigurations().create("userdevCompileOnly").setTransitive(false);
+        final Configuration jarJarConfiguration = project.getConfigurations().create("jarJar");
         
         clientExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateClientCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
         
@@ -188,6 +191,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> types.configureEach(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> configureRun(run, runtimeDefinition)));
+
+        project.getExtensions().create(net.neoforged.gradle.dsl.common.extensions.JarJar.class, JarJarExtension.EXTENSION_NAME, JarJarExtension.class, project);
         
         final LauncherProfile launcherProfile = project.getExtensions().create(LauncherProfile.class, "launcherProfile", LauncherProfile.class);
         final InstallerProfile installerProfile = project.getExtensions().create("installerProfile", InstallerProfile.class);
@@ -321,7 +326,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
             
-            final TaskProvider<Jar> universalJar = project.getTasks().register("universalJar", Jar.class, task -> {
+            final TaskProvider<JarJar> universalJar = project.getTasks().register("universalJar", JarJar.class, task -> {
                 task.getArchiveClassifier().set("universal-unsigned");
                 task.getArchiveAppendix().set("universal-unsigned");
                 task.getArchiveVersion().set(project.getVersion().toString());
@@ -337,6 +342,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     manifest.attributes(ImmutableMap.of("Specification-Title", "NeoForge", "Specification-Vendor", "NeoForge", "Specification-Version", project.getVersion().toString().substring(0, project.getVersion().toString().lastIndexOf(".")), "Implementation-Title", project.getGroup(), "Implementation-Version", project.getVersion(), "Implementation-Vendor", "NeoForged"), "net/neoforged/neoforge/internal/versions/neoforge/");
                     manifest.attributes(ImmutableMap.of("Specification-Title", "Minecraft", "Specification-Vendor", "Mojang", "Specification-Version", runtimeDefinition.getSpecification().getMinecraftVersion(), "Implementation-Title", "MCP", "Implementation-Version", runtimeDefinition.getSpecification().getVersion(), "Implementation-Vendor", "NeoForged"), "net/neoforged/neoforge/versions/neoform/");
                 });
+
+                task.configuration(jarJarConfiguration);
             });
             
             final TaskProvider<PotentiallySignJar> signUniversalJar = project.getTasks().register("signUniversalJar", PotentiallySignJar.class, task -> {
