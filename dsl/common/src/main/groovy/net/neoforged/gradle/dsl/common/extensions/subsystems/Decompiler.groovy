@@ -33,7 +33,7 @@ interface Decompiler extends ConfigurableDSLElement<Decompiler> {
     Property<Integer> getMaxThreads();
 
     /**
-     * The log-level to use for the decompiler. Supported values: info, debug, warn, error.
+     * The log-level to use for the decompiler. Supported values: trace, info, warn, error.
      * Defaults to {@link DecompilerLogLevel#INFO}.
      */
     @Input
