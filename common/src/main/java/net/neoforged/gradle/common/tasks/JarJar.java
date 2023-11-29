@@ -82,7 +82,10 @@ public abstract class JarJar extends Jar {
     @TaskAction
     protected void copy() {
         this.jarJarCopySpec.from(getIncludedDependencies());
-        this.jarJarCopySpec.from(getMetadata());
+        if (!createMetadata().jars().isEmpty()) {
+            // Only copy metadata if not empty.
+            this.jarJarCopySpec.from(getJarJarMetadataPath().toFile());
+        }
         super.copy();
     }
 
