@@ -12,7 +12,7 @@ import org.gradle.api.tasks.Nested
 interface Subsystems extends BaseDSLElement<Subsystems> {
 
     /**
-     * @return Settings for the decompiler subsystem.
+     * @return settings for the decompiler subsystem
      */
     @Nested
     @DSLProperty
