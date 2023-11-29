@@ -13,6 +13,7 @@ import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
@@ -38,6 +39,7 @@ import net.neoforged.gradle.neoform.util.NeoFormRuntimeConstants;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -157,7 +159,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         Decompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
         String maxMemory = settings.getMaxMemory().getOrElse(defaultMaxMemory);
         int maxThreads = settings.getMaxThreads().getOrElse(0);
-        String logLevel = settings.getLogLevel().getOrElse("INFO");
+        String logLevel = getDecompilerLogLevelArg(settings.getLogLevel().getOrElse(DecompilerLogLevel.INFO), function.getVersion());
 
         if (settings.getJvmArgs().isPresent()) {
             jvmArgs.addAll(settings.getJvmArgs().get());
@@ -173,6 +175,21 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             task.getJvmArguments().addAll(jvmArgs);
             task.getProgramArguments().addAll(decompilerArgs);
         });
+    }
+
+    private static String getDecompilerLogLevelArg(DecompilerLogLevel logLevel, String version) {
+        switch (logLevel) {
+            case TRACE:
+                return "trace";
+            case INFO:
+                return "info";
+            case WARN:
+                return "warn";
+            case ERROR:
+                return "error";
+            default:
+                throw new GradleException("LogLevel " + logLevel + " not supported by " + version);
+        }
     }
 
     private TaskProvider<? extends Runtime> createExecute(final NeoFormRuntimeSpecification spec, final NeoFormConfigConfigurationSpecV1.Step step, final NeoFormConfigConfigurationSpecV1.Function function) {

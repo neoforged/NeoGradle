@@ -34,12 +34,12 @@ interface Decompiler extends ConfigurableDSLElement<Decompiler> {
 
     /**
      * The log-level to use for the decompiler. Supported values: info, debug, warn, error.
-     * Defaults to info.
+     * Defaults to {@link DecompilerLogLevel#INFO}.
      */
     @Input
     @Optional
     @DSLProperty
-    Property<String> getLogLevel();
+    Property<DecompilerLogLevel> getLogLevel();
 
     /**
      * Allows additional JVM arguments to be added to the decompiler invocation.
