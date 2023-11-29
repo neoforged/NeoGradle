@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A simple manager which configures runs based on the IDE it is attached to.
@@ -123,10 +124,6 @@ public class IdeRunIntegrationManager {
             
         }
 
-        private static String quoteAndJoin(List<String> args) {
-            return args.stream().map(arg -> "\"" + arg + "\"").collect(Collectors.joining(" "));
-        }
-
         @Override
         public void eclipse(Project project, EclipseModel eclipse) {
             ProjectUtils.afterEvaluate(project, () -> {
@@ -147,11 +144,8 @@ public class IdeRunIntegrationManager {
                         final JavaApplicationLaunchConfig debugRun =
                                 JavaApplicationLaunchConfig.builder(eclipse.getProject().getName())
                                         .workingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath())
-                                        .vmArgs(runImpl.realiseJvmArguments().toArray(new String[0]))
-                                        .args(runImpl.getProgramArguments().get()
-                                                      .stream()
-                                                      .map(arg -> "\"" + arg + "\"")
-                                                      .toArray(String[]::new))
+                                        .vmArgs(quoteStream(runImpl.realiseJvmArguments()).toArray(String[]::new))
+                                        .args(quoteStream(runImpl.getProgramArguments().get()).toArray(String[]::new))
                                         .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                                         .useArgumentsFile()
                                         .build(runImpl.getMainClass().get());
@@ -177,6 +171,25 @@ public class IdeRunIntegrationManager {
                     }
                 }));
             });
+        }
+
+        private static String quoteAndJoin(List<String> args) {
+            return quoteStream(args).collect(Collectors.joining(" "));
+        }
+
+        private static Stream<String> quoteStream(List<String> args) {
+            return args.stream().map(RunsImportAction::quote);
+        }
+
+        /**
+         * This expects users to escape quotes in their system arguments on their own, which matches
+         * Gradles own behavior when used in JavaExec.
+         */
+        private static String quote(String arg) {
+            if (!arg.contains(" ")) {
+                return arg;
+            }
+            return "\"" + arg + "\"";
         }
 
         private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
