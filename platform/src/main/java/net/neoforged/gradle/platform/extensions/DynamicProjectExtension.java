@@ -178,7 +178,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary").setTransitive(false);
         final Configuration userdevCompileOnlyConfiguration = project.getConfigurations().create("userdevCompileOnly").setTransitive(false);
         final Configuration jarJarConfiguration = project.getConfigurations().create("jarJar");
-        
+
         clientExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateClientCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
         
         serverExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateServerCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
@@ -193,7 +193,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> configureRun(run, runtimeDefinition)));
 
         project.getExtensions().create(net.neoforged.gradle.dsl.common.extensions.JarJar.class, JarJarExtension.EXTENSION_NAME, JarJarExtension.class, project);
-        
+
         final LauncherProfile launcherProfile = project.getExtensions().create(LauncherProfile.class, "launcherProfile", LauncherProfile.class);
         final InstallerProfile installerProfile = project.getExtensions().create("installerProfile", InstallerProfile.class);
         final UserdevProfile userdevProfile = project.getExtensions().create("userdevProfile", UserdevProfile.class, project.getObjects());
@@ -756,12 +756,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         tokenizedTask.token("MC_VERSION", runtimeDefinition.getSpecification().getMinecraftVersion());
         tokenizedTask.token("MCP_VERSION", runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormVersion());
         tokenizedTask.token("FORGE_GROUP", tokenizedTask.getProject().getGroup());
-        tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(file -> {
-            if (file.getName().startsWith("events") || file.getName().startsWith("core")) {
-                return file.getName();
-            }
-            return file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", "");
-        }).collect(Collectors.joining(",")));
+        tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("PLUGIN_LAYER_LIBRARIES", pluginLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("GAME_LAYER_LIBRARIES", gameLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("MODULES", "ALL-MODULE-PATH");
@@ -776,7 +771,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         return project.provider(() -> {
             StringBuilder ignoreList = new StringBuilder(1000);
             for (Configuration cfg : configurations) {
-                ignoreList.append(cfg.getFiles().stream().map(file -> (file.getName().startsWith("events") || file.getName().startsWith("core") ? file.getName() : file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))).collect(Collectors.joining(","))).append(",");
+                ignoreList.append(cfg.getFiles().stream().map(File::getName).collect(Collectors.joining(","))).append(",");
             }
             ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
             return ignoreList.toString();
