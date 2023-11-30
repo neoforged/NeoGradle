@@ -747,12 +747,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         tokenizedTask.token("MC_VERSION", runtimeDefinition.getSpecification().getMinecraftVersion());
         tokenizedTask.token("MCP_VERSION", runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormVersion());
         tokenizedTask.token("FORGE_GROUP", tokenizedTask.getProject().getGroup());
-        tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(file -> {
-            if (file.getName().startsWith("events") || file.getName().startsWith("core")) {
-                return file.getName();
-            }
-            return file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", "");
-        }).collect(Collectors.joining(",")));
+        tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("PLUGIN_LAYER_LIBRARIES", pluginLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("GAME_LAYER_LIBRARIES", gameLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("MODULES", "ALL-MODULE-PATH");
@@ -767,7 +762,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         return project.provider(() -> {
             StringBuilder ignoreList = new StringBuilder(1000);
             for (Configuration cfg : Arrays.asList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration)) {
-                ignoreList.append(cfg.getFiles().stream().map(file -> (file.getName().startsWith("events") || file.getName().startsWith("core") ? file.getName() : file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))).collect(Collectors.joining(","))).append(",");
+                ignoreList.append(cfg.getFiles().stream().map(File::getName).collect(Collectors.joining(","))).append(",");
             }
             ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
             return ignoreList.toString();
