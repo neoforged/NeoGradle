@@ -1,5 +1,10 @@
 package net.neoforged.gradle.common.runs.ide;
 
+import cz.nightenom.vsclaunch.BatchedLaunchWriter;
+import cz.nightenom.vsclaunch.LaunchConfiguration;
+import cz.nightenom.vsclaunch.attribute.PathLike;
+import cz.nightenom.vsclaunch.attribute.ShortCmdBehaviour;
+import cz.nightenom.vsclaunch.writer.WritingMode;
 import net.neoforged.elc.configs.GradleLaunchConfig;
 import net.neoforged.elc.configs.JavaApplicationLaunchConfig;
 import net.neoforged.elc.configs.LaunchConfig;
@@ -22,8 +27,10 @@ import org.gradle.api.Project;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.language.jvm.tasks.ProcessResources;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.gradle.plugins.ide.idea.model.IdeaProject;
@@ -98,7 +105,7 @@ public class IdeRunIntegrationManager {
                 
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
-                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl, true);
                 
                 ideaRuns.register(runName, Application.class, ideaRun -> {
                     runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
@@ -131,7 +138,7 @@ public class IdeRunIntegrationManager {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     
                     final RunImpl runImpl = (RunImpl) run;
-                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+                    final TaskProvider<?> ideBeforeRunTask = createEclipseBeforeRunTask(eclipse, project, name, run, runImpl);
                     
                     try {
                         final GradleLaunchConfig idePreRunTask = GradleLaunchConfig.builder(eclipse.getProject().getName())
@@ -173,6 +180,45 @@ public class IdeRunIntegrationManager {
             });
         }
 
+        @Override
+        public void vscode(Project project, EclipseModel eclipse)
+        {
+            ProjectUtils.afterEvaluate(project, () -> {
+                final BatchedLaunchWriter launchWriter = new BatchedLaunchWriter(WritingMode.MODIFY_CURRENT);
+                project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                    final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
+                    final RunImpl runImpl = (RunImpl) run;
+
+                    final TaskProvider<?> ideBeforeRunTask = createEclipseBeforeRunTask(eclipse, project, name, run, runImpl);
+
+                    final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
+                        .createLaunchConfiguration()
+                        .withAdditionalJvmArgs(runImpl.realiseJvmArguments())
+                        .withArguments(runImpl.getProgramArguments().get())
+                        .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
+                        .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
+                        .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)
+                        .withMainClass(runImpl.getMainClass().get())
+                        .withProjectName(project.getName())
+                        .withName(runName);
+
+                    if (IdeManagementExtension.isDefinitelyVscodeImport(project))
+                    {
+                        cfg.withPreTaskName("gradle: " + ideBeforeRunTask.getName());
+                    }
+                    else
+                    {
+                        eclipse.autoBuildTasks(ideBeforeRunTask);
+                    }
+                }));
+                try {
+                    launchWriter.writeToLatestJson(project.getRootDir().toPath());
+                } catch (final IOException e) {
+                    throw new RuntimeException("Failed to write launch files", e);
+                }
+            });
+        }
+
         private static String quoteAndJoin(List<String> args) {
             return quoteStream(args).collect(Collectors.joining(" "));
         }
@@ -192,14 +238,16 @@ public class IdeRunIntegrationManager {
             return "\"" + arg + "\"";
         }
 
-        private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
+        private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl, boolean addDefaultProcessResources) {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
                 for (SourceSet sourceSet : run.getModSources().get()) {
                     final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
                     
                     //The following tasks are not guaranteed to be in the source sets build dependencies
                     //We however need at least the classes as well as the resources of the source set to be run
-                    task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
+                    if (addDefaultProcessResources) {
+                        task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
+                    }
                     task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
                     
                     //There might be additional tasks that are needed to configure and run a source set.
@@ -216,6 +264,39 @@ public class IdeRunIntegrationManager {
                         task.dependsOn(dep);
                     });
                 });
+            }
+            
+            return ideBeforeRunTask;
+        }
+
+        private TaskProvider<?> createEclipseBeforeRunTask(EclipseModel eclipse, Project project, String name, Run run, RunImpl runImpl) {
+            final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl, false);
+            
+            for (SourceSet sourceSet : run.getModSources().get()) {
+                final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
+                
+                //The following tasks are not guaranteed to be in the source sets build dependencies
+                //We however need at least the classes as well as the resources of the source set to be run
+                final String taskName = CommonRuntimeUtils.buildTaskName("eclipse", sourceSet.getProcessResourcesTaskName());
+                final TaskProvider<?> eclipseResourcesTask;
+                
+                if (sourceSetProject.getTasks().findByName(taskName) != null)
+                {
+                    eclipseResourcesTask = sourceSetProject.getTasks().named(taskName);
+                }
+                else
+                {
+                    eclipseResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, t -> {
+                        final TaskProvider<ProcessResources> defaultProcessResources =
+                            sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
+                        t.from(defaultProcessResources.get().getDestinationDir());
+                        t.into(eclipse.getClasspath().getDefaultOutputDir().toPath().resolve(sourceSet.getName()));
+
+                        t.dependsOn(defaultProcessResources);
+                    });
+                }
+
+                eclipse.autoBuildTasks(eclipseResourcesTask);
             }
             
             return ideBeforeRunTask;
