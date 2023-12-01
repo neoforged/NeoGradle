@@ -1,7 +1,7 @@
-package net.neoforged.gradle.dsl.userdev.extension
+package net.neoforged.gradle.dsl.common.extensions
 
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyFilter
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyVersionInformationHandler
+import net.neoforged.gradle.dsl.common.dependency.DependencyFilter
+import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler
 import org.gradle.api.Action
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.publish.maven.MavenPublication

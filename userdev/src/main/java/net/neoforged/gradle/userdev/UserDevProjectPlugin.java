@@ -1,11 +1,11 @@
 package net.neoforged.gradle.userdev;
 
-import net.neoforged.gradle.dsl.userdev.extension.JarJar;
+import net.neoforged.gradle.dsl.common.extensions.JarJar;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.neoform.NeoFormPlugin;
 import net.neoforged.gradle.userdev.dependency.UserDevDependencyManager;
 import net.neoforged.gradle.userdev.extension.UserDevExtension;
-import net.neoforged.gradle.userdev.jarjar.JarJarExtension;
+import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -41,7 +41,7 @@ public class UserDevProjectPlugin implements Plugin<Project> {
 
         JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 
-        TaskProvider<net.neoforged.gradle.userdev.tasks.JarJar> jarJarTask = project.getTasks().register(JAR_JAR_TASK_NAME, net.neoforged.gradle.userdev.tasks.JarJar.class, jarJar -> {
+        TaskProvider<net.neoforged.gradle.common.tasks.JarJar> jarJarTask = project.getTasks().register(JAR_JAR_TASK_NAME, net.neoforged.gradle.common.tasks.JarJar.class, jarJar -> {
             jarJar.setGroup(JAR_JAR_GROUP);
             jarJar.setDescription("Create a combined JAR of project and selected dependencies");
             jarJar.getArchiveClassifier().convention("all");

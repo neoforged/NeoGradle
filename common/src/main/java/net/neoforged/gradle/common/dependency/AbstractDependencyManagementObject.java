@@ -1,7 +1,7 @@
-package net.neoforged.gradle.userdev.dependency;
+package net.neoforged.gradle.common.dependency;
 
 import groovy.lang.Closure;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyManagementObject;
+import net.neoforged.gradle.dsl.common.dependency.DependencyManagementObject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleDependency;

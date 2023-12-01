@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-only
  */
 
-package net.neoforged.gradle.userdev.manifest;
+package net.neoforged.gradle.common.manifest;
 
 import org.gradle.api.Action;
 import org.gradle.api.java.archives.Manifest;
