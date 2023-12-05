@@ -52,20 +52,22 @@ public class RunsUtil {
             run.getTaskDependencies().forEach(task::dependsOn);
         }));
         
-        run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(run.getModSources()));
+        run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(project, run.getModSources()));
         
         return run;
     }
     
-    public static Provider<String> buildGradleModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+    public static Provider<String> buildGradleModClasses(Project runProject, ListProperty<SourceSet> sourceSetsProperty) {
         return buildGradleModClasses(
+                runProject,
                 sourceSetsProperty,
                 sourceSet -> Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream())
         );
     }
     
-    public static Provider<String> buildRunWithIdeaModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+    public static Provider<String> buildRunWithIdeaModClasses(Project runProject, final ListProperty<SourceSet> sourceSetsProperty) {
         return buildGradleModClasses(
+                runProject,
                 sourceSetsProperty,
                 sourceSet -> {
                     final Project project = SourceSetUtils.getProject(sourceSet);
@@ -86,8 +88,9 @@ public class RunsUtil {
     }
     
     @SuppressWarnings("UnstableApiUsage")
-    public static Provider<String> buildRunWithEclipseModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+    public static Provider<String> buildRunWithEclipseModClasses(Project runProject, final ListProperty<SourceSet> sourceSetsProperty) {
         return buildGradleModClasses(
+                runProject,
                 sourceSetsProperty,
                 sourceSet -> {
                     final Project project = SourceSetUtils.getProject(sourceSet);
@@ -107,10 +110,10 @@ public class RunsUtil {
         return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "production" : sourceSet.getName();
     }
     
-    public static Provider<String> buildGradleModClasses(final ListProperty<SourceSet> sourceSetsProperty, final Function<SourceSet, Stream<File>> directoryBuilder) {
+    public static Provider<String> buildGradleModClasses(Project runProject, ListProperty<SourceSet> sourceSetsProperty, Function<SourceSet, Stream<File>> directoryBuilder) {
         return sourceSetsProperty.map(sourceSets -> {
             final Multimap<String, SourceSet> sourceSetsByRunId = HashMultimap.create();
-            sourceSets.forEach(sourceSet -> sourceSetsByRunId.put(SourceSetUtils.getModIdentifier(sourceSet), sourceSet));
+            sourceSets.forEach(sourceSet -> sourceSetsByRunId.put(SourceSetUtils.getModIdentifier(sourceSet, runProject), sourceSet));
             
             return sourceSetsByRunId.entries()
                            .stream().flatMap(entry -> directoryBuilder.apply(entry.getValue())
@@ -118,7 +121,7 @@ public class RunsUtil {
                            .collect(Collectors.joining(File.pathSeparator));
         });
     }
-    
+
     private static String createTaskName(final String runName) {
         return createTaskName("run", runName);
     }

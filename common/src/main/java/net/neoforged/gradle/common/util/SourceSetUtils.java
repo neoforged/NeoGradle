@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.util;
 
+import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
 import net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet;
 import org.gradle.api.Project;
@@ -37,12 +38,18 @@ public class SourceSetUtils {
         
         throw new IllegalStateException("Could not find project for source set " + sourceSet.getName());
     }
-    
-    public static String getModIdentifier(final SourceSet sourceSet) {
+
+    /**
+     * Gets the mod-id to use for passing this source set to FML.
+     * @param runProject If the source set isn't part of a project where the NeoGradle plugin has been applied,
+     *                   we use this project to determine the mod id instead.
+     */
+    public static String getModIdentifier(SourceSet sourceSet, Project runProject) {
         final RunnableSourceSet runnableSourceSet = sourceSet.getExtensions().findByType(RunnableSourceSet.class);
         if (runnableSourceSet != null)
             return runnableSourceSet.getModIdentifier().get();
-        
-        return getProject(sourceSet).getName();
+
+        Minecraft minecraft = runProject.getExtensions().getByType(Minecraft.class);
+        return minecraft.getModIdentifier().get();
     }
 }

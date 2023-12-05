@@ -37,7 +37,7 @@ import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -237,10 +237,10 @@ public class IdeRunIntegrationManager {
         
         private static Map<String, String> adaptEnvironment(
                 final RunImpl run,
-                final Function<ListProperty<SourceSet>, Provider<String>> modClassesProvider
+                final BiFunction<Project, ListProperty<SourceSet>, Provider<String>> modClassesProvider
                 ) {
             final Map<String, String> environment = new HashMap<>(run.getEnvironmentVariables().get());
-            environment.put("MOD_CLASSES", modClassesProvider.apply(run.getModSources()).get());
+            environment.put("MOD_CLASSES", modClassesProvider.apply(run.getProject(), run.getModSources()).get());
             return environment;
         }
     }

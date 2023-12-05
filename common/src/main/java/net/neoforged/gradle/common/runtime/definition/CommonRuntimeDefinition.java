@@ -174,7 +174,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData(run);
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
-        workingInterpolationData.put("source_roots", RunsUtil.buildGradleModClasses(run.getModSources()).get());
+        workingInterpolationData.put("source_roots", RunsUtil.buildGradleModClasses(run.getProject(), run.getModSources()).get());
 
         if (run.getIsClient().get()) {
             getVersionJson().getPlatformJvmArgs().forEach(arg -> run.getJvmArguments().add(arg));
