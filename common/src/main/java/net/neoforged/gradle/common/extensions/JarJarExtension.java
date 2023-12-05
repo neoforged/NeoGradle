@@ -1,8 +1,8 @@
-package net.neoforged.gradle.userdev.jarjar;
+package net.neoforged.gradle.common.extensions;
 
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyFilter;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyVersionInformationHandler;
-import net.neoforged.gradle.userdev.tasks.JarJar;
+import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
+import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
+import net.neoforged.gradle.common.tasks.JarJar;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -14,7 +14,7 @@ import org.gradle.api.publish.maven.MavenPublication;
 import javax.inject.Inject;
 import java.util.Optional;
 
-public class JarJarExtension implements net.neoforged.gradle.dsl.userdev.extension.JarJar {
+public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensions.JarJar {
 
     private final Attribute<String> fixedJarJarVersionAttribute = Attribute.of("fixedJarJarVersion", String.class);
     private final Attribute<String> jarJarRangeAttribute = Attribute.of("jarJarRange", String.class);

@@ -10,9 +10,11 @@ import net.minecraftforge.gdi.annotations.ProjectGetter;
 import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
+import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
+import net.neoforged.gradle.common.tasks.JarJar;
 import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.common.tasks.PotentiallySignJar;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
@@ -174,7 +176,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final Configuration moduleOnlyConfiguration = project.getConfigurations().create("moduleOnly").setTransitive(false);
         final Configuration gameLayerLibraryConfiguration = project.getConfigurations().create("gameLayerLibrary").setTransitive(false);
         final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary").setTransitive(false);
-        
+        final Configuration userdevCompileOnlyConfiguration = project.getConfigurations().create("userdevCompileOnly").setTransitive(false);
+        final Configuration jarJarConfiguration = project.getConfigurations().create("jarJar");
+
         clientExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateClientCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
         
         serverExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateServerCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
@@ -187,7 +191,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> types.configureEach(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> configureRun(run, runtimeDefinition)));
-        
+
+        project.getExtensions().create(net.neoforged.gradle.dsl.common.extensions.JarJar.class, JarJarExtension.EXTENSION_NAME, JarJarExtension.class, project);
+
         final LauncherProfile launcherProfile = project.getExtensions().create(LauncherProfile.class, "launcherProfile", LauncherProfile.class);
         final InstallerProfile installerProfile = project.getExtensions().create("installerProfile", InstallerProfile.class);
         final UserdevProfile userdevProfile = project.getExtensions().create("userdevProfile", UserdevProfile.class, project.getObjects());
@@ -279,7 +285,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 arguments.game("forgeclient");
                 
                 arguments.jvm("-Djava.net.preferIPv6Addresses=system");
-                arguments.jvm(createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project).map(ignoreList -> "-DignoreList=" + ignoreList + ",${version_name}.jar"));
+                arguments.jvm(createIgnoreList(project, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration).map(ignoreList -> "-DignoreList=" + ignoreList + ",${version_name}.jar"));
                 arguments.jvm("-DmergeModules=jna-5.10.0.jar,jna-platform-5.10.0.jar");
                 arguments.jvm(collectFileNames(pluginLayerLibraryConfiguration, project).map(pluginLayerLibraries -> "-Dfml.pluginLayerLibraries=" + pluginLayerLibraries));
                 arguments.jvm(collectFileNames(gameLayerLibraryConfiguration, project).map(gameLayerLibraries -> "-Dfml.gameLayerLibraries=" + gameLayerLibraries));
@@ -320,7 +326,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
             
-            final TaskProvider<Jar> universalJar = project.getTasks().register("universalJar", Jar.class, task -> {
+            final TaskProvider<JarJar> universalJar = project.getTasks().register("universalJar", JarJar.class, task -> {
                 task.getArchiveClassifier().set("universal-unsigned");
                 task.getArchiveAppendix().set("universal-unsigned");
                 task.getArchiveVersion().set(project.getVersion().toString());
@@ -336,6 +342,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     manifest.attributes(ImmutableMap.of("Specification-Title", "NeoForge", "Specification-Vendor", "NeoForge", "Specification-Version", project.getVersion().toString().substring(0, project.getVersion().toString().lastIndexOf(".")), "Implementation-Title", project.getGroup(), "Implementation-Version", project.getVersion(), "Implementation-Vendor", "NeoForged"), "net/neoforged/neoforge/internal/versions/neoforge/");
                     manifest.attributes(ImmutableMap.of("Specification-Title", "Minecraft", "Specification-Vendor", "Mojang", "Specification-Version", runtimeDefinition.getSpecification().getMinecraftVersion(), "Implementation-Title", "MCP", "Implementation-Version", runtimeDefinition.getSpecification().getVersion(), "Implementation-Vendor", "NeoForged"), "net/neoforged/neoforge/versions/neoform/");
                 });
+
+                task.configuration(jarJarConfiguration);
             });
             
             final TaskProvider<PotentiallySignJar> signUniversalJar = project.getTasks().register("signUniversalJar", PotentiallySignJar.class, task -> {
@@ -520,7 +528,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--assetsDir");
                 type.getArguments().add("{assets_root}");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             userdevProfile.runType("server", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -531,7 +539,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgeserveruserdev");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             userdevProfile.runType("gameTestServer", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -546,7 +554,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgeserveruserdev");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             userdevProfile.runType("data", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
@@ -561,7 +569,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getArguments().add("--assetsDir");
                 type.getArguments().add("{assets_root}");
                 
-                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project);
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             
             userdevProfile.getNeoForm().set(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString());
@@ -577,6 +585,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             final TaskProvider<CreateUserdevJson> createUserdevJson = project.getTasks().register("createUserdevJson", CreateUserdevJson.class, task -> {
                 task.getProfile().set(userdevProfile);
+                task.getLibraries().from(userdevCompileOnlyConfiguration);
                 task.getLibraries().from(installerLibrariesConfiguration);
                 task.getLibraries().from(gameLayerLibraryConfiguration);
                 task.getLibraries().from(pluginLayerLibraryConfiguration);
@@ -679,7 +688,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
         runType.getJvmArguments().addAll("-p", moduleOnlyConfiguration.getAsPath());
 
-        runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
+        runType.getSystemProperties().put("ignoreList", createIgnoreList(project, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration));
         runType.getSystemProperties().put("mergeModules", "jna-5.10.0.jar,jna-platform-5.10.0.jar");
         runType.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
         runType.getSystemProperties().put("fml.gameLayerLibraries", collectFileNames(gameLayerLibraryConfiguration, project));
@@ -747,12 +756,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         tokenizedTask.token("MC_VERSION", runtimeDefinition.getSpecification().getMinecraftVersion());
         tokenizedTask.token("MCP_VERSION", runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormVersion());
         tokenizedTask.token("FORGE_GROUP", tokenizedTask.getProject().getGroup());
-        tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(file -> {
-            if (file.getName().startsWith("events") || file.getName().startsWith("core")) {
-                return file.getName();
-            }
-            return file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", "");
-        }).collect(Collectors.joining(",")));
+        tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("PLUGIN_LAYER_LIBRARIES", pluginLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("GAME_LAYER_LIBRARIES", gameLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("MODULES", "ALL-MODULE-PATH");
@@ -763,11 +767,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     }
 
     @NotNull
-    private static Provider<String> createIgnoreList(Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
+    private static Provider<String> createIgnoreList(Project project, Configuration... configurations) {
         return project.provider(() -> {
             StringBuilder ignoreList = new StringBuilder(1000);
-            for (Configuration cfg : Arrays.asList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration)) {
-                ignoreList.append(cfg.getFiles().stream().map(file -> (file.getName().startsWith("events") || file.getName().startsWith("core") ? file.getName() : file.getName().replaceAll("([-_]([.\\d]*\\d+)|\\.jar$)", ""))).collect(Collectors.joining(","))).append(",");
+            for (Configuration cfg : configurations) {
+                ignoreList.append(cfg.getFiles().stream().map(File::getName).collect(Collectors.joining(","))).append(",");
             }
             ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
             return ignoreList.toString();
@@ -827,13 +831,13 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
     }
 
-    private void configureUserdevRunType(final RunType runType, Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Project project) {
+    private void configureUserdevRunType(final RunType runType, Configuration moduleOnlyConfiguration, Configuration gameLayerLibraryConfiguration, Configuration pluginLayerLibraryConfiguration, Configuration userdevCompileOnlyConfiguration, Project project) {
         runType.getMainClass().set("cpw.mods.bootstraplauncher.BootstrapLauncher");
 
         runType.getArguments().addAll("--gameDir", ".");
 
         runType.getSystemProperties().put("java.net.preferIPv6Addresses", "system");
-        runType.getSystemProperties().put("ignoreList", createIgnoreList(moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, project));
+        runType.getSystemProperties().put("ignoreList", createIgnoreList(project, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration));
 
         runType.getSystemProperties().put("fml.pluginLayerLibraries", collectFileNames(pluginLayerLibraryConfiguration, project));
         runType.getSystemProperties().put("fml.gameLayerLibraries", collectFileNames(gameLayerLibraryConfiguration, project));

@@ -1,8 +1,7 @@
-package net.neoforged.gradle.userdev.dependency;
+package net.neoforged.gradle.common.dependency;
 
 import com.google.common.collect.Maps;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyManagementObject;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyVersionInformationHandler;
+import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.gradle.api.Project;

@@ -1,13 +1,12 @@
-package net.neoforged.gradle.userdev.tasks;
+package net.neoforged.gradle.common.tasks;
 
-import net.minecraftforge.jarjar.metadata.*;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyFilter;
-import net.neoforged.gradle.dsl.userdev.dependency.DependencyVersionInformationHandler;
-import net.neoforged.gradle.userdev.dependency.DefaultDependencyFilter;
-import net.neoforged.gradle.userdev.dependency.DefaultDependencyVersionInformationHandler;
-import net.neoforged.gradle.userdev.jarjar.JarJarExtension;
-import net.neoforged.gradle.userdev.manifest.DefaultInheritManifest;
-import net.neoforged.gradle.userdev.manifest.InheritManifest;
+import net.neoforged.jarjar.metadata.*;
+import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
+import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
+import net.neoforged.gradle.common.dependency.DefaultDependencyFilter;
+import net.neoforged.gradle.common.dependency.DefaultDependencyVersionInformationHandler;
+import net.neoforged.gradle.common.manifest.DefaultInheritManifest;
+import net.neoforged.gradle.common.manifest.InheritManifest;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
@@ -83,7 +82,10 @@ public abstract class JarJar extends Jar {
     @TaskAction
     protected void copy() {
         this.jarJarCopySpec.from(getIncludedDependencies());
-        this.jarJarCopySpec.from(getMetadata());
+        if (!createMetadata().jars().isEmpty()) {
+            // Only copy metadata if not empty.
+            this.jarJarCopySpec.from(getJarJarMetadataPath().toFile());
+        }
         super.copy();
     }
 
@@ -222,7 +224,7 @@ public abstract class JarJar extends Jar {
         if (versionRange.isPresent()) {
             return versionRange.get();
         }
-        final Optional<String> attributeVersion = getProject().getExtensions().getByType(net.neoforged.gradle.dsl.userdev.extension.JarJar.class).getRange(dependency);
+        final Optional<String> attributeVersion = getProject().getExtensions().getByType(net.neoforged.gradle.dsl.common.extensions.JarJar.class).getRange(dependency);
 
         return attributeVersion.orElseGet(() -> Objects.requireNonNull(dependency.getVersion()));
     }
@@ -232,7 +234,7 @@ public abstract class JarJar extends Jar {
         if (version.isPresent()) {
             return version.get();
         }
-        final Optional<String> attributeVersion = getProject().getExtensions().getByType(net.neoforged.gradle.dsl.userdev.extension.JarJar.class).getPin(dependency);
+        final Optional<String> attributeVersion = getProject().getExtensions().getByType(net.neoforged.gradle.dsl.common.extensions.JarJar.class).getPin(dependency);
 
         return attributeVersion.orElseGet(() -> Objects.requireNonNull(dependency.getVersion()));
     }

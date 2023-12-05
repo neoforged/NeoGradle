@@ -1,4 +1,4 @@
-package net.neoforged.gradle.dsl.userdev.dependency
+package net.neoforged.gradle.dsl.common.dependency
 
 import groovy.transform.CompileStatic
 import org.gradle.api.artifacts.ModuleDependency

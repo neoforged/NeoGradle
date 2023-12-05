@@ -3,6 +3,7 @@ package net.neoforged.gradle.neoform.runtime.extensions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.Execute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
@@ -11,6 +12,9 @@ import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
@@ -18,7 +22,11 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.specifications.OutputSpecification;
-import net.neoforged.gradle.dsl.common.util.*;
+import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -31,6 +39,7 @@ import net.neoforged.gradle.neoform.util.NeoFormRuntimeConstants;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -43,11 +52,17 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"}) // API Design
-public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<NeoFormRuntimeSpecification, NeoFormRuntimeSpecification.Builder, NeoFormRuntimeDefinition> {
+public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<NeoFormRuntimeSpecification, NeoFormRuntimeSpecification.Builder, NeoFormRuntimeDefinition> implements ConfigurableDSLElement<NeoFormRuntimeExtension> {
 
     @javax.inject.Inject
     public NeoFormRuntimeExtension(Project project) {
@@ -67,6 +82,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
     @Nullable
     private static TaskProvider<? extends WithOutput> createBuiltIn(final NeoFormRuntimeSpecification spec, NeoFormConfigConfigurationSpecV2 neoFormConfigV2, NeoFormConfigConfigurationSpecV1.Step step, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviders, final Optional<TaskProvider<? extends WithOutput>> adaptedInput) {
         switch (step.getType()) {
+            case "decompile":
+                return createDecompile(spec, step, neoFormConfigV2);
             case "downloadManifest":
                 return gameArtifactTaskProviders.computeIfAbsent(GameArtifact.LAUNCHER_MANIFEST, a -> {
                     throw new IllegalStateException("Launcher Manifest is required for this step, but was not provided");
@@ -117,7 +134,65 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         return null;
     }
 
-    private static TaskProvider<? extends Runtime> createExecute(final NeoFormRuntimeSpecification spec, final NeoFormConfigConfigurationSpecV1.Step step, final NeoFormConfigConfigurationSpecV1.Function function) {
+    @NotNull
+    private static TaskProvider<? extends Runtime> createDecompile(NeoFormRuntimeSpecification spec, NeoFormConfigConfigurationSpecV1.Step step, NeoFormConfigConfigurationSpecV2 neoFormConfig) {
+        NeoFormConfigConfigurationSpecV1.Function function = neoFormConfig.getFunction(step.getType());
+        if (function == null) {
+            throw new IllegalArgumentException(String.format("Invalid NeoForm Config, Unknown function step type: %s File: %s", step.getType(), neoFormConfig));
+        }
+
+        // Filter out decompiler arguments that aren't related to its output (log-level and thread-count)
+        List<String> decompilerArgs = new ArrayList<>(function.getArgs());
+        decompilerArgs.removeIf(arg -> arg.startsWith("-log=") || arg.startsWith("-thr="));
+
+        // Retrieve the default memory size from the JVM arguments configured in NeoForm
+        String defaultMaxMemory = "4g";
+        List<String> jvmArgs = new ArrayList<>(function.getJvmArgs());
+        for (int i = jvmArgs.size() - 1; i >= 0; i--) {
+            if (jvmArgs.get(i).startsWith("-Xmx")) {
+                defaultMaxMemory = jvmArgs.get(i).substring("-Xmx".length());
+                jvmArgs.remove(i);
+            }
+        }
+
+        // Consider user-settings
+        Decompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
+        String maxMemory = settings.getMaxMemory().getOrElse(defaultMaxMemory);
+        int maxThreads = settings.getMaxThreads().getOrElse(0);
+        String logLevel = getDecompilerLogLevelArg(settings.getLogLevel().getOrElse(DecompilerLogLevel.INFO), function.getVersion());
+
+        if (settings.getJvmArgs().isPresent()) {
+            jvmArgs.addAll(settings.getJvmArgs().get());
+        }
+        jvmArgs.add("-Xmx" + maxMemory);
+        if (maxThreads > 0) {
+            decompilerArgs.add(0, "-thr=" + maxThreads);
+        }
+        decompilerArgs.add(0, "-log=" + logLevel);
+
+        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
+            task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
+            task.getJvmArguments().addAll(jvmArgs);
+            task.getProgramArguments().addAll(decompilerArgs);
+        });
+    }
+
+    private static String getDecompilerLogLevelArg(DecompilerLogLevel logLevel, String version) {
+        switch (logLevel) {
+            case TRACE:
+                return "trace";
+            case INFO:
+                return "info";
+            case WARN:
+                return "warn";
+            case ERROR:
+                return "error";
+            default:
+                throw new GradleException("LogLevel " + logLevel + " not supported by " + version);
+        }
+    }
+
+    private TaskProvider<? extends Runtime> createExecute(final NeoFormRuntimeSpecification spec, final NeoFormConfigConfigurationSpecV1.Step step, final NeoFormConfigConfigurationSpecV1.Function function) {
         return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
             task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
             task.getJvmArguments().addAll(function.getJvmArgs());

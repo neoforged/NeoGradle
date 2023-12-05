@@ -22,6 +22,8 @@ dependencies {
     api "commons-codec:commons-codec:${project.commons_codec_version}"
     api "net.neoforged:EclipseLaunchConfigs:${project.eclipse_launch_configs_version}"
     api "cz.nightenom:vsc-launch-writer:${project.vscode_launch_configs_version}"
+    api "net.neoforged:JarJarMetadata:${project.jarjar_version}"
+    api "net.neoforged:JarJarSelector:${project.jarjar_version}"
 
     // IDE support
     api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
