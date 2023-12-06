@@ -9,6 +9,7 @@ import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
@@ -45,9 +46,7 @@ public class RunsUtil {
         });
         
         project.afterEvaluate(evaluatedProject -> runTask.configure(task -> {
-            task.getRun().get().getModSources().get().stream().map(SourceSet::getClassesTaskName)
-                    .map(classTaskName -> evaluatedProject.getTasks().named(classTaskName))
-                    .forEach(task::dependsOn);
+            addRunSourcesDependenciesToTask(task, run);
             
             run.getTaskDependencies().forEach(task::dependsOn);
         }));
@@ -55,6 +54,22 @@ public class RunsUtil {
         run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(run.getModSources()));
         
         return run;
+    }
+
+    public static void addRunSourcesDependenciesToTask(Task task, Run run) {
+        for (SourceSet sourceSet : run.getModSources().get()) {
+            final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
+
+            //The following tasks are not guaranteed to be in the source sets build dependencies
+            //We however need at least the classes as well as the resources of the source set to be run
+            task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
+            task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
+
+            //There might be additional tasks that are needed to configure and run a source set.
+            //Also run those
+            sourceSet.getOutput().getBuildDependencies().getDependencies(null)
+                    .forEach(task::dependsOn);
+        }
     }
     
     public static Provider<String> buildGradleModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
