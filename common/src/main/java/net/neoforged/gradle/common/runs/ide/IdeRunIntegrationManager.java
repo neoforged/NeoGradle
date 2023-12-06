@@ -94,11 +94,12 @@ public class IdeRunIntegrationManager {
             final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
             
             project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
-                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(name.replace(" ", "-")));
+                final String nameWithoutSpaces = name.replace(" ", "-");
+                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
                 
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
-                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
                 
                 ideaRuns.register(runName, Application.class, ideaRun -> {
                     runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
