@@ -92,6 +92,7 @@ public final class FileDownloadingUtils {
             }
 
             // Always download to a temp-file to avoid partially downloaded files persisting a VM crash/shutdown
+            Files.createDirectories(target.getParent());
             Path tempFile = Files.createTempFile(target.getParent(), target.getFileName().toString(), ".download");
 
             try {
