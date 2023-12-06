@@ -56,7 +56,9 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
     
     protected void downloadJsonTo(String url) {
         final File output = getOutput().get().getAsFile();
-        FileDownloadingUtils.downloadThrowing(getIsOffline().get(), new FileDownloadingUtils.DownloadInfo(url, null, "json", null, null), output);
+        FileDownloadingUtils.DownloadInfo info = new FileDownloadingUtils.DownloadInfo(url, null, "json", null, null);
+        boolean didWork = FileDownloadingUtils.downloadThrowing(getIsOffline().get(), info, output);
+        setDidWork(didWork);
     }
     
     protected void doDownloadVersionDownloadToCache(final String artifact, final String potentialError, File versionManifest) {
