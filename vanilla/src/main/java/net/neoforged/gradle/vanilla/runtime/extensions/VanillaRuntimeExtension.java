@@ -29,7 +29,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -75,7 +75,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final VersionJson versionJson;
         try {
             versionJson = VersionJson.get(gameArtifacts.get(GameArtifact.VERSION_MANIFEST));
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
         }
 

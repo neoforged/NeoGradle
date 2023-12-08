@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -274,7 +274,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final VersionJson versionJson;
         try {
             versionJson = VersionJson.get(gameArtifacts.get(GameArtifact.VERSION_MANIFEST));
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
         }
 

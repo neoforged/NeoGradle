@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
             .setPrettyPrinting().create();
 
     public static NeoFormConfigConfigurationSpecV1 get(InputStream stream) {
-        return GSON.fromJson(new InputStreamReader(stream), NeoFormConfigConfigurationSpecV1.class);
+        return GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), NeoFormConfigConfigurationSpecV1.class);
     }
     public static NeoFormConfigConfigurationSpecV1 get(byte[] data) {
         return get(new ByteArrayInputStream(data));

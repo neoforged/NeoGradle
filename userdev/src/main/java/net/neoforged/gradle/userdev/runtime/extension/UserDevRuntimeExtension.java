@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
-import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
@@ -34,15 +33,12 @@ import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<UserDevRuntimeSpecification, UserDevRuntimeSpecification.Builder, UserDevRuntimeDefinition> {
     
@@ -72,8 +68,8 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final File userDevConfigFile = new File(unpackedForgeDirectory, "config.json");
         final Gson userdevGson = UserdevProfile.createGson(getProject().getObjects());
         final UserdevProfile userDevConfigurationSpec;
-        try(final FileInputStream fileInputStream = new FileInputStream(userDevConfigFile)) {
-            userDevConfigurationSpec = userdevGson.fromJson(new InputStreamReader(fileInputStream), UserdevProfile.class);
+        try (final FileInputStream fileInputStream = new FileInputStream(userDevConfigFile)) {
+            userDevConfigurationSpec = userdevGson.fromJson(new InputStreamReader(fileInputStream, StandardCharsets.UTF_8), UserdevProfile.class);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

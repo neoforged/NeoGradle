@@ -100,13 +100,7 @@ public final class FileDownloadingUtils {
                     Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
                 }
 
-                try {
-                    Files.move(tempFile, target, StandardCopyOption.ATOMIC_MOVE);
-                } catch (AtomicMoveNotSupportedException e) {
-                    // Atomic moves within the same directory should have worked.
-                    // We fall back to the inferior normal move. We should log this issue, but there is no logger here.
-                    Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING);
-                }
+                move(target, tempFile);
 
                 if (urlConnection.getLastModified() != 0) {
                     Files.setLastModifiedTime(target, FileTime.fromMillis(urlConnection.getLastModified()));
@@ -118,6 +112,33 @@ public final class FileDownloadingUtils {
             }
         } finally {
             urlConnection.disconnect();
+        }
+    }
+
+    private static void move(Path target, Path tempFile) throws IOException {
+        int tries = 0;
+        while (true) {
+            tries++;
+            try {
+                try {
+                    Files.move(tempFile, target, StandardCopyOption.ATOMIC_MOVE);
+                } catch (AtomicMoveNotSupportedException e) {
+                    // Atomic moves within the same directory should have worked.
+                    // We fall back to the inferior normal move. We should log this issue, but there is no logger here.
+                    Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+                break;
+            } catch (IOException e) {
+                if (tries >= 5) {
+                    throw e;
+                }
+                // Wait a bit to give whatever concurrent process has it locked to unlock...
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 

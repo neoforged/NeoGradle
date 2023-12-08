@@ -27,6 +27,7 @@ import net.neoforged.gradle.dsl.common.util.Artifact;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -42,19 +43,21 @@ public class VersionJson implements Serializable {
             .setPrettyPrinting().create();
 
 
-    public static VersionJson get(Path path) throws FileNotFoundException {
+    public static VersionJson get(Path path) throws IOException {
         return get(path.toFile());
     }
 
-    public static VersionJson get(@Nullable File file) throws FileNotFoundException {
+    public static VersionJson get(@Nullable File file) throws IOException {
         if (file == null) {
             throw new IllegalArgumentException("VersionJson File can not be null!");
         }
-        return get(new FileInputStream(file));
+        try (InputStream in = new FileInputStream(file)) {
+            return get(in);
+        }
     }
 
     public static VersionJson get(InputStream stream) {
-        return GSON.fromJson(new InputStreamReader(stream), VersionJson.class);
+        return GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), VersionJson.class);
     }
 
     private String id;
