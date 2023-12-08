@@ -1,12 +1,12 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.neoforged.gradle.common.CommonProjectPlugin;
 import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.FileCacheUtils;
+import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.util.HashFunction;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.file.DirectoryProperty;
@@ -94,12 +94,9 @@ public abstract class ListLibraries extends DefaultRuntime {
         return FileList.read(bundleFs.getPath("META-INF", "libraries.list")).entries;
     }
     
-    private Set<PathAndUrl> listDownloadJsonLibraries() throws IOException {
-        Gson gson = new Gson();
-        Reader reader = new FileReader(getDownloadedVersionJsonFile().getAsFile().get());
-        JsonObject json = gson.fromJson(reader, JsonObject.class);
-        reader.close();
-        
+    private Set<PathAndUrl> listDownloadJsonLibraries() {
+        JsonObject json = SerializationUtils.fromJson(getDownloadedVersionJsonFile().getAsFile().get(), JsonObject.class);
+
         // Gather all the libraries
         Set<PathAndUrl> artifacts = new HashSet<>();
         for (JsonElement libElement : json.getAsJsonArray("libraries")) {

@@ -1,9 +1,8 @@
 package net.neoforged.gradle.common.tasks;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
+import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
@@ -16,10 +15,7 @@ import org.gradle.api.tasks.*;
 import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
-import java.util.Objects;
 
 @DisableCachingByDefault(because = "This is an abstract underlying task which provides defaults and systems for caching game artifacts.")
 public abstract class FileCacheProviding extends NeoGradleBase implements WithOutput, WithWorkspace {
@@ -62,48 +58,27 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
     }
     
     protected void doDownloadVersionDownloadToCache(final String artifact, final String potentialError, File versionManifest) {
-        try(final Reader reader = new FileReader(versionManifest)) {
-            final File output = getOutput().get().getAsFile();
-            
-            final Gson gson = new Gson();
-            final JsonObject json = gson.fromJson(reader, JsonObject.class);
+        JsonObject json = SerializationUtils.fromJson(versionManifest, JsonObject.class);
 
-            final JsonObject artifactInfo = json.getAsJsonObject("downloads").getAsJsonObject(artifact);
-            final String url = artifactInfo.get("url").getAsString();
-            final String hash = artifactInfo.get("sha1").getAsString();
-            final String version = json.getAsJsonObject().get("id").getAsString();
-            
-            final FileDownloadingUtils.DownloadInfo info = new FileDownloadingUtils.DownloadInfo(url, hash, "jar", version, artifact);
-            
+        final JsonObject artifactInfo = json.getAsJsonObject("downloads").getAsJsonObject(artifact);
+        final String url = artifactInfo.get("url").getAsString();
+        final String hash = artifactInfo.get("sha1").getAsString();
+        final String version = json.getAsJsonObject().get("id").getAsString();
+
+        final FileDownloadingUtils.DownloadInfo info = new FileDownloadingUtils.DownloadInfo(url, hash, "jar", version, artifact);
+
+        final File output = getOutput().get().getAsFile();
+        try {
             if (output.exists()) {
                 final String fileHash = HashFunction.SHA1.hash(output);
                 if (fileHash.equals(hash)) {
                     return;
                 }
             }
-            
+
             FileDownloadingUtils.downloadTo(getIsOffline().get(), info, output);
         } catch (IOException e) {
             throw new RuntimeException(potentialError, e);
         }
-    }
-    
-    protected static String resolveVersion(final String gameVersion, final File launcherMetadata) {
-        if (!Objects.equals(gameVersion, "+"))
-            return gameVersion;
-        
-        Gson gson = new Gson();
-        try(final Reader reader = new FileReader(launcherMetadata)) {
-            JsonObject json = gson.fromJson(reader, JsonObject.class);
-            
-            for (JsonElement e : json.getAsJsonArray("versions")) {
-                return e.getAsJsonObject().get("id").getAsString();
-            }
-            
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read the launcher manifest", e);
-        }
-        
-        throw new IllegalStateException("Could not find the correct version json.");
     }
 }

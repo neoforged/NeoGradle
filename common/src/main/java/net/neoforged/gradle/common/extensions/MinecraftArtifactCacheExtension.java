@@ -1,7 +1,6 @@
 package net.neoforged.gradle.common.extensions;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
@@ -10,6 +9,7 @@ import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvid
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
 import net.neoforged.gradle.common.util.MinecraftArtifactType;
+import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
@@ -24,9 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URL;
 import java.util.EnumMap;
 import java.util.Map;
@@ -177,21 +175,16 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     private File downloadVersionManifestToCache(Project project, final File cacheDirectory, final String minecraftVersion) {
         final File manifestFile = new File(new File(cacheDirectory, CacheFileSelector.launcherMetadata().getCacheDirectory()), CacheFileSelector.launcherMetadata().getCacheFileName());
 
-        Gson gson = new Gson();
         String url = null;
-        try(final Reader reader = new FileReader(manifestFile)) {
-            JsonObject json = gson.fromJson(reader, JsonObject.class);
 
-            for (JsonElement e : json.getAsJsonArray("versions")) {
-                String v = e.getAsJsonObject().get("id").getAsString();
-                if (Objects.equals(minecraftVersion, "+") || v.equals(minecraftVersion)) {
-                    url = e.getAsJsonObject().get("url").getAsString();
-                    break;
-                }
+        JsonObject json = SerializationUtils.fromJson(manifestFile, JsonObject.class);
+
+        for (JsonElement e : json.getAsJsonArray("versions")) {
+            String v = e.getAsJsonObject().get("id").getAsString();
+            if (Objects.equals(minecraftVersion, "+") || v.equals(minecraftVersion)) {
+                url = e.getAsJsonObject().get("url").getAsString();
+                break;
             }
-
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read the launcher manifest", e);
         }
 
         if (url == null) {
@@ -229,10 +222,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
         final File versionManifestFile = this.cacheVersionManifest(minecraftVersion);
 
         try {
-            Gson gson = new Gson();
-            Reader reader = new FileReader(versionManifestFile);
-            JsonObject json = gson.fromJson(reader, JsonObject.class);
-            reader.close();
+            JsonObject json = SerializationUtils.fromJson(versionManifestFile, JsonObject.class);
 
             JsonObject artifactInfo = json.getAsJsonObject("downloads").getAsJsonObject(artifact);
             String url = artifactInfo.get("url").getAsString();
@@ -274,17 +264,10 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
         final File launcherMetadata = this.cacheLauncherMetadata();
 
-        Gson gson = new Gson();
-        String url = null;
-        try(final Reader reader = new FileReader(launcherMetadata)) {
-            JsonObject json = gson.fromJson(reader, JsonObject.class);
+        JsonObject json = SerializationUtils.fromJson(launcherMetadata, JsonObject.class);
 
-            for (JsonElement e : json.getAsJsonArray("versions")) {
-                return e.getAsJsonObject().get("id").getAsString();
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read the launcher manifest", e);
+        for (JsonElement e : json.getAsJsonArray("versions")) {
+            return e.getAsJsonObject().get("id").getAsString();
         }
 
         throw new IllegalStateException("Could not find the correct version json.");

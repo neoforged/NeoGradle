@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class VersionedConfiguration {
 
@@ -35,7 +36,7 @@ public class VersionedConfiguration {
     public int spec = 1;
 
     public static int getSpec(InputStream stream) throws IOException {
-        return GSON.fromJson(new InputStreamReader(stream), VersionedConfiguration.class).spec;
+        return GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), VersionedConfiguration.class).spec;
     }
     public static int getSpec(byte[] data) throws IOException {
         return getSpec(new ByteArrayInputStream(data));
