@@ -5,6 +5,7 @@ import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.file.RelativePath;
 
 import java.io.File;
+import java.io.FilePermission;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.ZipEntry;

@@ -20,20 +20,24 @@
 
 package net.neoforged.gradle.common.runtime.naming.tasks;
 
+import com.google.common.collect.Lists;
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CacheKey;
+import net.neoforged.gradle.common.caching.SharedCacheService;
 import net.neoforged.gradle.util.FileUtils;
 import net.neoforged.gradle.common.runtime.naming.renamer.ISourceRenamer;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
-import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 
@@ -46,30 +50,49 @@ public abstract class ApplyMappingsToSourceJar extends DefaultRuntime {
 
     @TaskAction
     public void apply() throws Exception {
+        File inputFile = getInput().get().getAsFile();
+        File outputFile = getOutput().get().getAsFile();
+        boolean remapJavadocs = getRemapJavadocs().getOrElse(false);
+        boolean remapLambdas = getRemapLambdas().getOrElse(true);
         final ISourceRenamer renamer = getSourceRenamer().get();
-        try (ZipFile zin = new ZipFile(getInput().get().getAsFile())) {
-            try (FileOutputStream fos = new FileOutputStream(getOutput().get().getAsFile());
-                 ZipOutputStream out = new ZipOutputStream(fos)) {
 
-                final Enumeration<? extends ZipEntry> entries = zin.entries();
-                while(entries.hasMoreElements()) {
-                    final ZipEntry entry = entries.nextElement();
-                    out.putNextEntry(FileUtils.getStableEntry(entry.getName()));
+        // TODO: This is not safe since we do not account for code-changes to ISourceRenamer
+        SharedCacheService cacheService = getSharedCacheService().get();
+        CacheKey cacheKey = cacheService.cacheKeyBuilder(getProject())
+                .cacheDomain(getStepName().get())
+                .arguments(Lists.newArrayList("javadocs:" + remapJavadocs, "lambdas:" + remapLambdas))
+                .inputFiles(getInputs().getFiles().getFiles())
+                .build();
+
+        boolean usedCache = cacheService.cacheOutput(getProject(), cacheKey, outputFile.toPath(), () -> {
+            try (ZipInputStream zin = new ZipInputStream(new FileInputStream(inputFile));
+                 FileOutputStream fos = new FileOutputStream(outputFile);
+                 ZipOutputStream zout = new ZipOutputStream(fos)) {
+
+                ZipEntry entry;
+                while ((entry = zin.getNextEntry()) != null) {
+                    zout.putNextEntry(FileUtils.getStableEntry(entry.getName()));
                     if (!entry.getName().endsWith(".java")) {
-                        IOUtils.copy(zin.getInputStream(entry), out);
+                        IOUtils.copyLarge(zin, zout);
                     } else {
-                        final InputStream inputStream = zin.getInputStream(entry);
-                        final byte[] toRemap = IOUtils.toByteArray(inputStream);
-                        inputStream.close();
-                        out.write(renamer.rename(toRemap, getRemapJavadocs().getOrElse(false), getRemapLambdas().getOrElse(true)));
+                        // If the uncompressed size is known, use it to read the data more efficiently
+                        byte[] toRemap = entry.getSize() >= 0 ? IOUtils.toByteArray(zin, entry.getSize()) : IOUtils.toByteArray(zin);
+                        zout.write(renamer.rename(toRemap, remapJavadocs, remapLambdas));
                     }
-                    out.closeEntry();
+                    zout.closeEntry();
                 }
             }
-        }
 
-        getLogger().debug("Applying mappings to source jar complete");
+            getLogger().debug("Applying mappings to source jar complete");
+        });
+
+        if (usedCache) {
+            setDidWork(false);
+        }
     }
+
+    @ServiceReference(CommonProjectPlugin.NEOFORM_CACHE_SERVICE)
+    protected abstract Property<SharedCacheService> getSharedCacheService();
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)

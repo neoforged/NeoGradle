@@ -8,6 +8,19 @@ our official [Documentation](https://docs.neoforged.net/neogradle/docs/).
 
 To see the latest available version of NeoGradle, visit the [NeoForged project page](https://projects.neoforged.net/neoforged/neogradle).
 
+## Configuring Shared NeoForm Cache
+
+NeoForm is the toolkit used to provide a Minecraft JAR-File suitable for compiling your mod against.
+Since this is a rather resource-intensive task, the intermediary steps and final result of that
+process can be cached outside the project folder.
+
+The settings of this caching subsystem can be changed using [Gradle properties](https://docs.gradle.org/current/userguide/project_properties.html).
+
+| Property                                           | Description                                                                                                                                                                                     |
+|----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `neogradle.subsystems.neoFormCache.enabled`        | Can be used to fully disable the caching by setting this to `false`. The default is `true`.                                                                                                     |
+| `neogradle.subsystems.neoFormCache.CacheDirectory` | The path to a directory where the cache is stored. Defaults to `${GRADLE_USER_HOME}/caches/neoForm` (see [Gradle Directories](https://docs.gradle.org/current/userguide/directory_layout.html)) |
+
 ## Override Decompiler Settings
 
 The settings used by the decompiler when preparing Minecraft dependencies can be overridden

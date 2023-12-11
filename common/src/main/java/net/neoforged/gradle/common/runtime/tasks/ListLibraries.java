@@ -62,14 +62,19 @@ public abstract class ListLibraries extends DefaultRuntime {
             } else {
                 libraries = unpackAndListBundleLibraries(bundleFs);
             }
+
+            // Make it an ordered list to make this task idempotent
+            List<String> orderedLibraries = libraries.stream()
+                    .map(File::getAbsolutePath)
+                    .sorted()
+                    .collect(Collectors.toList());
             
             // Write the list
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8));
-            for (File file : libraries) {
-                writer.println("-e=" + file.getAbsolutePath());
+            try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8))) {
+                for (String library : orderedLibraries) {
+                    writer.println("-e=" + library);
+                }
             }
-            writer.flush();
-            writer.close();
         }
     }
     

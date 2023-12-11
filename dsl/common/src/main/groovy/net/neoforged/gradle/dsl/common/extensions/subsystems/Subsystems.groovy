@@ -25,4 +25,11 @@ interface Subsystems extends BaseDSLElement<Subsystems> {
     @DSLProperty
     Recompiler getRecompiler();
 
+    /**
+     * @return settings for the neoform caching subsystem
+     */
+    @Nested
+    @DSLProperty
+    NeoFormCache getNeoFormCache();
+
 }

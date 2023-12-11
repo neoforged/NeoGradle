@@ -94,43 +94,4 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         }) as Provider<List<String>>
     }
 
-    @TaskAction
-    default void execute() throws Throwable {
-        final Provider<List<String>> jvmArgs = applyVariableSubstitutions(getJvmArguments())
-        final Provider<List<String>> programArgs = applyVariableSubstitutions(getRuntimeProgramArguments())
-
-        final File outputFile = ensureFileWorkspaceReady(getOutput())
-        final File logFile = ensureFileWorkspaceReady(getLogFile())
-        final File consoleLogFile = ensureFileWorkspaceReady(getConsoleLogFile().get())
-
-        final Provider<String> mainClass = getMainClass()
-        final Provider<String> executable = getExecutablePath()
-
-        final Execute me = this
-
-        try (BufferedOutputStream log_out = new BufferedOutputStream(new FileOutputStream(consoleLogFile))) {
-            getExecuteOperation().javaexec({ JavaExecSpec java ->
-                PrintWriter writer = new PrintWriter(log_out)
-                Function<String, CharSequence> quote = s -> (CharSequence)('"' + s + '"')
-                writer.println("JVM Args:          " + jvmArgs.get().stream().map(quote).collect(Collectors.joining(", ")))
-                writer.println("Run Args:          " + programArgs.get().stream().map(quote).collect(Collectors.joining(", ")))
-                writer.println("JVM:               " + executable.get())
-                writer.println("Classpath:         " + me.getExecutingJar().get().getAsFile().getAbsolutePath())
-                writer.println("Working Dir:       " + me.getOutputDirectory().get().getAsFile().getAbsolutePath())
-                writer.println("Main Class:        " + mainClass.get())
-                writer.println("Program log file:  " + logFile.getAbsolutePath())
-                writer.println("Output file:       " + outputFile.getAbsolutePath())
-                writer.flush()
-
-                java.executable(executable.get())
-                java.setJvmArgs(jvmArgs.get())
-                java.setArgs(programArgs.get())
-                java.setClasspath(me.getObjectFactory().fileCollection().from(me.getExecutingJar().get()))
-                java.setWorkingDir(me.getOutputDirectory().get())
-                java.getMainClass().set(mainClass)
-                java.setStandardOutput(log_out)
-            }).rethrowFailure().assertNormalExitValue()
-        }
-    }
-
 }

@@ -32,7 +32,8 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         }
 
         when:
-        def run = project.run { it.tasks(':neoFormApplyOfficialMappings') }
+        def run = project.run { it.tasks(':neoFormApplyOfficialMappings').arguments("-s")
+        }
 
         then:
         run.task(':neoFormApplyOfficialMappings').outcome == TaskOutcome.SUCCESS
@@ -73,7 +74,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         }
 
         when:
-        def run = project.run { it.tasks('build') }
+        def run = project.run { it.tasks('build').arguments("-s") }
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
@@ -112,14 +113,15 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         }
 
         when:
-        def run = project.run { it.tasks('build').arguments('--build-cache') }
+        def run = project.run { it.tasks('build').arguments('--build-cache').arguments("-s")
+        }
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
 
         when:
         new File(project.getProjectDir(), 'build').deleteDir()
-        def secondRun = project.run {it.tasks('build').arguments('--build-cache') }
+        def secondRun = project.run {it.tasks('build').arguments('--build-cache').arguments("-s") }
 
         then:
         secondRun.task(':build').outcome == TaskOutcome.SUCCESS

@@ -5,32 +5,42 @@ import de.siegmar.fastcsv.writer.CsvWriter;
 import de.siegmar.fastcsv.writer.LineDelimiter;
 import org.apache.commons.io.file.DeletingPathVisitor;
 import org.gradle.api.Action;
+import org.gradle.api.GradleException;
 import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.FileVisitor;
 import org.gradle.api.tasks.util.PatternFilterable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Enumeration;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 /**
  * A utility class for file operations.
  */
 public final class FileUtils {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FileUtils.class);
 
     /**
      * The maximum number of tries that the system will try to atomically move a file.
@@ -85,7 +95,7 @@ public final class FileUtils {
      * Creates a path targeting a temporary file with the given key.
      *
      * @param parent The parent directory of the temporary file
-     * @param key The key of the temporary file
+     * @param key    The key of the temporary file
      * @return The path to the temporary file
      * @throws IOException If an I/O error occurs
      */
@@ -96,49 +106,94 @@ public final class FileUtils {
     /**
      * Atomically moves the given source file to the given destination file.
      *
-     * @param source The source file
+     * @param source      The source file
      * @param destination The destination file
      * @throws IOException If an I/O error occurs
      */
     @SuppressWarnings("BusyWait")
     public static void atomicMove(Path source, Path destination) throws IOException {
-        try {
-            FileUtils.atomicMoveIfPossible(source, destination);
-        } catch (final AccessDeniedException ex) {
-            // Sometimes because of file locking this will fail... Let's just try again and hope for the best
-            // Thanks Windows!
-            for (int tries = 0; true; ++tries) {
-                // Pause for a bit
+        int tries = 0;
+        while (true) {
+            tries++;
+            try {
                 try {
-                    Thread.sleep(10L * tries);
-                    FileUtils.atomicMoveIfPossible(source, destination);
-                    return;
-                } catch (final AccessDeniedException ex2) {
-                    if (tries == FileUtils.MAX_TRIES - 1) {
-                        throw ex;
-                    }
-                } catch (final InterruptedException exInterrupt) {
+                    Files.move(source, destination, StandardCopyOption.ATOMIC_MOVE);
+                } catch (IOException e) {
+                    LOG.warn("Atomic move of {} to {} failed, falling back to normal move: {}",
+                            source, destination, e.toString());
+                    // According to the spec, file-systems may throw IOExceptions if it does not support replacing
+                    // existing files with atomic moves, so we need to catch IOExceptions in general.
+                    Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                }
+                break;
+            } catch (AccessDeniedException e) {
+                // Handle the case on windows, where another process may have the target locked
+                if (tries >= MAX_TRIES) {
+                    throw e;
+                }
+                // Wait a bit to give whatever concurrent process has it locked time to unlock...
+                try {
+                    Thread.sleep(10000L);
+                } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
-                    throw ex;
+                    throw e;
                 }
             }
         }
     }
 
     /**
-     * Atomically moves the given source file to the given destination file.
-     * If the atomic move is not supported, the file will be moved normally.
+     * Tries to atomically copy the given source file to the given destination file by using a temporary
+     * file in the destination path that is then renamed.
      *
-     * @param source The source file
+     * @param source      The source file
      * @param destination The destination file
      * @throws IOException If an I/O error occurs
      */
-    private static void atomicMoveIfPossible(final Path source, final Path destination) throws IOException {
+    public static void atomicCopy(Path source, Path destination) throws IOException {
+        Path destinationDir = getAndCreateParentDirectory(destination);
+
+        Path copyTempFile = Files.createTempFile(destinationDir, destination.getFileName().toString(), ".copy");
         try {
-            Files.move(source, destination, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-        } catch (final AtomicMoveNotSupportedException ex) {
-            Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(source, copyTempFile, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+            FileUtils.atomicMove(copyTempFile, destination);
+        } finally {
+            Files.deleteIfExists(copyTempFile);
         }
+    }
+
+    /**
+     * Tries to atomically copy the given input stream to the given destination file by using a temporary
+     * file in the destination path that is then renamed.
+     *
+     * @param source      The source file
+     * @param destination The destination file
+     * @throws IOException If an I/O error occurs
+     */
+    public static void atomicCopy(InputStream source, Path destination) throws IOException {
+        Path destinationDir = getAndCreateParentDirectory(destination);
+
+        Path copyTempFile = Files.createTempFile(destinationDir, destination.getFileName().toString(), ".copy");
+        try {
+            Files.copy(source, copyTempFile, StandardCopyOption.REPLACE_EXISTING);
+            FileUtils.atomicMove(copyTempFile, destination);
+        } finally {
+            Files.deleteIfExists(copyTempFile);
+        }
+    }
+
+    private static Path getAndCreateParentDirectory(Path path) throws IOException {
+        // We need to be able to get a parent directory
+        if (path.getParent() == null) {
+            path = path.toAbsolutePath();
+            if (path.getParent() == null) {
+                throw new IllegalArgumentException("Cannot determine parent directory of " + path);
+            }
+        }
+
+        Path parentDir = path.getParent();
+        Files.createDirectories(parentDir);
+        return parentDir;
     }
 
     /**
@@ -155,13 +210,13 @@ public final class FileUtils {
      * Performs a complex zip extraction from the input zip file to the output directory.
      *
      * @param archiveOperations The archive operations
-     * @param input The input zip file
-     * @param output The output directory
-     * @param overrideExisting Whether to override existing files
-     * @param clean Whether to clean the output directory
-     * @param filter The filter to apply to the zip file
-     * @param renamer The renamer to apply to the zip file
-     * @param loggerWrapper The progress logger wrapper
+     * @param input             The input zip file
+     * @param output            The output directory
+     * @param overrideExisting  Whether to override existing files
+     * @param clean             Whether to clean the output directory
+     * @param filter            The filter to apply to the zip file
+     * @param renamer           The renamer to apply to the zip file
+     * @param loggerWrapper     The progress logger wrapper
      * @throws IOException If an I/O error occurs
      * @implNote This method does not use the {@link CopyingFileTreeVisitor} since it has some special functions.
      */
@@ -217,9 +272,9 @@ public final class FileUtils {
      * Creates a csv file with the given lines in a zip file via the given zip output stream.
      * If no lines are supplied, the csv file will not be created.
      *
-     * @param name The name of the csv file
+     * @param name     The name of the csv file
      * @param mappings The lines of the csv file
-     * @param out The zip output stream
+     * @param out      The zip output stream
      * @throws IOException If an I/O error occurs
      */
     public static void addCsvToZip(String name, List<String[]> mappings, ZipOutputStream out) throws IOException {
@@ -282,7 +337,7 @@ public final class FileUtils {
             Files.deleteIfExists(file);
         }
     }
-    
+
     public static String postFixClassifier(final File file, final String classifier) {
         final String name = file.getName();
         final int dotIndex = name.lastIndexOf('.');
@@ -290,5 +345,29 @@ public final class FileUtils {
             return name + "-" + classifier;
         }
         return name.substring(0, dotIndex) + "-" + classifier + name.substring(dotIndex);
+    }
+
+    /**
+     * Asserts that a given file exists, and is a ZIP-file that contains at least one file.
+     */
+    public static void assertNonEmptyZipFile(File f) {
+        try (ZipFile zf = new ZipFile(f)) {
+            Enumeration<? extends ZipEntry> entries = zf.entries();
+            boolean foundFile = false;
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = entries.nextElement();
+                if (!zipEntry.isDirectory()) {
+                    foundFile = true;
+                    break;
+                }
+            }
+            if (!foundFile) {
+                throw new GradleException(f + " is a ZIP-file, but contains no files.");
+            }
+        } catch (ZipException e) {
+            throw new GradleException("Expected file " + f + " to be a ZIP-file, but it was not.", e);
+        } catch (IOException e) {
+            throw new GradleException("I/O error while validating that " + f + " is a ZIP-file.", e);
+        }
     }
 }

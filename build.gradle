@@ -218,5 +218,14 @@ subprojects.forEach { subProject ->
                 project.changelog.publish publication
             }
         }
+
+        evalSubProject.tasks.withType(org.gradle.api.publish.maven.tasks.AbstractPublishToMaven).configureEach { task ->
+            doLast {
+                if (task.state.didWork) {
+                    MavenPublication publication = task.publication
+                    println("Published ${publication.groupId}:${publication.artifactId}:${publication.version}")
+                }
+            }
+        }
     }
 }

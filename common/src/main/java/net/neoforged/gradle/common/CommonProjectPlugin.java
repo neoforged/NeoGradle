@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common;
 
 import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.caching.SharedCacheService;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
@@ -21,6 +22,7 @@ import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.NeoFormCache;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
@@ -42,10 +44,11 @@ import java.util.Optional;
 import java.util.Set;
 
 public class CommonProjectPlugin implements Plugin<Project> {
-    
+
     public static final String ASSETS_SERVICE = "ng_assets";
     public static final String LIBRARIES_SERVICE = "ng_libraries";
-    
+    public static final String NEOFORM_CACHE_SERVICE = "ng_neoform_cache";
+
     @Override
     public void apply(Project project) {
         //Apply the evaluation extension to monitor immediate execution of indirect tasks when evaluation already happened.
@@ -57,11 +60,11 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(IdeaPlugin.class);
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
-        
+
         //Register the assets service
         CentralCacheService.register(project, ASSETS_SERVICE, FileCacheUtils.getAssetsCacheDirectory(project));
         CentralCacheService.register(project, LIBRARIES_SERVICE, FileCacheUtils.getLibrariesCacheDirectory(project));
-        
+
         project.getExtensions().create("allRuntimes", RuntimesExtension.class);
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
@@ -78,6 +81,13 @@ public class CommonProjectPlugin implements Plugin<Project> {
         extensionManager.registerExtension("mappings", Mappings.class, (p) -> p.getObjects().newInstance(MappingsExtension.class, p));
         extensionManager.registerExtension("subsystems", Subsystems.class, (p) -> p.getObjects().newInstance(SubsystemsExtension.class, p));
 
+        // The shared cache can only be registered after the subsystems extension
+        SharedCacheService.register(project, NEOFORM_CACHE_SERVICE, params -> {
+            NeoFormCache cacheSettings = project.getExtensions().getByType(Subsystems.class).getNeoFormCache();
+            params.getEnabled().set(cacheSettings.getEnabled().orElse(params.getEnabled().get()));
+            params.getCacheDirectory().set(cacheSettings.getCacheDirectory().orElse(params.getCacheDirectory().get()));
+        });
+
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 
         project.getTasks().register("handleNamingLicense", DisplayMappingsLicenseTask.class, task -> {
@@ -85,7 +95,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 final Mappings mappings = project.getExtensions().getByType(Mappings.class);
                 if (mappings.getChannel().get().getHasAcceptedLicense().get())
                     return null;
-                
+
                 return mappings.getChannel().get().getLicenseText().get();
             }));
         });
@@ -107,15 +117,15 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 RunsConstants.Extensions.RUN_TYPES,
                 project.getObjects().domainObjectContainer(RunType.class, name -> project.getObjects().newInstance(RunType.class, name))
         );
-        
+
         project.getExtensions().add(
                 RunsConstants.Extensions.RUNS,
                 project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name))
         );
-        
+
         IdeRunIntegrationManager.getInstance().setup(project);
     }
-    
+
     private void applyAfterEvaluate(final Project project) {
         RuntimesExtension runtimesExtension = project.getExtensions().getByType(RuntimesExtension.class);
         runtimesExtension.bakeDefinitions();
@@ -139,9 +149,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
-                    
+
                     final Set<CommonRuntimeDefinition<?>> definitionSet = new HashSet<>();
-                    
+
                     runImpl.getModSources().get().forEach(sourceSet -> {
                         try {
                             final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(project, sourceSet);
@@ -150,14 +160,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
                             throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
                         }
                     });
-                    
+
                     definitionSet.forEach(definition -> {
-                       definition.configureRun(runImpl);
+                        definition.configureRun(runImpl);
                     });
                 }
             }
         }));
-        
+
         IdeRunIntegrationManager.getInstance().apply(project);
     }
 }

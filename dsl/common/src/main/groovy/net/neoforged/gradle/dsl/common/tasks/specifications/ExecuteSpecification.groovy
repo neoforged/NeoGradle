@@ -37,16 +37,6 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
     RegularFileProperty getExecutingJar();
 
     /**
-     * Defines the main class that will be executed.
-     * When this value is not supplied, it is retrieved from the manifest of the executing jar.
-     *
-     * @return The main class to execute.
-     */
-    @Input
-    @DSLProperty
-    Property<String> getMainClass();
-
-    /**
      * Defines the path to the console log file.
      *
      * @return The path to the console log file.

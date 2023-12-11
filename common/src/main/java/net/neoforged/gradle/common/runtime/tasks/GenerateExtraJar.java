@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
+import com.google.common.base.Stopwatch;
 import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
@@ -26,9 +27,9 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
 
     @TaskAction
     public void doTask() throws Throwable {
+        Stopwatch sw = Stopwatch.createStarted();
         final File originalJar = getOriginalJar().get().getAsFile();
         final File outputJar = ensureFileWorkspaceReady(getOutput());
-
 
         final FileTree inputTree = getArchiveOperations().zipTree(originalJar);
         final FileTree filteredInput = inputTree.matching(filter -> {
@@ -38,9 +39,11 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(outputJar))) {
             filteredInput.visit(new ZipBuildingFileTreeVisitor(zos));
         }
+        getLogger().lifecycle("Took {}", sw);
     }
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getOriginalJar();
+
 }

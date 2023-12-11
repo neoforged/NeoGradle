@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.util;
 
+import net.neoforged.gradle.util.FileUtils;
 import net.neoforged.gradle.util.HashFunction;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
@@ -11,10 +12,8 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 
 public final class FileDownloadingUtils {
@@ -86,59 +85,18 @@ public final class FileDownloadingUtils {
                         + urlConnection.getResponseCode());
             }
 
-            // Resolve a relative path to get a proper parent directory
-            if (target.getParent() == null) {
-                target = target.toAbsolutePath();
-            }
-
             // Always download to a temp-file to avoid partially downloaded files persisting a VM crash/shutdown
-            Files.createDirectories(target.getParent());
-            Path tempFile = Files.createTempFile(target.getParent(), target.getFileName().toString(), ".download");
-
-            try {
-                try (InputStream stream = urlConnection.getInputStream()) {
-                    Files.copy(stream, tempFile, StandardCopyOption.REPLACE_EXISTING);
-                }
-
-                move(target, tempFile);
-
-                if (urlConnection.getLastModified() != 0) {
-                    Files.setLastModifiedTime(target, FileTime.fromMillis(urlConnection.getLastModified()));
-                }
-
-                return true;
-            } finally {
-                Files.deleteIfExists(tempFile);
+            try (InputStream stream = urlConnection.getInputStream()) {
+                FileUtils.atomicCopy(stream, target);
             }
+
+            if (urlConnection.getLastModified() != 0) {
+                Files.setLastModifiedTime(target, FileTime.fromMillis(urlConnection.getLastModified()));
+            }
+
+            return true;
         } finally {
             urlConnection.disconnect();
-        }
-    }
-
-    private static void move(Path target, Path tempFile) throws IOException {
-        int tries = 0;
-        while (true) {
-            tries++;
-            try {
-                try {
-                    Files.move(tempFile, target, StandardCopyOption.ATOMIC_MOVE);
-                } catch (AtomicMoveNotSupportedException e) {
-                    // Atomic moves within the same directory should have worked.
-                    // We fall back to the inferior normal move. We should log this issue, but there is no logger here.
-                    Files.move(tempFile, target, StandardCopyOption.REPLACE_EXISTING);
-                }
-                break;
-            } catch (IOException e) {
-                if (tries >= 5) {
-                    throw e;
-                }
-                // Wait a bit to give whatever concurrent process has it locked to unlock...
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
         }
     }
 

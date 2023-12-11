@@ -1,5 +1,9 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
+import codechicken.diffpatch.cli.PatchOperation;
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CacheKey;
+import net.neoforged.gradle.common.caching.SharedCacheService;
 import net.neoforged.gradle.util.FileUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
@@ -7,6 +11,7 @@ import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -18,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
@@ -25,6 +31,8 @@ import java.util.stream.Collectors;
 
 @CacheableTask
 public abstract class StripJar extends DefaultRuntime {
+
+    private static final String CACHE_GENERATION = "1";
 
     public StripJar() {
         super();
@@ -47,12 +55,32 @@ public abstract class StripJar extends DefaultRuntime {
 
     @TaskAction
     protected void run() throws Throwable {
-        final File input = getInput().get().getAsFile();
-        final File output = ensureFileWorkspaceReady(getOutput());
-        final boolean isWhitelist = getIsWhitelistMode().get();
 
-        strip(input, output, isWhitelist);
+        SharedCacheService cachingService = getSharedCacheService().get();
+        CacheKey cacheKey = cachingService.cacheKeyBuilder(getProject())
+                // We use the NeoForm step name as the cache domain to make debugging the cache state easier
+                // since every step will have its own cache directory.
+                .cacheDomain(getStepName().get())
+                .inputFiles(getInputs().getFiles().getFiles())
+                .argument(CACHE_GENERATION)
+                .build();
+
+        final File output = ensureFileWorkspaceReady(getOutput());
+
+        boolean usedCache = cachingService.cacheOutput(getProject(), cacheKey, output.toPath(), () -> {
+            final File input = getInput().get().getAsFile();
+            final boolean isWhitelist = getIsWhitelistMode().get();
+
+            strip(input, output, isWhitelist);
+        });
+
+        if (usedCache) {
+            setDidWork(false);
+        }
     }
+
+    @ServiceReference(CommonProjectPlugin.NEOFORM_CACHE_SERVICE)
+    protected abstract Property<SharedCacheService> getSharedCacheService();
 
     private void strip(File input, File output, boolean whitelist) throws IOException {
         JarInputStream is = new JarInputStream(new FileInputStream(input));
