@@ -31,7 +31,7 @@ import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfiguration
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
-import net.neoforged.gradle.neoform.runtime.tasks.InjectCode;
+import net.neoforged.gradle.neoform.runtime.tasks.InjectZipContent;
 import net.neoforged.gradle.neoform.runtime.tasks.Patch;
 import net.neoforged.gradle.neoform.runtime.tasks.RecompileSourceJar;
 import net.neoforged.gradle.neoform.runtime.tasks.StripJar;
@@ -107,13 +107,18 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     task.getDownloadedVersionJsonFile().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, "downloadJson", adaptedInput, task));
                 });
             case "inject":
-                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), InjectCode.class, task -> {
+                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), InjectZipContent.class, task -> {
                     task.getInjectionSource().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task));
-                    if (spec.getDistribution().equals(DistributionType.SERVER)) {
-                        task.getInclusionFilter().add("**/server/**");
-                    } else if (spec.getDistribution().equals(DistributionType.CLIENT)) {
-                        task.getInclusionFilter().add("**/client/**");
-                    }
+                    task.injectDirectory(
+                            task.getRuntimeData().flatMap(data -> data.get("inject")),
+                            filter -> {
+                                if (spec.getDistribution().equals(DistributionType.SERVER)) {
+                                    filter.include("**/server/**");
+                                } else if (spec.getDistribution().equals(DistributionType.CLIENT)) {
+                                    filter.include("**/client/**");
+                                }
+                            }
+                    );
                 });
             case "patch":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Patch.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task)));

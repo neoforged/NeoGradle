@@ -6,6 +6,8 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 
@@ -47,6 +49,17 @@ class ConfigurationUtils {
         configuration.setCanBeResolved(true)
 
         return configuration
+    }
+
+    /**
+     * Creates a provider that will resolve a temporary configuration containing the given dependency.
+     */
+    static Provider<File> getArtifactProvider(Project project, Provider<? extends Object> dependencyNotationProvider) {
+        return dependencyNotationProvider.flatMap(dependencyNotation -> {
+            Configuration configuration = temporaryConfiguration(project, project.getDependencies().create(dependencyNotation));
+            configuration.transitive = false;
+            return configuration.getElements().map(files -> files.iterator().next().getAsFile());
+        });
     }
 
     static List<Configuration> findReplacementConfigurations(final Project project, final Configuration configuration) {
