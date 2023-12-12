@@ -2,11 +2,15 @@ package net.neoforged.gradle.dsl.common.runtime.spec
 
 import com.google.common.collect.Multimap
 import groovy.transform.CompileStatic
+import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer
 import net.neoforged.gradle.dsl.common.util.DistributionType
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.provider.Provider
 import org.jetbrains.annotations.NotNull
+
+import java.util.function.Consumer
 
 @CompileStatic
 interface Specification {
@@ -78,6 +82,11 @@ interface Specification {
     @NotNull Multimap<String, TaskTreeAdapter> getPostTypeAdapters();
 
     /**
+     * The customizers that are allowed to change the configuration of Neoform tasks.
+     */
+    @NotNull Multimap<String, TaskCustomizer<? extends Task>> getTaskCustomizers();
+
+    /**
      * Determines the specifications minecraft version.
      *
      * @return The minecraft version.
@@ -126,5 +135,15 @@ interface Specification {
          * @return The builder instance.
          */
         B withPostTaskAdapter(String taskTypeName, TaskTreeAdapter adapter);
+
+        /**
+         * Adds a task customizer to the specification which is about to be build.
+         *
+         * @param taskTypeName The name of the task type or specification step to which the customization should be applied.
+         * @param taskType     The expected Gradle task type of the task.
+         * @param customizer   The function to apply to the task via {@link Task#configure}.
+         * @return The builder instance.
+         */
+         <T extends Task> B withTaskCustomizer(final String taskTypeName, Class<T> taskType, Consumer<T> customizer);
     }
 }

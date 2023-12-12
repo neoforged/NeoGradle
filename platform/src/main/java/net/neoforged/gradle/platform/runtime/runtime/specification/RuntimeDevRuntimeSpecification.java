@@ -2,12 +2,14 @@ package net.neoforged.gradle.platform.runtime.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.platform.runtime.runtime.extension.RuntimeDevRuntimeExtension;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -28,8 +30,17 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
     private final Directory rejectsDirectory;
     private final boolean isUpdating;
     
-    public RuntimeDevRuntimeSpecification(Project project, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, Artifact neoFormArtifact, FileCollection additionalDependencies, Directory patchesDirectory, Directory rejectsDirectory, boolean isUpdating) {
-        super(project, "platform", neoFormArtifact.getVersion(), distribution, preTaskTypeAdapters, postTypeAdapters, RuntimeDevRuntimeExtension.class);
+    public RuntimeDevRuntimeSpecification(Project project,
+                                          DistributionType distribution,
+                                          Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
+                                          Multimap<String, TaskTreeAdapter> postTypeAdapters,
+                                          Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
+                                          Artifact neoFormArtifact,
+                                          FileCollection additionalDependencies,
+                                          Directory patchesDirectory,
+                                          Directory rejectsDirectory,
+                                          boolean isUpdating) {
+        super(project, "platform", neoFormArtifact.getVersion(), distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, RuntimeDevRuntimeExtension.class);
         this.minecraftVersion = neoFormArtifact.getVersion().substring(0, neoFormArtifact.getVersion().lastIndexOf("-"));
         this.neoFormArtifact = neoFormArtifact;
         this.additionalDependencies = additionalDependencies;
@@ -216,6 +227,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
                     distributionType.get(),
                     preTaskAdapters,
                     postTaskAdapters,
+                    taskCustomizers,
                     resolvedArtifact.get(),
                     additionalDependencies,
                     patchesDirectory.get(),

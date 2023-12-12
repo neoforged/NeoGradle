@@ -2,6 +2,7 @@ package net.neoforged.gradle.userdev.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
@@ -10,13 +11,13 @@ import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.dsl.userdev.runtime.specification.UserDevSpecification;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Defines a specification for a ForgeUserDev runtime.
@@ -29,8 +30,16 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
     @Nullable
     private String minecraftVersion = null;
 
-    public UserDevRuntimeSpecification(Project project, String version, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, String forgeGroup, String forgeName, String forgeVersion) {
-        super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, UserDevRuntimeExtension.class);
+    public UserDevRuntimeSpecification(Project project,
+                                       String version,
+                                       DistributionType distribution,
+                                       Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
+                                       Multimap<String, TaskTreeAdapter> postTypeAdapters,
+                                       Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
+                                       String forgeGroup,
+                                       String forgeName,
+                                       String forgeVersion) {
+        super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, UserDevRuntimeExtension.class);
         this.forgeGroup = forgeGroup;
         this.forgeName = forgeName;
         this.forgeVersion = forgeVersion;
@@ -166,7 +175,17 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
             final Artifact universalArtifact = new Artifact(group, name, version, "userdev", "jar");
             final Artifact resolvedArtifact = resolveUserDevVersion(project, universalArtifact);
 
-            return new UserDevRuntimeSpecification(project, resolvedArtifact.getVersion(), distributionType.get(), preTaskAdapters, postTaskAdapters, resolvedArtifact.getGroup(), resolvedArtifact.getName(), resolvedArtifact.getVersion());
+            return new UserDevRuntimeSpecification(
+                    project,
+                    resolvedArtifact.getVersion(),
+                    distributionType.get(),
+                    preTaskAdapters,
+                    postTaskAdapters,
+                    taskCustomizers,
+                    resolvedArtifact.getGroup(),
+                    resolvedArtifact.getName(),
+                    resolvedArtifact.getVersion()
+            );
         }
 
         private static Artifact resolveUserDevVersion(final Project project, final Artifact current) {

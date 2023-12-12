@@ -11,6 +11,7 @@ import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.runtime.extensions.CommonRuntimes;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
+import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -18,8 +19,8 @@ import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.Directory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -52,6 +53,10 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
         runtimeTask.getRuntimeName().set(spec.getVersionedName());
         runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
+
+        for (TaskCustomizer<? extends Task> taskCustomizer : spec.getTaskCustomizers().get(step)) {
+            taskCustomizer.apply(runtimeTask);
+        }
     }
 
     public static void configureCommonRuntimeTaskParameters(Runtime mcpRuntimeTask, Map<String, File> dataFiles, Map<String, File> dataDirectories, String step, DistributionType distributionType, String minecraftVersion, Project project, File runtimeDirectory) {
