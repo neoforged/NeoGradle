@@ -6,14 +6,17 @@ import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
+import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Defines a runtime specification.
@@ -25,14 +28,23 @@ public abstract class CommonRuntimeSpecification implements Specification {
     @NotNull private final DistributionType distribution;
     @NotNull private final Multimap<String, TaskTreeAdapter> preTaskTypeAdapters;
     @NotNull private final Multimap<String, TaskTreeAdapter> postTypeAdapters;
+    @NotNull private final Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers;
     @NotNull private final CommonRuntimeExtension<?,?,?> runtimeExtension;
-    protected CommonRuntimeSpecification(Project project, @NotNull String name, @NotNull String version, DistributionType distribution, Multimap<String, TaskTreeAdapter> preTaskTypeAdapters, Multimap<String, TaskTreeAdapter> postTypeAdapters, @NotNull Class<? extends CommonRuntimeExtension<?, ?, ?>> runtimeExtensionClass) {
+    protected CommonRuntimeSpecification(Project project,
+                                         @NotNull String name,
+                                         @NotNull String version,
+                                         DistributionType distribution,
+                                         Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
+                                         Multimap<String, TaskTreeAdapter> postTypeAdapters,
+                                         Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
+                                         @NotNull Class<? extends CommonRuntimeExtension<?, ?, ?>> runtimeExtensionClass) {
         this.project = project;
         this.name = name;
         this.version = version;
         this.distribution = distribution;
         this.preTaskTypeAdapters = ImmutableMultimap.copyOf(preTaskTypeAdapters);
         this.postTypeAdapters = ImmutableMultimap.copyOf(postTypeAdapters);
+        this.taskCustomizers = ImmutableMultimap.copyOf(taskCustomizers);
         this.runtimeExtension = project.getExtensions().getByType(runtimeExtensionClass);
     }
 
@@ -92,6 +104,12 @@ public abstract class CommonRuntimeSpecification implements Specification {
         return postTypeAdapters;
     }
 
+    @NotNull
+    @Override
+    public Multimap<String, TaskCustomizer<? extends Task>> getTaskCustomizers() {
+        return taskCustomizers;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -103,6 +121,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
         if (!getIdentifier().equals(that.getIdentifier())) return false;
         if (getDistribution() != that.getDistribution()) return false;
         if (!getPreTaskTypeAdapters().equals(that.getPreTaskTypeAdapters())) return false;
+        if (!getTaskCustomizers().equals(that.getTaskCustomizers())) return false;
         return getPostTypeAdapters().equals(that.getPostTypeAdapters());
     }
 
@@ -113,6 +132,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
         result = 31 * result + getDistribution().hashCode();
         result = 31 * result + getPreTaskTypeAdapters().hashCode();
         result = 31 * result + getPostTypeAdapters().hashCode();
+        result = 31 * result + getTaskCustomizers().hashCode();
         return result;
     }
 
@@ -124,6 +144,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
                 ", distribution=" + distribution +
                 ", preTaskTypeAdapters=" + preTaskTypeAdapters +
                 ", postTypeAdapters=" + postTypeAdapters +
+                ", taskCustomizers=" + taskCustomizers +
                 '}';
     }
 
@@ -140,6 +161,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
         protected boolean hasConfiguredDistributionType = false;
         protected final Multimap<String, TaskTreeAdapter> preTaskAdapters = LinkedListMultimap.create();
         protected final Multimap<String, TaskTreeAdapter> postTaskAdapters = LinkedListMultimap.create();
+        protected final Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers = LinkedListMultimap.create();
 
         /**
          * Creates a new builder.
@@ -199,6 +221,14 @@ public abstract class CommonRuntimeSpecification implements Specification {
         @NotNull
         public final B withPostTaskAdapter(final String taskTypeName, final TaskTreeAdapter adapter) {
             this.postTaskAdapters.put(taskTypeName, adapter);
+            return getThis();
+        }
+
+
+        @Override
+        @NotNull
+        public final <T extends Task> B withTaskCustomizer(final String taskTypeName, Class<T> taskType, Consumer<T> customizer) {
+            this.taskCustomizers.put(taskTypeName, new TaskCustomizer<>(taskType, customizer));
             return getThis();
         }
 

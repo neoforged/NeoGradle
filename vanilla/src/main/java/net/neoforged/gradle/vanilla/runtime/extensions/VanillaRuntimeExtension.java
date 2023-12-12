@@ -168,7 +168,22 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             }
 
             AtomicInteger additionalTaskIndex = new AtomicInteger(0);
-            TaskProvider<? extends Runtime> task = step.buildTask(definition, currentInput, minecraftCache, vanillaDirectory, definition.getTasks(), definition.getGameArtifactProvidingTasks(), taskProvider -> taskProvider.configure(additionalTask -> configureCommonRuntimeTaskParameters(additionalTask, Collections.emptyMap(), Collections.emptyMap(), step.getName() + "Additional" + additionalTaskIndex.getAndIncrement(), spec, runtimeWorkingDirectory)));
+            TaskProvider<? extends Runtime> task = step.buildTask(
+                    definition,
+                    currentInput,
+                    minecraftCache,
+                    vanillaDirectory,
+                    definition.getTasks(),
+                    definition.getGameArtifactProvidingTasks(),
+                    taskProvider -> taskProvider.configure(additionalTask -> configureCommonRuntimeTaskParameters(
+                            additionalTask,
+                            Collections.emptyMap(),
+                            Collections.emptyMap(),
+                            step.getName() + "Additional" + additionalTaskIndex.getAndIncrement(),
+                            spec,
+                            runtimeWorkingDirectory)
+                    )
+            );
 
             task.configure((Runtime mcpRuntimeTask) -> configureCommonRuntimeTaskParameters(mcpRuntimeTask, Collections.emptyMap(), Collections.emptyMap(), step.getName(), spec, runtimeWorkingDirectory));
 
