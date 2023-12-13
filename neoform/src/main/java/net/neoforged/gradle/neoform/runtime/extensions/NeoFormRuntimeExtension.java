@@ -14,6 +14,7 @@ import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
@@ -47,6 +48,7 @@ import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.compile.ForkOptions;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -166,9 +168,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         int maxThreads = settings.getMaxThreads().getOrElse(0);
         String logLevel = getDecompilerLogLevelArg(settings.getLogLevel().getOrElse(DecompilerLogLevel.INFO), function.getVersion());
 
-        if (settings.getJvmArgs().isPresent()) {
-            jvmArgs.addAll(settings.getJvmArgs().get());
-        }
+        jvmArgs.addAll(settings.getJvmArgs().get());
         jvmArgs.add("-Xmx" + maxMemory);
         if (maxThreads > 0) {
             decompilerArgs.add(0, "-thr=" + maxThreads);
@@ -430,10 +430,18 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final FileCollection recompileDependencies = spec.getAdditionalRecompileDependencies().plus(spec.getProject().files(definition.getMinecraftDependenciesConfiguration()));
         final TaskProvider<? extends Runtime> recompileTask = spec.getProject()
-                .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, recompileSourceJar -> {
-                    recompileSourceJar.getInputJar().set(remapTask.flatMap(WithOutput::getOutput));
-                    recompileSourceJar.getCompileClasspath().setFrom(recompileDependencies);
-                    recompileSourceJar.getStepName().set("recompile");
+                .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, task -> {
+                    task.getInputJar().set(remapTask.flatMap(WithOutput::getOutput));
+                    task.getCompileClasspath().setFrom(recompileDependencies);
+                    task.getStepName().set("recompile");
+
+                    // Consider user-settings
+                    Recompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getRecompiler();
+                    String maxMemory = settings.getMaxMemory().get();
+                    ForkOptions forkOptions = task.getOptions().getForkOptions();
+                    forkOptions.setMemoryMaximumSize(maxMemory);
+                    forkOptions.setJvmArgs(settings.getJvmArgs().get());
+                    task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
                 });
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, neoFormRuntimeTask));
 
