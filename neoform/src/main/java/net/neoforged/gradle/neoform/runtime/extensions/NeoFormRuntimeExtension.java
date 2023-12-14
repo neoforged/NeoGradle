@@ -82,7 +82,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @Nullable
-    private static TaskProvider<? extends WithOutput> createBuiltIn(final NeoFormRuntimeSpecification spec, NeoFormConfigConfigurationSpecV2 neoFormConfigV2, NeoFormConfigConfigurationSpecV1.Step step, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviders, final Optional<TaskProvider<? extends WithOutput>> adaptedInput) {
+    private static TaskProvider<? extends WithOutput> createBuiltIn(final NeoFormRuntimeSpecification spec,
+                                                                    NeoFormConfigConfigurationSpecV2 neoFormConfigV2,
+                                                                    NeoFormConfigConfigurationSpecV1.Step step,
+                                                                    final Map<String, TaskProvider<? extends WithOutput>> tasks,
+                                                                    final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviders,
+                                                                    final Optional<TaskProvider<? extends WithOutput>> adaptedInput) {
         switch (step.getType()) {
             case "decompile":
                 return createDecompile(spec, step, neoFormConfigV2);
@@ -123,7 +128,15 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     );
                 });
             case "patch":
-                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Patch.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task)));
+                return spec.getProject().getTasks().register(
+                        CommonRuntimeUtils.buildTaskName(spec, step.getName()),
+                        Patch.class,
+                        task -> {
+                            task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task));
+                            task.getPatchArtifact().set(spec.getNeoFormArtifact());
+                            task.getPatchDirectory().set(neoFormConfigV2.getData("patches", spec.getDistribution().getName()));
+                        }
+                );
         }
         if (neoFormConfigV2.getSpec() >= 2) {
             switch (step.getType()) {
