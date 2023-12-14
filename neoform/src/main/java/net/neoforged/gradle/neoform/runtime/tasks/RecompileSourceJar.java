@@ -1,9 +1,7 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
 import net.neoforged.gradle.common.runtime.tasks.RuntimeArgumentsImpl;
-import net.neoforged.gradle.common.runtime.tasks.RuntimeDataImpl;
 import net.neoforged.gradle.common.runtime.tasks.RuntimeMultiArgumentsImpl;
-import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeData;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
@@ -42,14 +40,12 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     private Property<JavaLanguageVersion> javaVersion;
     private Provider<JavaToolchainService> javaToolchainService;
-    private final RuntimeData data;
     private final RuntimeArguments arguments;
     private final RuntimeMultiArguments multiArguments;
 
     public RecompileSourceJar() {
         super();
         
-        data = getObjectFactory().newInstance(RuntimeDataImpl.class, getProviderFactory());
         arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
         
@@ -126,12 +122,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         getInputJar().finalizeValueOnRead();
     }
-    
-    @Override
-    public RuntimeData getData() {
-        return data;
-    }
-    
+
     @Override
     public RuntimeArguments getArguments() {
         return arguments;

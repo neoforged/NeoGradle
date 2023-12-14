@@ -52,7 +52,7 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
             task.getRejects().set(spec.getRejectsDirectory());
             task.getPatchMode().set(spec.isUpdating() ? PatchMode.FUZZY : PatchMode.ACCESS);
             task.getShouldFailOnPatchFailure().set(!spec.isUpdating());
-            configureCommonRuntimeTaskParameters(task, Collections.emptyMap(), Collections.emptyMap(), "applyPatches", spec, workingDirectory);
+            configureCommonRuntimeTaskParameters(task, "applyPatches", spec, workingDirectory);
         });
         
         final TaskProvider<ArtifactProvider> sourcesProvider = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "sourceFromAppliedPatches"), ArtifactProvider.class, task -> {
