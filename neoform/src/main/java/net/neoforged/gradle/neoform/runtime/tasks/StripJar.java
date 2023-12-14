@@ -55,20 +55,21 @@ public abstract class StripJar extends DefaultRuntime {
     }
 
     private void strip(File input, File output, boolean whitelist) throws IOException {
-        JarInputStream is = new JarInputStream(new FileInputStream(input));
-        JarOutputStream os = new JarOutputStream(new FileOutputStream(output));
+        try (JarInputStream is = new JarInputStream(new FileInputStream(input));
+             FileOutputStream fout = new FileOutputStream(output);
+             JarOutputStream os = new JarOutputStream(fout)) {
 
-        // Ignore any entry that's not allowed
-        JarEntry entry;
-        while ((entry = is.getNextJarEntry()) != null) {
-            if (!isEntryValid(entry, whitelist)) continue;
-            os.putNextEntry(entry);
-            IOUtils.copyLarge(is, os);
-            os.closeEntry();
+            // Ignore any entry that's not allowed
+            JarEntry entry;
+            while ((entry = is.getNextJarEntry()) != null) {
+                if (!isEntryValid(entry, whitelist)) {
+                    continue;
+                }
+                os.putNextEntry(entry);
+                IOUtils.copyLarge(is, os);
+                os.closeEntry();
+            }
         }
-
-        os.close();
-        is.close();
     }
 
     private boolean isEntryValid(JarEntry entry, boolean whitelist) {
