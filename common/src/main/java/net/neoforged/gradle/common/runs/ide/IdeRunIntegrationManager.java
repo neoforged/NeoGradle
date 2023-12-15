@@ -94,6 +94,8 @@ public class IdeRunIntegrationManager {
             final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
             
             project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                if (run.getIsJUnit().get()) return; // Skip JUnit runs
+
                 final String nameWithoutSpaces = name.replace(" ", "-");
                 final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
                 
@@ -129,6 +131,8 @@ public class IdeRunIntegrationManager {
         public void eclipse(Project project, EclipseModel eclipse) {
             ProjectUtils.afterEvaluate(project, () -> {
                 project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                    if (run.getIsJUnit().get()) return; // Skip JUnit runs
+
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     
                     final RunImpl runImpl = (RunImpl) run;

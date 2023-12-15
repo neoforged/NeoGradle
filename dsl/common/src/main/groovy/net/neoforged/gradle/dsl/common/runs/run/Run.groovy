@@ -146,6 +146,14 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Property<Boolean> getIsGameTest();
 
     /**
+     * Indicates if this run is a JUnit run.
+     */
+    @Input
+    @DSLProperty(propertyName = 'junit')
+    @Optional
+    abstract Property<Boolean> getIsJUnit()
+
+    /**
      * Defines the source sets that are used as a mod.
      *
      * @return The source sets that are used as a mod.

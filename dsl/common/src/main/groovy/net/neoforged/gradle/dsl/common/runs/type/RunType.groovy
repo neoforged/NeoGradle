@@ -122,6 +122,13 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     abstract Property<Boolean> getIsGameTest();
 
     /**
+     * Indicates if this run is a JUnit run.
+     */
+    @Input
+    @DSLProperty(propertyName = 'junit')
+    abstract Property<Boolean> getIsJUnit()
+
+    /**
      * Gives access to the key value pairs which are added as environment variables when an instance of this run type is executed.
      *
      * @return The property which holds the environment variables.
@@ -177,6 +184,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         other.getEnvironmentVariables().set(getEnvironmentVariables())
         other.getSystemProperties().set(getSystemProperties())
         other.getClasspath().from(getClasspath())
+        other.getIsJUnit().set(getIsJUnit())
     }
 
     /**

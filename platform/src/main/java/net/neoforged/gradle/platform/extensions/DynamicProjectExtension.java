@@ -711,8 +711,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 run.getProgramArguments().addAll("--username", "Dev");
                 run.getProgramArguments().addAll("--version", project.getName());
                 run.getProgramArguments().addAll("--accessToken", "0");
-                run.getProgramArguments().addAll("--userrun", "mojang");
-                run.getProgramArguments().addAll("--versionrun", "release");
                 run.getProgramArguments().addAll("--launchTarget", "forgeclientdev");
             }
 
@@ -739,11 +737,15 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
             }
 
-            if (run.getIsDataGenerator().get() || run.getIsClient().get()) {
+            if (run.getIsDataGenerator().get() || run.getIsClient().get() || run.getIsJUnit().get()) {
                 run.getProgramArguments().add("--assetsDir");
                 run.getProgramArguments().add(assetsDir);
                 run.getProgramArguments().add("--assetIndex");
                 run.getProgramArguments().add(assetIndex);
+            }
+
+            if (run.getIsJUnit().get()) {
+                run.getProgramArguments().addAll("--launchTarget", "junitfmldev");
             }
         });
     }
