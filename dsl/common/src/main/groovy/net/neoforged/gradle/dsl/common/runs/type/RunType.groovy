@@ -232,6 +232,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
             deserializeBool(instance.isServer, object, "server")
             deserializeBool(instance.isDataGenerator, object, "dataGenerator")
             deserializeBool(instance.isGameTest, object, "gameTest")
+            deserializeBool(instance.isJUnit, object, 'junit')
             deserializeMap(instance.environmentVariables, object, "env", String.class, jsonDeserializationContext)
             deserializeMap(instance.systemProperties, object, "props", String.class, jsonDeserializationContext)
 
@@ -256,6 +257,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
             serializeBool(runType.isServer, object, "server")
             serializeBool(runType.isDataGenerator, object, "dataGenerator")
             serializeBool(runType.isGameTest, object, "gameTest")
+            serializeBool(runType.isJUnit, object, "junit")
             serializeMap(runType.environmentVariables, object, "env", jsonSerializationContext)
             serializeMap(runType.systemProperties, object, "props", jsonSerializationContext)
 
