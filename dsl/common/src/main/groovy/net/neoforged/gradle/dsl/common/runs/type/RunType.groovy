@@ -38,6 +38,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         getIsServer().convention(false)
         getIsDataGenerator().convention(false)
         getIsGameTest().convention(false)
+        getIsJUnit().convention(false)
     }
 
     private static Boolean or(Boolean a, Boolean b) {

@@ -5,7 +5,7 @@ plugins {
     id 'net.neoforged.gradleutils' version '3.0.0-alpha.1'
 }
 
-version = gradleutils.version.toString()
+version = (gradleutils.version.toString() + '-junit')
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->

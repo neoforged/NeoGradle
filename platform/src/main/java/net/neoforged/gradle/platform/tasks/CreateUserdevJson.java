@@ -33,7 +33,11 @@ public abstract class CreateUserdevJson  extends DefaultRuntime implements WithO
         final CoordinateCollector libraryCollector = new CoordinateCollector(getObjectFactory());
         getLibraries().getAsFileTree().visit(libraryCollector);
         clone.getAdditionalDependencyArtifactCoordinates().addAll(libraryCollector.getCoordinates());
-        
+
+        final CoordinateCollector testLibraryCollector = new CoordinateCollector(getObjectFactory());
+        getTestLibraries().getAsFileTree().visit(testLibraryCollector);
+        clone.getAdditionalTestDependencyArtifactCoordinates().addAll(testLibraryCollector.getCoordinates());
+
         final CoordinateCollector moduleCollector = new CoordinateCollector(getObjectFactory());
         getModules().getAsFileTree().visit(moduleCollector);
         clone.getModules().addAll(moduleCollector.getCoordinates());
@@ -53,7 +57,11 @@ public abstract class CreateUserdevJson  extends DefaultRuntime implements WithO
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getLibraries();
-    
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract ConfigurableFileCollection getTestLibraries();
+
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getModules();
