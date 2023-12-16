@@ -711,8 +711,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 run.getProgramArguments().addAll("--username", "Dev");
                 run.getProgramArguments().addAll("--version", project.getName());
                 run.getProgramArguments().addAll("--accessToken", "0");
-                run.getProgramArguments().addAll("--userrun", "mojang");
-                run.getProgramArguments().addAll("--versionrun", "release");
                 run.getProgramArguments().addAll("--launchTarget", "forgeclientdev");
             }
 
