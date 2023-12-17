@@ -98,9 +98,6 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         stepsMcpDirectory.mkdirs();
 
-        final Map<String, File> dataFiles = Collections.emptyMap();
-        final Map<String, File> dataDirectories = Collections.emptyMap();
-        
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
         if (gameArtifactTasks.containsKey(GameArtifact.SERVER_JAR) && BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
             final TaskProvider<? extends WithOutput> serverJarTask = gameArtifactTasks.get(GameArtifact.SERVER_JAR);
@@ -124,8 +121,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final Optional<ServerLaunchInformation> launchInformation = spec.getDistribution().isClient() ? Optional.empty() : Optional.of(ServerLaunchInformation.from(gameArtifacts.get(GameArtifact.SERVER_JAR)));
 
         return new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
-            configureCommonRuntimeTaskParameters(vanillaRuntimeTask, dataFiles, dataDirectories, CommonRuntimeUtils.buildStepName(spec, vanillaRuntimeTask.getName()), spec, vanillaDirectory);
-        }), versionJson, createDownloadAssetsTasks(spec, dataFiles, dataDirectories, runtimeWorkingDirectory, versionJson), createExtractNativesTasks(spec, dataFiles, dataDirectories, runtimeWorkingDirectory, versionJson), launchInformation);
+            configureCommonRuntimeTaskParameters(vanillaRuntimeTask, CommonRuntimeUtils.buildStepName(spec, vanillaRuntimeTask.getName()), spec, vanillaDirectory);
+        }), versionJson, createDownloadAssetsTasks(spec, runtimeWorkingDirectory, versionJson), createExtractNativesTasks(spec, runtimeWorkingDirectory, versionJson), launchInformation);
     }
 
     protected VanillaRuntimeSpecification.Builder createBuilder() {
@@ -157,9 +154,9 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                     for (TaskTreeAdapter taskTreeAdapter : spec.getPreTaskTypeAdapters().get(step.getName())) {
                         final AtomicInteger additionalPreAdapterTasks = new AtomicInteger(0);
                         int currentTaskPreAdapterIndex = taskPreAdapterIndex;
-                        final TaskProvider<? extends Runtime> modifiedTree = taskTreeAdapter.adapt(definition, currentInput, vanillaDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), taskProvider -> taskProvider.configure(task -> configureCommonRuntimeTaskParameters(task, Collections.emptyMap(), Collections.emptyMap(), step.getName() + "PreAdapter" + currentTaskPreAdapterIndex + "-" + additionalPreAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory)));
+                        final TaskProvider<? extends Runtime> modifiedTree = taskTreeAdapter.adapt(definition, currentInput, vanillaDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), taskProvider -> taskProvider.configure(task -> configureCommonRuntimeTaskParameters(task,step.getName() + "PreAdapter" + currentTaskPreAdapterIndex + "-" + additionalPreAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory)));
                         if (modifiedTree != null) {
-                            modifiedTree.configure(task -> configureCommonRuntimeTaskParameters(task, Collections.emptyMap(), Collections.emptyMap(), step.getName() + "PreAdapter" + currentTaskPreAdapterIndex + "-" + additionalPreAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory));
+                            modifiedTree.configure(task -> configureCommonRuntimeTaskParameters(task, step.getName() + "PreAdapter" + currentTaskPreAdapterIndex + "-" + additionalPreAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory));
                             currentInput = modifiedTree;
                             taskPreAdapterIndex++;
                         }
@@ -177,15 +174,13 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                     definition.getGameArtifactProvidingTasks(),
                     taskProvider -> taskProvider.configure(additionalTask -> configureCommonRuntimeTaskParameters(
                             additionalTask,
-                            Collections.emptyMap(),
-                            Collections.emptyMap(),
                             step.getName() + "Additional" + additionalTaskIndex.getAndIncrement(),
                             spec,
                             runtimeWorkingDirectory)
                     )
             );
 
-            task.configure((Runtime mcpRuntimeTask) -> configureCommonRuntimeTaskParameters(mcpRuntimeTask, Collections.emptyMap(), Collections.emptyMap(), step.getName(), spec, runtimeWorkingDirectory));
+            task.configure((Runtime mcpRuntimeTask) -> configureCommonRuntimeTaskParameters(mcpRuntimeTask, step.getName(), spec, runtimeWorkingDirectory));
 
             if (!spec.getPostTypeAdapters().containsKey(step.getName())) {
                 definition.getTasks().put(task.getName(), task);
@@ -194,9 +189,9 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                 for (TaskTreeAdapter taskTreeAdapter : spec.getPostTypeAdapters().get(step.getName())) {
                     final AtomicInteger additionalPostAdapterTasks = new AtomicInteger(0);
                     final int currentPostAdapterIndex = taskPostAdapterIndex++;
-                    final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(definition, task, vanillaDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), dependentTaskProvider -> dependentTaskProvider.configure(additionalTask -> configureCommonRuntimeTaskParameters(additionalTask, Collections.emptyMap(), Collections.emptyMap(), step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory)));
+                    final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(definition, task, vanillaDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), dependentTaskProvider -> dependentTaskProvider.configure(additionalTask -> configureCommonRuntimeTaskParameters(additionalTask, step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory)));
                     if (taskProvider != null) {
-                        taskProvider.configure(adaptedTask -> configureCommonRuntimeTaskParameters(adaptedTask, Collections.emptyMap(), Collections.emptyMap(), step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory));
+                        taskProvider.configure(adaptedTask -> configureCommonRuntimeTaskParameters(adaptedTask, step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory));
                         task = taskProvider;
                     }
                 }
