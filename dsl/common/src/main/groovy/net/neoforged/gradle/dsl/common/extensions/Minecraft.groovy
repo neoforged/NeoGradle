@@ -34,6 +34,7 @@ interface Minecraft extends BaseDSLElement<Minecraft> {
      * @return The mappings configuration extension.
      */
     @NotNull
+    @DSLProperty
     Mappings getMappings();
 
     /**
@@ -42,5 +43,6 @@ interface Minecraft extends BaseDSLElement<Minecraft> {
      * @return The access transformer configuration extension.
      */
     @NotNull
+    @DSLProperty
     AccessTransformers getAccessTransformers();
 }
