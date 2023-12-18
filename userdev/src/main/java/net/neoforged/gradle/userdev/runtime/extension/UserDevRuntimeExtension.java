@@ -102,7 +102,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             
             builder.withPreTaskAdapter("decompile", atAndSASAdapter);
 
-            builder.withPostTaskAdapter("patch", createPatchAdapter(userDevConfigurationSpec.getSourcePatchesDirectory().get(), unpackedForgeDirectory));
+            builder.withPostTaskAdapter("patch", createPatchAdapter(userDevDependency, userDevConfigurationSpec.getSourcePatchesDirectory().get()));
 
             builder.withTaskCustomizer("inject", InjectZipContent.class, task -> configureNeoforgeInjects(
                     task,
@@ -155,10 +155,13 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         };
     }
 
-    private TaskTreeAdapter createPatchAdapter(final String patchDirectory, final File unpackForgeUserDevDirectory) {
+    private TaskTreeAdapter createPatchAdapter(Dependency userDevDependency, String patchDirectory) {
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "patchUserDev"), Patch.class, task -> {
+            Artifact userDevArtifact = Artifact.from(userDevDependency);
+
             task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-            task.getPatchDirectory().fileProvider(definition.getSpecification().getProject().provider(() -> new File(unpackForgeUserDevDirectory, patchDirectory)));
+            task.getPatchArtifact().set(userDevArtifact);
+            task.getPatchDirectory().set(patchDirectory);
         });
     }
 

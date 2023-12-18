@@ -6,8 +6,6 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
-import org.gradle.api.Action;
-import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
@@ -25,10 +23,12 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.internal.CurrentJvmToolchainSpec;
+import org.gradle.work.InputChanges;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,7 +45,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     public RecompileSourceJar() {
         super();
-        
+
         arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
         
@@ -97,32 +97,30 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setFork(true);
         getOptions().setIncremental(true);
         getOptions().getIncrementalAfterFailure().set(true);
-
-        //Leave this as an anon class, so that gradle is aware of this. Lambdas can not be used during task tree analysis.
-        //noinspection Convert2Lambda
-        doLast(new Action<Task>() {
-            @Override
-            public void execute(Task doLast) {
-                try {
-                    final File outputJar = RecompileSourceJar.this.ensureFileWorkspaceReady(RecompileSourceJar.this.getOutput());
-                    final FileOutputStream fileOutputStream = new FileOutputStream(outputJar);
-                    final ZipOutputStream outputZipStream = new ZipOutputStream(fileOutputStream);
-                    final ZipBuildingFileTreeVisitor zipBuildingFileTreeVisitor = new ZipBuildingFileTreeVisitor(outputZipStream);
-                    //Add the compiled output.
-                    RecompileSourceJar.this.getDestinationDirectory().getAsFileTree().visit(zipBuildingFileTreeVisitor);
-                    //Add the original resources.
-                    RecompileSourceJar.this.getArchiveOperations().zipTree(RecompileSourceJar.this.getInputJar()).matching(filter -> filter.exclude("**/*.java")).visit(zipBuildingFileTreeVisitor);
-                    outputZipStream.close();
-                    fileOutputStream.close();
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to create recompiled output jar", e);
-                }
-            }
-        });
-
         getInputJar().finalizeValueOnRead();
     }
 
+    @Override
+    @TaskAction
+    protected void compile(InputChanges inputs) {
+        super.compile(inputs);
+
+        if (getState().getDidWork()) {
+            final File outputJar = ensureFileWorkspaceReady(getOutput());
+            try (FileOutputStream fileOutputStream = new FileOutputStream(outputJar);
+                ZipOutputStream outputZipStream = new ZipOutputStream(fileOutputStream)) {
+                ZipBuildingFileTreeVisitor zipBuildingFileTreeVisitor = new ZipBuildingFileTreeVisitor(outputZipStream);
+                //Add the compiled output.
+                getDestinationDirectory().getAsFileTree().visit(zipBuildingFileTreeVisitor);
+                //Add the original resources.
+                getArchiveOperations().zipTree(getInputJar()).matching(filter -> filter.exclude("**/*.java")).visit(zipBuildingFileTreeVisitor);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create recompiled output jar", e);
+            }
+        }
+    }
+
+    
     @Override
     public RuntimeArguments getArguments() {
         return arguments;

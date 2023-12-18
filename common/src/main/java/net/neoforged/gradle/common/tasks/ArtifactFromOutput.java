@@ -5,8 +5,9 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
+import org.gradle.work.DisableCachingByDefault;
 
-@CacheableTask
+@DisableCachingByDefault(because = "a simple file-copy is not worthwhile to cache")
 public abstract class ArtifactFromOutput extends NeoGradleBase implements WithOutput {
 
     public ArtifactFromOutput() {
