@@ -2,52 +2,58 @@ package net.neoforged.gradle.neoform.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
-import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
+import net.neoforged.gradle.util.FileUtils;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Defines a specification for an MCP runtime.
  */
 public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification implements NeoFormSpecification {
-    private final Artifact neoFormArtifact;
+    private final File neoFormArchive;
+    private final NeoFormConfigConfigurationSpecV2 spec;
     private final FileCollection additionalRecompileDependencies;
 
-    public NeoFormRuntimeSpecification(Project project,
-                                       String version,
-                                       Artifact neoFormArtifact,
-                                       DistributionType side,
-                                       Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
-                                       Multimap<String, TaskTreeAdapter> postTypeAdapters,
-                                       Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
-                                       FileCollection additionalRecompileDependencies) {
+    private NeoFormRuntimeSpecification(Project project,
+                                          String version,
+                                          File neoFormArchive,
+                                          NeoFormConfigConfigurationSpecV2 spec,
+                                          DistributionType side,
+                                          Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
+                                          Multimap<String, TaskTreeAdapter> postTypeAdapters,
+                                          Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
+                                          FileCollection additionalRecompileDependencies) {
         super(project, "neoForm", version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, NeoFormRuntimeExtension.class);
-        this.neoFormArtifact = neoFormArtifact;
+        this.neoFormArchive = neoFormArchive;
+        this.spec = spec;
         this.additionalRecompileDependencies = additionalRecompileDependencies;
     }
 
     public String getMinecraftVersion() {
-        return getNeoFormArtifact().getVersion().substring(0, getNeoFormArtifact().getVersion().lastIndexOf("-"));
+        return spec.getVersion();
     }
     
     public String getNeoFormVersion() {
-        return getNeoFormArtifact().getVersion().substring(getNeoFormArtifact().getVersion().lastIndexOf("-") + 1);
+        return getVersion();
     }
 
-    @Override
-    public Artifact getNeoFormArtifact() {
-        return neoFormArtifact;
+    public File getNeoFormArchive() {
+        return neoFormArchive;
     }
 
     @Override
@@ -63,40 +69,27 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
 
         NeoFormRuntimeSpecification spec = (NeoFormRuntimeSpecification) o;
 
-        if (!neoFormArtifact.equals(spec.neoFormArtifact)) return false;
+        if (!neoFormArchive.equals(spec.neoFormArchive)) return false;
         return additionalRecompileDependencies.equals(spec.additionalRecompileDependencies);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + neoFormArtifact.hashCode();
+        result = 31 * result + neoFormArchive.hashCode();
         result = 31 * result + additionalRecompileDependencies.hashCode();
         return result;
     }
 
     public static final class Builder extends CommonRuntimeSpecification.Builder<NeoFormRuntimeSpecification, Builder> implements NeoFormSpecification.Builder<NeoFormRuntimeSpecification, Builder> {
 
-        private Provider<String> neoFormGroup;
-        private Provider<String> neoFormName;
-        private Provider<String> neoFormVersion;
-        private Provider<Artifact> neoFormArtifact;
+        private Dependency neoFormDependency;
         private FileCollection additionalDependencies;
 
         private Builder(Project project) {
             super(project);
             this.additionalDependencies = project.getObjects().fileCollection();
-
-            this.neoFormGroup = project.provider(() -> "net.neoforged");
-            this.neoFormName = project.provider(() -> "neoform");
-            this.neoFormVersion = project.provider(() -> "+");
-
-            this.neoFormArtifact = this.neoFormGroup
-                    .flatMap(group -> this.neoFormName
-                            .flatMap(name -> this.neoFormVersion
-                                    .map(version -> Artifact.from(
-                                            String.format("%s:%s:%s@zip", group, name, version)
-                                    ))));
+            withNeoFormVersion("+");
         }
 
         @Override
@@ -108,60 +101,18 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
             return new Builder(project);
         }
 
+        @NotNull
         @Override
-        public Builder withNeoFormGroup(final Provider<String> neoFormGroup) {
-            this.neoFormGroup = neoFormGroup;
+        public Builder withNeoFormVersion(@NotNull String version) {
+            this.neoFormDependency = project.getDependencies().create("net.neoforged:neoform:" + version + "@zip");
             return getThis();
         }
 
+        @NotNull
         @Override
-        public Builder withNeoFormGroup(final String neoFormGroup) {
-            if (neoFormGroup == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-
-            return withNeoFormGroup(project.provider(() -> neoFormGroup));
-        }
-
-        @Override
-        public Builder withNeoFormName(final Provider<String> neoFormName) {
-            this.neoFormName = neoFormName;
+        public Builder withNeoFormDependency(@NotNull Object notation) {
+            this.neoFormDependency = getProject().getDependencies().create(notation);
             return getThis();
-        }
-
-        @Override
-        public Builder withNeoFormName(final String neoFormName) {
-            if (neoFormName == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-
-            return withNeoFormName(project.provider(() -> neoFormName));
-        }
-
-        @Override
-        public Builder withNeoFormVersion(final Provider<String> neoFormVersion) {
-            this.neoFormVersion = neoFormVersion;
-            return getThis();
-        }
-
-        @Override
-        public Builder withNeoFormVersion(final String neoFormVersion) {
-            if (neoFormVersion == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-
-            return withNeoFormVersion(project.provider(() -> neoFormVersion));
-        }
-
-        @Override
-        public Builder withNeoFormArtifact(final Provider<Artifact> neoFormArtifact) {
-            this.neoFormArtifact = neoFormArtifact;
-            return getThis();
-        }
-
-        @Override
-        public Builder withNeoFormArtifact(final Artifact neoFormArtifact) {
-            if (neoFormArtifact == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-
-            return withNeoFormArtifact(project.provider(() -> neoFormArtifact));
         }
 
         @Override
@@ -171,32 +122,29 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
         }
 
         public NeoFormRuntimeSpecification build() {
-            final Provider<Artifact> resolvedArtifact = neoFormArtifact.map(a -> resolveNeoFormVersion(project, a));
-            final Provider<String> resolvedVersion = resolvedArtifact.map(Artifact::getVersion).map(v -> v.equals("+") ? "" : v);
+            ResolvedArtifact artifact = ToolUtilities.resolveToolArtifact(project, neoFormDependency);
+            File archive = artifact.getFile();
+            String effectiveVersion = artifact.getModuleVersion().getId().getVersion();
+
+            // Read the NF config from the archive
+            NeoFormConfigConfigurationSpecV2 spec;
+            try {
+                spec = FileUtils.processFileFromZip(archive, "config.json", NeoFormConfigConfigurationSpecV2::get);
+            } catch (IOException e) {
+                throw new GradleException("Failed to read NeoForm config file from version " + effectiveVersion);
+            }
 
             return new NeoFormRuntimeSpecification(
                     project,
-                    resolvedVersion.get(),
-                    resolvedArtifact.get(),
+                    effectiveVersion,
+                    archive,
+                    spec,
                     distributionType.get(),
                     preTaskAdapters,
                     postTaskAdapters,
                     taskCustomizers,
                     additionalDependencies
             );
-        }
-
-        private static Artifact resolveNeoFormVersion(final Project project, final Artifact current) {
-            if (!Objects.equals(current.getVersion(), "+")) {
-                return current;
-            }
-
-            final Configuration resolveConfig = ConfigurationUtils.temporaryConfiguration(project, current.toDependency(project));
-            return resolveConfig.getResolvedConfiguration()
-                    .getResolvedArtifacts().stream()
-                    .filter(current.asArtifactMatcher())
-                    .findFirst()
-                    .map(Artifact::from).orElse(current);
         }
     }
 }

@@ -10,7 +10,6 @@ import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Depende
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
@@ -53,8 +52,8 @@ public final class NeoFormDependencyManager {
                                 runtimeDefinition.getSourceJarTask(),
                                 runtimeDefinition.getRawJarTask(),
                                 runtimeDefinition.getMinecraftDependenciesConfiguration(),
-                                builder -> builder.setVersion(runtimeDefinition.getSpecification().getNeoFormArtifact().getVersion()),
-                                builder -> builder.setVersion(runtimeDefinition.getSpecification().getNeoFormArtifact().getVersion()),
+                                builder -> builder.setVersion(runtimeDefinition.getSpecification().getNeoFormVersion()),
+                                builder -> builder.setVersion(runtimeDefinition.getSpecification().getNeoFormVersion()),
                                 runtimeDefinition::setReplacedDependency,
                                 runtimeDefinition::onRepoWritten,
                                 Sets::newHashSet
@@ -66,7 +65,7 @@ public final class NeoFormDependencyManager {
     private boolean isNotAMatchingDependency(final Dependency dependencyToCheck) {
         if (dependencyToCheck instanceof ExternalModuleDependency) {
             final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependencyToCheck;
-            return externalModuleDependency.getGroup() == null || !externalModuleDependency.getGroup().equals("net.minecraft") || !isSupportedSide(dependencyToCheck) || !hasMatchingArtifact(externalModuleDependency);
+            return !"net.minecraft".equals(externalModuleDependency.getGroup()) || !isSupportedSide(dependencyToCheck) || !hasMatchingArtifact(externalModuleDependency);
         }
 
         return true;
@@ -104,7 +103,7 @@ public final class NeoFormDependencyManager {
                 throw new IllegalStateException("Version is not defined on NeoForm dependency");
             }
 
-            builder.withNeoFormVersion(dependency.getVersion());
+            builder.withNeoFormDependency("net.neoform:neoform:" + dependency.getVersion() + "@zip");
             NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
         });
     }
