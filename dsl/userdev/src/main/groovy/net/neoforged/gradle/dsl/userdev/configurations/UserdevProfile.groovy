@@ -18,6 +18,7 @@ import org.gradle.api.tasks.Optional
 
 import javax.inject.Inject
 import java.lang.reflect.Type
+import java.nio.charset.StandardCharsets
 import java.util.function.BiFunction
 import java.util.function.Function
 
@@ -33,11 +34,17 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
         this.factory = factory
     }
 
-    public static Gson createGson(ObjectFactory objectFactory) {
+    static Gson createGson(ObjectFactory objectFactory) {
         return new GsonBuilder().disableHtmlEscaping()
                 .registerTypeHierarchyAdapter(UserdevProfile.class, new Serializer(objectFactory))
                 .registerTypeHierarchyAdapter(ToolExecution.class, new ToolExecution.Serializer(objectFactory))
                 .create()
+    }
+
+    static UserdevProfile get(ObjectFactory objectFactory, InputStream input) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
+            return createGson(objectFactory).fromJson(reader, UserdevProfile.class);
+        }
     }
 
     @Input

@@ -12,19 +12,20 @@ import org.gradle.api.file.FileVisitor;
 import org.gradle.api.tasks.util.PatternFilterable;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -149,6 +150,24 @@ public final class FileUtils {
      */
     public static int getFileSize(File asFile) {
         return readAllBytes(asFile.toPath()).length;
+    }
+
+    /**
+     * Reads a JSON file from the given ZIP archive without extracting it fully.
+     */
+    public static <T> T processFileFromZip(File zipArchivePath, String pathInArchive, TransformerUtils.ThrowingFunction<InputStream, T> processor) throws IOException {
+        try (ZipFile zipFile = new ZipFile(zipArchivePath)) {
+            ZipEntry entry = zipFile.getEntry(pathInArchive);
+            if (entry == null) {
+                throw new FileNotFoundException("Couldn't find " + pathInArchive + " in " + zipArchivePath);
+            }
+
+            try (InputStream in = zipFile.getInputStream(entry)) {
+                return processor.apply(in);
+            } catch (Throwable e) {
+                throw new IOException("Failed to process file " + pathInArchive + " from " + zipArchivePath);
+            }
+        }
     }
 
     /**
