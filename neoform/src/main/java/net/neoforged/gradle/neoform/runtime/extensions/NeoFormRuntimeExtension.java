@@ -255,7 +255,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
         final Mappings mappingsExtension = minecraftExtension.getMappings();
         final MinecraftArtifactCache artifactCacheExtension = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
-        final File neoFormZipFile = spec.getNeoFormArchive();
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
@@ -278,18 +277,19 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         }
 
         final File neoFormDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
-        final File unpackedMcpZipDirectory = new File(neoFormDirectory, "unpacked");
         final File stepsMcpDirectory = new File(neoFormDirectory, "steps");
 
         stepsMcpDirectory.mkdirs();
 
+        // TODO: This is unpacking the ZIP during the configuration phase. This should be changed to only extract
+        // the files that are neaded for each task on-demand as part of the task.
+        final File unpackedMcpZipDirectory = new File(neoFormDirectory, "unpacked");
+        final File neoFormZipFile = spec.getNeoFormArchive();
         final FileTree neoFormZipFileTree = spec.getProject().zipTree(neoFormZipFile);
         final CopyingFileTreeVisitor unpackingVisitor = new CopyingFileTreeVisitor(unpackedMcpZipDirectory);
         neoFormZipFileTree.visit(unpackingVisitor);
 
-        final File neoFormConfigFile = new File(unpackedMcpZipDirectory, "config.json");
-        final NeoFormConfigConfigurationSpecV2 neoFormConfig = NeoFormConfigConfigurationSpecV2.get(neoFormConfigFile);
-
+        NeoFormConfigConfigurationSpecV2 neoFormConfig = spec.getConfig();
         neoFormConfig.getLibraries(spec.getDistribution().getName()).forEach(library -> minecraftDependenciesConfiguration.getDependencies().add(
                 spec.getProject().getDependencies().create(library)
         ));
@@ -340,7 +340,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
         final File neoFormDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
-        final File unpackedMcpZipDirectory = new File(neoFormDirectory, "unpacked");
         final File stepsMcpDirectory = new File(neoFormDirectory, "steps");
 
         final Map<String, String> versionData = Maps.newHashMap(mappingsExtension.getVersion().get());
@@ -352,7 +351,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final List<NeoFormConfigConfigurationSpecV1.Step> steps = neoFormConfig.getSteps(spec.getDistribution().getName());
         if (steps.isEmpty()) {
-            throw new IllegalArgumentException("Unknown side: " + spec.getDistribution() + " For Config: " + definition.getSpecification().getNeoFormArchive());
+            throw new IllegalArgumentException("Unknown side: " + spec.getDistribution() + " for NeoForm " + definition.getSpecification().getNeoFormVersion());
         }
 
         final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs = definition.getTasks();

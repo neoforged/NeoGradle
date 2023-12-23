@@ -4,7 +4,6 @@ import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -16,7 +15,6 @@ import net.neoforged.gradle.util.FileUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.provider.Provider;
@@ -221,15 +219,6 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
                     effectiveVersion.getName(),
                     effectiveVersion.getVersion()
             );
-        }
-
-        private static Artifact resolveUserDevVersion(final Project project, final Artifact current) {
-            final Configuration resolveConfig = ConfigurationUtils.temporaryConfiguration(project, current.toDependency(project));
-            return resolveConfig.getResolvedConfiguration()
-                    .getResolvedArtifacts().stream()
-                    .filter(current.asArtifactMatcher())
-                    .findFirst()
-                    .map(Artifact::from).orElse(current);
         }
     }
 }

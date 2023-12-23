@@ -40,14 +40,14 @@ public class NeoFormProjectPlugin implements Plugin<Project> {
         // Needed to gain access to the common systems
         project.getPluginManager().apply(CommonPlugin.class);
 
-        NeoFormRuntimeExtension runtimeExtension = project.getExtensions().create("neoFormRuntime", NeoFormRuntimeExtension.class, project);
+        project.getExtensions().create("neoFormRuntime", NeoFormRuntimeExtension.class, project);
 
         NeoFormOfficialNamingChannelConfigurator.getInstance().configure(project);
 
-        //Setup handling of the dependencies
-        NeoFormDependencyManager.getInstance().apply(project);
+        // Setup handling of the dependencies
+        NeoFormDependencyManager.apply(project);
 
-        //Add Known repos
+        // Add Known repos
         project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.NEO_FORGE_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
