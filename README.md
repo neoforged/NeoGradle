@@ -46,7 +46,7 @@ subsystems {
     // Overrides the full Maven coordinate of the tool used to apply the Parchment mappings
     // See https://github.com/neoforged/JavaSourceTransformer
     // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.toolArtifact
-    // toolArtifact = "net.neoforged.jst:jst-cli-bundle:1.0.29"
+    // toolArtifact = "net.neoforged.jst:jst-cli-bundle:1.0.30"
     
     // Set this to false if you don't want the https://maven.parchmentmc.org/ repository to be added automatically when
     // applying Parchment mappings is enabled
