@@ -45,7 +45,7 @@ public abstract class IvyDummyRepositoryEntry implements ConfigurableDSLElement<
     private final Collection<RepositoryReference> dependencies;
 
     /**
-     * @param project      The project thsi entry resides in.
+     * @param project      The project this entry resides in.
      * @param group        The group of the dependency.
      * @param name         The name of the dependency.
      * @param version      The version of the dependency.

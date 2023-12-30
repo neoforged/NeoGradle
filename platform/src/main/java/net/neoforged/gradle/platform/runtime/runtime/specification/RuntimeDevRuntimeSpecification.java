@@ -3,16 +3,13 @@ package net.neoforged.gradle.platform.runtime.runtime.specification;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
-import net.neoforged.gradle.dsl.common.util.Artifact;
-import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
+import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
 import net.neoforged.gradle.platform.runtime.runtime.extension.RuntimeDevRuntimeExtension;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,47 +19,43 @@ import java.util.Objects;
  * Defines a specification for a ForgeUserDev runtime.
  */
 public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecification {
-    
-    private final Artifact neoFormArtifact;
-    private final String minecraftVersion;
-    private final FileCollection additionalDependencies;
+
+    private final NeoFormRuntimeDefinition neoFormRuntime;
     private final Directory patchesDirectory;
     private final Directory rejectsDirectory;
     private final boolean isUpdating;
     
-    public RuntimeDevRuntimeSpecification(Project project,
-                                          DistributionType distribution,
+    public RuntimeDevRuntimeSpecification(NeoFormRuntimeDefinition neoFormRuntime,
                                           Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
                                           Multimap<String, TaskTreeAdapter> postTypeAdapters,
                                           Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
-                                          Artifact neoFormArtifact,
-                                          FileCollection additionalDependencies,
                                           Directory patchesDirectory,
                                           Directory rejectsDirectory,
                                           boolean isUpdating) {
-        super(project, "platform", neoFormArtifact.getVersion(), distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, RuntimeDevRuntimeExtension.class);
-        this.minecraftVersion = neoFormArtifact.getVersion().substring(0, neoFormArtifact.getVersion().lastIndexOf("-"));
-        this.neoFormArtifact = neoFormArtifact;
-        this.additionalDependencies = additionalDependencies;
+        super(neoFormRuntime.getSpecification().getProject(),
+                "platform",
+                neoFormRuntime.getSpecification().getVersion(),
+                neoFormRuntime.getSpecification().getDistribution(),
+                preTaskTypeAdapters,
+                postTypeAdapters,
+                taskCustomizers,
+                RuntimeDevRuntimeExtension.class);
+        this.neoFormRuntime = neoFormRuntime;
         this.patchesDirectory = patchesDirectory;
         this.rejectsDirectory = rejectsDirectory;
         this.isUpdating = isUpdating;
     }
-    
+
+    public NeoFormRuntimeDefinition getNeoFormRuntime() {
+        return neoFormRuntime;
+    }
+
     @NotNull
     @Override
     public String getMinecraftVersion() {
-        return Objects.requireNonNull(minecraftVersion, "Minecraft version not set");
+        return neoFormRuntime.getSpecification().getMinecraftVersion();
     }
-    
-    public Artifact getNeoFormArtifact() {
-        return neoFormArtifact;
-    }
-    
-    public FileCollection getAdditionalDependencies() {
-        return additionalDependencies;
-    }
-    
+
     public Directory getPatchesDirectory() {
         return patchesDirectory;
     }
@@ -74,47 +67,30 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
     public boolean isUpdating() {
         return isUpdating;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         RuntimeDevRuntimeSpecification that = (RuntimeDevRuntimeSpecification) o;
-        return Objects.equals(neoFormArtifact, that.neoFormArtifact) && Objects.equals(minecraftVersion, that.minecraftVersion) && Objects.equals(additionalDependencies, that.additionalDependencies) && Objects.equals(patchesDirectory, that.patchesDirectory) && Objects.equals(rejectsDirectory, that.rejectsDirectory);
+        return isUpdating == that.isUpdating && Objects.equals(neoFormRuntime, that.neoFormRuntime) && Objects.equals(patchesDirectory, that.patchesDirectory) && Objects.equals(rejectsDirectory, that.rejectsDirectory);
     }
-    
+
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), neoFormArtifact, minecraftVersion, additionalDependencies, patchesDirectory, rejectsDirectory);
+        return Objects.hash(super.hashCode(), neoFormRuntime, patchesDirectory, rejectsDirectory, isUpdating);
     }
-    
+
     public static final class Builder extends CommonRuntimeSpecification.Builder<RuntimeDevRuntimeSpecification, Builder> {
-        
-        private Provider<String> neoFormGroup;
-        private Provider<String> neoFormName;
-        private Provider<String> neoFormVersion;
-        private Provider<Artifact> neoFormArtifact;
-        private FileCollection additionalDependencies;
+
+        private NeoFormRuntimeDefinition neoFormRuntimeDefinition;
         private Provider<Directory> patchesDirectory;
         private Provider<Directory> rejectsDirectory;
         private Provider<Boolean> isUpdating;
         
         private Builder(Project project) {
             super(project);
-            this.additionalDependencies = project.getObjects().fileCollection();
-            
-            this.neoFormGroup = project.provider(() -> "net.neoforged");
-            this.neoFormName = project.provider(() -> "neoform");
-            this.neoFormVersion = project.provider(() -> "+");
-            
-            this.neoFormArtifact = this.neoFormGroup
-                                           .flatMap(group -> this.neoFormName
-                                                                     .flatMap(name -> this.neoFormVersion
-                                                                                              .map(version -> Artifact.from(
-                                                                                                      String.format("%s:%s:%s@zip", group, name, version)
-                                                                                              ))));
-            
             this.patchesDirectory = project.provider(() -> project.getLayout().getProjectDirectory().dir("patches"));
             this.rejectsDirectory = project.provider(() -> project.getLayout().getProjectDirectory().dir("rejects"));
             this.isUpdating = project.provider(() -> false);
@@ -128,60 +104,17 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
         public static Builder from(final Project project) {
             return new Builder(project);
         }
-        
-        public Builder withNeoFormGroup(final Provider<String> neoFormGroup) {
-            this.neoFormGroup = neoFormGroup;
+
+        public Builder withNeoFormRuntime(NeoFormRuntimeDefinition neoFormRuntimeDefinition) {
+            this.neoFormRuntimeDefinition = neoFormRuntimeDefinition;
             return getThis();
         }
-        
-        public Builder withNeoFormGroup(final String neoFormGroup) {
-            if (neoFormGroup == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-            
-            return withNeoFormGroup(project.provider(() -> neoFormGroup));
-        }
-        
-        public Builder withNeoFormName(final Provider<String> neoFormName) {
-            this.neoFormName = neoFormName;
-            return getThis();
-        }
-        
-        public Builder withNeoFormName(final String neoFormName) {
-            if (neoFormName == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-            
-            return withNeoFormName(project.provider(() -> neoFormName));
-        }
-        
-        public Builder withNeoFormVersion(final Provider<String> neoFormVersion) {
-            this.neoFormVersion = neoFormVersion;
-            return getThis();
-        }
-        
-        public Builder withNeoFormVersion(final String neoFormVersion) {
-            if (neoFormVersion == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-            
-            return withNeoFormVersion(project.provider(() -> neoFormVersion));
-        }
-        
-        public Builder withNeoFormArtifact(final Provider<Artifact> neoFormArtifact) {
-            this.neoFormArtifact = neoFormArtifact;
-            return getThis();
-        }
-        
-        public Builder withNeoFormArtifact(final Artifact neoFormArtifact) {
-            if (neoFormArtifact == null) // Additional null check for convenient loading of versions from dependencies.
-                return getThis();
-            
-            return withNeoFormArtifact(project.provider(() -> neoFormArtifact));
-        }
-        
+
         public Builder withPatchesDirectory(final Provider<Directory> patchesDirectory) {
             this.patchesDirectory = patchesDirectory;
             return getThis();
         }
-        
+
         public Builder withPatchesDirectory(final Directory patchesDirectory) {
             if (patchesDirectory == null) // Additional null check for convenient loading of versions from dependencies.
                 return getThis();
@@ -212,40 +145,30 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
             
             return isUpdating(project.provider(() -> isUpdating));
         }
-        
-        
-        public Builder withAdditionalDependencies(final FileCollection files) {
-            this.additionalDependencies = this.additionalDependencies.plus(files);
-            return getThis();
-        }
-        
+
         public @NotNull RuntimeDevRuntimeSpecification build() {
-            final Provider<Artifact> resolvedArtifact = neoFormArtifact.map(a -> resolveNeoFormVersion(project, a));
-            
+            if (neoFormRuntimeDefinition == null) {
+                throw new IllegalStateException("Setting a neoFormRuntimeDefinition is required");
+            }
+
+            NeoFormRuntimeSpecification neoFormSpec = neoFormRuntimeDefinition.getSpecification();
+            if (neoFormSpec.getProject() != getProject()) {
+                throw new IllegalStateException("Cannot use a neoFormRuntimeDefinition from a different project (" + neoFormSpec.getProject() + ")");
+            }
+
+            if (distributionType.get() != neoFormSpec.getDistribution()){
+                throw new IllegalStateException("Cannot change the distribution type to " + distributionType.get() +
+                        " if the NeoForm runtime is for " + neoFormSpec.getDistribution());
+            }
+
             return new RuntimeDevRuntimeSpecification(
-                    project,
-                    distributionType.get(),
+                    neoFormRuntimeDefinition,
                     preTaskAdapters,
                     postTaskAdapters,
                     taskCustomizers,
-                    resolvedArtifact.get(),
-                    additionalDependencies,
                     patchesDirectory.get(),
                     rejectsDirectory.get(),
                     isUpdating.get());
-        }
-        
-        private static Artifact resolveNeoFormVersion(final Project project, final Artifact current) {
-            if (!Objects.equals(current.getVersion(), "+")) {
-                return current;
-            }
-            
-            final Configuration resolveConfig = ConfigurationUtils.temporaryConfiguration(project, current.toDependency(project));
-            return resolveConfig.getResolvedConfiguration()
-                           .getResolvedArtifacts().stream()
-                           .filter(current.asArtifactMatcher())
-                           .findFirst()
-                           .map(Artifact::from).orElse(current);
         }
     }
 }
