@@ -35,6 +35,9 @@ jobs:
       - name: Test
         run: ./gradlew --info -s check
 
+      - name: Publish artifacts
+        uses: neoforged/action-pr-publishing/upload@v1
+
       # Always upload test results
       - name: Merge Test Reports
         if: success() || failure()
