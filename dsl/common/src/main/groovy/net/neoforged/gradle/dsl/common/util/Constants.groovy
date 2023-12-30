@@ -23,7 +23,7 @@ class Constants {
     public static final String DEFAULT_PARCHMENT_GROUP = "org.parchmentmc.data"
     public static final String DEFAULT_PARCHMENT_ARTIFACT_PREFIX = "parchment-"
     public static final String DEFAULT_PARCHMENT_MAVEN_URL = "https://maven.parchmentmc.org/"
-    public static final String DEFAULT_PARCHMENT_TOOL_ARTIFACT = "net.neoforged.jst:jst-cli-bundle:1.0.29"
+    public static final String DEFAULT_PARCHMENT_TOOL_ARTIFACT = "net.neoforged.jst:jst-cli-bundle:1.0.30"
 
     public static final String DEFAULT_RECOMPILER_MAX_MEMORY = "1g"
 
