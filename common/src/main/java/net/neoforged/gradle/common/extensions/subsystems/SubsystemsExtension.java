@@ -62,16 +62,18 @@ public abstract class SubsystemsExtension implements ConfigurableDSLElement<Subs
     private void configureParchmentDefaults() {
         Parchment parchment = getParchment();
         parchment.getParchmentArtifact().convention(
-                parchment.getMinecraftVersion()
-                        .zip(parchment.getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
-                            return DEFAULT_PARCHMENT_GROUP
-                                    + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
-                                    + ":" + mappingVersion
-                                    // We need the checked variant for now since it resolves
-                                    // parameters conflicting with local variables by prefixing everything with "p"
-                                    + ":checked"
-                                    + "@zip";
-                        })
+                getStringProperty("parchment.parchmentArtifact").orElse(
+                        parchment.getMinecraftVersion()
+                                .zip(parchment.getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
+                                    return DEFAULT_PARCHMENT_GROUP
+                                            + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
+                                            + ":" + mappingVersion
+                                            // We need the checked variant for now since it resolves
+                                            // parameters conflicting with local variables by prefixing everything with "p"
+                                            + ":checked"
+                                            + "@zip";
+                                })
+                )
         );
         parchment.getMinecraftVersion().convention(
                 getStringProperty("parchment.minecraftVersion")
