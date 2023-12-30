@@ -13,8 +13,16 @@ To see the latest available version of NeoGradle, visit the [NeoForged project p
 To get human-readable parameter names in decompiled Minecraft source-code, as well as Javadocs, crowed-sourced data
 from the [Parchment project](https://parchmentmc.org) can be applied to the Minecraft source-code before it is recompiled.
 
-This can either be configured in the build-script or via Gradle properties. Parchment will be applied
-automatically once you configure the `minecraftVersion` and `mappingsVersion` parameters.
+This is currently only supported when applying the NeoGradle userdev Plugin.
+
+The most basic configuration is using the following properties in gradle.properties:
+
+```
+neogradle.subsystems.parchment.minecraftVersion=1.20.2
+neogradle.subsystems.parchment.mappingsVersion=2023.12.10
+```
+
+The subsystem also has Gradle DSL and supports more parameters explained in the following Gradle snippet.
 
 ```gradle
 subsystems {
