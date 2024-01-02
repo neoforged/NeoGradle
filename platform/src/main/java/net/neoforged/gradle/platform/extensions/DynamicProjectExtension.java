@@ -448,7 +448,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
             
-            final Configuration installerToolConfiguration = ConfigurationUtils.temporaryConfiguration(project, project.getDependencies().create("net.minecraftforge:installer:2.1.+:shrunk"));
+            final Configuration installerToolConfiguration = ConfigurationUtils.temporaryConfiguration(project, project.getDependencies().create("net.neoforged:legacyinstaller:3.0.+:shrunk"));
             final TaskProvider<Download> downloadInstaller = project.getTasks().register("downloadInstaller", Download.class, task -> {
                 task.getInput().from(installerToolConfiguration);
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
