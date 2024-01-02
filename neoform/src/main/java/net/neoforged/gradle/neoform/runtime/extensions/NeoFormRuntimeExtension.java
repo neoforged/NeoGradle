@@ -491,6 +491,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
             task.getInputs().file(mappingFile);
+            task.getInputs().file(recompileInput);
+            task.getInputs().file(listLibrariesOutput);
             task.getExecutingJar().fileProvider(toolExecutable);
             task.getProgramArguments().add(listLibrariesOutput.map(f -> "--libraries-list=" + f.getAsFile().getAbsolutePath()));
             task.getProgramArguments().add("--enable-parchment");
