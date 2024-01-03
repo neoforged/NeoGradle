@@ -370,7 +370,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 profile.data("MCP_VERSION", String.format("'%s'", neoFormVersion), String.format("'%s'", neoFormVersion));
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set("net.minecraftforge:installertools:1.3.0");
+                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "EXTRACT_FILES", "--archive", "{INSTALLER}",
                             
                             "--from", "data/run.sh", "--to", "{ROOT}/run.sh", "--exec", "{ROOT}/run.sh",
@@ -385,34 +385,34 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set("net.minecraftforge:installertools:1.3.0");
+                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{ROOT}/libraries/", "--libraries");
                 });
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set("net.minecraftforge:installertools:1.3.0");
+                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{MC_UNPACKED}", "--jar-only");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set("net.minecraftforge:installertools:1.3.0");
+                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "MCP_DATA", "--input", String.format("[%s]", runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString()), "--output", "{MAPPINGS}", "--key", "mappings");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set("net.minecraftforge:installertools:1.3.0");
+                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "DOWNLOAD_MOJMAPS", "--version", runtimeDefinition.getSpecification().getMinecraftVersion(), "--side", "{SIDE}", "--output", "{MOJMAPS}");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set("net.minecraftforge:installertools:1.3.0");
+                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "MERGE_MAPPING", "--left", "{MAPPINGS}", "--right", "{MOJMAPS}", "--output", "{MERGED_MAPPINGS}", "--classes", "--fields", "--methods", "--reverse-right");
                 });
                 profile.processor(project, processor -> {
                     processor.client();
-                    processor.getJar().set("net.minecraftforge:jarsplitter:1.1.4");
+                    processor.getJar().set(Constants.JARSPLITTER);
                     processor.getArguments().addAll("--input", "{MINECRAFT_JAR}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set("net.minecraftforge:jarsplitter:1.1.4");
+                    processor.getJar().set(Constants.JARSPLITTER);
                     processor.getArguments().addAll("--input", "{MC_UNPACKED}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
                 profile.processor(project, processor -> {
@@ -420,7 +420,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     processor.getArguments().addAll("--input", "{MC_SLIM}", "--output", "{MC_SRG}", "--names", "{MERGED_MAPPINGS}", "--ann-fix", "--ids-fix", "--src-fix", "--record-fix");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set("net.minecraftforge:binarypatcher:1.1.1");
+                    processor.getJar().set(Constants.BINARYPATCHER);
                     processor.getArguments().addAll("--clean", "{MC_SRG}", "--output", "{PATCHED}", "--apply", "{BINPATCH}");
                 });
                 
