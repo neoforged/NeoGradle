@@ -1,7 +1,7 @@
 NeoGradle
 ===========
 
-Minecraft mod development framework used by NeoForge and FML for the Gradle build system.
+Minecraft mod development framework, used by NeoForge and FML for the Gradle build system.
 
 For a quick start, see how the [NeoForge Mod Development Kit](https://github.com/neoforged/MDK) uses NeoGradle, or see
 our official [Documentation](https://docs.neoforged.net/neogradle/docs/).
@@ -10,7 +10,7 @@ To see the latest available version of NeoGradle, visit the [NeoForged project p
 
 ## Apply Parchment Mappings
 
-To get human-readable parameter names in decompiled Minecraft source-code, as well as Javadocs, crowed-sourced data
+To get human-readable parameter names in decompiled Minecraft source-code, as well as Javadocs, crowdsourced data
 from the [Parchment project](https://parchmentmc.org) can be applied to the Minecraft source-code before it is recompiled.
 
 This is currently only supported when applying the NeoGradle userdev Plugin.
@@ -22,7 +22,7 @@ neogradle.subsystems.parchment.minecraftVersion=1.20.2
 neogradle.subsystems.parchment.mappingsVersion=2023.12.10
 ```
 
-The subsystem also has Gradle DSL and supports more parameters explained in the following Gradle snippet.
+The subsystem also has a Gradle DSL and supports more parameters, explained in the following Gradle snippet:
 
 ```gradle
 subsystems {
@@ -66,7 +66,7 @@ subsystems {
 
 The settings used by the decompiler when preparing Minecraft dependencies can be overridden
 using [Gradle properties](https://docs.gradle.org/current/userguide/project_properties.html).
-This can be useful to trade slower build-times for being able to run NeoGradle on lower-end machines.
+This can be useful to run NeoGradle on lower-end machines, at the cost of slower build times.
 
 | Property                                     | Description                                                                                                                |
 |----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
