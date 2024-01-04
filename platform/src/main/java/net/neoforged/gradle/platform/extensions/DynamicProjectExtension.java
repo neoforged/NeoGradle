@@ -352,9 +352,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 task.dependsOn(universalJar);
             });
-            
+
             installerProfile.configure((Consumer<InstallerProfile>) profile -> {
-                profile.getProfile().set(project.getName());
+                profile.getProfile().convention(project.getName());
                 profile.getVersion().set(launcherProfile.getId());
                 profile.getMinecraft().set(runtimeDefinition.getSpecification().getMinecraftVersion());
                 profile.getServerJarPath().set("{LIBRARY_DIR}/net/minecraft/server/{MINECRAFT_VERSION}/server-{MINECRAFT_VERSION}.jar");
@@ -436,7 +436,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 profile.getJson().set("/version.json");
                 profile.getLogo().set("/big_logo.png");
                 profile.getMirrorList().set("https://mirrors.neoforged.net");
-                profile.getWelcome().set("Welcome to the simple installer for " + project.getName());
+                profile.getWelcome().convention(profile.getProfile().map(name -> "Welcome to the simple " + name + " installer"));
+
+                profile.getShouldHideExtract().set(true);
             });
             
             final TaskProvider<CreateLegacyInstallerJson> createLegacyInstallerJson = project.getTasks().register("createLegacyInstallerJson", CreateLegacyInstallerJson.class, task -> {
