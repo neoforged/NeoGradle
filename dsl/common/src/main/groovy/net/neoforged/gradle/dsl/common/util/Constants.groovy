@@ -12,10 +12,10 @@ class Constants {
     public static final String ACCESSTRANSFORMER_VERSION_INTERPOLATION = "net.minecraftforge:accesstransformers:%s:fatjar";
     public static final String ACCESSTRANSFORMER = String.format(ACCESSTRANSFORMER_VERSION_INTERPOLATION, ACCESSTRANSFORMER_VERSION);
     public static final String SPECIALSOURCE = "net.md-5:SpecialSource:1.11.0:shaded";
-    public static final String FART_VERSION = "1.0.12";
+    public static final String FART_VERSION = "1.0.13";
     public static final String FART_ARTIFACT_INTERPOLATION = "net.neoforged:AutoRenamingTool:%s:all";
     public static final String FART = String.format(FART_ARTIFACT_INTERPOLATION, FART_VERSION);
-    public static final String INSTALLERTOOLS_VERSION = '2.1.1'
+    public static final String INSTALLERTOOLS_VERSION = '2.1.2'
     public static final String INSTALLERTOOLS = "net.neoforged.installertools:installertools:${INSTALLERTOOLS_VERSION}"
     public static final String JARSPLITTER = "net.neoforged.installertools:jarsplitter:${INSTALLERTOOLS_VERSION}"
     public static final String BINARYPATCHER = "net.neoforged.installertools:binarypatcher:${INSTALLERTOOLS_VERSION}"
