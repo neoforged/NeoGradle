@@ -771,7 +771,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         return project.provider(() -> {
             StringBuilder ignoreList = new StringBuilder(1000);
             for (Configuration cfg : configurations) {
-                ignoreList.append(cfg.getFiles().stream().map(File::getName).collect(Collectors.joining(","))).append(",");
+                if (!cfg.isEmpty()) { // Skip empty else we will end up with ",," in the ignore list and all entries will be ignored.
+                    ignoreList.append(cfg.getFiles().stream().map(File::getName).collect(Collectors.joining(","))).append(",");
+                }
             }
             ignoreList.append("client-extra").append(",").append(project.getName()).append("-");
             return ignoreList.toString();
