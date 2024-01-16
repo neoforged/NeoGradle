@@ -3,7 +3,7 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.minecraftforge.gradleutils' version '[2.0.13,)'
+    id 'net.minecraftforge.gradleutils' version '[2.3,2.4)'
     id 'com.github.ben-manes.versions' version '0.46.0'
 }
 
@@ -12,8 +12,8 @@ version = gradleutils.getTagOffsetBranchVersion('FG_6.0')
 logger.lifecycle('Version: ' + version)
 
 changelog {
-    fromTag '6.0'
-    disableAutomaticPublicationRegistration()
+    from '6.0'
+    publishAll = false
 }
 sourceSets {
     common
