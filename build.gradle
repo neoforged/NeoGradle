@@ -3,17 +3,17 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.minecraftforge.gradleutils' version '[2.3,2.4)'
+    id 'net.neoforged.gradleutils' version '3.0.0-alpha.10'
     id 'com.github.ben-manes.versions' version '0.46.0'
 }
 
 group = "net.neoforged"
-version = gradleutils.getTagOffsetBranchVersion('FG_6.0')
+version = gradleutils.version.toString()
 logger.lifecycle('Version: ' + version)
 
 changelog {
     from '6.0'
-    publishAll = false
+    disableAutomaticPublicationRegistration()
 }
 sourceSets {
     common
@@ -137,6 +137,6 @@ publishing {
         }
     }
     repositories {
-        maven gradleutils.getPublishingForgeMaven()
+        maven gradleutils.getPublishingMaven()
     }
 }
