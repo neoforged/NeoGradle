@@ -119,7 +119,7 @@ public class JUnitProjectPlugin implements Plugin<Project> {
         final Iterator<SourceSet> sets = Stream.concat(
                 extension.getTestSources().get().stream(), junitRun.getModSources().get().stream()
         ).distinct().iterator();
-        
+
         final Set<File> excludedPaths = new HashSet<>();
         while (sets.hasNext()) {
             final SourceSet sourceSet = sets.next();

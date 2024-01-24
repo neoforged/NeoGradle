@@ -613,7 +613,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.getLibraries().from(moduleOnlyConfiguration);
                 task.getModules().from(moduleOnlyConfiguration);
 
-                task.getTestLibraries().from(userdevTestImplementationConfiguration);
+                task.getTestLibraries().set(userdevTestImplementationConfiguration.getDependencies()
+                        .stream().map(dep -> dep.getGroup() + ":" + dep.getName() + ":" + dep.getVersion())
+                        .collect(Collectors.toList()));
                 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
