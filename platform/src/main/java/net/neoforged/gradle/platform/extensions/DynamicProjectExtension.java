@@ -758,14 +758,14 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
             }
 
-            if (run.getIsDataGenerator().get() || run.getIsClient().get()) {
+            if (run.getIsDataGenerator().get() || run.getIsClient().get() || runType.getIsJUnit().get()) {
                 run.getProgramArguments().add("--assetsDir");
                 run.getProgramArguments().add(assetsDir);
                 run.getProgramArguments().add("--assetIndex");
                 run.getProgramArguments().add(assetIndex);
             }
 
-            if (run.getName().equals("junit")) {
+            if (runType.getIsJUnit().get()) {
                 run.getProgramArguments().addAll("--launchTarget", "forgejunitdev");
             }
         });

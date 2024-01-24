@@ -38,6 +38,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         getIsServer().convention(false)
         getIsDataGenerator().convention(false)
         getIsGameTest().convention(false)
+        getIsJUnit().convention(false)
     }
 
     private static Boolean or(Boolean a, Boolean b) {
@@ -102,6 +103,15 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @DSLProperty
     @Input
     abstract Property<Boolean> getIsServer();
+
+    /**
+     * Indicates if this run is a JUnit run.
+     *
+     * @return {@code true} if this run is a JUnit run; otherwise, {@code false}.
+     */
+    @DSLProperty(propertyName = 'junit')
+    @Input
+    abstract Property<Boolean> getIsJUnit();
 
     /**
      * Indicates if this run is a data generation run.

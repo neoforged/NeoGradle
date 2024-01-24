@@ -12,19 +12,25 @@ import javax.inject.Inject
 /**
  * An extension used to configure the {@code test} task.
  */
-abstract class TestTaskExtension {
+class TestTaskExtension {
     public static final String NAME = 'minecraft'
+
+    private final ListProperty<SourceSet> testSources
 
     /**
      * A list of sources to use as mod classes.
      */
     @Input
     @DSLProperty
-    abstract ListProperty<SourceSet> getTestSources()
+    ListProperty<SourceSet> getTestSources() {
+        return testSources
+    }
 
     @Inject
     TestTaskExtension(Project project) {
+        testSources = project.objects.listProperty(SourceSet)
         testSources.convention([])
+        testSources.add(project.getExtensions().getByType(JavaPluginExtension).sourceSets.named('main'))
         testSources.add(project.getExtensions().getByType(JavaPluginExtension).sourceSets.named('test'))
     }
 }

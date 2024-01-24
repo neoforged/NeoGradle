@@ -20,6 +20,7 @@ import org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFram
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +29,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,7 +67,7 @@ public class JUnitProjectPlugin implements Plugin<Project> {
         Project project = testTask.getProject();
 
         // Find the runtime reachable from the test task
-        CommonRuntimeDefinition<?> runtimeDefinition;
+        @Nullable CommonRuntimeDefinition<?> runtimeDefinition;
         try {
             runtimeDefinition = TaskDependencyUtils.extractRuntimeDefinition(project, testTask);
         } catch (MultipleDefinitionsFoundException e) {
@@ -75,7 +78,7 @@ public class JUnitProjectPlugin implements Plugin<Project> {
             if (runtimeExtension instanceof CommonRuntimeDefinition) {
                 runtimeDefinition = (CommonRuntimeDefinition<?>) runtimeExtension;
             } else {
-                throw new GradleException("Couldn't determine Minecraft runtime definition for JUnit tests", e);
+                runtimeDefinition = null;
             }
         }
 
@@ -93,10 +96,14 @@ public class JUnitProjectPlugin implements Plugin<Project> {
 
         RunImpl junitRun = getOrCreateRun("junitTest", project, runtimeDefinition, runType);
 
+        testTask.setWorkingDir(junitRun.getWorkingDirectory().get());
         // Wire up the execution parameters for the Test task with the definitions found in the run
         testTask.getSystemProperties().putAll(junitRun.getSystemProperties().get());
-        File argsFile = project.getLayout().getBuildDirectory().file("test_args.txt").get().getAsFile();
+        File argsFile = new File(testTask.getWorkingDir(), "test_args.txt");
         testTask.doFirst("writeArgs", task -> {
+            if (!testTask.getWorkingDir().exists()) {
+                testTask.getWorkingDir().mkdirs();
+            }
             try {
                 Files.write(argsFile.toPath(), junitRun.getProgramArguments().get(), StandardCharsets.UTF_8);
             } catch (IOException e) {
@@ -112,12 +119,20 @@ public class JUnitProjectPlugin implements Plugin<Project> {
         final Iterator<SourceSet> sets = Stream.concat(
                 extension.getTestSources().get().stream(), junitRun.getModSources().get().stream()
         ).distinct().iterator();
+        
+        final Set<File> excludedPaths = new HashSet<>();
         while (sets.hasNext()) {
             final SourceSet sourceSet = sets.next();
             final String modId = SourceSetUtils.getModIdentifier(sourceSet);
             Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream())
-                    .forEach(dir -> modClassesDirs.add(modId + "%%" + dir.getAbsolutePath()));
+                    .forEach(dir -> {
+                        excludedPaths.add(dir);
+                        modClassesDirs.add(modId + "%%" + dir.getAbsolutePath());
+                    });
         }
+
+        // Make sure that mod classes don't end up being loaded from the boot CP
+        testTask.setClasspath(testTask.getClasspath().filter(f -> !excludedPaths.contains(f)));
         testTask.getEnvironment().put("MOD_CLASSES", String.join(File.pathSeparator, modClassesDirs));
 
         for (TaskProvider<? extends Task> taskDependency : junitRun.getTaskDependencies()) {
@@ -125,7 +140,7 @@ public class JUnitProjectPlugin implements Plugin<Project> {
         }
     }
 
-    private static RunImpl getOrCreateRun(String runName, Project project, CommonRuntimeDefinition<?> runtimeDefinition, String runType) {
+    private static RunImpl getOrCreateRun(String runName, Project project, @Nullable CommonRuntimeDefinition<?> runtimeDefinition, String runType) {
         // Reuse an existing junitTest run, otherwise create it
         RunImpl junitRun = (RunImpl) RunsUtil.get(project, runName);
         if (junitRun == null) {
@@ -133,7 +148,9 @@ public class JUnitProjectPlugin implements Plugin<Project> {
             // Run-Type "junit" must be provided by the runtime or inline in the project
             junitRun.configure(runType);
             junitRun.configure();
-            runtimeDefinition.configureRun(junitRun);
+            if (runtimeDefinition != null) {
+                runtimeDefinition.configureRun(junitRun);
+            }
         }
         return junitRun;
     }
