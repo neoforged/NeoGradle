@@ -20,6 +20,12 @@ jobs:
           fetch-depth: 1000
           fetch-tags: true
 
+      # Switch to a new branch with the PR number and PR branch name,
+      # for the projects where the buildscript uses the branch name
+      - name: Create branch for commit
+        run:
+          git switch -C pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.ref }}
+
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:

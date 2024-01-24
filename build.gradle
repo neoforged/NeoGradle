@@ -6,9 +6,12 @@ plugins {
 }
 
 gradleutils.version {
-    branches.suffixBranch = true
+    branches {
+        suffixBranch = true
+        suffixExemptedBranches.add('NG_7.0')
+    }
 }
-version = gradleutils.version
+println("Version: ${version = gradleutils.version}")
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
