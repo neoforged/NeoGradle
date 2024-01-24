@@ -3,12 +3,14 @@ package net.neoforged.gradle.dsl.common.extensions
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
-import net.minecraftforge.gdi.annotations.ProjectGetter
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 
 import javax.inject.Inject
 
+/**
+ * A {@link org.gradle.api.tasks.SourceSet SourceSet} extension used for associating each source set with a mod identifier.
+ */
 @CompileStatic
 abstract class RunnableSourceSet implements BaseDSLElement<RunnableSourceSet> {
 
@@ -33,6 +35,13 @@ abstract class RunnableSourceSet implements BaseDSLElement<RunnableSourceSet> {
         return project;
     }
 
+    /**
+     * Defines the mod identifier this source set belongs to.
+     * <p>
+     * Defaults to {@link Minecraft#getModIdentifier}.
+     *
+     * @return The property which holds the mod identifier this source set belongs to.
+     */
     @DSLProperty
     Property<String> getModIdentifier() {
         return modIdentifier;

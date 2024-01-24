@@ -14,6 +14,7 @@ import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
@@ -47,6 +48,8 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.ForkOptions;
 import org.jetbrains.annotations.NotNull;
@@ -71,18 +74,23 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         super(project);
     }
 
-    private static void configureMcpRuntimeTaskWithDefaults(NeoFormRuntimeSpecification spec, File neoFormDirectory, Map<String, File> dataFiles, Map<String, File> dataDirectories, LinkedHashMap<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, Runtime neoFormRuntimeTask, Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
+    private static void configureMcpRuntimeTaskWithDefaults(NeoFormRuntimeSpecification spec, File neoFormDirectory, Map<String, String> symbolicDataSources, LinkedHashMap<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, Runtime neoFormRuntimeTask, Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         buildArguments(neoFormRuntimeTask.getArguments(), spec, step, tasks, neoFormRuntimeTask, alternativeInputProvider);
-        configureCommonRuntimeTaskParameters(neoFormRuntimeTask, dataFiles, dataDirectories, step.getName(), spec, neoFormDirectory);
+        configureCommonRuntimeTaskParameters(neoFormRuntimeTask, symbolicDataSources, step.getName(), spec, neoFormDirectory);
     }
 
-    private static void configureMcpRuntimeTaskWithDefaults(NeoFormRuntimeSpecification spec, File neoFormDirectory, Map<String, File> dataFiles, Map<String, File> dataDirectories, Runtime neoFormRuntimeTask) {
-        configureCommonRuntimeTaskParameters(neoFormRuntimeTask, dataFiles, dataDirectories, CommonRuntimeUtils.buildStepName(spec, neoFormRuntimeTask.getName()), spec, neoFormDirectory);
+    private static void configureMcpRuntimeTaskWithDefaults(NeoFormRuntimeSpecification spec, File neoFormDirectory, Map<String, String> symbolicDataSources, Runtime neoFormRuntimeTask) {
+        configureCommonRuntimeTaskParameters(neoFormRuntimeTask, symbolicDataSources, CommonRuntimeUtils.buildStepName(spec, neoFormRuntimeTask.getName()), spec, neoFormDirectory);
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @Nullable
-    private static TaskProvider<? extends WithOutput> createBuiltIn(final NeoFormRuntimeSpecification spec, NeoFormConfigConfigurationSpecV2 neoFormConfigV2, NeoFormConfigConfigurationSpecV1.Step step, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviders, final Optional<TaskProvider<? extends WithOutput>> adaptedInput) {
+    private static TaskProvider<? extends WithOutput> createBuiltIn(final NeoFormRuntimeSpecification spec,
+                                                                    NeoFormConfigConfigurationSpecV2 neoFormConfigV2,
+                                                                    NeoFormConfigConfigurationSpecV1.Step step,
+                                                                    final Map<String, TaskProvider<? extends WithOutput>> tasks,
+                                                                    final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTaskProviders,
+                                                                    final Optional<TaskProvider<? extends WithOutput>> adaptedInput) {
         switch (step.getType()) {
             case "decompile":
                 return createDecompile(spec, step, neoFormConfigV2);
@@ -123,7 +131,15 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     );
                 });
             case "patch":
-                return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Patch.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task)));
+                return spec.getProject().getTasks().register(
+                        CommonRuntimeUtils.buildTaskName(spec, step.getName()),
+                        Patch.class,
+                        task -> {
+                            task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task));
+                            task.getPatchArtifact().set(spec.getNeoFormArtifact());
+                            task.getPatchDirectory().set(neoFormConfigV2.getData("patches", spec.getDistribution().getName()));
+                        }
+                );
         }
         if (neoFormConfigV2.getSpec() >= 2) {
             switch (step.getType()) {
@@ -223,39 +239,14 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         });
     }
 
-    @NotNull
-    private static Map<String, File> buildDataFilesMap(NeoFormConfigConfigurationSpecV2 neoFormConfig, final DistributionType side, final File unpackedMcpDirectory) {
-        final Map<String, File> dataMap = buildDataMap(neoFormConfig, side, unpackedMcpDirectory);
-        final Map<String, File> dataFiles = Maps.newHashMap();
-        dataMap.forEach((key, value) -> {
-            if (value.isFile()) {
-                dataFiles.put(key, value);
-            }
-        });
-        
-        return dataFiles;
-    }
-    
-    @NotNull
-    private static Map<String, File> buildDataDirectoriesMap(NeoFormConfigConfigurationSpecV2 neoFormConfig, final DistributionType side, final File unpackedMcpDirectory) {
-        final Map<String, File> dataMap = buildDataMap(neoFormConfig, side, unpackedMcpDirectory);
-        final Map<String, File> dataFiles = Maps.newHashMap();
-        dataMap.forEach((key, value) -> {
-            if (value.isDirectory()) {
-                dataFiles.put(key, value);
-            }
-        });
-        
-        return dataFiles;
-    }
-    
     @SuppressWarnings("unchecked")
     @NotNull
-    private static Map<String, File> buildDataMap(NeoFormConfigConfigurationSpecV2 neoFormConfig, final DistributionType side, final File unpackedMcpDirectory) {
+    private static Map<String, String> buildDataFilesMap(NeoFormConfigConfigurationSpecV2 neoFormConfig, final DistributionType side) {
         return neoFormConfig.getData().entrySet().stream()
-                       .collect(Collectors.toMap(Map.Entry::getKey,
-                               e -> new File(unpackedMcpDirectory, e.getValue() instanceof Map ? ((Map<String, String>) e.getValue()).get(side.getName()) : (String) e.getValue())
-                       ));
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue() instanceof Map ? ((Map<String, String>) e.getValue()).get(side.getName()) : (String) e.getValue()
+                ));
     }
 
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
@@ -311,8 +302,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
 
-        final Map<String, File> dataFiles = buildDataFilesMap(neoFormConfig, spec.getDistribution(), unpackedMcpZipDirectory);
-        final Map<String, File> dataDirectories = buildDataDirectoriesMap(neoFormConfig, spec.getDistribution(), unpackedMcpZipDirectory);
+        final Map<String, String> symbolicDataSources = buildDataFilesMap(neoFormConfig, spec.getDistribution());
 
         final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(neoFormDirectory, "sources.jar"));
@@ -321,9 +311,22 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             task.getOutput().set(new File(neoFormDirectory, "raw.jar"));
         });
         
-        return new NeoFormRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(runtimeTask -> {
-            configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, runtimeTask);
-        }), versionJson, unpackedMcpZipDirectory, neoFormConfig, createDownloadAssetsTasks(spec, dataFiles, dataDirectories, neoFormDirectory, versionJson), createExtractNativesTasks(spec, dataFiles, dataDirectories, neoFormDirectory, versionJson));
+        return new NeoFormRuntimeDefinition(
+                spec,
+                new LinkedHashMap<>(),
+                sourceJarTask,
+                rawJarTask,
+                gameArtifactTasks,
+                minecraftDependenciesConfiguration,
+                taskProvider -> taskProvider.configure(runtimeTask -> {
+                    configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, runtimeTask);
+                }),
+                versionJson,
+                unpackedMcpZipDirectory,
+                neoFormConfig,
+                createDownloadAssetsTasks(spec, symbolicDataSources, neoFormDirectory, versionJson),
+                createExtractNativesTasks(spec, symbolicDataSources, neoFormDirectory, versionJson)
+        );
     }
 
     @Override
@@ -351,8 +354,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         versionData.put(NeoFormRuntimeConstants.Naming.Version.NEOFORM_VERSION, spec.getVersionedName());
         definition.setMappingVersionData(versionData);
 
-        final Map<String, File> dataFiles = buildDataFilesMap(neoFormConfig, spec.getDistribution(), unpackedMcpZipDirectory);
-        final Map<String, File> dataDirectories = buildDataDirectoriesMap(neoFormConfig, spec.getDistribution(), unpackedMcpZipDirectory);
+        final Map<String, String> symbolicDataSources = buildDataFilesMap(neoFormConfig, spec.getDistribution());
 
         final List<NeoFormConfigConfigurationSpecV1.Step> steps = neoFormConfig.getSteps(spec.getDistribution().getName());
         if (steps.isEmpty()) {
@@ -373,9 +375,9 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
                 if (!spec.getPreTaskTypeAdapters().get(step.getName()).isEmpty() && inputTask.isPresent()) {
                     for (TaskTreeAdapter taskTreeAdapter : spec.getPreTaskTypeAdapters().get(step.getName())) {
-                        final TaskProvider<? extends Runtime> modifiedTree = taskTreeAdapter.adapt(definition, inputTask.get(), neoFormDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, task)));
+                        final TaskProvider<? extends Runtime> modifiedTree = taskTreeAdapter.adapt(definition, inputTask.get(), neoFormDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task)));
                         if (modifiedTree != null) {
-                            modifiedTree.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, task));
+                            modifiedTree.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task));
                             inputTask = Optional.of(modifiedTree);
                         }
                     }
@@ -384,7 +386,14 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 }
             }
 
-            TaskProvider<? extends WithOutput> neoFormRuntimeTaskProvider = createBuiltIn(spec, neoFormConfig, step, taskOutputs, definition.getGameArtifactProvidingTasks(), adaptedInput);
+            TaskProvider<? extends WithOutput> neoFormRuntimeTaskProvider = createBuiltIn(
+                    spec,
+                    neoFormConfig,
+                    step,
+                    taskOutputs,
+                    definition.getGameArtifactProvidingTasks(),
+                    adaptedInput
+            );
 
             if (neoFormRuntimeTaskProvider == null) {
                 NeoFormConfigConfigurationSpecV1.Function function = neoFormConfig.getFunction(step.getType());
@@ -399,7 +408,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             neoFormRuntimeTaskProvider.configure((WithOutput neoFormRuntimeTask) -> {
                 if (neoFormRuntimeTask instanceof Runtime) {
                     final Runtime runtimeTask = (Runtime) neoFormRuntimeTask;
-                    configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, taskOutputs, step, runtimeTask, finalAdaptedInput);
+                    configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, taskOutputs, step, runtimeTask, finalAdaptedInput);
                 }
             });
 
@@ -407,9 +416,9 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 taskOutputs.put(neoFormRuntimeTaskProvider.getName(), neoFormRuntimeTaskProvider);
             } else {
                 for (TaskTreeAdapter taskTreeAdapter : spec.getPostTypeAdapters().get(step.getName())) {
-                    final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(definition, neoFormRuntimeTaskProvider, neoFormDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), dependentTaskProvider -> dependentTaskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, task)));
+                    final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(definition, neoFormRuntimeTaskProvider, neoFormDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), dependentTaskProvider -> dependentTaskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task)));
                     if (taskProvider != null) {
-                        taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, task));
+                        taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task));
                         neoFormRuntimeTaskProvider = taskProvider;
                     }
                 }
@@ -425,13 +434,21 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         );
 
         final TaskProvider<? extends Runtime> remapTask = context.getNamingChannel().getApplySourceMappingsTaskBuilder().get().build(context);
-        additionalRuntimeTasks.forEach(taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, task)));
-        remapTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, task));
+        additionalRuntimeTasks.forEach(taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task)));
+        remapTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task));
+
+        Provider<RegularFile> recompileInput = maybeApplyParchment(
+                spec,
+                remapTask.flatMap(WithOutput::getOutput),
+                symbolicDataSources,
+                neoFormDirectory,
+                context.getLibrariesTask().flatMap(WithOutput::getOutput)
+        );
 
         final FileCollection recompileDependencies = spec.getAdditionalRecompileDependencies().plus(spec.getProject().files(definition.getMinecraftDependenciesConfiguration()));
         final TaskProvider<? extends Runtime> recompileTask = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, task -> {
-                    task.getInputJar().set(remapTask.flatMap(WithOutput::getOutput));
+                    task.getInputJar().set(recompileInput);
                     task.getCompileClasspath().setFrom(recompileDependencies);
                     task.getStepName().set("recompile");
 
@@ -443,17 +460,50 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
                 });
-        recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, dataFiles, dataDirectories, neoFormRuntimeTask));
+        recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
         taskOutputs.put(recompileTask.getName(), recompileTask);
 
         definition.getSourceJarTask().configure(task -> {
-            task.getInput().set(remapTask.flatMap(WithOutput::getOutput));
+            task.getInput().set(recompileInput);
             task.dependsOn(remapTask);
         });
         definition.getRawJarTask().configure(task -> {
             task.getInput().set(recompileTask.flatMap(WithOutput::getOutput));
             task.dependsOn(recompileTask);
         });
+    }
+
+    private static Provider<RegularFile> maybeApplyParchment(NeoFormRuntimeSpecification spec,
+                                                             Provider<RegularFile> recompileInput,
+                                                             Map<String, String> symbolicDataSources,
+                                                             File neoFormDirectory,
+                                                             Provider<RegularFile> listLibrariesOutput) {
+        Project project = spec.getProject();
+        Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
+        if (!parchment.getEnabled().get()) {
+            return recompileInput;
+        }
+
+        // Provide the mappings via artifact
+        Provider<File> mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact());
+        Provider<File> toolExecutable = ToolUtilities.resolveTool(project, parchment.getToolArtifact());
+
+        TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
+            task.getInputs().file(mappingFile);
+            task.getInputs().file(recompileInput);
+            task.getInputs().file(listLibrariesOutput);
+            task.getExecutingJar().fileProvider(toolExecutable);
+            task.getProgramArguments().add(listLibrariesOutput.map(f -> "--libraries-list=" + f.getAsFile().getAbsolutePath()));
+            task.getProgramArguments().add("--enable-parchment");
+            task.getProgramArguments().add(mappingFile.map(f -> "--parchment-mappings=" + f.getAbsolutePath()));
+            task.getProgramArguments().add("--in-format=archive");
+            task.getProgramArguments().add("--out-format=archive");
+            task.getProgramArguments().add(recompileInput.map(f -> f.getAsFile().getAbsolutePath()));
+            task.getProgramArguments().add("{output}");
+            configureCommonRuntimeTaskParameters(task, symbolicDataSources, "applyParchment", spec, neoFormDirectory);
+        });
+
+        return applyParchmentTask.flatMap(WithOutput::getOutput);
     }
 }

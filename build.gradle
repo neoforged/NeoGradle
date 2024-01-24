@@ -2,7 +2,7 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.neoforged.gradleutils' version '3.0.0-alpha.1'
+    id 'net.neoforged.gradleutils' version '3.0.0-alpha.10'
 }
 
 gradleutils.version {

@@ -1,7 +1,6 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
 import net.neoforged.gradle.common.tasks.JavaRuntimeTask;
-import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeData;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
@@ -15,18 +14,17 @@ import org.gradle.api.tasks.*;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @CacheableTask
 public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime {
     
-    private final RuntimeData data;
     private final RuntimeArguments arguments;
     private final RuntimeMultiArguments multiArguments;
     
     public DefaultRuntime() {
         super();
 
-        data = getObjectFactory().newInstance(RuntimeDataImpl.class, getProviderFactory());
         arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
         
@@ -49,21 +47,17 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
             buildRuntimeArguments(result);
             return result;
         }));
-        getRuntimeData().convention(getData().asMap().map(data -> {
+        getRuntimeData().convention(getSymbolicDataSources().map(dataSources -> {
             final Directory unpackedMcpDirectory = getUnpackedMcpZipDirectory().get();
-            final Map<String, Provider<File>> result = new HashMap<>();
-            data.forEach((key, value) -> result.put(key, unpackedMcpDirectory.file(value.map(File::getAbsolutePath)).map(RegularFile::getAsFile)));
-            return result;
+            return dataSources.entrySet().stream().collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry -> getProject().provider(() -> unpackedMcpDirectory.file(entry.getValue()).getAsFile())
+            ));
         }));
         
         getOutputDirectory().finalizeValueOnRead();
     }
-    
-    @Override
-    public RuntimeData getData() {
-        return data;
-    }
-    
+
     @Override
     public RuntimeArguments getArguments() {
         return arguments;
