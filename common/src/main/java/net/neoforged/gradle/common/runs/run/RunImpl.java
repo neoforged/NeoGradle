@@ -162,7 +162,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsServer().convention(spec.getIsServer());
         getIsDataGenerator().convention(spec.getIsDataGenerator());
         getIsGameTest().convention(spec.getIsGameTest());
-        getIsJUnit().convention(spec.getIsJUnit());
         getClasspath().from(spec.getClasspath());
 
         if (spec.getRunAdapter().isPresent()) {

@@ -38,7 +38,6 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         getIsServer().convention(false)
         getIsDataGenerator().convention(false)
         getIsGameTest().convention(false)
-        getIsJUnit().convention(false)
     }
 
     private static Boolean or(Boolean a, Boolean b) {
@@ -123,13 +122,6 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     abstract Property<Boolean> getIsGameTest();
 
     /**
-     * Indicates if this run is a JUnit run.
-     */
-    @Input
-    @DSLProperty(propertyName = 'junit')
-    abstract Property<Boolean> getIsJUnit()
-
-    /**
      * Gives access to the key value pairs which are added as environment variables when an instance of this run type is executed.
      *
      * @return The property which holds the environment variables.
@@ -185,7 +177,6 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         other.getEnvironmentVariables().set(getEnvironmentVariables())
         other.getSystemProperties().set(getSystemProperties())
         other.getClasspath().from(getClasspath())
-        other.getIsJUnit().set(getIsJUnit())
     }
 
     /**
@@ -233,7 +224,6 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
             deserializeBool(instance.isServer, object, "server")
             deserializeBool(instance.isDataGenerator, object, "dataGenerator")
             deserializeBool(instance.isGameTest, object, "gameTest")
-            deserializeBool(instance.isJUnit, object, 'junit')
             deserializeMap(instance.environmentVariables, object, "env", String.class, jsonDeserializationContext)
             deserializeMap(instance.systemProperties, object, "props", String.class, jsonDeserializationContext)
 
@@ -258,7 +248,6 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
             serializeBool(runType.isServer, object, "server")
             serializeBool(runType.isDataGenerator, object, "dataGenerator")
             serializeBool(runType.isGameTest, object, "gameTest")
-            serializeBool(runType.isJUnit, object, "junit")
             serializeMap(runType.environmentVariables, object, "env", jsonSerializationContext)
             serializeMap(runType.systemProperties, object, "props", jsonSerializationContext)
 
