@@ -532,12 +532,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
-            userdevProfile.runType("test", type -> {
+            userdevProfile.runType("junit", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
                 type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
 
                 type.getIsClient().set(true);
-                type.getIsJUnit().set(true);
 
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgejunituserdev");
@@ -759,14 +758,14 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
             }
 
-            if (run.getIsDataGenerator().get() || run.getIsClient().get() || run.getIsJUnit().get()) {
+            if (run.getIsDataGenerator().get() || run.getIsClient().get()) {
                 run.getProgramArguments().add("--assetsDir");
                 run.getProgramArguments().add(assetsDir);
                 run.getProgramArguments().add("--assetIndex");
                 run.getProgramArguments().add(assetIndex);
             }
 
-            if (run.getIsJUnit().get()) {
+            if (run.getName().equals("junit")) {
                 run.getProgramArguments().addAll("--launchTarget", "forgejunitdev");
             }
         });
