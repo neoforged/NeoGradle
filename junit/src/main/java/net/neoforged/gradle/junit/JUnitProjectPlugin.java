@@ -2,11 +2,13 @@ package net.neoforged.gradle.junit;
 
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
+import net.neoforged.gradle.dsl.common.runs.task.extensions.TestTaskExtension;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
@@ -15,6 +17,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyFactory;
 import org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.slf4j.Logger;
@@ -25,14 +28,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class JUnitProjectPlugin implements Plugin<Project> {
     private static final Logger LOG = LoggerFactory.getLogger(JUnitProjectPlugin.class);
 
     @Override
     public void apply(Project project) {
+        project.getTasks().named("test").configure(task -> task.getExtensions().create(TestTaskExtension.NAME, TestTaskExtension.class, project));
         project.afterEvaluate(this::applyAfterEvaluate);
     }
 
@@ -54,6 +60,7 @@ public class JUnitProjectPlugin implements Plugin<Project> {
      *                the properties from.
      */
     private static void configureTestTask(Test testTask, String runType) {
+        TestTaskExtension extension = testTask.getExtensions().getByType(TestTaskExtension.class);
         Project project = testTask.getProject();
 
         // Find the runtime reachable from the test task
@@ -102,9 +109,14 @@ public class JUnitProjectPlugin implements Plugin<Project> {
 
         // Extend MOD_CLASSES with test sources
         List<String> modClassesDirs = new ArrayList<>();
-        String modId = project.getExtensions().getByType(Minecraft.class).getModIdentifier().get();
-        for (File testClassesDir : testTask.getClasspath().getFiles().stream().filter(File::isDirectory).collect(Collectors.toList())) {
-            modClassesDirs.add(modId + "%%" + testClassesDir.getAbsolutePath());
+        final Iterator<SourceSet> sets = Stream.concat(
+                extension.getTestSources().get().stream(), junitRun.getModSources().get().stream()
+        ).distinct().iterator();
+        while (sets.hasNext()) {
+            final SourceSet sourceSet = sets.next();
+            final String modId = SourceSetUtils.getModIdentifier(sourceSet);
+            Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream())
+                    .forEach(dir -> modClassesDirs.add(modId + "%%" + dir.getAbsolutePath()));
         }
         testTask.getEnvironment().put("MOD_CLASSES", String.join(File.pathSeparator, modClassesDirs));
 
