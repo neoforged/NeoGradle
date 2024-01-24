@@ -98,7 +98,7 @@ public final class TaskDependencyUtils {
 
     private static CommonRuntimeDefinition<?> validateAndUnwrapDefinitions(@NotNull Project project, String type, String name, Collection<? extends CommonRuntimeDefinition<?>> definitions) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         if (definitions.isEmpty()) {
-            throw new IllegalStateException(String.format("Could not find runtime definition for %s: %s", type, name));
+            throw new NoDefinitionsFoundException(String.format("Could not find runtime definition for %s: %s", type, name));
         }
         return unwrapDefinitions(project, definitions).orElseThrow(NoDefinitionsFoundException::new);
     }
@@ -185,7 +185,7 @@ public final class TaskDependencyUtils {
             } else if (dependency instanceof SourceDirectorySet) {
                 this.processSourceDirectorySet((SourceDirectorySet) dependency);
             } else if (dependency instanceof JavaCompile) {
-                this.add(((JavaCompile) dependency).getClasspath());
+                this.add(((JavaCompile) dependency).getInputs());
             } else if (dependency instanceof Configuration) {
                 this.processConfiguration((Configuration) dependency);
             } else if (dependency instanceof TaskDependencyContainer) {

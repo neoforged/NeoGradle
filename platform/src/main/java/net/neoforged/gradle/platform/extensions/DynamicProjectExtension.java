@@ -181,8 +181,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final Configuration userdevTestImplementationConfiguration = project.getConfigurations().create("userdevTestImplementation").setTransitive(true);
         final Configuration jarJarConfiguration = project.getConfigurations().create("jarJar");
 
-        UserDevRuntimeExtension.setupTestConfigurations(project, config -> config.extendsFrom(userdevTestImplementationConfiguration));
-
         clientExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateClientCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
         
         serverExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateServerCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));

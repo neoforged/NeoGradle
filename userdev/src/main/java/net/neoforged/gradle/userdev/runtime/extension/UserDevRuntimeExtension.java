@@ -86,8 +86,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
         final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
 
-        setupTestConfigurations(getProject(), config -> userDevConfigurationSpec.getAdditionalTestDependencyArtifactCoordinates().get().forEach(dep -> config.getDependencies().add(getProject().getDependencies().create(dep))));
-
         for (String dependencyCoordinate : userDevConfigurationSpec.getAdditionalDependencyArtifactCoordinates().get()) {
             userDevAdditionalDependenciesConfiguration.getDependencies().add(getProject().getDependencies().create(dependencyCoordinate));
         }
@@ -131,14 +129,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 userDevConfigurationSpec,
                 userDevAdditionalDependenciesConfiguration
         );
-    }
-
-    public static void setupTestConfigurations(Project project, Consumer<Configuration> consumer) {
-        project.getExtensions().configure(TestingExtension.class, ext -> ext.getSuites().withType(JvmTestSuite.class).configureEach(suite -> {
-            final Configuration config = project.getConfigurations().create(suite.getName() + "BootImplementation");
-            suite.getDependencies().getCompileOnly().bundle(project.provider(config::getDependencies));
-            consumer.accept(config);
-        }));
     }
 
     @Override
