@@ -230,6 +230,9 @@ public class IdeRunIntegrationManager {
                         task.from(defaultProcessResources.get().getDestinationDir());
                         Path outputDir = eclipse.getClasspath().getDefaultOutputDir().toPath();
                         if (outputDir.endsWith("default")) {
+                            // sometimes it has default value from org.gradle.plugins.ide.eclipse.internal.EclipsePluginConstants#DEFAULT_PROJECT_OUTPUT_PATH
+                            // which has /default on end that is not present in the final outputDir in eclipse/buildship
+                            // (output of getDefaultOutputDir() should be just project/bin/)
                             outputDir = outputDir.getParent();
                         }
                         task.into(outputDir.resolve(sourceSet.getName()));
