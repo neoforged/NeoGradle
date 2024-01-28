@@ -7,7 +7,6 @@ import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
 import net.neoforged.gradle.common.util.run.RunsUtil;
-import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runs.task.extensions.TestTaskExtension;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import org.gradle.api.GradleException;
@@ -33,7 +32,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JUnitProjectPlugin implements Plugin<Project> {
@@ -41,18 +39,21 @@ public class JUnitProjectPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getTasks().named("test").configure(task -> task.getExtensions().create(TestTaskExtension.NAME, TestTaskExtension.class, project));
+        project.getTasks().withType(Test.class).configureEach(task -> task.getExtensions().create(TestTaskExtension.NAME, TestTaskExtension.class, project, task.getName()));
         project.afterEvaluate(this::applyAfterEvaluate);
     }
 
     private void applyAfterEvaluate(Project project) {
-        Test testTask = (Test) project.getTasks().getByName("test");
-        if (!(testTask.getTestFrameworkProperty().get() instanceof JUnitPlatformTestFramework)) {
-            LOG.info("Ignoring test task {} because it doesn't use JUnit 5", testTask.getName());
-            return;
-        }
+        project.getTasks().withType(Test.class).forEach(testTask -> {
+            if (!(testTask.getTestFrameworkProperty().get() instanceof JUnitPlatformTestFramework)) {
+                LOG.info("Ignoring test task {} because it doesn't use JUnit 5", testTask.getName());
+                return;
+            }
 
-        configureTestTask(testTask, "junit");
+            if (testTask.getExtensions().getByType(TestTaskExtension.class).isMinecraftEnvironment().get()) {
+                configureTestTask(testTask, "junit");
+            }
+        });
     }
 
     /**
@@ -84,13 +85,13 @@ public class JUnitProjectPlugin implements Plugin<Project> {
 
         // If it is a userdev runtime, we automatically add the additional testing libraries declared by the runtime
         // this will add the FML JUnit support library without the user having to declare it themselves.
-        Configuration testRuntimeOnly = project.getConfigurations().getByName("testRuntimeOnly");
+        Configuration testImpl = project.getConfigurations().getByName("testImplementation");
         DependencyFactory dependencyFactory = project.getDependencyFactory();
         if (runtimeDefinition instanceof UserDevRuntimeDefinition) {
             UserDevRuntimeDefinition userdevRuntime = (UserDevRuntimeDefinition) runtimeDefinition;
             List<String> testDependencies = userdevRuntime.getUserdevConfiguration().getAdditionalTestDependencyArtifactCoordinates().get();
             for (String testDependency : testDependencies) {
-                testRuntimeOnly.getDependencies().add(dependencyFactory.create(testDependency));
+                testImpl.getDependencies().add(dependencyFactory.create(testDependency));
             }
         }
 

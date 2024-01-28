@@ -539,6 +539,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
 
                 type.getIsClient().set(true);
+                type.getIsJUnit().set(true);
 
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgejunituserdev");

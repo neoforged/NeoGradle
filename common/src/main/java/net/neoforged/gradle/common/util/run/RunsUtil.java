@@ -59,15 +59,13 @@ public class RunsUtil {
             runExec.getRun().set(run);
         });
 
-        project.afterEvaluate(evaluatedProject -> {
-            run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(run.getModSources()));
+        project.afterEvaluate(evaluatedProject -> runTask.configure(task -> {
+            addRunSourcesDependenciesToTask(task, run);
 
-            runTask.configure(task -> {
-                addRunSourcesDependenciesToTask(task, run);
+            run.getTaskDependencies().forEach(task::dependsOn);
+        }));
 
-                run.getTaskDependencies().forEach(task::dependsOn);
-            });
-        });
+        run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(run.getModSources()));
         
         return run;
     }
