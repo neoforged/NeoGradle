@@ -72,8 +72,6 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
             return toolChain.launcherFor(spec -> spec.getLanguageVersion().set(getJavaVersion()));
         }));
-        getLogging().captureStandardOutput(LogLevel.DEBUG);
-        getLogging().captureStandardError(LogLevel.ERROR);
 
         setDescription("Recompiles an already existing decompiled java jar.");
         setSource(getProject().zipTree(getInputJar()).matching(filter -> filter.include("**/*.java")));
