@@ -19,8 +19,5 @@ abstract class NeoGradleBase extends DefaultTask implements WithWorkspace {
 
     NeoGradleBase() {
         setGroup("NeoGradle");
-
-        getLogging().captureStandardOutput(LogLevel.DEBUG);
-        getLogging().captureStandardError(LogLevel.ERROR);
     }
 }
