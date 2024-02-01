@@ -5,7 +5,13 @@ plugins {
     id 'net.neoforged.gradleutils' version '3.0.0-alpha.10'
 }
 
-version = gradleutils.version.toString()
+gradleutils.version {
+    branches {
+        suffixBranch = true
+        suffixExemptedBranches.add('NG_7.0')
+    }
+}
+println("Version: ${version = gradleutils.version}")
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->

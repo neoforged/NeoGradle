@@ -5,18 +5,23 @@ import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.tasks.RunExec;
 import net.neoforged.gradle.common.util.SourceSetUtils;
+import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.plugins.ExtensionContainer;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -37,20 +42,29 @@ public class RunsUtil {
     public static String createTaskName(final String prefix, final Run run) {
         return createTaskName(prefix, run.getName());
     }
-    
+
+    @Nullable
+    public static Run get(Project project, String runName) {
+        Object runsExtension = project.getExtensions().findByName(RunsConstants.Extensions.RUNS);
+        if (runsExtension instanceof NamedDomainObjectContainer) {
+            return (RunImpl) ((NamedDomainObjectContainer<?>) runsExtension).findByName(runName);
+        }
+        return null;
+    }
+
     public static Run create(final Project project, final String name) {
         final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
         
         final TaskProvider<RunExec> runTask = project.getTasks().register(createTaskName(name), RunExec.class, runExec -> {
             runExec.getRun().set(run);
         });
-        
+
         project.afterEvaluate(evaluatedProject -> runTask.configure(task -> {
             addRunSourcesDependenciesToTask(task, run);
-            
+
             run.getTaskDependencies().forEach(task::dependsOn);
         }));
-        
+
         run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(run.getModSources()));
         
         return run;

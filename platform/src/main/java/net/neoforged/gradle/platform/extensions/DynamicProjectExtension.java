@@ -48,6 +48,7 @@ import net.neoforged.gradle.platform.runtime.runtime.tasks.PackZip;
 import net.neoforged.gradle.platform.tasks.*;
 import net.neoforged.gradle.platform.util.ArtifactPathsCollector;
 import net.neoforged.gradle.platform.util.SetupUtils;
+import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.vanilla.VanillaProjectPlugin;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
@@ -177,6 +178,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final Configuration gameLayerLibraryConfiguration = project.getConfigurations().create("gameLayerLibrary").setTransitive(false);
         final Configuration pluginLayerLibraryConfiguration = project.getConfigurations().create("pluginLayerLibrary").setTransitive(false);
         final Configuration userdevCompileOnlyConfiguration = project.getConfigurations().create("userdevCompileOnly").setTransitive(false);
+        final Configuration userdevTestImplementationConfiguration = project.getConfigurations().create("userdevTestImplementation").setTransitive(true);
         final Configuration jarJarConfiguration = project.getConfigurations().create("jarJar");
 
         clientExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateClientCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
@@ -532,12 +534,30 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
+            userdevProfile.runType("junit", type -> {
+                type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
+                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
+
+                type.getIsClient().set(true);
+                type.getIsJUnit().set(true);
+
+                type.getArguments().add("--launchTarget");
+                type.getArguments().add("forgejunituserdev");
+                type.getArguments().add("--version");
+                type.getArguments().add(project.getVersion().toString());
+                type.getArguments().add("--assetIndex");
+                type.getArguments().add("{asset_index}");
+                type.getArguments().add("--assetsDir");
+                type.getArguments().add("{assets_root}");
+
+                configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
+            });
             userdevProfile.runType("server", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
                 type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
                 
                 type.getIsServer().set(true);
-                
+
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgeserveruserdev");
                 
@@ -563,7 +583,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
                 
                 type.getIsDataGenerator().set(true);
-                
+
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgedatauserdev");
                 type.getArguments().add("--assetIndex");
@@ -593,6 +613,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.getLibraries().from(pluginLayerLibraryConfiguration);
                 task.getLibraries().from(moduleOnlyConfiguration);
                 task.getModules().from(moduleOnlyConfiguration);
+
+                task.getTestLibraries().set(userdevTestImplementationConfiguration.getDependencies()
+                        .stream().map(dep -> dep.getGroup() + ":" + dep.getName() + ":" + dep.getVersion())
+                        .collect(Collectors.toList()));
                 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
@@ -739,11 +763,15 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
             }
 
-            if (run.getIsDataGenerator().get() || run.getIsClient().get()) {
+            if (run.getIsDataGenerator().get() || run.getIsClient().get() || runType.getIsJUnit().get()) {
                 run.getProgramArguments().add("--assetsDir");
                 run.getProgramArguments().add(assetsDir);
                 run.getProgramArguments().add("--assetIndex");
                 run.getProgramArguments().add(assetIndex);
+            }
+
+            if (runType.getIsJUnit().get()) {
+                run.getProgramArguments().addAll("--launchTarget", "forgejunitdev");
             }
         });
     }

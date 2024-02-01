@@ -10,4 +10,8 @@ public class NoDefinitionsFoundException extends Exception {
     public NoDefinitionsFoundException() {
         super("Could not find the runtime definition to use.");
     }
+
+    public NoDefinitionsFoundException(String message) {
+        super(message);
+    }
 }
