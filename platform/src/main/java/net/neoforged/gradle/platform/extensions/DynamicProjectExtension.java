@@ -701,7 +701,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         runType.getJvmArguments().addAll("--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler");
         runType.getJvmArguments().addAll("--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming");
 
-        runType.getEnvironmentVariables().put("NEOFORGE_SPEC", project.getVersion().toString());
+        runType.getEnvironmentVariables().put("NEOFORGE_SPEC", project.getVersion().toString().substring(0, project.getVersion().toString().lastIndexOf(".")));
 
         runType.getClasspath().from(runtimeClasspath);
 
