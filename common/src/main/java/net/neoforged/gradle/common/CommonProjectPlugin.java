@@ -53,14 +53,15 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getPluginManager().apply(JavaPlugin.class);
 
+        //Register the services
+        CentralCacheService.register(project, ASSETS_SERVICE);
+        CentralCacheService.register(project, LIBRARIES_SERVICE);
+
         // Apply both the idea and eclipse IDE plugins
         project.getPluginManager().apply(IdeaPlugin.class);
+        project.getRootProject().getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
-        
-        //Register the assets service
-        CentralCacheService.register(project, ASSETS_SERVICE, FileCacheUtils.getAssetsCacheDirectory(project));
-        CentralCacheService.register(project, LIBRARIES_SERVICE, FileCacheUtils.getLibrariesCacheDirectory(project));
         
         project.getExtensions().create("allRuntimes", RuntimesExtension.class);
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
