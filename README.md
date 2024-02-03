@@ -1,64 +1,11 @@
 # NeoGradle
 
-Minecraft mod development framework used by NeoForge and FML for the Gradle build system.
+Minecraft mod development framework, used by NeoForge and FML for the Gradle build system.
 
 For a quick start, see how the [NeoForge Mod Development Kit](https://github.com/neoforged/MDK) uses NeoGradle, or see
 our official [Documentation](https://docs.neoforged.net/neogradle/docs/).
 
 To see the latest available version of NeoGradle, visit the [NeoForged project page](https://projects.neoforged.net/neoforged/neogradle).
-
-## Apply Parchment Mappings
-
-To get human-readable parameter names in decompiled Minecraft source-code, as well as Javadocs, crowed-sourced data
-from the [Parchment project](https://parchmentmc.org) can be applied to the Minecraft source-code before it is recompiled.
-
-This is currently only supported when applying the NeoGradle userdev Plugin.
-
-The most basic configuration is using the following properties in gradle.properties:
-
-```
-neogradle.subsystems.parchment.minecraftVersion=1.20.2
-neogradle.subsystems.parchment.mappingsVersion=2023.12.10
-```
-
-The subsystem also has Gradle DSL and supports more parameters explained in the following Gradle snippet.
-
-```gradle
-subsystems {
-  parchment {
-    // The Minecraft version for which the Parchment mappings were created.
-    // This does not necessarily need to match the Minecraft version your mod targets
-    // Defaults to the value of Gradle property neogradle.subsystems.parchment.minecraftVersion
-    minecraftVersion = "1.20.2"
-    
-    // The version of Parchment mappings to apply.
-    // See https://parchmentmc.org/docs/getting-started for a list.
-    // Defaults to the value of Gradle property neogradle.subsystems.parchment.mappingsVersion
-    mappingsVersion = "2023.12.10"
-    
-    // Overrides the full Maven coordinate of the Parchment artifact to use
-    // This is computed from the minecraftVersion and mappingsVersion properties by default.
-    // If you set this property explicitly, minecraftVersion and mappingsVersion will be ignored.
-    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.parchmentArtifact
-    // parchmentArtifact = "org.parchmentmc.data:parchment-$minecraftVersion:$mappingsVersion:checked@zip"
-    
-    // Overrides the full Maven coordinate of the tool used to apply the Parchment mappings
-    // See https://github.com/neoforged/JavaSourceTransformer
-    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.toolArtifact
-    // toolArtifact = "net.neoforged.jst:jst-cli-bundle:1.0.30"
-    
-    // Set this to false if you don't want the https://maven.parchmentmc.org/ repository to be added automatically when
-    // applying Parchment mappings is enabled
-    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.addRepository
-    // addRepository = true
-    
-    // Can be used to explicitly disable this subsystem. By default, it will be enabled automatically as soon
-    // as parchmentArtifact or minecraftVersion and mappingsVersion are set.
-    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.enabled
-    // enabled = true
-  }
-}
-```
 
 ## Plugins
 
@@ -104,13 +51,66 @@ dependencies {
 }
 ```
 
+## Apply Parchment Mappings
+
+To get human-readable parameter names in decompiled Minecraft source-code, as well as Javadocs, crowdsourced data
+from the [Parchment project](https://parchmentmc.org) can be applied to the Minecraft source-code before it is recompiled.
+
+This is currently only supported when applying the NeoGradle userdev Plugin.
+
+The most basic configuration is using the following properties in gradle.properties:
+
+```
+neogradle.subsystems.parchment.minecraftVersion=1.20.2
+neogradle.subsystems.parchment.mappingsVersion=2023.12.10
+```
+
+The subsystem also has a Gradle DSL and supports more parameters, explained in the following Gradle snippet:
+
+```gradle
+subsystems {
+  parchment {
+    // The Minecraft version for which the Parchment mappings were created.
+    // This does not necessarily need to match the Minecraft version your mod targets
+    // Defaults to the value of Gradle property neogradle.subsystems.parchment.minecraftVersion
+    minecraftVersion = "1.20.2"
+    
+    // The version of Parchment mappings to apply.
+    // See https://parchmentmc.org/docs/getting-started for a list.
+    // Defaults to the value of Gradle property neogradle.subsystems.parchment.mappingsVersion
+    mappingsVersion = "2023.12.10"
+    
+    // Overrides the full Maven coordinate of the Parchment artifact to use
+    // This is computed from the minecraftVersion and mappingsVersion properties by default.
+    // If you set this property explicitly, minecraftVersion and mappingsVersion will be ignored.
+    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.parchmentArtifact
+    // parchmentArtifact = "org.parchmentmc.data:parchment-$minecraftVersion:$mappingsVersion:checked@zip"
+    
+    // Overrides the full Maven coordinate of the tool used to apply the Parchment mappings
+    // See https://github.com/neoforged/JavaSourceTransformer
+    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.toolArtifact
+    // toolArtifact = "net.neoforged.jst:jst-cli-bundle:1.0.30"
+    
+    // Set this to false if you don't want the https://maven.parchmentmc.org/ repository to be added automatically when
+    // applying Parchment mappings is enabled
+    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.addRepository
+    // addRepository = true
+    
+    // Can be used to explicitly disable this subsystem. By default, it will be enabled automatically as soon
+    // as parchmentArtifact or minecraftVersion and mappingsVersion are set.
+    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.enabled
+    // enabled = true
+  }
+}
+```
+
 ## Advanced Settings
 
 ### Override Decompiler Settings
 
 The settings used by the decompiler when preparing Minecraft dependencies can be overridden
 using [Gradle properties](https://docs.gradle.org/current/userguide/project_properties.html).
-This can be useful to trade slower build-times for being able to run NeoGradle on lower-end machines.
+This can be useful to run NeoGradle on lower-end machines, at the cost of slower build times.
 
 | Property                                     | Description                                                                                                                |
 |----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
