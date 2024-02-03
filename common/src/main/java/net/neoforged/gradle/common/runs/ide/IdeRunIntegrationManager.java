@@ -70,7 +70,7 @@ public class IdeRunIntegrationManager {
         final IdeaModel ideaModel = rootProject.getExtensions().getByType(IdeaModel.class);
         final IdeaProject ideaProject = ideaModel.getProject();
         final ExtensionAware extensionAware = (ExtensionAware) ideaProject;
-        if (extensionAware.getExtensions().findByType(IdeaRunsExtension.class) == null) {
+        if (extensionAware.getExtensions().findByType(IdeaRunsExtension.class) == null && extensionAware.getExtensions().findByName("runs") == null) {
             extensionAware.getExtensions().create("runs", IdeaRunsExtension.class, project);
         }
     }

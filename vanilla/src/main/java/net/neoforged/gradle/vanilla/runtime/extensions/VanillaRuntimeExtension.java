@@ -229,6 +229,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                 .add(new ApplyAccessTransformerStep())
                 .add(rawJarStep)
                 .add(sourcesStep)
+                .add(new ParchmentStep())
                 .build();
 
         return new StepData(steps, rawJarStep, sourcesStep);
