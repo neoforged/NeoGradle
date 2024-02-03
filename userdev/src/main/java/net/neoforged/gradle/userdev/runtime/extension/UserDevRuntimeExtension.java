@@ -28,20 +28,12 @@ import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Set;
 
@@ -55,66 +47,50 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     @Override
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
-        
-        final Dependency userDevDependency = getProject().getDependencies().create(String.format("%s:%s:%s:userdev", spec.getForgeGroup(), spec.getForgeName(), spec.getForgeVersion()));
-        final Configuration userDevConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), userDevDependency);
-        final ResolvedConfiguration resolvedUserDevConfiguration = userDevConfiguration.getResolvedConfiguration();
-        final File userDevJar = resolvedUserDevConfiguration.getFiles().iterator().next();
+
+        final UserdevProfile userdevProfile = spec.getProfile();
+        final File userDevJar = spec.getUserDevArchive();
 
         final File forgeDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForge/%s", spec.getIdentifier())).get().getAsFile();
         final File unpackedForgeDirectory = new File(forgeDirectory, "unpacked");
-
         unpackedForgeDirectory.mkdirs();
         
         final FileTree userDevJarZipTree = spec.getProject().zipTree(userDevJar);
         final CopyingFileTreeVisitor unpackingVisitor = new CopyingFileTreeVisitor(unpackedForgeDirectory);
         userDevJarZipTree.visit(unpackingVisitor);
-        
-        final File userDevConfigFile = new File(unpackedForgeDirectory, "config.json");
-        final Gson userdevGson = UserdevProfile.createGson(getProject().getObjects());
-        final UserdevProfile userDevConfigurationSpec;
-        try (final FileInputStream fileInputStream = new FileInputStream(userDevConfigFile)) {
-            userDevConfigurationSpec = userdevGson.fromJson(new InputStreamReader(fileInputStream, StandardCharsets.UTF_8), UserdevProfile.class);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
 
         final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
-        for (String dependencyCoordinate : userDevConfigurationSpec.getAdditionalDependencyArtifactCoordinates().get()) {
+        for (String dependencyCoordinate : userdevProfile.getAdditionalDependencyArtifactCoordinates().get()) {
             userDevAdditionalDependenciesConfiguration.getDependencies().add(getProject().getDependencies().create(dependencyCoordinate));
         }
         
-        if (!userDevConfigurationSpec.getNeoForm().isPresent()) {
+        if (!userdevProfile.getNeoForm().isPresent()) {
             throw new IllegalStateException("Userdev configuration spec has no MCP version. As of now this is not supported!");
         }
-        
-        final Artifact neoFormArtifact = Artifact.from(userDevConfigurationSpec.getNeoForm().get());
-        
+
         final NeoFormRuntimeDefinition mcpRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormArtifact(neoFormArtifact)
+            builder.withNeoFormDependency(userdevProfile.getNeoForm().get())
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
             
-            final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userDevConfigurationSpec.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
+            final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
                                                             .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
             
             builder.withPreTaskAdapter("decompile", atAndSASAdapter);
 
-            builder.withPostTaskAdapter("patch", createPatchAdapter(userDevDependency, userDevConfigurationSpec.getSourcePatchesDirectory().get()));
+            builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userdevProfile.getSourcePatchesDirectory().get()));
 
             builder.withTaskCustomizer("inject", InjectZipContent.class, task -> configureNeoforgeInjects(
                     task,
-                    userDevConfigurationSpec.getInjectedFilesDirectory().map(injectedDir -> new File(unpackedForgeDirectory, injectedDir)),
-                    ConfigurationUtils.getArtifactProvider(getProject(), userDevConfigurationSpec.getSourcesJarArtifactCoordinate()),
-                    ConfigurationUtils.getArtifactProvider(getProject(), userDevConfigurationSpec.getUniversalJarArtifactCoordinate())
+                    userdevProfile.getInjectedFilesDirectory().map(injectedDir -> new File(unpackedForgeDirectory, injectedDir)),
+                    ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getSourcesJarArtifactCoordinate()),
+                    ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getUniversalJarArtifactCoordinate())
             ));
         });
         
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
         
-        getProject().getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> userDevConfigurationSpec.getRunTypes().forEach((type) -> {
+        getProject().getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> userdevProfile.getRunTypes().forEach((type) -> {
             TypesUtil.registerWithPotentialPrefix(types, spec.getIdentifier(), type.getName(), type::copyTo);
         }));
         
@@ -122,7 +98,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 spec,
                 mcpRuntimeDefinition,
                 unpackedForgeDirectory,
-                userDevConfigurationSpec,
+                userdevProfile,
                 userDevAdditionalDependenciesConfiguration
         );
     }
@@ -155,12 +131,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         };
     }
 
-    private TaskTreeAdapter createPatchAdapter(Dependency userDevDependency, String patchDirectory) {
+    private TaskTreeAdapter createPatchAdapter(File userDevArchive, String patchDirectory) {
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "patchUserDev"), Patch.class, task -> {
-            Artifact userDevArtifact = Artifact.from(userDevDependency);
-
             task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-            task.getPatchArtifact().set(userDevArtifact);
+            task.getPatchArchive().set(userDevArchive);
             task.getPatchDirectory().set(patchDirectory);
         });
     }

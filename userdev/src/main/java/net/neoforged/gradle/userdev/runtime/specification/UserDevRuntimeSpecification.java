@@ -2,21 +2,27 @@ package net.neoforged.gradle.userdev.runtime.specification;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.dsl.userdev.runtime.specification.UserDevSpecification;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
+import net.neoforged.gradle.util.FileUtils;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -24,14 +30,18 @@ import java.util.Objects;
  */
 public final class UserDevRuntimeSpecification extends CommonRuntimeSpecification implements UserDevSpecification {
 
+    private final File userDevArchive;
     private final String forgeGroup;
     private final String forgeName;
     private final String forgeVersion;
+    private final UserdevProfile profile;
     @Nullable
     private String minecraftVersion = null;
 
     public UserDevRuntimeSpecification(Project project,
                                        String version,
+                                       File userDevArchive,
+                                       UserdevProfile profile,
                                        DistributionType distribution,
                                        Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
                                        Multimap<String, TaskTreeAdapter> postTypeAdapters,
@@ -40,6 +50,8 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
                                        String forgeName,
                                        String forgeVersion) {
         super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, UserDevRuntimeExtension.class);
+        this.userDevArchive = userDevArchive;
+        this.profile = profile;
         this.forgeGroup = forgeGroup;
         this.forgeName = forgeName;
         this.forgeVersion = forgeVersion;
@@ -50,12 +62,20 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         return forgeVersion;
     }
 
+    public File getUserDevArchive() {
+        return userDevArchive;
+    }
+
     public String getForgeGroup() {
         return forgeGroup;
     }
 
     public String getForgeName() {
         return forgeName;
+    }
+
+    public UserdevProfile getProfile() {
+        return profile;
     }
 
     @NotNull
@@ -172,33 +192,33 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
             final String name = forgeNameProvider.get();
             final String version = forgeVersionProvider.get();
 
-            final Artifact universalArtifact = new Artifact(group, name, version, "userdev", "jar");
-            final Artifact resolvedArtifact = resolveUserDevVersion(project, universalArtifact);
+            final Artifact artifact = new Artifact(group, name, version, "userdev", "jar");
+            ResolvedArtifact userdevArchiveArtifact = ToolUtilities.resolveToolArtifact(project, artifact.getDescriptor());
+
+            File userdevArchive = userdevArchiveArtifact.getFile();
+            ModuleVersionIdentifier effectiveVersion = userdevArchiveArtifact.getModuleVersion().getId();
+
+            // Read the userdev profile from the archive
+            UserdevProfile profile;
+            try {
+                profile = FileUtils.processFileFromZip(userdevArchive, "config.json", in -> UserdevProfile.get(project.getObjects(), in));
+            } catch (IOException e) {
+                throw new GradleException("Failed to read userdev config file for version " + effectiveVersion, e);
+            }
 
             return new UserDevRuntimeSpecification(
                     project,
-                    resolvedArtifact.getVersion(),
+                    effectiveVersion.getVersion(),
+                    userdevArchive,
+                    profile,
                     distributionType.get(),
                     preTaskAdapters,
                     postTaskAdapters,
                     taskCustomizers,
-                    resolvedArtifact.getGroup(),
-                    resolvedArtifact.getName(),
-                    resolvedArtifact.getVersion()
+                    effectiveVersion.getGroup(),
+                    effectiveVersion.getName(),
+                    effectiveVersion.getVersion()
             );
-        }
-
-        private static Artifact resolveUserDevVersion(final Project project, final Artifact current) {
-            if (!Objects.equals(current.getVersion(), "+")) {
-                return current;
-            }
-
-            final Configuration resolveConfig = ConfigurationUtils.temporaryConfiguration(project, current.toDependency(project));
-            return resolveConfig.getResolvedConfiguration()
-                    .getResolvedArtifacts().stream()
-                    .filter(current.asArtifactMatcher())
-                    .findFirst()
-                    .map(Artifact::from).orElse(current);
         }
     }
 }

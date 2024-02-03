@@ -6,8 +6,6 @@ import codechicken.diffpatch.util.LoggingOutputStream;
 import codechicken.diffpatch.util.PatchMode;
 import codechicken.diffpatch.util.archiver.ArchiveFormat;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
-import net.neoforged.gradle.dsl.common.util.Artifact;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.Property;
@@ -31,14 +29,12 @@ public abstract class Patch extends DefaultRuntime {
         final File input = getInput().get().getAsFile();
         final File output = ensureFileWorkspaceReady(getOutput());
         final File rejects = getRejectsFile().get().getAsFile();
-
-        // Resolve the input artifact
-        File inputArtifact = ConfigurationUtils.getArtifactProvider(getProject(), getPatchArtifact().map(Artifact::getDescriptor)).get();
+        final File patchArchive = getPatchArchive().get().getAsFile();
 
         PatchOperation.Builder builder = PatchOperation.builder()
                 .logTo(new LoggingOutputStream(getLogger(), LogLevel.LIFECYCLE))
                 .basePath(input.toPath())
-                .patchesPath(inputArtifact.toPath(), ArchiveFormat.ZIP)
+                .patchesPath(patchArchive.toPath(), ArchiveFormat.ZIP)
                 .patchesPrefix(getPatchDirectory().get())
                 .outputPath(output.toPath())
                 .level(getIsVerbose().get() ? codechicken.diffpatch.util.LogLevel.ALL : codechicken.diffpatch.util.LogLevel.WARN)
@@ -66,8 +62,9 @@ public abstract class Patch extends DefaultRuntime {
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
-    @Input
-    public abstract Property<Artifact> getPatchArtifact();
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract RegularFileProperty getPatchArchive();
 
     @Input
     public abstract Property<String> getPatchDirectory();

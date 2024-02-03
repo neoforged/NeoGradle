@@ -157,9 +157,26 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         final JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
         final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
-        
+
+        // Maven coordinates for the NeoForm version this runtime uses
+        final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
+        final NeoFormRuntimeDefinition neoFormRuntimeDefinition = neoFormRuntimeExtension.create(builder -> {
+            builder.withNeoFormVersion(neoFormVersion).withDistributionType(DistributionType.JOINED);
+
+            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
+        });
+        // The NeoForm version that's passed into this method can be a version range or '+', but to build userdev and installer profiles safely,
+        // we need the actual version it was resolved to. Otherwise the NeoForm version used by installer & userdev could change over time.
+        String neoformDependency = "net.neoforged:neoform:" + neoFormRuntimeDefinition.getSpecification().getNeoFormVersion() + "@zip";
+
         final RuntimeDevRuntimeExtension runtimeDevRuntimeExtension = project.getExtensions().getByType(RuntimeDevRuntimeExtension.class);
-        final RuntimeDevRuntimeDefinition runtimeDefinition = runtimeDevRuntimeExtension.create(builder -> builder.withNeoFormVersion(neoFormVersion).withPatchesDirectory(patches).withRejectsDirectory(rejects).withDistributionType(DistributionType.JOINED).isUpdating(getIsUpdating()));
+        final RuntimeDevRuntimeDefinition runtimeDefinition = runtimeDevRuntimeExtension.create(builder -> {
+            builder.withNeoFormRuntime(neoFormRuntimeDefinition)
+                    .withPatchesDirectory(patches)
+                    .withRejectsDirectory(rejects)
+                    .withDistributionType(DistributionType.JOINED)
+                    .isUpdating(getIsUpdating());
+        });
         
         project.getExtensions().add("runtime", runtimeDefinition);
         
@@ -184,7 +201,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         serverExtraConfiguration.getDependencies().add(project.getDependencies().create(ExtraJarDependencyManager.generateServerCoordinateFor(runtimeDefinition.getSpecification().getMinecraftVersion())));
         
         installerLibrariesConfiguration.extendsFrom(installerConfiguration);
-        installerLibrariesConfiguration.getDependencies().add(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toDependency(project));
+        installerLibrariesConfiguration.getDependencies().add(project.getDependencyFactory().create(neoformDependency));
         
         project.getConfigurations().getByName(mainSource.getApiConfigurationName()).extendsFrom(gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, installerConfiguration);
         project.getConfigurations().getByName(mainSource.getRuntimeClasspathConfigurationName()).extendsFrom(clientExtraConfiguration);
@@ -395,7 +412,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
                 profile.processor(project, processor -> {
                     processor.getJar().set(Constants.INSTALLERTOOLS);
-                    processor.getArguments().addAll("--task", "MCP_DATA", "--input", String.format("[%s]", runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString()), "--output", "{MAPPINGS}", "--key", "mappings");
+                    processor.getArguments().addAll("--task", "MCP_DATA", "--input", String.format("[%s]", neoformDependency), "--output", "{MAPPINGS}", "--key", "mappings");
                 });
                 profile.processor(project, processor -> {
                     processor.getJar().set(Constants.INSTALLERTOOLS);
@@ -574,7 +591,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
             
-            userdevProfile.getNeoForm().set(runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormArtifact().toString());
+            userdevProfile.getNeoForm().set(neoformDependency);
             userdevProfile.getSourcePatchesDirectory().set("patches/");
             userdevProfile.getAccessTransformerDirectory().set("ats/");
             userdevProfile.getBinaryPatchFile().set("joined.lzma");
