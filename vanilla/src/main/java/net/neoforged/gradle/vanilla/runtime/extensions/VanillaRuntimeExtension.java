@@ -220,7 +220,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     private StepData buildSteps() {
         final IStep rawJarStep = new CleanManifestStep();
 
-        final IStep sourcesStep = new DecompileStep();
+        final IStep sourcesStep = new ParchmentStep();
 
         final List<IStep> steps = ImmutableList.<IStep>builder()
                 .add(new CollectLibraryInformationStep())
@@ -228,8 +228,8 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                 .add(new RenameStep())
                 .add(new ApplyAccessTransformerStep())
                 .add(rawJarStep)
+                .add(new DecompileStep())
                 .add(sourcesStep)
-                .add(new ParchmentStep())
                 .build();
 
         return new StepData(steps, rawJarStep, sourcesStep);
