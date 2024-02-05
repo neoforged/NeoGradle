@@ -173,7 +173,7 @@ public abstract class JarJar extends Jar {
 
     private Metadata createMetadata() {
         return new Metadata(
-                this.configurations.stream().flatMap(config -> config.getAllDependencies().stream())
+                this.configurations.stream().flatMap(config -> config.getDependencies().stream())
                         .filter(ModuleDependency.class::isInstance)
                         .map(ModuleDependency.class::cast)
                         .map(this::createDependencyMetadata)
