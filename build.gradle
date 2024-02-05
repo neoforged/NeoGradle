@@ -5,6 +5,15 @@ plugins {
     id 'net.neoforged.gradleutils' version '3.0.0-alpha.10'
 }
 
+gradleutils {
+    version {
+        branches {
+            suffixBranch()
+            suffixExemptedBranch('NG_7.0')
+        }
+    }
+}
+
 version = gradleutils.version.toString()
 
 //We hard coded the version of the gradle wrapper here.
@@ -39,6 +48,8 @@ subprojects.forEach { subProject ->
     subProject.apply plugin: 'maven-publish'
     subProject.apply plugin: 'eclipse'
     subProject.apply plugin: 'idea'
+
+    gradleutils.setupSigning(project: subProject, signAllPublications: true)
 
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version
@@ -205,7 +216,9 @@ subprojects.forEach { subProject ->
         if (evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
             evalSubProject.publishing.publications { PublicationContainer publications ->
                 publications.create('pluginMaven', MavenPublication) { publication ->
-                    project.changelog.publish publication
+                    if (evalSubProject.name == 'userdev') {
+                        project.changelog.publish publication
+                    }
                 }
             }
 
@@ -215,7 +228,6 @@ subprojects.forEach { subProject ->
         evalSubProject.publishing.publications { PublicationContainer publications ->
             publications.create('maven', MavenPublication) { publication ->
                 publication.from evalSubProject.components.java
-                project.changelog.publish publication
             }
         }
     }
