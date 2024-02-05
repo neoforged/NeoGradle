@@ -33,6 +33,7 @@ public abstract class ApplyPatches extends DefaultRuntime implements WithWorkspa
       getModifiedPrefix().convention("b/");
       getShouldFailOnPatchFailure().convention(false);
       getPatchMode().convention(getShouldFailOnPatchFailure().map(fail -> fail ? PatchMode.ACCESS : PatchMode.FUZZY));
+      getMinimalFuzzingQuality().convention(0.90f); // The 0.5 default in DiffPatch is too low.
    }
    
    @TaskAction
@@ -58,11 +59,9 @@ public abstract class ApplyPatches extends DefaultRuntime implements WithWorkspa
                                              .bPrefix(getModifiedPrefix().get())
                                              .level(getShouldFailOnPatchFailure().get() ? codechicken.diffpatch.util.LogLevel.WARN : codechicken.diffpatch.util.LogLevel.ALL)
                                              .patchesPrefix(getPatchesPrefix().get());
-      
-      if (getMinimalFuzzingQuality().isPresent()) {
-         builder.minFuzz(getMinimalFuzzingQuality().get());
-      }
-      
+
+      builder.minFuzz(getMinimalFuzzingQuality().get());
+
       if (getMaximalFuzzingOffset().isPresent()) {
          builder.maxOffset(getMaximalFuzzingOffset().get());
       }
