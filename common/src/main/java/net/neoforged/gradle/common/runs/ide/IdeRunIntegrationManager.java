@@ -244,7 +244,7 @@ public class IdeRunIntegrationManager {
             return "\"" + arg + "\"";
         }
 
-        private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl, boolean addDefaultProcessResources) {
+        private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
                 RunsUtil.addRunSourcesDependenciesToTask(task, run);
             });
@@ -261,39 +261,6 @@ public class IdeRunIntegrationManager {
             return ideBeforeRunTask;
         }
 
-        private TaskProvider<?> createEclipseBeforeRunTask(EclipseModel eclipse, Project project, String name, Run run, RunImpl runImpl) {
-            final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl, false);
-            
-            for (SourceSet sourceSet : run.getModSources().get()) {
-                final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
-                
-                //The following tasks are not guaranteed to be in the source sets build dependencies
-                //We however need at least the classes as well as the resources of the source set to be run
-                final String taskName = CommonRuntimeUtils.buildTaskName("eclipse", sourceSet.getProcessResourcesTaskName());
-                final TaskProvider<?> eclipseResourcesTask;
-                
-                if (sourceSetProject.getTasks().findByName(taskName) != null)
-                {
-                    eclipseResourcesTask = sourceSetProject.getTasks().named(taskName);
-                }
-                else
-                {
-                    eclipseResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, t -> {
-                        final TaskProvider<ProcessResources> defaultProcessResources =
-                            sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
-                        t.from(defaultProcessResources.get().getDestinationDir());
-                        t.into(eclipse.getClasspath().getDefaultOutputDir().toPath().resolve(sourceSet.getName()));
-
-                        t.dependsOn(defaultProcessResources);
-                    });
-                }
-
-                eclipse.autoBuildTasks(eclipseResourcesTask);
-            }
-            
-            return ideBeforeRunTask;
-        }
-        
         private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run, Consumer<TaskProvider<?>> tasksConsumer) {
             for (SourceSet sourceSet : run.getModSources().get()) {
                 final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
