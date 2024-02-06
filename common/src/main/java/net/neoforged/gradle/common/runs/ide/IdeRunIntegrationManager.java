@@ -22,8 +22,10 @@ import org.gradle.api.Project;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.language.jvm.tasks.ProcessResources;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.gradle.plugins.ide.idea.model.IdeaProject;
@@ -34,9 +36,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -133,6 +137,7 @@ public class IdeRunIntegrationManager {
                     
                     final RunImpl runImpl = (RunImpl) run;
                     final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+                    ideBeforeRunTask.configure(task -> addEclipseCopyResourcesTasks(eclipse, run, t -> task.dependsOn(t)));
                     
                     try {
                         final GradleLaunchConfig idePreRunTask = GradleLaunchConfig.builder(eclipse.getProject().getName())
@@ -210,6 +215,37 @@ public class IdeRunIntegrationManager {
             return ideBeforeRunTask;
         }
         
+        private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run, Consumer<TaskProvider<?>> tasksConsumer) {
+            for (SourceSet sourceSet : run.getModSources().get()) {
+                final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
+
+                final String taskName = CommonRuntimeUtils.buildTaskName("eclipseCopy", sourceSet.getProcessResourcesTaskName());
+                final TaskProvider<?> eclipseResourcesTask;
+
+                if (sourceSetProject.getTasks().findByName(taskName) != null) {
+                    eclipseResourcesTask = sourceSetProject.getTasks().named(taskName);
+                }
+                else {
+                    eclipseResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
+                        final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
+                        task.from(defaultProcessResources.get().getDestinationDir());
+                        Path outputDir = eclipse.getClasspath().getDefaultOutputDir().toPath();
+                        if (outputDir.endsWith("default")) {
+                            // sometimes it has default value from org.gradle.plugins.ide.eclipse.internal.EclipsePluginConstants#DEFAULT_PROJECT_OUTPUT_PATH
+                            // which has /default on end that is not present in the final outputDir in eclipse/buildship
+                            // (output of getDefaultOutputDir() should be just project/bin/)
+                            outputDir = outputDir.getParent();
+                        }
+                        task.into(outputDir.resolve(sourceSet.getName()));
+
+                        task.dependsOn(defaultProcessResources);
+                    });
+                }
+
+                tasksConsumer.accept(eclipseResourcesTask);
+            }
+        }
+
         private static void writeLaunchToFile(Project project, String fileName, LaunchConfig config) {
             final File file = project.file(String.format(".eclipse/configurations/%s.launch", fileName));
             file.getParentFile().mkdirs();

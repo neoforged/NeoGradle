@@ -9,6 +9,7 @@ repo
 .classpath
 .project
 bin
+/.vscode/
 
 # intellij
 out
