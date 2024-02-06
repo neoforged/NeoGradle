@@ -4,8 +4,8 @@ import codechicken.diffpatch.cli.CliOperation;
 import codechicken.diffpatch.cli.PatchOperation;
 import codechicken.diffpatch.util.LoggingOutputStream;
 import codechicken.diffpatch.util.PatchMode;
+import codechicken.diffpatch.util.archiver.ArchiveFormat;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
-import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.Property;
@@ -20,7 +20,6 @@ public abstract class Patch extends DefaultRuntime {
     public Patch() {
         super();
 
-        getPatchDirectory().fileProvider(getRuntimeData().flatMap(data -> data.get("patches")));
         getRejectsFile().fileProvider(getFileInOutputDirectory("rejects.zip"));
         getIsVerbose().convention(false);
     }
@@ -30,12 +29,13 @@ public abstract class Patch extends DefaultRuntime {
         final File input = getInput().get().getAsFile();
         final File output = ensureFileWorkspaceReady(getOutput());
         final File rejects = getRejectsFile().get().getAsFile();
+        final File patchArchive = getPatchArchive().get().getAsFile();
 
         PatchOperation.Builder builder = PatchOperation.builder()
                 .logTo(new LoggingOutputStream(getLogger(), LogLevel.LIFECYCLE))
                 .basePath(input.toPath())
-                .patchesPath(getUnpackedMcpZipDirectory().get().getAsFile().toPath())
-                .patchesPrefix(getUnpackedMcpZipDirectory().get().getAsFile().toPath().relativize(getPatchDirectory().get().getAsFile().toPath()).toString())
+                .patchesPath(patchArchive.toPath(), ArchiveFormat.ZIP)
+                .patchesPrefix(getPatchDirectory().get())
                 .outputPath(output.toPath())
                 .level(getIsVerbose().get() ? codechicken.diffpatch.util.LogLevel.ALL : codechicken.diffpatch.util.LogLevel.WARN)
                 .mode(PatchMode.OFFSET)
@@ -62,9 +62,12 @@ public abstract class Patch extends DefaultRuntime {
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
-    @InputDirectory
+    @InputFile
     @PathSensitive(PathSensitivity.NONE)
-    public abstract DirectoryProperty getPatchDirectory();
+    public abstract RegularFileProperty getPatchArchive();
+
+    @Input
+    public abstract Property<String> getPatchDirectory();
 
     @OutputFile
     public abstract RegularFileProperty getRejectsFile();

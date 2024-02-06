@@ -18,4 +18,18 @@ interface Subsystems extends BaseDSLElement<Subsystems> {
     @DSLProperty
     Decompiler getDecompiler();
 
+    /**
+     * @return settings for the recompiler subsystem
+     */
+    @Nested
+    @DSLProperty
+    Recompiler getRecompiler();
+
+    /**
+     * @return settings for applying Parchment mappings.
+     */
+    @Nested
+    @DSLProperty
+    Parchment getParchment();
+
 }

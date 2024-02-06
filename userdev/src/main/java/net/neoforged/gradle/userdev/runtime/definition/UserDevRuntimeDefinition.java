@@ -10,8 +10,6 @@ import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -140,7 +138,9 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     task.getInputFiles().from(this.additionalUserDevDependencies);
                     task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
 
-                    run.getDependencies().get().getRuntime().get().forEach(runDependency -> task.getInputFiles().from(runDependency.getDependency()));
+                    Configuration userDependencies = run.getDependencies().get().getConfiguration();
+                    userDependencies.getExtendsFrom().forEach(task.getInputFiles()::from);
+                    task.getInputFiles().from(userDependencies);
                 }
         );
         configureAssociatedTask(minecraftClasspathSerializer);

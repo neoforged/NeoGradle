@@ -69,7 +69,7 @@ public final class VanillaDependencyManager {
     private boolean isNotAMatchingDependency(final Dependency dependencyToCheck) {
         if (dependencyToCheck instanceof ExternalModuleDependency) {
             final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependencyToCheck;
-            return externalModuleDependency.getGroup() == null || !externalModuleDependency.getGroup().equals("net.minecraft") || !isSupportedSide(dependencyToCheck) || !hasMatchingArtifact(externalModuleDependency);
+            return !"net.minecraft".equals(externalModuleDependency.getGroup()) || !isSupportedSide(dependencyToCheck) || !hasMatchingArtifact(externalModuleDependency);
         }
 
         return true;
@@ -94,7 +94,7 @@ public final class VanillaDependencyManager {
         }
 
         final DependencyArtifact artifact = externalModuleDependency.getArtifacts().iterator().next();
-        return artifact.getClassifier().equals("sources") && artifact.getExtension().equals("jar");
+        return "sources".equals(artifact.getClassifier()) && "jar".equals(artifact.getExtension());
     }
 
 

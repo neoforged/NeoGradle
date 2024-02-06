@@ -3,26 +3,21 @@ package net.neoforged.gradle.dsl.common.runs.run
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.ClosureEquivalent
-import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.Action
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.provider.ListProperty
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 
 /**
  * A custom dependency handler which manages runtime dependencies for a run configuration.
  */
 @CompileStatic
 interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
-
     /**
-     * Gets the runtime dependencies for the run configuration.
-     * @return The runtime dependencies for the run configuration.
+     * The dependency configuration that contains all the declared dependencies.
      */
-    @Input
-    @DSLProperty
-    ListProperty<RunDependency> getRuntime();
+    @Internal
+    Configuration getConfiguration();
 
     /**
      * Adds a runtime dependency to the run configuration.
@@ -30,7 +25,7 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @param dependencyNotation The dependency notation.
      * @return The runtime dependency.
      */
-    RunDependency runtime(Object dependencyNotation);
+    Dependency runtime(Object dependencyNotation);
 
     /**
      * Adds a runtime dependency to the run configuration.
@@ -40,7 +35,7 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @return The runtime dependency.
      */
     @ClosureEquivalent
-    RunDependency runtime(Object dependencyNotation, Action<Dependency> configureClosure);
+    Dependency runtime(Object dependencyNotation, Action<Dependency> configureClosure);
 
     /**
      * Creates a new run dependency from the given notation.
@@ -48,7 +43,7 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @param dependencyNotation The run dependency notation.
      * @return The run dependency.
      */
-    RunDependency create(Object dependencyNotation);
+    Dependency create(Object dependencyNotation);
 
     /**
      * Creates a new run dependency from the given notation and configures it.
@@ -58,7 +53,7 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @return The run dependency.
      */
     @ClosureEquivalent
-    RunDependency create(Object dependencyNotation, Action<Dependency> configureClosure);
+    Dependency create(Object dependencyNotation, Action<Dependency> configureClosure);
 
     /**
      * Creates a new run dependency from the given module notation.
@@ -66,7 +61,7 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @param notation the module notation.
      * @return The run dependency.
      */
-    RunDependency module(Object notation);
+    Dependency module(Object notation);
 
     /**
      * Creates a new run dependency from the given module notation and configures it.
@@ -76,7 +71,7 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @return The run dependency.
      */
     @ClosureEquivalent
-    RunDependency module(Object notation, Action<Dependency> configureClosure);
+    Dependency module(Object notation, Action<Dependency> configureClosure);
 
     /**
      * Creates a new run dependency from the given project notation.
@@ -84,13 +79,5 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler> {
      * @param notation the project notation.
      * @return The run dependency.
      */
-    RunDependency project(Map<String, ?> notation);
-
-    /**
-     * Creates a new run dependency from the given configuration notation.
-     *
-     * @param notation The configuration to use.
-     * @return The run dependency.
-     */
-    RunDependency configuration(Configuration notation);
+    Dependency project(Map<String, ?> notation);
 }

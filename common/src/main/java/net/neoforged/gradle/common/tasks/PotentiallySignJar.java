@@ -76,7 +76,7 @@ public abstract class PotentiallySignJar extends DefaultTask implements PatternF
         try (OutputStream toSignOutputStream = new FileOutputStream(toSign); ZipOutputStream toSignZipOutputStream = new ZipOutputStream(toSignOutputStream)) {
             
             ZipBuildingFileTreeVisitor toSignBuilder = new ZipBuildingFileTreeVisitor(toSignZipOutputStream);
-            inputFileTree.matching(this).visit(toSignBuilder);
+            inputFileTree.matching(patternSet).visit(toSignBuilder);
         }
     }
     
@@ -87,7 +87,7 @@ public abstract class PotentiallySignJar extends DefaultTask implements PatternF
             
             ZipBuildingFileTreeVisitor builder = new ZipBuildingFileTreeVisitor(zipOutputStream);
             signedFileTree.visit(builder);
-            inputFileTree.minus(inputFileTree.matching(this)).getAsFileTree().visit(builder);
+            inputFileTree.minus(inputFileTree.matching(patternSet)).getAsFileTree().visit(builder);
         }
     }
     

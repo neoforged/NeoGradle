@@ -41,9 +41,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,7 +79,7 @@ public class IdeRunIntegrationManager {
         final IdeaModel ideaModel = rootProject.getExtensions().getByType(IdeaModel.class);
         final IdeaProject ideaProject = ideaModel.getProject();
         final ExtensionAware extensionAware = (ExtensionAware) ideaProject;
-        if (extensionAware.getExtensions().findByType(IdeaRunsExtension.class) == null) {
+        if (extensionAware.getExtensions().findByType(IdeaRunsExtension.class) == null && extensionAware.getExtensions().findByName("runs") == null) {
             extensionAware.getExtensions().create("runs", IdeaRunsExtension.class, project);
         }
     }
@@ -101,11 +103,12 @@ public class IdeRunIntegrationManager {
             final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
             
             project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
-                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(name.replace(" ", "-")));
+                final String nameWithoutSpaces = name.replace(" ", "-");
+                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
                 
                 final RunImpl runImpl = (RunImpl) run;
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
-                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl, true);
+                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
                 
                 ideaRuns.register(runName, Application.class, ideaRun -> {
                     runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
@@ -138,7 +141,8 @@ public class IdeRunIntegrationManager {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     
                     final RunImpl runImpl = (RunImpl) run;
-                    final TaskProvider<?> ideBeforeRunTask = createEclipseBeforeRunTask(eclipse, project, name, run, runImpl);
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+                    ideBeforeRunTask.configure(task -> addEclipseCopyResourcesTasks(eclipse, run, t -> task.dependsOn(t)));
                     
                     try {
                         final GradleLaunchConfig idePreRunTask = GradleLaunchConfig.builder(eclipse.getProject().getName())
@@ -240,21 +244,7 @@ public class IdeRunIntegrationManager {
 
         private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl, boolean addDefaultProcessResources) {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
-                for (SourceSet sourceSet : run.getModSources().get()) {
-                    final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
-                    
-                    //The following tasks are not guaranteed to be in the source sets build dependencies
-                    //We however need at least the classes as well as the resources of the source set to be run
-                    if (addDefaultProcessResources) {
-                        task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
-                    }
-                    task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
-                    
-                    //There might be additional tasks that are needed to configure and run a source set.
-                    //Also run those
-                    sourceSet.getOutput().getBuildDependencies().getDependencies(null)
-                            .forEach(task::dependsOn);
-                }
+                RunsUtil.addRunSourcesDependenciesToTask(task, run);
             });
             
             if (!runImpl.getTaskDependencies().isEmpty()) {
@@ -302,6 +292,37 @@ public class IdeRunIntegrationManager {
             return ideBeforeRunTask;
         }
         
+        private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run, Consumer<TaskProvider<?>> tasksConsumer) {
+            for (SourceSet sourceSet : run.getModSources().get()) {
+                final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
+
+                final String taskName = CommonRuntimeUtils.buildTaskName("eclipseCopy", sourceSet.getProcessResourcesTaskName());
+                final TaskProvider<?> eclipseResourcesTask;
+
+                if (sourceSetProject.getTasks().findByName(taskName) != null) {
+                    eclipseResourcesTask = sourceSetProject.getTasks().named(taskName);
+                }
+                else {
+                    eclipseResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
+                        final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
+                        task.from(defaultProcessResources.get().getDestinationDir());
+                        Path outputDir = eclipse.getClasspath().getDefaultOutputDir().toPath();
+                        if (outputDir.endsWith("default")) {
+                            // sometimes it has default value from org.gradle.plugins.ide.eclipse.internal.EclipsePluginConstants#DEFAULT_PROJECT_OUTPUT_PATH
+                            // which has /default on end that is not present in the final outputDir in eclipse/buildship
+                            // (output of getDefaultOutputDir() should be just project/bin/)
+                            outputDir = outputDir.getParent();
+                        }
+                        task.into(outputDir.resolve(sourceSet.getName()));
+
+                        task.dependsOn(defaultProcessResources);
+                    });
+                }
+
+                tasksConsumer.accept(eclipseResourcesTask);
+            }
+        }
+
         private static void writeLaunchToFile(Project project, String fileName, LaunchConfig config) {
             final File file = project.file(String.format(".eclipse/configurations/%s.launch", fileName));
             file.getParentFile().mkdirs();

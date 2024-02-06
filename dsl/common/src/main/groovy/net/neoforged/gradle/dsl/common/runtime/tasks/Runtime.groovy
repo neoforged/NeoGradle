@@ -8,6 +8,7 @@ import net.neoforged.gradle.dsl.common.tasks.WithWorkspace
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion
 import net.neoforged.gradle.dsl.common.util.DistributionType
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -77,13 +78,11 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
     abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
 
     /**
-     * The custom pipeline file pointer data.
-     *
-     * @return The custom pipeline file pointer data.
+     * Symbolic data source references defined by the NeoForm package, already adjusted for the
+     * current {@link #getDistribution()}.
      */
-    @Nested
-    @DSLProperty
-    abstract RuntimeData getData();
+    @Internal
+    abstract MapProperty<String, String> getSymbolicDataSources();
 
     /**
      * The arguments for this step.

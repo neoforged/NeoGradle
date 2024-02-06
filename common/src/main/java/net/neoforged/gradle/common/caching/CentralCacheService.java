@@ -17,7 +17,7 @@ import org.gradle.api.tasks.OutputDirectory;
  */
 public abstract class CentralCacheService implements BuildService<BuildServiceParameters.None> {
     
-    public static void register(Project project, String name, Provider<Directory> cacheDirectory) {
+    public static void register(Project project, String name) {
         project.getGradle().getSharedServices().registerIfAbsent(
                 name,
                 CentralCacheService.class,

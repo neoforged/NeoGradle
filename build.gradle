@@ -2,7 +2,16 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.neoforged.gradleutils' version '3.0.0-alpha.1'
+    id 'net.neoforged.gradleutils' version '3.0.0-alpha.10'
+}
+
+gradleutils {
+    version {
+        branches {
+            suffixBranch()
+            suffixExemptedBranch('NG_7.0')
+        }
+    }
 }
 
 version = gradleutils.version.toString()
@@ -39,6 +48,8 @@ subprojects.forEach { subProject ->
     subProject.apply plugin: 'maven-publish'
     subProject.apply plugin: 'eclipse'
     subProject.apply plugin: 'idea'
+
+    gradleutils.setupSigning(project: subProject, signAllPublications: true)
 
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version
@@ -77,9 +88,9 @@ subprojects.forEach { subProject ->
     subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
-    subProject.dependencies.testImplementation "net.neoforged:TrainingWheels-Base:${project.trainingwheels_version}"
-    subProject.dependencies.testImplementation "net.neoforged:TrainingWheels-Gradle-Base:${project.trainingwheels_version}"
-    subProject.dependencies.testImplementation "net.neoforged:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:trainingwheels-base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:trainingwheels-gradle-base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:trainingwheels-gradle-functional:${project.trainingwheels_version}"
 
     //Exclude duplicates.
     subProject.tasks.withType(Jar).configureEach { jarTask ->
@@ -136,7 +147,7 @@ subprojects.forEach { subProject ->
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
             spec.exclude group: 'org.codehaus.groovy'
         }
-        evalSubProject.dependencies.functionalTestImplementation "net.neoforged:TrainingWheels-Gradle-Functional:${project.trainingwheels_version}"
+        evalSubProject.dependencies.functionalTestImplementation "net.neoforged.trainingwheels:trainingwheels-gradle-functional:${project.trainingwheels_version}"
 
         //Configure the plugin metadata, so we can publish it.
         evalSubProject.gradlePlugin.plugins { NamedDomainObjectContainer<PluginDeclaration> plugins ->
@@ -205,7 +216,9 @@ subprojects.forEach { subProject ->
         if (evalSubProject.getPlugins().hasPlugin("java-gradle-plugin")) {
             evalSubProject.publishing.publications { PublicationContainer publications ->
                 publications.create('pluginMaven', MavenPublication) { publication ->
-                    project.changelog.publish publication
+                    if (evalSubProject.name == 'userdev') {
+                        project.changelog.publish publication
+                    }
                 }
             }
 
@@ -215,7 +228,6 @@ subprojects.forEach { subProject ->
         evalSubProject.publishing.publications { PublicationContainer publications ->
             publications.create('maven', MavenPublication) { publication ->
                 publication.from evalSubProject.components.java
-                project.changelog.publish publication
             }
         }
     }

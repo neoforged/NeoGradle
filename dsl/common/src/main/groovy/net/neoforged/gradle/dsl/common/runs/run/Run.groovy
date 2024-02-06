@@ -147,6 +147,9 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
 
     /**
      * Defines the source sets that are used as a mod.
+     * <p>
+     * For changing the mod identifier a source set belongs to see
+     * {@link net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet#getModIdentifier RunnableSourceSet#getModIdentifier}.
      *
      * @return The source sets that are used as a mod.
      */

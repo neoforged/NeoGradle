@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
-import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
@@ -12,14 +11,15 @@ import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.*;
+import net.neoforged.gradle.dsl.common.util.Artifact;
+import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
-import net.neoforged.gradle.neoform.runtime.tasks.Download;
-import net.neoforged.gradle.neoform.runtime.tasks.InjectCode;
+import net.neoforged.gradle.neoform.runtime.tasks.InjectZipContent;
 import net.neoforged.gradle.neoform.runtime.tasks.Patch;
-import net.neoforged.gradle.neoform.runtime.tasks.UnpackZip;
 import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
@@ -28,25 +28,18 @@ import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import javax.inject.Inject;
-import java.io.*;
+import java.io.File;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<UserDevRuntimeSpecification, UserDevRuntimeSpecification.Builder, UserDevRuntimeDefinition> {
     
-    @Inject
+    @javax.inject.Inject
     public UserDevRuntimeExtension(Project project) {
         super(project);
     }
@@ -54,66 +47,50 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     @Override
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
-        
-        final Dependency userDevDependency = getProject().getDependencies().create(String.format("%s:%s:%s:userdev", spec.getForgeGroup(), spec.getForgeName(), spec.getForgeVersion()));
-        final Configuration userDevConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), userDevDependency);
-        final ResolvedConfiguration resolvedUserDevConfiguration = userDevConfiguration.getResolvedConfiguration();
-        final File userDevJar = resolvedUserDevConfiguration.getFiles().iterator().next();
-        
+
+        final UserdevProfile userdevProfile = spec.getProfile();
+        final File userDevJar = spec.getUserDevArchive();
+
         final File forgeDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForge/%s", spec.getIdentifier())).get().getAsFile();
         final File unpackedForgeDirectory = new File(forgeDirectory, "unpacked");
-        
         unpackedForgeDirectory.mkdirs();
         
         final FileTree userDevJarZipTree = spec.getProject().zipTree(userDevJar);
         final CopyingFileTreeVisitor unpackingVisitor = new CopyingFileTreeVisitor(unpackedForgeDirectory);
         userDevJarZipTree.visit(unpackingVisitor);
-        
-        final File userDevConfigFile = new File(unpackedForgeDirectory, "config.json");
-        final Gson userdevGson = UserdevProfile.createGson(getProject().getObjects());
-        final UserdevProfile userDevConfigurationSpec;
-        try(final FileInputStream fileInputStream = new FileInputStream(userDevConfigFile)) {
-            userDevConfigurationSpec = userdevGson.fromJson(new InputStreamReader(fileInputStream), UserdevProfile.class);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
 
         final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
-        for (String dependencyCoordinate : userDevConfigurationSpec.getAdditionalDependencyArtifactCoordinates().get()) {
+        for (String dependencyCoordinate : userdevProfile.getAdditionalDependencyArtifactCoordinates().get()) {
             userDevAdditionalDependenciesConfiguration.getDependencies().add(getProject().getDependencies().create(dependencyCoordinate));
         }
         
-        if (!userDevConfigurationSpec.getNeoForm().isPresent()) {
+        if (!userdevProfile.getNeoForm().isPresent()) {
             throw new IllegalStateException("Userdev configuration spec has no MCP version. As of now this is not supported!");
         }
-        
-        final Artifact neoFormArtifact = Artifact.from(userDevConfigurationSpec.getNeoForm().get());
-        
+
         final NeoFormRuntimeDefinition mcpRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormArtifact(neoFormArtifact)
+            builder.withNeoFormDependency(userdevProfile.getNeoForm().get())
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
             
-            final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userDevConfigurationSpec.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
+            final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
                                                             .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
             
             builder.withPreTaskAdapter("decompile", atAndSASAdapter);
-            
-            final TaskTreeAdapter patchAdapter = createPatchAdapter(userDevConfigurationSpec.getSourcePatchesDirectory().get(), unpackedForgeDirectory);
-            final Provider<TaskTreeAdapter> optionalInjectionAdapter = createInjectionAdapter(userDevConfigurationSpec.getInjectedFilesDirectory(), unpackedForgeDirectory);
-            
-            final TaskTreeAdapter resultingAdapter = optionalInjectionAdapter.map(inject -> inject.andThen(patchAdapter)).getOrElse(patchAdapter);
-            final TaskTreeAdapter withForgeSourcesAdapter = userDevConfigurationSpec.getSourcesJarArtifactCoordinate().map(sources -> resultingAdapter.andThen(createInjectForgeSourcesAdapter(sources))).getOrElse(resultingAdapter);
-            final TaskTreeAdapter withForgeResourcesAdapter = userDevConfigurationSpec.getUniversalJarArtifactCoordinate().map(resources -> withForgeSourcesAdapter.andThen(createInjectResourcesAdapter(resources))).getOrElse(withForgeSourcesAdapter);
-            
-            builder.withPostTaskAdapter("patch", withForgeResourcesAdapter);
+
+            builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userdevProfile.getSourcePatchesDirectory().get()));
+
+            builder.withTaskCustomizer("inject", InjectZipContent.class, task -> configureNeoforgeInjects(
+                    task,
+                    userdevProfile.getInjectedFilesDirectory().map(injectedDir -> new File(unpackedForgeDirectory, injectedDir)),
+                    ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getSourcesJarArtifactCoordinate()),
+                    ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getUniversalJarArtifactCoordinate())
+            ));
         });
         
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
         
-        getProject().getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> userDevConfigurationSpec.getRunTypes().forEach((type) -> {
+        getProject().getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> userdevProfile.getRunTypes().forEach((type) -> {
             TypesUtil.registerWithPotentialPrefix(types, spec.getIdentifier(), type.getName(), type::copyTo);
         }));
         
@@ -121,11 +98,11 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 spec,
                 mcpRuntimeDefinition,
                 unpackedForgeDirectory,
-                userDevConfigurationSpec,
+                userdevProfile,
                 userDevAdditionalDependenciesConfiguration
         );
     }
-    
+
     @Override
     protected UserDevRuntimeSpecification.Builder createBuilder() {
         return UserDevRuntimeSpecification.Builder.from(getProject());
@@ -153,78 +130,42 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             return accessTransformerTask;
         };
     }
-    
-    private Provider<TaskTreeAdapter> createInjectionAdapter(final Provider<String> injectionDirectory, final File unpackedForgeUserDevDirectory) {
-        return injectionDirectory.map(s -> {
-            File directory = new File(unpackedForgeUserDevDirectory, s);
-            if (!directory.exists()) return null;
-            return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) ->
-                    definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "injectUserDev"), InjectCode.class, task -> {
-                        task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-                        task.getInjectionDirectory().fileValue(directory);
-                    });
-        });
-    }
-    
-    private TaskTreeAdapter createPatchAdapter(final String patchDirectory, final File unpackForgeUserDevDirectory) {
+
+    private TaskTreeAdapter createPatchAdapter(File userDevArchive, String patchDirectory) {
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "patchUserDev"), Patch.class, task -> {
             task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-            task.getPatchDirectory().fileProvider(definition.getSpecification().getProject().provider(() -> new File(unpackForgeUserDevDirectory, patchDirectory)));
+            task.getPatchArchive().set(userDevArchive);
+            task.getPatchDirectory().set(patchDirectory);
         });
     }
-    
-    private TaskTreeAdapter createInjectForgeSourcesAdapter(final String forgeSourcesCoordinate) {
-        return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            final Configuration forgeSourcesConfiguration = ConfigurationUtils.temporaryConfiguration(definition.getSpecification().getProject(), definition.getSpecification().getProject().getDependencies().create(forgeSourcesCoordinate));
-            final TaskProvider<? extends Download> downloadForgeSources = definition.getSpecification().getProject().getTasks()
-                                                                                  .register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "downloadForgesSources"), Download.class, task -> {
-                                                                                      task.getInput().from(forgeSourcesConfiguration);
-                                                                                  });
-            
-            dependentTaskConfigurationHandler.accept(downloadForgeSources);
-            
-            final TaskProvider<? extends UnpackZip> unzipForgeSources = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "unzipForgesSources"), UnpackZip.class, task -> {
-                task.getInputZip().set(downloadForgeSources.flatMap(Download::getOutput));
-                task.dependsOn(downloadForgeSources);
+
+    /*
+     * Configures the inject task, which runs right before patching, to also include the content that Neoforge
+     * adds to the Minecraft jar, such as the Neoforge sources and resources.
+     */
+    private void configureNeoforgeInjects(InjectZipContent task,
+                                          Provider<File> userDevInjectDir,
+                                          Provider<File> sourcesInjectArtifact,
+                                          Provider<File> resourcesInjectArtifact) {
+
+        if (userDevInjectDir.isPresent()) {
+            task.injectDirectory(userDevInjectDir);
+        }
+
+        if (sourcesInjectArtifact.isPresent()) {
+            task.injectZip(sourcesInjectArtifact, filter -> {
+                filter.include("net/**");
             });
-            
-            dependentTaskConfigurationHandler.accept(unzipForgeSources);
-            
-            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "injectForgesSources"), InjectCode.class, task -> {
-                task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-                task.getInjectionDirectory().set(unzipForgeSources.flatMap(UnpackZip::getUnpackingTarget));
-                task.getInclusionFilter().add("net/**");
-                task.dependsOn(unzipForgeSources);
+        }
+
+        if (resourcesInjectArtifact.isPresent()) {
+            task.injectZip(resourcesInjectArtifact, filter -> {
+                filter.exclude("**/*.class");
+                filter.exclude("META-INF/**/*.DSA");
+                filter.exclude("**/*.SF");
             });
-        };
+        }
+
     }
-    
-    private TaskTreeAdapter createInjectResourcesAdapter(final String forgeUniversalCoordinate) {
-        return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            final Configuration forgeUniversalConfiguration = ConfigurationUtils.temporaryConfiguration(definition.getSpecification().getProject(), definition.getSpecification().getProject().getDependencies().create(forgeUniversalCoordinate));
-            final TaskProvider<? extends Download> downloadForgeUniversal = definition.getSpecification().getProject().getTasks()
-                                                                                    .register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "downloadForgeUniversal"), Download.class, task -> {
-                                                                                        task.getInput().from(forgeUniversalConfiguration);
-                                                                                    });
-            
-            dependentTaskConfigurationHandler.accept(downloadForgeUniversal);
-            
-            final TaskProvider<? extends UnpackZip> unzipForgeUniversal = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "unzipForgeUniversal"), UnpackZip.class, task -> {
-                task.getInputZip().set(downloadForgeUniversal.flatMap(Download::getOutput));
-                task.dependsOn(downloadForgeUniversal);
-            });
-            
-            dependentTaskConfigurationHandler.accept(unzipForgeUniversal);
-            
-            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "injectForgeResources"), InjectCode.class, task -> {
-                task.getInjectionSource().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-                task.getInjectionDirectory().set(unzipForgeUniversal.flatMap(UnpackZip::getUnpackingTarget));
-                task.getExclusionFilter().add("**/*.class");
-                task.getExclusionFilter().add("META-INF/**/*.DSA");
-                task.getExclusionFilter().add("**/*.SF");
-                task.dependsOn(unzipForgeUniversal);
-            });
-        };
-    }
-    
+
 }

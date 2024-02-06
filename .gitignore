@@ -10,6 +10,7 @@ repo
 .project
 /.vscode/
 bin
+/.vscode/
 
 # intellij
 out

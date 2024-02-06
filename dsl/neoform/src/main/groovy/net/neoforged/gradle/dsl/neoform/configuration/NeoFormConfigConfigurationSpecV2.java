@@ -24,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.gradle.api.tasks.Input;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -39,7 +40,7 @@ public class NeoFormConfigConfigurationSpecV2 extends NeoFormConfigConfiguration
         }
     }
     public static NeoFormConfigConfigurationSpecV2 get(InputStream stream) {
-        try(final InputStreamReader reader = new InputStreamReader(stream)) {
+        try (final InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             return GSON.fromJson(reader, NeoFormConfigConfigurationSpecV2.class);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
