@@ -78,7 +78,7 @@ public abstract class IdeManagementExtension {
     private boolean isLikelyVscodeImport()
     {
         final boolean hasVscodeDirectory = Files.isDirectory(project.getRootDir().toPath().resolve(".vscode"));
-        final boolean hasExtensionGradlePlugin = project.getPlugins().stream().anyMatch(p -> p.getClass().getName().equals("com.microsoft.gradle.GradlePlugin"));
+        final boolean hasExtensionGradlePlugin = isDefinitelyVscodeImport(project);
         project.getLogger().debug("vscode detection - dir .vscode: " + hasVscodeDirectory);
         project.getLogger().debug("vscode detection - extension vscjava.vscode-gradle: " + hasExtensionGradlePlugin);
         return hasVscodeDirectory || hasExtensionGradlePlugin;
@@ -236,7 +236,9 @@ public abstract class IdeManagementExtension {
             EclipseModel model = project.getExtensions().findByType(EclipseModel.class);
             if (model == null) {
                 model = rootProject.getExtensions().findByType(EclipseModel.class);
-                return;
+                if (model == null) {
+                    return;
+                }
             }
             
             //Configure the project, passing the model and the relevant project. Which does not need to be the root, but can be.
@@ -298,7 +300,7 @@ public abstract class IdeManagementExtension {
      * A configuration action for vscode IDE projects.
      */
     public interface VscodeIdeImportAction {
-        
+
         /**
          * Configure an vscode project.
          *

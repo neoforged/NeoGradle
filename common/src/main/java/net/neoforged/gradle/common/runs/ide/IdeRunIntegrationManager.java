@@ -193,7 +193,7 @@ public class IdeRunIntegrationManager {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     final RunImpl runImpl = (RunImpl) run;
 
-                    final TaskProvider<?> ideBeforeRunTask = createEclipseBeforeRunTask(eclipse, project, name, run, runImpl);
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
 
                     final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
                         .createLaunchConfiguration()
@@ -208,10 +208,12 @@ public class IdeRunIntegrationManager {
 
                     if (IdeManagementExtension.isDefinitelyVscodeImport(project))
                     {
+                        ideBeforeRunTask.configure(task -> addEclipseCopyResourcesTasks(eclipse, run, t -> task.dependsOn(t)));
                         cfg.withPreTaskName("gradle: " + ideBeforeRunTask.getName());
                     }
                     else
                     {
+                        addEclipseCopyResourcesTasks(eclipse, run, eclipse::autoBuildTasks);
                         eclipse.autoBuildTasks(ideBeforeRunTask);
                     }
                 }));
