@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -136,7 +137,7 @@ public class IdeRunIntegrationManager {
                     
                     final RunImpl runImpl = (RunImpl) run;
                     final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
-                    addEclipseCopyResourcesTasks(eclipse, run);
+                    ideBeforeRunTask.configure(task -> addEclipseCopyResourcesTasks(eclipse, run, t -> task.dependsOn(t)));
                     
                     try {
                         final GradleLaunchConfig idePreRunTask = GradleLaunchConfig.builder(eclipse.getProject().getName())
@@ -214,7 +215,7 @@ public class IdeRunIntegrationManager {
             return ideBeforeRunTask;
         }
         
-        private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
+        private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run, Consumer<TaskProvider<?>> tasksConsumer) {
             for (SourceSet sourceSet : run.getModSources().get()) {
                 final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
@@ -241,7 +242,7 @@ public class IdeRunIntegrationManager {
                     });
                 }
 
-                eclipse.autoBuildTasks(eclipseResourcesTask);
+                tasksConsumer.accept(eclipseResourcesTask);
             }
         }
 
