@@ -137,7 +137,8 @@ public class IdeRunIntegrationManager {
                     
                     final RunImpl runImpl = (RunImpl) run;
                     final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
-                    ideBeforeRunTask.configure(task -> addEclipseCopyResourcesTasks(eclipse, run, t -> task.dependsOn(t)));
+                    final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
+                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(t -> task.dependsOn(t)));
                     
                     try {
                         final GradleLaunchConfig idePreRunTask = GradleLaunchConfig.builder(eclipse.getProject().getName())
@@ -214,8 +215,9 @@ public class IdeRunIntegrationManager {
             
             return ideBeforeRunTask;
         }
-        
-        private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run, Consumer<TaskProvider<?>> tasksConsumer) {
+
+        private List<TaskProvider<?>> createEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
+            final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().get()) {
                 final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
@@ -242,8 +244,9 @@ public class IdeRunIntegrationManager {
                     });
                 }
 
-                tasksConsumer.accept(eclipseResourcesTask);
+                copyProcessResources.add(eclipseResourcesTask);
             }
+            return copyProcessResources;
         }
 
         private static void writeLaunchToFile(Project project, String fileName, LaunchConfig config) {
