@@ -99,7 +99,7 @@ jobs:
         if: success() || failure()
         with:
           if-no-files-found: ignore
-          name: test-results-${{ matrix.test }}
+          name: test-results
           path: junit.xml
           retention-days: 1
 
@@ -111,9 +111,9 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Download reports' artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: test-results-*
+          name: test-results
           path: downloaded_artifacts
 
       - name: Merge Test Reports
