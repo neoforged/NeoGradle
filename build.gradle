@@ -185,6 +185,8 @@ subprojects.forEach { subProject ->
 
             testClassesDirs = evalSubProject.sourceSets.functionalTest.output.classesDirs
             classpath = evalSubProject.sourceSets.functionalTest.runtimeClasspath
+
+            it.extensions.add('test-source-set', evalSubProject.sourceSets.functionalTest)
         }
 
         //Wire them up so they run as part of the check task (and as such through build, but not through test!)
@@ -232,3 +234,6 @@ subprojects.forEach { subProject ->
         }
     }
 }
+
+//Apply the custom gradle file for handling the github ci infrastructure.
+apply from: '.github/gradle/gradle.gradle'

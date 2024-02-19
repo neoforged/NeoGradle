@@ -1,0 +1,50 @@
+static def outputUnitTest(Project project, Task test) {
+    project.getLogger().lifecycle("<< TEST >>${test.path}")
+}
+
+static def outputClassTest(Project project, Task test, String className) {
+    project.getLogger().lifecycle("<< TEST >>${test.path} --tests \"${className}\"")
+}
+
+subprojects.forEach { Project subProject ->
+    subProject.tasks.register('determineTests') { Task it ->
+        it.group = 'infrastructure'
+        it.doLast {
+            subProject.tasks.withType(Test).forEach { Task test ->
+                def testSourceSetCandidate = test.extensions.findByName('test-source-set')
+                if (testSourceSetCandidate != null) {
+                    SourceSet testSourceSet = testSourceSetCandidate as SourceSet
+
+                    testSourceSet.java.srcDirs
+                            .collect { File file ->
+                                subProject.fileTree(file.parentFile)
+                            }
+                            .collect { FileTree fileTree ->
+                                return fileTree.matching {
+                                    include '**/*Test.java'
+                                    include '**/*Tests.java'
+                                    include '**/*Test.groovy'
+                                    include '**/*Tests.groovy'
+                                }
+                            }
+                            .forEach {
+                                it.visit { FileVisitDetails details ->
+                                    if (details.isDirectory())
+                                        return;
+
+                                    String className = details.relativePath.pathString
+                                            .replace(".groovy", "")
+                                            .replace(".java", "")
+                                            .replace("/", ".")
+
+                                    outputClassTest(subProject, test, className)
+                                }
+                            }
+
+                } else {
+                    outputUnitTest(subProject, test)
+                }
+            }
+        }
+    }
+}
