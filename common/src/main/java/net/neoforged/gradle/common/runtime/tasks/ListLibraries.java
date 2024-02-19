@@ -47,7 +47,11 @@ public abstract class ListLibraries extends DefaultRuntime {
             return new File(arguments.get("bundle").get());
         }));
         getOutputFileName().set("libraries.txt");
+        getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
     }
+
+    @Input
+    public abstract Property<Boolean> getIsOffline();
     
     @ServiceReference(CommonProjectPlugin.LIBRARIES_SERVICE)
     public abstract Property<CentralCacheService> getLibrariesCache();
@@ -154,7 +158,7 @@ public abstract class ListLibraries extends DefaultRuntime {
                 params.getShouldValidateHash().set(true);
                 params.getSha1().set(libraryCoordinate.hash);
                 params.getOutputFile().set(outputFile);
-                params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
+                params.getIsOffline().set(getIsOffline());
             });
             result.add(outputFile);
         }

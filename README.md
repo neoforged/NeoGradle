@@ -1,4 +1,7 @@
 # NeoGradle
+[![Release](https://github.com/neoforged/NeoGradle/actions/workflows/release.yml/badge.svg?branch=NG_7.0)](https://github.com/neoforged/NeoGradle/actions/workflows/release.yml)
+
+---
 
 Minecraft mod development framework, used by NeoForge and FML for the Gradle build system.
 
@@ -128,3 +131,86 @@ using [Gradle properties](https://docs.gradle.org/current/userguide/project_prop
 | `neogradle.subsystems.recompiler.maxMemory` | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`). Defaults to `1g`. |
 | `neogradle.subsystems.recompiler.jvmArgs`   | Pass arbitrary JVM arguments to the forked Gradle process that runs the compiler. I.e. `-XX:+HeapDumpOnOutOfMemoryError`             |
 | `neogradle.subsystems.recompiler.args`      | Pass additional command line arguments to the Java compiler.                                                                         |
+
+## Run specific dependency management
+This implements run specific dependency management for the classpath of a run.
+In the past this had to happen via a manual modification of the "minecraft_classpath" token, however tokens don't exist anymore as a component that can be configured on a run.
+It was as such not possible to add none FML aware libraries to your classpath of a run.
+This PR enables this feature again.
+
+
+### Usage:
+#### Direct
+```groovy
+dependencies {
+    implementation 'some:library:1.2.3'
+}
+
+runs {
+   testRun {
+      dependencies {
+         runtime 'some:library:1.2.3'
+      }
+   }
+}
+```
+#### Configuration
+```groovy
+configurations {
+   libraries {}
+   implementation.extendsFrom libraries
+}
+
+dependencies {
+    libraries 'some:library:1.2.3'
+}
+
+runs {
+   testRun {
+      dependencies {
+         runtime project.configurations.libraries
+      }
+   }
+}
+```
+#### Run Dependency Handler
+The dependency handler on a run works very similar to a projects own dependency handler, however it has only one "configuration" available to add dependencies to: "runtime". Additionally, it provides a method to use when you want to turn an entire configuration into a runtime dependency.
+
+## Handling of None-NeoGradle sibling projects
+In general, we suggest, no strongly encourage, to **not** use fat jars for this solution.
+The process of creating a fat jar with all the code from your sibling projects is difficult to model in a way that is both correct and efficient for a dev project, especially if the sibling project does not use NeoGradle.
+
+### Sibling project uses a NeoGradle module
+If it is possible to use a NeoGradle module (for example the Vanilla module, instead of VanillaGradle) then you can use the source-set's mod identifier:
+```groovy
+sourceSets {
+    main {
+        run {
+            modIdentifier '<some string that all projects in your fat jar have in common>'
+        }
+    }
+}
+```
+The value of the modIdentifier does not matter here, all projects with the same source-set mod identifier will be included in the same fake fat jar when running your run.
+
+### Sibling project does not use NeoGradle
+If the sibling project does not use NeoGradle, then you have to make sure that its Manifest is configured properly:
+```text
+FMLModType: GAMELIBRARY #Or any other mod type that is not a mod, like LIBRARY
+Automatic-Module-Name: '<some string that is unique to this project>'
+```
+> [!CAUTION]
+> If you do this, then your sibling projects are not allowed to contain a class in the same package! This is because no two modules are allowed to contain the same package.
+> If you have two sibling projects with a class in the same package, then you will need to move one of them!
+
+### Including the sibling project in your run
+To include the sibling project in your run, you need to add it as a modSource to your run:
+```groovy
+runs {
+    someRun {
+        modSource sourceSets.main
+        modSource project(':siblingProject').sourceSets.main
+    }
+}
+``` 
+No other action is needed.
