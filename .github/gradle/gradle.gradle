@@ -38,8 +38,8 @@ subprojects.forEach { Project subProject ->
                                         return;
 
                                     String className = details.relativePath.pathString
-                                            .replace("groovy.", "")
-                                            .replace("java.", "")
+                                            .replace("groovy/", "")
+                                            .replace("java/", "")
                                             .replace(".groovy", "")
                                             .replace(".java", "")
                                             .replace("/", ".")
