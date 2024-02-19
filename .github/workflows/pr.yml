@@ -136,7 +136,7 @@ jobs:
 
       - name: Merge Test Reports
         if: success() || failure()
-        run: npx junit-report-merger junit.xml "**/TEST-*.xml"
+        run: npx junit-report-merger junit.xml "**/*.xml"
 
       - uses: actions/upload-artifact@v4
         if: success() || failure()
