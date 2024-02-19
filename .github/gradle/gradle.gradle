@@ -1,3 +1,8 @@
+if (!project.hasProperty('githubCiTesting') && System.env['GITHUB_OUTPUT'] == null) {
+    // If the property is not set and we are not running in the CI environment then we will do nothing
+    return
+}
+
 static def outputUnitTest(Project project, Task test) {
     project.getLogger().lifecycle("<< TEST >>${test.path}")
 }
