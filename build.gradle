@@ -41,7 +41,7 @@ changelog {
 
 ///First setup all the subprojects
 ///Configure them in such a way that we can run test and have all the plugins applied.
-subprojects.forEach { subProject ->
+subprojects.forEach { Project subProject ->
     //All base plugins.
     subProject.apply plugin: 'net.neoforged.gradleutils'
     subProject.apply plugin: 'java-library'
@@ -54,7 +54,7 @@ subprojects.forEach { subProject ->
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version
     subProject.group = 'net.neoforged.gradle'
-    subProject.archivesBaseName = "ng-${subProject.name.toLowerCase()}"
+    subProject.base.archivesName = "ng-${subProject.name.toLowerCase()}"
 
     //Setup the java toolchain
     subProject.java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_version)
