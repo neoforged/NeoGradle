@@ -167,7 +167,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
         // The NeoForm version that's passed into this method can be a version range or '+', but to build userdev and installer profiles safely,
         // we need the actual version it was resolved to. Otherwise the NeoForm version used by installer & userdev could change over time.
-        String neoformDependency = "net.neoforged:neoform:" + neoFormRuntimeDefinition.getSpecification().getNeoFormVersion() + "@zip";
+        String neoformDependency = "net.neoforged:neoform:" + neoFormRuntimeDefinition.getSpecification().getVersion() + "@zip";
 
         final RuntimeDevRuntimeExtension runtimeDevRuntimeExtension = project.getExtensions().getByType(RuntimeDevRuntimeExtension.class);
         final RuntimeDevRuntimeDefinition runtimeDefinition = runtimeDevRuntimeExtension.create(builder -> {

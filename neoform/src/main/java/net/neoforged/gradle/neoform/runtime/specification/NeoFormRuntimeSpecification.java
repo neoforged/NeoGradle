@@ -52,9 +52,9 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
     public String getMinecraftVersion() {
         return config.getVersion();
     }
-    
+
     public String getNeoFormVersion() {
-        return getVersion();
+        return getVersion().substring(getVersion().lastIndexOf("-") + 1);
     }
 
     public File getNeoFormArchive() {

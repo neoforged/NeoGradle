@@ -12,7 +12,8 @@ import org.jetbrains.annotations.NotNull;
 interface NeoFormSpecification extends Specification {
 
     /**
-     * The version of NeoForm that shall be used.
+     * The version of NeoForm that shall be used. Does not include the minecraft version as a prefix, unlike
+     * {@link Specification#getVersion()}.
      * 
      * @return The NeoForm version.
      */
