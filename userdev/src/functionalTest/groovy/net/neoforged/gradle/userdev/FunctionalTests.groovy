@@ -4,7 +4,6 @@ import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Ignore
 
-@Ignore
 class FunctionalTests extends SimpleTestSpecification {
 
     protected File codeFile

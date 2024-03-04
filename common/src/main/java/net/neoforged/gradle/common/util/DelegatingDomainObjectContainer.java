@@ -86,6 +86,11 @@ public class DelegatingDomainObjectContainer<T> implements NamedDomainObjectCont
     }
 
     @Override
+    public NamedDomainObjectSet<T> named(Spec<String> nameFilter) {
+        return delegate.named(nameFilter);
+    }
+
+    @Override
     public NamedDomainObjectSet<T> matching(Spec<? super T> spec) {
         return delegate.matching(spec);
     }

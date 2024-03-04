@@ -74,8 +74,8 @@ public final class NeoFormDependencyManager {
                         runtime.getSourceJarTask(),
                         runtime.getRawJarTask(),
                         runtime.getMinecraftDependenciesConfiguration(),
-                        builder -> builder.setVersion(runtime.getSpecification().getNeoFormVersion()),
-                        builder -> builder.setVersion(runtime.getSpecification().getNeoFormVersion()),
+                        builder -> builder.setVersion(runtime.getSpecification().getVersion()),
+                        builder -> builder.setVersion(runtime.getSpecification().getVersion()),
                         runtime::setReplacedDependency,
                         runtime::onRepoWritten,
                         Sets::newHashSet
