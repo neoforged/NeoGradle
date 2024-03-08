@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -112,7 +111,7 @@ public class IdeRunIntegrationManager {
                     ideaRun.setMainClass(runImpl.getMainClass().get());
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
                     ideaRun.setJvmArgs(quoteAndJoin(runImpl.realiseJvmArguments()));
-                    ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
+                    ideaRun.moduleRef(project, runImpl.getPrimarySourceSet().orElse(runIdeaConfig.getPrimarySourceSet()).get());
                     ideaRun.setProgramParameters(quoteAndJoin(runImpl.getProgramArguments().get()));
                     ideaRun.setEnvs(adaptEnvironment(runImpl, RunsUtil::buildRunWithIdeaModClasses));
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);

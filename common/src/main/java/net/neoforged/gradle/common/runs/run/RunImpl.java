@@ -15,6 +15,7 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -77,6 +78,9 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     public void overrideEnvironmentVariables(MapProperty<String, String> environmentVariables) {
         this.environmentVariables = environmentVariables;
     }
+
+    @Override
+    public abstract Property<SourceSet> getPrimarySourceSet();
 
     @Override
     public abstract Property<String> getMainClass();

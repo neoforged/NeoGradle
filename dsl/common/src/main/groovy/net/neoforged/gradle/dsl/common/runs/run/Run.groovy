@@ -33,6 +33,15 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Project getProject();
 
     /**
+     * Defines the primary source set that will be used in the ide run configuration.
+     *
+     * @return The primary source set that will be used in the ide run configuration.
+     */
+    @Input
+    @DSLProperty
+    abstract Property<SourceSet> getPrimarySourceSet();
+
+    /**
      * Defines the environment variables that are passed to the JVM when running the game.
      *
      * @return The environment variables that are passed to the JVM when running the game.
