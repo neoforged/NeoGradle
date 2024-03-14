@@ -101,16 +101,14 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
     @Override
     public JarJarExtension dependencies(Action<DependencyFilter> c) {
         enable();
-        // TODO: reimplement
-        //project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.dependencies(c));
+        project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.dependencies(c));
         return this;
     }
 
     @Override
     public JarJarExtension versionInformation(Action<DependencyVersionInformationHandler> c) {
         enable();
-        // TODO: reimplement
-        //project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.versionInformation(c));
+        project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.versionInformation(c));
         return this;
     }
 
