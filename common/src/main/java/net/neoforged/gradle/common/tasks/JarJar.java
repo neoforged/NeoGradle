@@ -8,21 +8,22 @@ import net.neoforged.gradle.common.manifest.DefaultInheritManifest;
 import net.neoforged.gradle.common.manifest.InheritManifest;
 import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
 import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
-import net.neoforged.jarjar.metadata.*;
+import net.neoforged.jarjar.metadata.Metadata;
+import net.neoforged.jarjar.metadata.MetadataIOHandler;
 import org.gradle.api.Action;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.internal.file.FileResolver;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.bundling.Jar;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class JarJar extends Jar {
@@ -105,6 +106,13 @@ public abstract class JarJar extends Jar {
     public void configuration(Configuration jarJarConfiguration) {
         getJarJarArtifacts().configuration(jarJarConfiguration);
         dependsOn(jarJarConfiguration);
+    }
+
+    public void fromRuntimeConfiguration() {
+        final Configuration runtimeConfiguration = getProject().getConfigurations().findByName("runtimeClasspath");
+        if (runtimeConfiguration != null) {
+            this.configuration(runtimeConfiguration);
+        }
     }
 
     private Path getJarJarMetadataPath() {

@@ -71,12 +71,7 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
     @Override
     public void fromRuntimeConfiguration() {
         enable();
-        final Configuration runtimeConfiguration = project.getConfigurations().findByName("runtimeClasspath");
-        project.getTasks().withType(JarJar.class).configureEach(task -> {
-            if (runtimeConfiguration != null) {
-                task.configuration(runtimeConfiguration);
-            }
-        });
+        project.getTasks().withType(JarJar.class).configureEach(JarJar::fromRuntimeConfiguration);
     }
 
     @Override
