@@ -1,23 +1,22 @@
 package net.neoforged.gradle.common.extensions;
 
+import net.neoforged.gradle.common.tasks.JarJar;
 import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
 import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
-import net.neoforged.gradle.common.tasks.JarJar;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ExternalDependency;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.publish.maven.MavenPublication;
 
 import javax.inject.Inject;
-import java.util.Optional;
 
 public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensions.JarJar {
-
-    private final Attribute<String> fixedJarJarVersionAttribute = Attribute.of("fixedJarJarVersion", String.class);
-    private final Attribute<String> jarJarRangeAttribute = Attribute.of("jarJarRange", String.class);
+    public static final Attribute<String> JAR_JAR_RANGE_ATTRIBUTE = Attribute.of("jarJarRange", String.class);
 
     private final Project project;
     private boolean disabled;
@@ -72,25 +71,22 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
     @Override
     public void fromRuntimeConfiguration() {
         enable();
-        project.getTasks().withType(JarJar.class).configureEach(JarJar::fromRuntimeConfiguration);
+        final Configuration runtimeConfiguration = project.getConfigurations().findByName("runtimeClasspath");
+        project.getTasks().withType(JarJar.class).configureEach(task -> {
+            if (runtimeConfiguration != null) {
+                task.configuration(runtimeConfiguration);
+            }
+        });
     }
 
     @Override
     public void pin(Dependency dependency, String version) {
         enable();
-        if (dependency instanceof ModuleDependency) {
-            final ModuleDependency moduleDependency = (ModuleDependency) dependency;
-            moduleDependency.attributes(attributeContainer -> attributeContainer.attribute(fixedJarJarVersionAttribute, version));
+        if (dependency instanceof ExternalDependency) {
+            ((ExternalDependency) dependency).version(constraint -> {
+                constraint.prefer(version);
+            });
         }
-    }
-
-    @Override
-    public Optional<String> getPin(Dependency dependency) {
-        if (dependency instanceof ModuleDependency) {
-            final ModuleDependency moduleDependency = (ModuleDependency) dependency;
-            return Optional.ofNullable(moduleDependency.getAttributes().getAttribute(fixedJarJarVersionAttribute));
-        }
-        return Optional.empty();
     }
 
     @Override
@@ -98,30 +94,23 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
         enable();
         if (dependency instanceof ModuleDependency) {
             final ModuleDependency moduleDependency = (ModuleDependency) dependency;
-            moduleDependency.attributes(attributeContainer -> attributeContainer.attribute(jarJarRangeAttribute, range));
+            moduleDependency.attributes(attributeContainer -> attributeContainer.attribute(JAR_JAR_RANGE_ATTRIBUTE, range));
         }
-    }
-
-    @Override
-    public Optional<String> getRange(Dependency dependency) {
-        if (dependency instanceof ModuleDependency) {
-            final ModuleDependency moduleDependency = (ModuleDependency) dependency;
-            return Optional.ofNullable(moduleDependency.getAttributes().getAttribute(jarJarRangeAttribute));
-        }
-        return Optional.empty();
     }
 
     @Override
     public JarJarExtension dependencies(Action<DependencyFilter> c) {
         enable();
-        project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.dependencies(c));
+        // TODO: reimplement
+        //project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.dependencies(c));
         return this;
     }
 
     @Override
     public JarJarExtension versionInformation(Action<DependencyVersionInformationHandler> c) {
         enable();
-        project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.versionInformation(c));
+        // TODO: reimplement
+        //project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.versionInformation(c));
         return this;
     }
 

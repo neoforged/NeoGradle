@@ -3,7 +3,7 @@ package net.neoforged.gradle.dsl.common.dependency
 import groovy.transform.CompileStatic
 import org.apache.maven.artifact.versioning.ArtifactVersion
 import org.apache.maven.artifact.versioning.VersionRange
-import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.specs.Spec
 
 @CompileStatic
@@ -15,7 +15,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param spec The spec to match dependencies.
      * @param range The string representation to match the version range.
      */
-    void ranged(final Spec<? super ArtifactIdentifier> spec, final String range);
+    void ranged(final Spec<? super ModuleComponentIdentifier> spec, final String range);
 
     /**
      * Sets the supported version range for dependencies which match the spec.
@@ -23,7 +23,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param spec The spec to match dependencies.
      * @param range The version range to match.
      */
-    void ranged(final Spec<? super ArtifactIdentifier> spec, final VersionRange range);
+    void ranged(final Spec<? super ModuleComponentIdentifier> spec, final VersionRange range);
 
     /**
      * Sets the supported version range for dependencies which match the spec, but limits it to exactly the given version.
@@ -31,7 +31,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param spec The spec to match dependencies.
      * @param version The version to match.
      */
-    void ranged(final Spec<? super ArtifactIdentifier> spec, final ArtifactVersion version);
+    void ranged(final Spec<? super ModuleComponentIdentifier> spec, final ArtifactVersion version);
 
     /**
      * Sets the fixed version of the dependencies matching the spec.
@@ -39,7 +39,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param spec The spec to match.
      * @param version The string representation of the version.
      */
-    void pin(final Spec<? super ArtifactIdentifier> spec, final String version);
+    void pin(final Spec<? super ModuleComponentIdentifier> spec, final String version);
 
     /**
      * Sets the fixed version of the dependencies matching the spec.
@@ -47,7 +47,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param spec The spec to match.
      * @param version The version to set.
      */
-    void pin(final Spec<? super ArtifactIdentifier> spec, final ArtifactVersion version);
+    void pin(final Spec<? super ModuleComponentIdentifier> spec, final ArtifactVersion version);
 
     /**
      * Gets the version range for the given dependency.
@@ -55,7 +55,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param dependency The dependency to get the version range for.
      * @return The version range, if any.
      */
-    Optional<String> getVersionRange(ModuleDependency dependency);
+    Optional<String> getVersionRange(ModuleComponentIdentifier dependency);
 
     /**
      * Gets the version for the given dependency.
@@ -63,5 +63,5 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param dependency The dependency to get the version for.
      * @return The version, if any.
      */
-    Optional<String> getVersion(ModuleDependency dependency);
+    Optional<String> getVersion(ModuleComponentIdentifier dependency);
 }

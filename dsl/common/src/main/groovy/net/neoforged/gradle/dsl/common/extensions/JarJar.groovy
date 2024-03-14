@@ -26,11 +26,7 @@ interface JarJar {
 
     void pin(Dependency dependency, String version);
 
-    Optional<String> getPin(Dependency dependency);
-
     void ranged(Dependency dependency, String range);
-
-    Optional<String> getRange(Dependency dependency);
 
     JarJar dependencies(Action<DependencyFilter> c);
 

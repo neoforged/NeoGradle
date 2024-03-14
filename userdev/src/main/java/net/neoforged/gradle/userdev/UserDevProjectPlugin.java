@@ -1,11 +1,11 @@
 package net.neoforged.gradle.userdev;
 
+import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.dsl.common.extensions.JarJar;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.neoform.NeoFormPlugin;
 import net.neoforged.gradle.userdev.dependency.UserDevDependencyManager;
 import net.neoforged.gradle.userdev.extension.UserDevExtension;
-import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -38,6 +38,7 @@ public class UserDevProjectPlugin implements Plugin<Project> {
 
     protected void configureJarJarTask(Project project, JarJar jarJarExtension) {
         final Configuration configuration = project.getConfigurations().create(JAR_JAR_DEFAULT_CONFIGURATION_NAME);
+        configuration.setTransitive(false);
 
         JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 

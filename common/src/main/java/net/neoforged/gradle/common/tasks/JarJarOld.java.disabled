@@ -34,7 +34,7 @@ import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public abstract class JarJar extends Jar {
+public abstract class JarJarOld extends Jar {
     private final List<Configuration> configurations;
     private transient DependencyFilter dependencyFilter;
     private transient DependencyVersionInformationHandler dependencyVersionInformationHandler;
@@ -52,7 +52,7 @@ public abstract class JarJar extends Jar {
 
     private final CopySpec jarJarCopySpec;
 
-    public JarJar() {
+    public JarJarOld() {
         super();
         setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //As opposed to shadow, we do not filter out our entries early!, So we need to handle them accordingly.
         dependencyFilter = new DefaultDependencyFilter(getProject());
@@ -109,12 +109,12 @@ public abstract class JarJar extends Jar {
         return metadata;
     }
 
-    public JarJar dependencies(Action<DependencyFilter> c) {
+    public JarJarOld dependencies(Action<DependencyFilter> c) {
         c.execute(dependencyFilter);
         return this;
     }
 
-    public JarJar versionInformation(Action<DependencyVersionInformationHandler> c) {
+    public JarJarOld versionInformation(Action<DependencyVersionInformationHandler> c) {
         c.execute(dependencyVersionInformationHandler);
         return this;
     }

@@ -6,48 +6,44 @@ import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.specs.Spec;
 
 import java.util.Map;
 import java.util.Optional;
 
-public class DefaultDependencyVersionInformationHandler extends AbstractDependencyManagementObject implements DependencyVersionInformationHandler {
+public abstract class DefaultDependencyVersionInformationHandler extends AbstractDependencyManagementObject implements DependencyVersionInformationHandler {
 
-    private final Map<Spec<? super ArtifactIdentifier>, String> rangedVersions = Maps.newHashMap();
-    private final Map<Spec<? super ArtifactIdentifier>, String> pinnedVersions = Maps.newHashMap();
-
-    public DefaultDependencyVersionInformationHandler(final Project project) {
-        super(project);
-    }
+    private final Map<Spec<? super ModuleComponentIdentifier>, String> rangedVersions = Maps.newHashMap();
+    private final Map<Spec<? super ModuleComponentIdentifier>, String> pinnedVersions = Maps.newHashMap();
 
     @Override
-    public void ranged(final Spec<? super ArtifactIdentifier> spec, final String range) {
+    public void ranged(final Spec<? super ModuleComponentIdentifier> spec, final String range) {
         rangedVersions.put(spec, range);
     }
 
     @Override
-    public void ranged(final Spec<? super ArtifactIdentifier> spec, final VersionRange range) {
+    public void ranged(final Spec<? super ModuleComponentIdentifier> spec, final VersionRange range) {
         ranged(spec, range.toString());
     }
 
     @Override
-    public void ranged(final Spec<? super ArtifactIdentifier> spec, final ArtifactVersion version) {
+    public void ranged(final Spec<? super ModuleComponentIdentifier> spec, final ArtifactVersion version) {
         ranged(spec, String.format("[%s,%s]", version, version));
     }
 
     @Override
-    public void pin(final Spec<? super ArtifactIdentifier> spec, final String version) {
+    public void pin(final Spec<? super ModuleComponentIdentifier> spec, final String version) {
         pinnedVersions.put(spec, version);
     }
 
     @Override
-    public void pin(final Spec<? super ArtifactIdentifier> spec, final ArtifactVersion version) {
+    public void pin(final Spec<? super ModuleComponentIdentifier> spec, final ArtifactVersion version) {
         pin(spec, version.toString());
     }
 
     @Override
-    public Optional<String> getVersionRange(final ModuleDependency dependency) {
-        final ArtifactIdentifier identifier = createArtifactIdentifier(dependency);
+    public Optional<String> getVersionRange(final ModuleComponentIdentifier identifier) {
         return rangedVersions.entrySet().stream()
                 .filter(entry -> entry.getKey().isSatisfiedBy(identifier))
                 .map(Map.Entry::getValue)
@@ -55,8 +51,7 @@ public class DefaultDependencyVersionInformationHandler extends AbstractDependen
     }
 
     @Override
-    public Optional<String> getVersion(final ModuleDependency dependency) {
-        final ArtifactIdentifier identifier = createArtifactIdentifier(dependency);
+    public Optional<String> getVersion(final ModuleComponentIdentifier identifier) {
         return pinnedVersions.entrySet().stream()
                 .filter(entry -> entry.getKey().isSatisfiedBy(identifier))
                 .map(Map.Entry::getValue)
