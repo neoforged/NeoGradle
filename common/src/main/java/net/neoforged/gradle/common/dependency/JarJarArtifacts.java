@@ -1,10 +1,12 @@
 package net.neoforged.gradle.common.dependency;
 
 import net.neoforged.gradle.common.extensions.JarJarExtension;
+import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
+import net.neoforged.gradle.dsl.common.dependency.DependencyManagementObject;
+import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
 import net.neoforged.jarjar.metadata.ContainedJarIdentifier;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
-import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -14,7 +16,6 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector;
 import org.gradle.api.artifacts.result.*;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
@@ -27,6 +28,10 @@ import java.util.stream.Collectors;
 public abstract class JarJarArtifacts {
     private transient final SetProperty<ResolvedComponentResult> includedRootComponents;
     private transient final SetProperty<ResolvedArtifactResult> includedArtifacts;
+
+    private final DependencyFilter dependencyFilter;
+    private final DependencyVersionInformationHandler dependencyVersionInformationHandler;
+
 
     @Internal
     protected SetProperty<ResolvedComponentResult> getIncludedRootComponents() {
@@ -44,10 +49,28 @@ public abstract class JarJarArtifacts {
     @Nested
     public abstract ListProperty<ResolvedJarJarArtifact> getResolvedArtifacts();
 
+    @Nested
+    public DependencyFilter getDependencyFilter() {
+        return dependencyFilter;
+    }
+
+    @Nested
+    public DependencyVersionInformationHandler getDependencyVersionInformationHandler() {
+        return dependencyVersionInformationHandler;
+    }
+
     public JarJarArtifacts() {
+        dependencyFilter = getObjectFactory().newInstance(DefaultDependencyFilter.class);
+        dependencyVersionInformationHandler = getObjectFactory().newInstance(DefaultDependencyVersionInformationHandler.class);
         includedRootComponents = getObjectFactory().setProperty(ResolvedComponentResult.class);
         includedArtifacts = getObjectFactory().setProperty(ResolvedArtifactResult.class);
-        getResolvedArtifacts().set(getIncludedRootComponents().zip(getIncludedArtifacts(), JarJarArtifacts::getIncludedJars));
+
+        includedArtifacts.finalizeValueOnRead();
+        includedRootComponents.finalizeValueOnRead();
+
+        final DependencyFilter filter = getDependencyFilter();
+        final DependencyVersionInformationHandler versionHandler = getDependencyVersionInformationHandler();
+        getResolvedArtifacts().set(getIncludedRootComponents().zip(getIncludedArtifacts(), (components, artifacts) -> getIncludedJars(filter, versionHandler, components, artifacts)));
     }
 
     public void configuration(Configuration jarJarConfiguration) {
@@ -55,11 +78,59 @@ public abstract class JarJarArtifacts {
         getIncludedRootComponents().add(jarJarConfiguration.getIncoming().getResolutionResult().getRootComponent());
     }
 
-    private static List<ResolvedJarJarArtifact> getIncludedJars(Set<ResolvedComponentResult> rootComponents, Set<ResolvedArtifactResult> artifacts) {
+    private static List<ResolvedJarJarArtifact> getIncludedJars(DependencyFilter filter, DependencyVersionInformationHandler versionHandler, Set<ResolvedComponentResult> rootComponents, Set<ResolvedArtifactResult> artifacts) {
         Map<ContainedJarIdentifier, String> versions = new HashMap<>();
         Map<ContainedJarIdentifier, String> versionRanges = new HashMap<>();
+        Set<ContainedJarIdentifier> knownIdentifiers = new HashSet<>();
 
-        for (DependencyResult result : rootComponents.stream().flatMap(c -> c.getDependencies().stream()).collect(Collectors.toList())) {
+        for (ResolvedComponentResult rootComponent : rootComponents) {
+            collectFromComponent(filter, rootComponent, knownIdentifiers, versions, versionRanges);
+        }
+        List<ResolvedJarJarArtifact> data = new ArrayList<>();
+        for (ResolvedArtifactResult result : artifacts) {
+            ResolvedVariantResult variant = result.getVariant();
+            if (!(variant.getOwner() instanceof ModuleComponentIdentifier)) {
+                continue;
+            }
+            ModuleComponentIdentifier componentIdentifier = (ModuleComponentIdentifier) variant.getOwner();
+            DependencyManagementObject.ArtifactIdentifier artifactIdentifier = new DependencyManagementObject.ArtifactIdentifier(
+                    componentIdentifier.getModuleIdentifier().getGroup(),
+                    componentIdentifier.getModuleIdentifier().getName(),
+                    componentIdentifier.getVersion()
+            );
+            if (!filter.isIncluded(artifactIdentifier)) {
+                continue;
+            }
+            ModuleIdentifier identifier = componentIdentifier.getModuleIdentifier();
+            ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(identifier.getGroup(), identifier.getName());
+            if (!knownIdentifiers.contains(jarIdentifier)) {
+                continue;
+            }
+
+            String version = versionHandler.getVersion(artifactIdentifier).orElse(versions.get(jarIdentifier));
+            if (version == null) {
+                version = getVersionFrom(variant);
+            }
+
+            String versionRange = versionHandler.getVersionRange(artifactIdentifier).orElse(versionRanges.get(jarIdentifier));
+            if (versionRange == null) {
+                versionRange = getVersionRangeFrom(variant);
+            }
+            if (versionRange == null) {
+                versionRange = makeOpenRange(variant);
+            }
+
+            if (version != null && versionRange != null) {
+                data.add(new ResolvedJarJarArtifact(result.getFile(), version, versionRange, jarIdentifier.group(), jarIdentifier.artifact()));
+            }
+        }
+        return data.stream()
+                .sorted(Comparator.comparing(d -> d.getGroup() + ":" + d.getArtifact()))
+                .collect(Collectors.toList());
+    }
+
+    private static void collectFromComponent(DependencyFilter dependencyFilter, ResolvedComponentResult rootComponent, Set<ContainedJarIdentifier> knownIdentifiers, Map<ContainedJarIdentifier, String> versions, Map<ContainedJarIdentifier, String> versionRanges) {
+        for (DependencyResult result : rootComponent.getDependencies()) {
             if (!(result instanceof ResolvedDependencyResult)) {
                 continue;
             }
@@ -69,8 +140,10 @@ public abstract class JarJarArtifacts {
             if (!(variant.getOwner() instanceof ModuleComponentIdentifier)) {
                 continue;
             }
-            ModuleIdentifier identifier = ((ModuleComponentIdentifier) variant.getOwner()).getModuleIdentifier();
+            ModuleComponentIdentifier componentIdentifier = (ModuleComponentIdentifier) variant.getOwner();
+            ModuleIdentifier identifier = componentIdentifier.getModuleIdentifier();
             ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(identifier.getGroup(), identifier.getName());
+            knownIdentifiers.add(jarIdentifier);
 
             String versionRange = getVersionRangeFrom(variant);
             if (versionRange == null && requested instanceof ModuleComponentSelector) {
@@ -98,35 +171,6 @@ public abstract class JarJarArtifacts {
                 versionRanges.put(jarIdentifier, versionRange);
             }
         }
-        List<ResolvedJarJarArtifact> data = new ArrayList<>();
-        for (ResolvedArtifactResult result : artifacts) {
-            ResolvedVariantResult variant = result.getVariant();
-            if (!(variant.getOwner() instanceof ModuleComponentIdentifier)) {
-                continue;
-            }
-            ModuleIdentifier identifier = ((ModuleComponentIdentifier) variant.getOwner()).getModuleIdentifier();
-            ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(identifier.getGroup(), identifier.getName());
-
-            String version = versions.get(jarIdentifier);
-            if (version == null) {
-                version = getVersionFrom(variant);
-            }
-
-            String versionRange = versionRanges.get(jarIdentifier);
-            if (versionRange == null) {
-                versionRange = getVersionRangeFrom(variant);
-            }
-            if (versionRange == null) {
-                versionRange = makeOpenRange(variant);
-            }
-
-            if (version != null && versionRange != null) {
-                data.add(new ResolvedJarJarArtifact(result.getFile(), version, versionRange, jarIdentifier.group(), jarIdentifier.artifact()));
-            }
-        }
-        return data.stream()
-                .sorted(Comparator.comparing(d -> d.getGroup() + ":" + d.getArtifact()))
-                .collect(Collectors.toList());
     }
 
     private static @Nullable String getVersionRangeFrom(final ResolvedVariantResult variant) {
@@ -143,10 +187,11 @@ public abstract class JarJarArtifacts {
 
     private static @Nullable String getVersionFrom(final ResolvedVariantResult variant) {
         ComponentIdentifier identifier = variant.getOwner();
-        if (identifier instanceof ModuleComponentIdentifier) {
-            return ((ModuleComponentIdentifier) identifier).getVersion();
+        String version = variant.getAttributes().getAttribute(JarJarExtension.FIXED_JAR_JAR_VERSION_ATTRIBUTE);
+        if (version == null && identifier instanceof ModuleComponentIdentifier) {
+            version = ((ModuleComponentIdentifier) identifier).getVersion();
         }
-        return null;
+        return version;
     }
 
     private static boolean isValidVersionRange(final @Nullable String range) {

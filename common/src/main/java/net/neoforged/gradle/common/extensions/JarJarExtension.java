@@ -5,22 +5,27 @@ import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
 import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ExternalDependency;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
-import org.gradle.api.publish.maven.MavenPublication;
+import org.gradle.api.plugins.JavaPlugin;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensions.JarJar {
     public static final Attribute<String> JAR_JAR_RANGE_ATTRIBUTE = Attribute.of("jarJarRange", String.class);
+    public static final Attribute<String> FIXED_JAR_JAR_VERSION_ATTRIBUTE = Attribute.of("fixedJarJarVersion", String.class);
 
     private final Project project;
     private boolean disabled;
+    private boolean enabled;
     private boolean disableDefaultSources;
+    private PublishArtifact addedToPublication;
+    private final List<PublishArtifact> removedFromPublication = new ArrayList<>();
 
     @Inject
     public JarJarExtension(final Project project) {
@@ -34,9 +39,30 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
     }
 
     private void enable(boolean enabled) {
-        final Task task = project.getTasks().findByPath("jarJar");
+        if (this.enabled == enabled) {
+            return;
+        }
+        this.enabled = enabled;
+        final JarJar task = (JarJar) project.getTasks().findByPath("jarJar");
+        Configuration runtimeElements = project.getConfigurations().maybeCreate(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME);
         if (task != null) {
-            task.setEnabled(enabled);
+            if (enabled) {
+                removedFromPublication.clear();
+                runtimeElements.getArtifacts().clear();
+                project.artifacts(handler ->
+                        addedToPublication = handler.add(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME, task, artifact ->
+                                artifact.builtBy(task)
+                        )
+                );
+            } else {
+                runtimeElements.getArtifacts().removeIf(publishArtifact ->
+                        publishArtifact == addedToPublication
+                );
+                runtimeElements.getArtifacts().addAll(removedFromPublication);
+            }
+            if (!task.getEnabled() == enabled) {
+                task.setEnabled(enabled);
+            }
         }
     }
 
@@ -77,10 +103,9 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
     @Override
     public void pin(Dependency dependency, String version) {
         enable();
-        if (dependency instanceof ExternalDependency) {
-            ((ExternalDependency) dependency).version(constraint -> {
-                constraint.prefer(version);
-            });
+        if (dependency instanceof ModuleDependency) {
+            final ModuleDependency moduleDependency = (ModuleDependency) dependency;
+            moduleDependency.attributes(attributeContainer -> attributeContainer.attribute(FIXED_JAR_JAR_VERSION_ATTRIBUTE, version));
         }
     }
 
@@ -105,52 +130,5 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
         enable();
         project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.versionInformation(c));
         return this;
-    }
-
-    @Override
-    public MavenPublication component(MavenPublication mavenPublication) {
-        return component(mavenPublication, true);
-    }
-
-    public MavenPublication component(MavenPublication mavenPublication, boolean handleDependencies) {
-        enable();
-        project.getTasks().withType(JarJar.class).configureEach(task -> component(mavenPublication, task, false, handleDependencies));
-
-        return mavenPublication;
-    }
-
-    public MavenPublication component(MavenPublication mavenPublication, JarJar task) {
-        enable();
-        return component(mavenPublication, task, true, true);
-    }
-
-    public MavenPublication cleanedComponent(MavenPublication mavenPublication, JarJar task, boolean handleDependencies) {
-        enable();
-        return component(mavenPublication, task, true, handleDependencies);
-    }
-
-    private MavenPublication component(MavenPublication mavenPublication, JarJar task, boolean handleCleaning) {
-        return component(mavenPublication, task, handleCleaning, true);
-    }
-
-    private MavenPublication component(MavenPublication mavenPublication, JarJar task, boolean handleCleaning, boolean handleDependencies) {
-        if (!task.isEnabled()) {
-            return mavenPublication;
-        }
-
-        if (handleCleaning) {
-            //TODO: Handle this gracefully somehow?
-        }
-
-        mavenPublication.artifact(task, mavenArtifact -> {
-            mavenArtifact.setClassifier(task.getArchiveClassifier().get());
-            mavenArtifact.setExtension(task.getArchiveExtension().get());
-        });
-
-        if (handleDependencies) {
-            //TODO: Handle this gracefully.
-        }
-
-        return mavenPublication;
     }
 }

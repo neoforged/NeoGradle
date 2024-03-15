@@ -1,9 +1,6 @@
 package net.neoforged.gradle.dsl.common.dependency
 
 import groovy.transform.CompileStatic
-import org.gradle.api.artifacts.ModuleDependency
-import org.gradle.api.artifacts.ResolvedDependency
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.specs.Spec
 
 @CompileStatic
@@ -16,7 +13,7 @@ interface DependencyFilter extends DependencyManagementObject {
      * @param spec The spec to exclude dependencies that match.
      * @return The filter (this object).
      */
-    DependencyFilter exclude(Spec<? super ModuleComponentIdentifier> spec);
+    DependencyFilter exclude(Spec<? super ArtifactIdentifier> spec);
 
     /**
      * Include dependencies that match the provided spec.
@@ -25,7 +22,7 @@ interface DependencyFilter extends DependencyManagementObject {
      * @param spec The spec to include dependencies that match.
      * @return The filter (this object)
      */
-    DependencyFilter include(Spec<? super ModuleComponentIdentifier> spec);
+    DependencyFilter include(Spec<? super ArtifactIdentifier> spec);
 
     /**
      * Indicates if the given identifier passes the filter.
@@ -33,5 +30,5 @@ interface DependencyFilter extends DependencyManagementObject {
      * @param dependency The resolved dependency to check.
      * @return The result of the filter.
      */
-    boolean isIncluded(ModuleComponentIdentifier dependency);
+    boolean isIncluded(ArtifactIdentifier dependency);
 }

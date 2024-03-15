@@ -32,6 +32,4 @@ interface JarJar {
 
     JarJar versionInformation(Action<DependencyVersionInformationHandler> c);
 
-    MavenPublication component(MavenPublication mavenPublication);
-
 }

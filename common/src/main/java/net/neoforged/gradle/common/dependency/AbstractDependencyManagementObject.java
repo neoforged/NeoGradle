@@ -7,26 +7,29 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.dsl.DependencyFactory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.specs.Specs;
 
 import javax.inject.Inject;
 import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.Objects;
 
 @SuppressWarnings("UnstableApiUsage")
 public abstract class AbstractDependencyManagementObject implements DependencyManagementObject {
     @Inject
     protected abstract DependencyFactory getDependencyFactory();
 
-    @Inject
-    protected abstract ProviderFactory getProviderFactory();
+    protected static ArtifactIdentifier createArtifactIdentifier(final ModuleComponentIdentifier identifier) {
+        return new ArtifactIdentifier(identifier.getModuleIdentifier().getGroup(), identifier.getModuleIdentifier().getName(), identifier.getVersion());
+    }
+
+    protected static ArtifactIdentifier createArtifactIdentifier(final Dependency dependency) {
+        return new ArtifactIdentifier(dependency.getGroup(), dependency.getName(), dependency.getVersion());
+    }
 
     @SuppressWarnings("unchecked")
-    public Spec<? super ModuleComponentIdentifier> dependency(Object notation) {
+    public Spec<? super ArtifactIdentifier> dependency(Object notation) {
         Dependency dependency;
         if (notation instanceof Dependency) {
             dependency = (Dependency) notation;
@@ -50,29 +53,20 @@ public abstract class AbstractDependencyManagementObject implements DependencyMa
         return dependency(dependency);
     }
 
-    public Spec<? super ModuleComponentIdentifier> dependency(Dependency dependency) {
-        Provider<String> groupProvider = getProviderFactory().provider(dependency::getGroup);
-        Provider<String> nameProvider = getProviderFactory().provider(dependency::getName);
-        Provider<String> versionProvider = getProviderFactory().provider(dependency::getVersion);
+    public Spec<? super ArtifactIdentifier> dependency(Dependency dependency) {
+        ArtifactIdentifier identifier = createArtifactIdentifier(dependency);
 
         return this.dependency(new Closure<Boolean>(null) {
 
             @SuppressWarnings("ConstantConditions")
             @Override
             public Boolean call(final Object it) {
-                if (it instanceof ModuleComponentIdentifier) {
-                    final ModuleComponentIdentifier identifier = (ModuleComponentIdentifier) it;
-                    return (groupProvider.get() == null || Pattern.matches(groupProvider.get(), identifier.getGroup())) &&
-                            (nameProvider.get() == null || Pattern.matches(nameProvider.get(), identifier.getModule())) &&
-                            (versionProvider.get() == null || Pattern.matches(versionProvider.get(), identifier.getVersion()));
-                }
-
-                return false;
+                return Objects.equals(it, identifier);
             }
         });
     }
 
-    public Spec<? super ModuleComponentIdentifier> dependency(Closure<Boolean> spec) {
+    public Spec<? super ArtifactIdentifier> dependency(Closure<Boolean> spec) {
         return Specs.convertClosureToSpec(spec);
     }
 }

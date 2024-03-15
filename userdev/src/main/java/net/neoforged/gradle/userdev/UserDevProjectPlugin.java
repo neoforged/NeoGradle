@@ -10,6 +10,7 @@ import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Jar;
@@ -39,6 +40,12 @@ public class UserDevProjectPlugin implements Plugin<Project> {
     protected void configureJarJarTask(Project project, JarJar jarJarExtension) {
         final Configuration configuration = project.getConfigurations().create(JAR_JAR_DEFAULT_CONFIGURATION_NAME);
         configuration.setTransitive(false);
+        configuration.getAllDependencies().configureEach(dep ->
+                jarJarExtension.enable()
+        );
+        configuration.attributes(attributes ->
+                attributes.attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME))
+        );
 
         JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 

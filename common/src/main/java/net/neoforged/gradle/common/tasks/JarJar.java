@@ -1,7 +1,5 @@
 package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.common.dependency.DefaultDependencyFilter;
-import net.neoforged.gradle.common.dependency.DefaultDependencyVersionInformationHandler;
 import net.neoforged.gradle.common.dependency.JarJarArtifacts;
 import net.neoforged.gradle.common.dependency.ResolvedJarJarArtifact;
 import net.neoforged.gradle.common.manifest.DefaultInheritManifest;
@@ -28,11 +26,8 @@ import java.util.stream.Collectors;
 
 public abstract class JarJar extends Jar {
 
-    private DependencyFilter dependencyFilter;
-    private DependencyVersionInformationHandler dependencyVersionInformationHandler;
-
     @Nested
-    abstract JarJarArtifacts getJarJarArtifacts();
+    public abstract JarJarArtifacts getJarJarArtifacts();
 
     @Override
     public InheritManifest getManifest() {
@@ -45,30 +40,27 @@ public abstract class JarJar extends Jar {
         this.jarJarCopySpec = this.getMainSpec().addChild();
         this.jarJarCopySpec.into("META-INF/jarjar");
 
-        dependencyFilter = getProject().getObjects().newInstance(DefaultDependencyFilter.class);
-        dependencyVersionInformationHandler = getProject().getObjects().newInstance(DefaultDependencyVersionInformationHandler.class);
-
         setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //As opposed to shadow, we do not filter out our entries early!, So we need to handle them accordingly.
         setManifest(new DefaultInheritManifest(getServices().get(FileResolver.class)));
     }
 
     @Nested
     public DependencyFilter getDependencyFilter() {
-        return dependencyFilter;
+        return getJarJarArtifacts().getDependencyFilter();
     }
 
     @Nested
     public DependencyVersionInformationHandler getDependencyVersionInformationHandler() {
-        return dependencyVersionInformationHandler;
+        return getJarJarArtifacts().getDependencyVersionInformationHandler();
     }
 
     public JarJar dependencies(Action<DependencyFilter> c) {
-        c.execute(dependencyFilter);
+        c.execute(getDependencyFilter());
         return this;
     }
 
     public JarJar versionInformation(Action<DependencyVersionInformationHandler> c) {
-        c.execute(dependencyVersionInformationHandler);
+        c.execute(getDependencyVersionInformationHandler());
         return this;
     }
 
