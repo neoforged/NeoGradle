@@ -48,7 +48,7 @@ public class ResolvedJarJarArtifact {
     }
 
     public ContainedJarMetadata createContainerMetadata() {
-        return new ContainedJarMetadata(createContainedJarIdentifier(), createContainedVersion(), file.getName(), isObfuscated(file));
+        return new ContainedJarMetadata(createContainedJarIdentifier(), createContainedVersion(), "META-INF/jarjar/"+file.getName(), isObfuscated(file));
     }
 
     @InputFile
