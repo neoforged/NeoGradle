@@ -63,9 +63,9 @@ public abstract class CreateLegacyInstaller extends Zip implements WithOutput, W
         from(getData(), spec -> {
             spec.into("data");
             spec.filter(s -> {
-                final Map<String, Object> tokens = getTokens().get();
-                for (Map.Entry<String, Object> entry : tokens.entrySet()) {
-                    s = s.replace(String.format("@%s@", entry.getKey()), entry.getValue().toString());
+                final Map<String, String> tokens = getTokens().get();
+                for (Map.Entry<String, String> entry : tokens.entrySet()) {
+                    s = s.replace(String.format("@%s@", entry.getKey()), entry.getValue());
                 }
                 return s;
             });

@@ -5,7 +5,6 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
@@ -47,13 +46,10 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
             buildRuntimeArguments(result);
             return result;
         }));
-        getRuntimeData().convention(getSymbolicDataSources().map(dataSources -> {
-            final Directory unpackedMcpDirectory = getUnpackedMcpZipDirectory().get();
-            return dataSources.entrySet().stream().collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry -> getProject().provider(() -> unpackedMcpDirectory.file(entry.getValue()).getAsFile())
-            ));
-        }));
+        getRuntimeData().convention(getSymbolicDataSources().map(dataSources -> dataSources.entrySet().stream().collect(Collectors.toMap(
+                Map.Entry::getKey,
+                entry -> getUnpackedMcpZipDirectory().map(unpackedMcpDirectory -> unpackedMcpDirectory.file(entry.getValue()).getAsFile())
+        ))));
         
         getOutputDirectory().finalizeValueOnRead();
     }
