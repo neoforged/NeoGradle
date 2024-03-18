@@ -4,7 +4,6 @@ import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.provider.Provider;
 
 import java.io.File;
 
@@ -33,9 +32,5 @@ public class ToolUtilities {
                 project.getConfigurations(),
                 tool
         ).getResolvedConfiguration().getResolvedArtifacts().iterator().next();
-    }
-
-    public static Provider<File> resolveTool(final Project project, final Provider<String> tool) {
-        return tool.map(toolArtifactId -> resolveTool(project, toolArtifactId));
     }
 }

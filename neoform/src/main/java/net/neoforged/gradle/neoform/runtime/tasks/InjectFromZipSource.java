@@ -56,7 +56,7 @@ public abstract class InjectFromZipSource extends AbstractInjectSource {
                             throw e;
                         } else if (!entry.isDirectory()) {
                             // Warn on duplicate files, but ignore duplicate directories
-                            getProject().getLogger().warn("Cannot inject duplicate file {}", entry.getName());
+                            getLogger().warn("Cannot inject duplicate file {}", entry.getName());
                         }
                     }
                 }
