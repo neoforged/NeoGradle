@@ -149,9 +149,9 @@ public abstract class JarJarArtifacts {
             if (versionRange == null && requested instanceof ModuleComponentSelector) {
                 ModuleComponentSelector requestedModule = (ModuleComponentSelector) requested;
                 if (isValidVersionRange(requestedModule.getVersionConstraint().getStrictVersion())) {
-                    versionRange = requestedModule.getVersionConstraint().getPreferredVersion();
+                    versionRange = requestedModule.getVersionConstraint().getStrictVersion();
                 } else if (isValidVersionRange(requestedModule.getVersionConstraint().getRequiredVersion())) {
-                    versionRange = requestedModule.getVersionConstraint().getPreferredVersion();
+                    versionRange = requestedModule.getVersionConstraint().getRequiredVersion();
                 } else if (isValidVersionRange(requestedModule.getVersionConstraint().getPreferredVersion())) {
                     versionRange = requestedModule.getVersionConstraint().getPreferredVersion();
                 } if (isValidVersionRange(requestedModule.getVersion())) {

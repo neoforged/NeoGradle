@@ -48,6 +48,7 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
         if (task != null) {
             if (enabled) {
                 removedFromPublication.clear();
+                removedFromPublication.addAll(runtimeElements.getArtifacts());
                 runtimeElements.getArtifacts().clear();
                 project.artifacts(handler ->
                         addedToPublication = handler.add(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME, task, artifact ->
@@ -55,9 +56,7 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
                         )
                 );
             } else {
-                runtimeElements.getArtifacts().removeIf(publishArtifact ->
-                        publishArtifact == addedToPublication
-                );
+                runtimeElements.getArtifacts().remove(addedToPublication);
                 runtimeElements.getArtifacts().addAll(removedFromPublication);
             }
             if (!task.getEnabled() == enabled) {
@@ -101,6 +100,7 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
     }
 
     @Override
+    @Deprecated
     public void pin(Dependency dependency, String version) {
         enable();
         if (dependency instanceof ModuleDependency) {
@@ -110,6 +110,7 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
     }
 
     @Override
+    @Deprecated
     public void ranged(Dependency dependency, String range) {
         enable();
         if (dependency instanceof ModuleDependency) {
