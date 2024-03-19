@@ -2,19 +2,41 @@ package net.neoforged.gradle.dsl.common.dependency
 
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
+import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.FileCollectionDependency
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.file.FileCollection
 import org.gradle.api.specs.Spec
+
+import javax.annotation.Nullable
 
 @CompileStatic
 interface DependencyManagementObject {
     /**
      * Create a spec that matches dependencies using the provided notation on group, name, and version
-     * If a regex is supplied for any of the group, name, or version, the spec will match if the dependency matches the regex.
      *
      * @param notation The dependency notation to parse.
      * @return The spec that matches the dependency notation.
      */
-    Spec<? super ArtifactIdentifier> dependency(Object notation);
+    Spec<? super ArtifactIdentifier> dependency(CharSequence dependencyNotation);
+
+    /**
+     * Create a spec that matches dependencies on the provided group, name, and version
+     *
+     * @param notation The dependency notation to parse.
+     * @return The spec that matches the dependency notation.
+     */
+    Spec<? super ArtifactIdentifier> dependency(@Nullable String group, String name, @Nullable String version);
+
+    /**
+     * Create a spec that matches dependencies using the provided project's group, name, and version
+     *
+     * @param notation The dependency notation to parse.
+     * @return The spec that matches the dependency notation.
+     */
+    Spec<? super ArtifactIdentifier> dependency(Project project);
 
     /**
      * Create a spec that matches the provided dependency on group, name, and version
