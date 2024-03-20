@@ -100,13 +100,6 @@ public abstract class JarJar extends Jar {
         dependsOn(jarJarConfiguration);
     }
 
-    public void fromRuntimeConfiguration() {
-        final Configuration runtimeConfiguration = getProject().getConfigurations().findByName("runtimeClasspath");
-        if (runtimeConfiguration != null) {
-            this.configuration(runtimeConfiguration);
-        }
-    }
-
     private Path getJarJarMetadataPath() {
         return getTemporaryDir().toPath().resolve("metadata.json");
     }

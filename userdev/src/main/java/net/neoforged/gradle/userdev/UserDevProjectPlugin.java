@@ -56,7 +56,9 @@ public class UserDevProjectPlugin implements Plugin<Project> {
 
             if (!jarJarExtension.getDefaultSourcesDisabled()) {
                 jarJar.getManifest().inheritFrom(((Jar) project.getTasks().getByName("jar")).getManifest());
-                jarJar.from(javaPluginExtension.getSourceSets().getByName("main").getOutput());
+                jarJar.from(project.zipTree(((Jar) project.getTasks().getByName("jar")).getArchiveFile()).matching(patternFilterable -> {
+                    patternFilterable.exclude("META-INF/MANIFEST.MF");
+                }));
             }
 
             jarJar.configuration(configuration);

@@ -44,20 +44,22 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
         }
         this.enabled = enabled;
         final JarJar task = (JarJar) project.getTasks().findByPath("jarJar");
-        Configuration runtimeElements = project.getConfigurations().maybeCreate(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME);
+        Configuration runtimeElements = project.getConfigurations().findByName(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME);
         if (task != null) {
-            if (enabled) {
-                removedFromPublication.clear();
-                removedFromPublication.addAll(runtimeElements.getArtifacts());
-                runtimeElements.getArtifacts().clear();
-                project.artifacts(handler ->
-                        addedToPublication = handler.add(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME, task, artifact ->
-                                artifact.builtBy(task)
-                        )
-                );
-            } else {
-                runtimeElements.getArtifacts().remove(addedToPublication);
-                runtimeElements.getArtifacts().addAll(removedFromPublication);
+            if (runtimeElements != null) {
+                if (enabled) {
+                    removedFromPublication.clear();
+                    removedFromPublication.addAll(runtimeElements.getArtifacts());
+                    runtimeElements.getArtifacts().clear();
+                    project.artifacts(handler ->
+                            addedToPublication = handler.add(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME, task, artifact ->
+                                    artifact.builtBy(task)
+                            )
+                    );
+                } else {
+                    runtimeElements.getArtifacts().remove(addedToPublication);
+                    runtimeElements.getArtifacts().addAll(removedFromPublication);
+                }
             }
             if (!task.getEnabled() == enabled) {
                 task.setEnabled(enabled);
@@ -95,8 +97,11 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
 
     @Override
     public void fromRuntimeConfiguration() {
-        enable();
-        project.getTasks().withType(JarJar.class).configureEach(JarJar::fromRuntimeConfiguration);
+        enable();;
+        Configuration runtimeConfiguration = project.getConfigurations().findByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
+        if (runtimeConfiguration != null) {
+            project.getTasks().withType(JarJar.class).configureEach(it -> it.configuration(runtimeConfiguration));
+        }
     }
 
     @Override
