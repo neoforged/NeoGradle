@@ -1,5 +1,6 @@
 package net.neoforged.gradle.userdev;
 
+import net.neoforged.gradle.common.extensions.DefaultJarJarFeature;
 import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.dsl.common.extensions.JarJar;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
@@ -9,18 +10,12 @@ import net.neoforged.gradle.userdev.extension.UserDevExtension;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.attributes.Usage;
-import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.bundling.Jar;
-import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 public class UserDevProjectPlugin implements Plugin<Project> {
-    public static final String JAR_JAR_TASK_NAME = "jarJar";
-    public static final String JAR_JAR_GROUP = "jarjar";
+    public static final String JAR_JAR_TASK_NAME = DefaultJarJarFeature.JAR_JAR_TASK_NAME;
+    public static final String JAR_JAR_GROUP = DefaultJarJarFeature.JAR_JAR_GROUP;
 
-    public static final String JAR_JAR_DEFAULT_CONFIGURATION_NAME = "jarJar";
+    public static final String JAR_JAR_DEFAULT_CONFIGURATION_NAME = DefaultJarJarFeature.JAR_JAR_DEFAULT_CONFIGURATION_NAME;
 
 
     @Override
@@ -38,38 +33,6 @@ public class UserDevProjectPlugin implements Plugin<Project> {
     }
 
     protected void configureJarJarTask(Project project, JarJar jarJarExtension) {
-        final Configuration configuration = project.getConfigurations().create(JAR_JAR_DEFAULT_CONFIGURATION_NAME);
-        configuration.setTransitive(false);
-        configuration.getAllDependencies().configureEach(dep ->
-                jarJarExtension.enable()
-        );
-        configuration.attributes(attributes ->
-                attributes.attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME))
-        );
-
-        JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
-
-        TaskProvider<net.neoforged.gradle.common.tasks.JarJar> jarJarTask = project.getTasks().register(JAR_JAR_TASK_NAME, net.neoforged.gradle.common.tasks.JarJar.class, jarJar -> {
-            jarJar.setGroup(JAR_JAR_GROUP);
-            jarJar.setDescription("Create a combined JAR of project and selected dependencies");
-            jarJar.getArchiveClassifier().convention("all");
-
-            if (!jarJarExtension.getDefaultSourcesDisabled()) {
-                jarJar.getManifest().inheritFrom(((Jar) project.getTasks().getByName("jar")).getManifest());
-                jarJar.from(project.zipTree(((Jar) project.getTasks().getByName("jar")).getArchiveFile()).matching(patternFilterable -> {
-                    patternFilterable.exclude("META-INF/MANIFEST.MF");
-                }));
-            }
-
-            jarJar.configuration(configuration);
-
-            jarJar.setEnabled(false);
-        });
-
-        project.getArtifacts().add(JAR_JAR_DEFAULT_CONFIGURATION_NAME, jarJarTask);
-
-        project.getTasks().named(LifecycleBasePlugin.ASSEMBLE_TASK_NAME, t -> {
-            t.dependsOn(jarJarTask);
-        });
+        ((DefaultJarJarFeature) jarJarExtension).createTaskAndConfiguration();
     }
 }

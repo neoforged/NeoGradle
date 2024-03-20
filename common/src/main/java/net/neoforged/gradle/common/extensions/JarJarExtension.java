@@ -1,107 +1,25 @@
 package net.neoforged.gradle.common.extensions;
 
-import net.neoforged.gradle.common.tasks.JarJar;
-import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
-import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
-import org.gradle.api.Action;
+import net.neoforged.gradle.dsl.common.extensions.JarJarFeature;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleDependency;
-import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
-import org.gradle.api.plugins.JavaPlugin;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensions.JarJar {
+public class JarJarExtension extends DefaultJarJarFeature implements net.neoforged.gradle.dsl.common.extensions.JarJar {
     public static final Attribute<String> JAR_JAR_RANGE_ATTRIBUTE = Attribute.of("jarJarRange", String.class);
     public static final Attribute<String> FIXED_JAR_JAR_VERSION_ATTRIBUTE = Attribute.of("fixedJarJarVersion", String.class);
 
-    private final Project project;
-    private boolean disabled;
-    private boolean enabled;
-    private boolean disableDefaultSources;
-    private PublishArtifact addedToPublication;
-    private final List<PublishArtifact> removedFromPublication = new ArrayList<>();
+    private final Map<String, DefaultJarJarFeature> features = new HashMap<>();
 
     @Inject
     public JarJarExtension(final Project project) {
-        this.project = project;
-    }
-
-    @Override
-    public void enable() {
-        if (!this.disabled)
-            enable(true);
-    }
-
-    private void enable(boolean enabled) {
-        if (this.enabled == enabled) {
-            return;
-        }
-        this.enabled = enabled;
-        final JarJar task = (JarJar) project.getTasks().findByPath("jarJar");
-        Configuration runtimeElements = project.getConfigurations().findByName(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME);
-        if (task != null) {
-            if (runtimeElements != null) {
-                if (enabled) {
-                    removedFromPublication.clear();
-                    removedFromPublication.addAll(runtimeElements.getArtifacts());
-                    runtimeElements.getArtifacts().clear();
-                    project.artifacts(handler ->
-                            addedToPublication = handler.add(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME, task, artifact ->
-                                    artifact.builtBy(task)
-                            )
-                    );
-                } else {
-                    runtimeElements.getArtifacts().remove(addedToPublication);
-                    runtimeElements.getArtifacts().addAll(removedFromPublication);
-                }
-            }
-            if (!task.getEnabled() == enabled) {
-                task.setEnabled(enabled);
-            }
-        }
-    }
-
-    @Override
-    public void disable() {
-        disable(true);
-    }
-
-    @Override
-    public void disable(boolean disable) {
-        this.disabled = disable;
-        if (disable) {
-            enable(false);
-        }
-    }
-
-    @Override
-    public boolean getDefaultSourcesDisabled() {
-        return this.disableDefaultSources;
-    }
-
-    @Override
-    public void disableDefaultSources() {
-        disableDefaultSources(true);
-    }
-
-    @Override
-    public void disableDefaultSources(boolean value) {
-        this.disableDefaultSources = value;
-    }
-
-    @Override
-    public void fromRuntimeConfiguration() {
-        enable();;
-        Configuration runtimeConfiguration = project.getConfigurations().findByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
-        if (runtimeConfiguration != null) {
-            project.getTasks().withType(JarJar.class).configureEach(it -> it.configuration(runtimeConfiguration));
-        }
+        super(project, "");
+        features.put("", this);
     }
 
     @Override
@@ -124,17 +42,14 @@ public class JarJarExtension implements net.neoforged.gradle.dsl.common.extensio
         }
     }
 
-    @Override
-    public JarJarExtension dependencies(Action<DependencyFilter> c) {
-        enable();
-        project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.dependencies(c));
-        return this;
-    }
-
-    @Override
-    public JarJarExtension versionInformation(Action<DependencyVersionInformationHandler> c) {
-        enable();
-        project.getTasks().withType(JarJar.class).configureEach(jarJar -> jarJar.versionInformation(c));
-        return this;
+    public JarJarFeature forFeature(String featureName) {
+        if (featureName == null || featureName.isEmpty()) {
+            return this;
+        }
+        return features.computeIfAbsent(featureName, f -> {
+            DefaultJarJarFeature feature = new DefaultJarJarFeature(project, f);
+            feature.createTaskAndConfiguration();
+            return feature;
+        });
     }
 }
