@@ -5,10 +5,16 @@ import net.neoforged.gradle.dsl.common.extensions.JarJarFeature;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.PublishArtifact;
+import org.gradle.api.attributes.Bundling;
+import org.gradle.api.attributes.Category;
+import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.attributes.java.TargetJvmVersion;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Jar;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 import javax.inject.Inject;
@@ -113,9 +119,21 @@ public class DefaultJarJarFeature implements JarJarFeature {
         configuration.getAllDependencies().configureEach(dep ->
                 this.enable()
         );
-        configuration.attributes(attributes ->
-                attributes.attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME))
-        );
+
+        JavaPluginExtension javaPlugin = project.getExtensions().getByType(JavaPluginExtension.class);
+
+        configuration.attributes(attributes -> {
+            // Unfortunately, while we can hopefully rely on disambiguation rules to get us some of these, others run
+            // into issues. The target JVM version is the most worrying - we don't want to pull in a variant for a newer
+            // jvm version. We could copy DefaultJvmFeature, and search for the target version of the compile task,
+            // but this is difficult - we only have a feature name, not the linked source set. For this reason, we use
+            // the toolchain version, which is the most likely to be correct.
+            attributes.attributeProvider(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, javaPlugin.getToolchain().getLanguageVersion().map(JavaLanguageVersion::asInt));
+            attributes.attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME));
+            attributes.attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, project.getObjects().named(LibraryElements.class, LibraryElements.JAR));
+            attributes.attribute(Category.CATEGORY_ATTRIBUTE, project.getObjects().named(Category.class, Category.LIBRARY));
+            attributes.attribute(Bundling.BUNDLING_ATTRIBUTE, project.getObjects().named(Bundling.class, Bundling.EXTERNAL));
+        });
 
         TaskProvider<JarJar> jarJarTask = project.getTasks().register(withPrefix(JAR_JAR_TASK_NAME), net.neoforged.gradle.common.tasks.JarJar.class, jarJar -> {
             jarJar.setGroup(JAR_JAR_GROUP);

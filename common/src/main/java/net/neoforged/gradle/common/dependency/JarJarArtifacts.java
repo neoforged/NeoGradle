@@ -14,6 +14,7 @@ import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentSelector;
 import org.gradle.api.artifacts.result.*;
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.SetProperty;
@@ -74,7 +75,11 @@ public abstract class JarJarArtifacts {
     }
 
     public void configuration(Configuration jarJarConfiguration) {
-        getIncludedArtifacts().addAll(jarJarConfiguration.getIncoming().getArtifacts().getResolvedArtifacts());
+        getIncludedArtifacts().addAll(jarJarConfiguration.getIncoming().artifactView(config -> {
+            config.attributes(
+                    attr -> attr.attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, ArtifactTypeDefinition.JAR_TYPE)
+            );
+        }).getArtifacts().getResolvedArtifacts());
         getIncludedRootComponents().add(jarJarConfiguration.getIncoming().getResolutionResult().getRootComponent());
     }
 
@@ -84,7 +89,7 @@ public abstract class JarJarArtifacts {
         Set<ContainedJarIdentifier> knownIdentifiers = new HashSet<>();
 
         for (ResolvedComponentResult rootComponent : rootComponents) {
-            collectFromComponent(filter, rootComponent, knownIdentifiers, versions, versionRanges);
+            collectFromComponent(rootComponent, knownIdentifiers, versions, versionRanges);
         }
         List<ResolvedJarJarArtifact> data = new ArrayList<>();
         for (ResolvedArtifactResult result : artifacts) {
@@ -129,7 +134,7 @@ public abstract class JarJarArtifacts {
                 .collect(Collectors.toList());
     }
 
-    private static void collectFromComponent(DependencyFilter dependencyFilter, ResolvedComponentResult rootComponent, Set<ContainedJarIdentifier> knownIdentifiers, Map<ContainedJarIdentifier, String> versions, Map<ContainedJarIdentifier, String> versionRanges) {
+    private static void collectFromComponent(ResolvedComponentResult rootComponent, Set<ContainedJarIdentifier> knownIdentifiers, Map<ContainedJarIdentifier, String> versions, Map<ContainedJarIdentifier, String> versionRanges) {
         for (DependencyResult result : rootComponent.getDependencies()) {
             if (!(result instanceof ResolvedDependencyResult)) {
                 continue;
