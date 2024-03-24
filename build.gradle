@@ -1,3 +1,6 @@
+import org.gradle.api.attributes.plugin.GradlePluginApiVersion
+import org.gradle.util.GradleVersion
+
 plugins {
     id 'eclipse'
     id 'maven-publish'
@@ -63,6 +66,17 @@ subprojects.forEach { Project subProject ->
     //We exclude ASM from all subprojects, it is handled by Gradle itself.
     subProject.configurations.configureEach { Configuration configuration ->
         configuration.exclude group: 'org.ow2.asm'
+    }
+
+    ['apiElements', 'runtimeElements'].each {
+        subProject.configurations.named(it).configure {
+            attributes {
+                attribute(
+                        GradlePluginApiVersion.GRADLE_PLUGIN_API_VERSION_ATTRIBUTE,
+                        objects.named(GradlePluginApiVersion, GradleVersion.current().getVersion())
+                )
+            }
+        }
     }
 
     //Wire up our custom repositories.
