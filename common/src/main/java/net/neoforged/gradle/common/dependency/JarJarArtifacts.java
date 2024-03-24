@@ -8,13 +8,13 @@ import net.neoforged.jarjar.metadata.ContainedJarIdentifier;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentSelector;
 import org.gradle.api.artifacts.result.*;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
+import org.gradle.api.capabilities.Capability;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.SetProperty;
@@ -94,20 +94,38 @@ public abstract class JarJarArtifacts {
         List<ResolvedJarJarArtifact> data = new ArrayList<>();
         for (ResolvedArtifactResult result : artifacts) {
             ResolvedVariantResult variant = result.getVariant();
-            if (!(variant.getOwner() instanceof ModuleComponentIdentifier)) {
+            ComponentIdentifier componentIdentifier = variant.getOwner();
+
+            String group;
+            String name;
+            String baseVersion;
+
+            if (componentIdentifier instanceof ModuleComponentIdentifier) {
+                ModuleComponentIdentifier moduleComponentIdentifier = (ModuleComponentIdentifier) componentIdentifier;
+                group = moduleComponentIdentifier.getGroup();
+                name = moduleComponentIdentifier.getModule();
+                baseVersion = moduleComponentIdentifier.getVersion();
+            } else if (!variant.getCapabilities().isEmpty()) {
+                Capability capability = variant.getCapabilities().get(0);
+                group = capability.getGroup();
+                name = capability.getName();
+                baseVersion = capability.getVersion();
+                if (group == null || name == null) {
+                    continue;
+                }
+            } else {
                 continue;
             }
-            ModuleComponentIdentifier componentIdentifier = (ModuleComponentIdentifier) variant.getOwner();
+
             DependencyManagementObject.ArtifactIdentifier artifactIdentifier = new DependencyManagementObject.ArtifactIdentifier(
-                    componentIdentifier.getModuleIdentifier().getGroup(),
-                    componentIdentifier.getModuleIdentifier().getName(),
-                    componentIdentifier.getVersion()
+                    group,
+                    name,
+                    baseVersion
             );
             if (!filter.isIncluded(artifactIdentifier)) {
                 continue;
             }
-            ModuleIdentifier identifier = componentIdentifier.getModuleIdentifier();
-            ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(identifier.getGroup(), identifier.getName());
+            ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(group, name);
             if (!knownIdentifiers.contains(jarIdentifier)) {
                 continue;
             }
@@ -142,12 +160,25 @@ public abstract class JarJarArtifacts {
             ResolvedDependencyResult resolvedResult = (ResolvedDependencyResult) result;
             ComponentSelector requested = resolvedResult.getRequested();
             ResolvedVariantResult variant = resolvedResult.getResolvedVariant();
-            if (!(variant.getOwner() instanceof ModuleComponentIdentifier)) {
+
+            String group;
+            String name;
+
+            if (variant.getOwner() instanceof ModuleComponentIdentifier) {
+                ModuleComponentIdentifier moduleComponentIdentifier = (ModuleComponentIdentifier) variant.getOwner();
+                group = moduleComponentIdentifier.getGroup();
+                name = moduleComponentIdentifier.getModule();
+            } else if (!variant.getCapabilities().isEmpty()) {
+                Capability capability = variant.getCapabilities().get(0);
+                group = capability.getGroup();
+                name = capability.getName();
+                if (group == null || name == null) {
+                    continue;
+                }
+            } else {
                 continue;
             }
-            ModuleComponentIdentifier componentIdentifier = (ModuleComponentIdentifier) variant.getOwner();
-            ModuleIdentifier identifier = componentIdentifier.getModuleIdentifier();
-            ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(identifier.getGroup(), identifier.getName());
+            ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(group, name);
             knownIdentifiers.add(jarIdentifier);
 
             String versionRange = getVersionRangeFrom(variant);
@@ -182,19 +213,34 @@ public abstract class JarJarArtifacts {
         return variant.getAttributes().getAttribute(JarJarExtension.JAR_JAR_RANGE_ATTRIBUTE);
     }
 
-    private static @Nullable String makeOpenRange(final ResolvedVariantResult variant) {
-        ComponentIdentifier identifier = variant.getOwner();
-        if (identifier instanceof ModuleComponentIdentifier) {
-            return "[" + ((ModuleComponentIdentifier) identifier).getVersion() + ",)";
+    private static @Nullable String moduleOrCapabilityVersion(final ResolvedVariantResult variant) {
+        String baseVersion = null;
+
+        if (variant.getOwner() instanceof ModuleComponentIdentifier) {
+            ModuleComponentIdentifier moduleComponentIdentifier = (ModuleComponentIdentifier) variant.getOwner();
+            baseVersion = moduleComponentIdentifier.getVersion();
+        } else if (!variant.getCapabilities().isEmpty()) {
+            Capability capability = variant.getCapabilities().get(0);
+            baseVersion = capability.getVersion();
         }
-        return null;
+
+        return baseVersion;
+    }
+
+    private static @Nullable String makeOpenRange(final ResolvedVariantResult variant) {
+        String baseVersion = moduleOrCapabilityVersion(variant);
+
+        if (baseVersion == null) {
+            return null;
+        }
+
+        return "[" + baseVersion + ",)";
     }
 
     private static @Nullable String getVersionFrom(final ResolvedVariantResult variant) {
-        ComponentIdentifier identifier = variant.getOwner();
         String version = variant.getAttributes().getAttribute(JarJarExtension.FIXED_JAR_JAR_VERSION_ATTRIBUTE);
-        if (version == null && identifier instanceof ModuleComponentIdentifier) {
-            version = ((ModuleComponentIdentifier) identifier).getVersion();
+        if (version == null) {
+            version = moduleOrCapabilityVersion(variant);
         }
         return version;
     }
