@@ -90,9 +90,11 @@ subprojects.forEach { Project subProject ->
     //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
     subProject.dependencies.api subProject.dependencies.gradleApi()
     subProject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
-    subProject.dependencies.api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}"
-    subProject.dependencies.api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}:base"
-    subProject.dependencies.api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}:runtime"
+    subProject.dependencies.api("net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}") {
+        capabilities {
+            requireCapability 'net.neoforged:groovydslimprover-base'
+        }
+    }
 
     subProject.dependencies.testImplementation subProject.dependencies.gradleTestKit()
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
