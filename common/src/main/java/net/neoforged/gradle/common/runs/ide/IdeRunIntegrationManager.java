@@ -1,5 +1,10 @@
 package net.neoforged.gradle.common.runs.ide;
 
+import cz.nightenom.vsclaunch.BatchedLaunchWriter;
+import cz.nightenom.vsclaunch.LaunchConfiguration;
+import cz.nightenom.vsclaunch.attribute.PathLike;
+import cz.nightenom.vsclaunch.attribute.ShortCmdBehaviour;
+import cz.nightenom.vsclaunch.writer.WritingMode;
 import net.neoforged.elc.configs.GradleLaunchConfig;
 import net.neoforged.elc.configs.JavaApplicationLaunchConfig;
 import net.neoforged.elc.configs.LaunchConfig;
@@ -181,6 +186,47 @@ public class IdeRunIntegrationManager {
             });
         }
 
+        @Override
+        public void vscode(Project project, EclipseModel eclipse)
+        {
+            ProjectUtils.afterEvaluate(project, () -> {
+                final BatchedLaunchWriter launchWriter = new BatchedLaunchWriter(WritingMode.MODIFY_CURRENT);
+                project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                    final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
+                    final RunImpl runImpl = (RunImpl) run;
+
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+
+                    final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
+                        .createLaunchConfiguration()
+                        .withAdditionalJvmArgs(runImpl.realiseJvmArguments())
+                        .withArguments(runImpl.getProgramArguments().get())
+                        .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
+                        .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
+                        .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)
+                        .withMainClass(runImpl.getMainClass().get())
+                        .withProjectName(project.getName())
+                        .withName(runName);
+
+                    if (IdeManagementExtension.isDefinitelyVscodeImport(project))
+                    {
+                        ideBeforeRunTask.configure(task -> addEclipseCopyResourcesTasks(eclipse, run, t -> task.dependsOn(t)));
+                        cfg.withPreTaskName("gradle: " + ideBeforeRunTask.getName());
+                    }
+                    else
+                    {
+                        addEclipseCopyResourcesTasks(eclipse, run, eclipse::autoBuildTasks);
+                        eclipse.autoBuildTasks(ideBeforeRunTask);
+                    }
+                }));
+                try {
+                    launchWriter.writeToLatestJson(project.getRootDir().toPath());
+                } catch (final IOException e) {
+                    throw new RuntimeException("Failed to write launch files", e);
+                }
+            });
+        }
+
         private static String quoteAndJoin(List<String> args) {
             return quoteStream(args).collect(Collectors.joining(" "));
         }
@@ -217,6 +263,10 @@ public class IdeRunIntegrationManager {
             return ideBeforeRunTask;
         }
 
+        private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run, Consumer<TaskProvider<?>> tasksConsumer) {
+            createEclipseCopyResourcesTasks(eclipse, run).forEach(tasksConsumer::accept);
+        }
+      
         private List<TaskProvider<?>> createEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().get()) {
