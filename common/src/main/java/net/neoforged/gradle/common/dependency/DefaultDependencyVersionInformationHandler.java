@@ -4,21 +4,15 @@ import com.google.common.collect.Maps;
 import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.VersionRange;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.specs.Spec;
 
 import java.util.Map;
 import java.util.Optional;
 
-public class DefaultDependencyVersionInformationHandler extends AbstractDependencyManagementObject implements DependencyVersionInformationHandler {
+public abstract class DefaultDependencyVersionInformationHandler extends AbstractDependencyManagementObject implements DependencyVersionInformationHandler {
 
     private final Map<Spec<? super ArtifactIdentifier>, String> rangedVersions = Maps.newHashMap();
     private final Map<Spec<? super ArtifactIdentifier>, String> pinnedVersions = Maps.newHashMap();
-
-    public DefaultDependencyVersionInformationHandler(final Project project) {
-        super(project);
-    }
 
     @Override
     public void ranged(final Spec<? super ArtifactIdentifier> spec, final String range) {
@@ -46,8 +40,7 @@ public class DefaultDependencyVersionInformationHandler extends AbstractDependen
     }
 
     @Override
-    public Optional<String> getVersionRange(final ModuleDependency dependency) {
-        final ArtifactIdentifier identifier = createArtifactIdentifier(dependency);
+    public Optional<String> getVersionRange(final ArtifactIdentifier identifier) {
         return rangedVersions.entrySet().stream()
                 .filter(entry -> entry.getKey().isSatisfiedBy(identifier))
                 .map(Map.Entry::getValue)
@@ -55,8 +48,7 @@ public class DefaultDependencyVersionInformationHandler extends AbstractDependen
     }
 
     @Override
-    public Optional<String> getVersion(final ModuleDependency dependency) {
-        final ArtifactIdentifier identifier = createArtifactIdentifier(dependency);
+    public Optional<String> getVersion(final ArtifactIdentifier identifier) {
         return pinnedVersions.entrySet().stream()
                 .filter(entry -> entry.getKey().isSatisfiedBy(identifier))
                 .map(Map.Entry::getValue)
