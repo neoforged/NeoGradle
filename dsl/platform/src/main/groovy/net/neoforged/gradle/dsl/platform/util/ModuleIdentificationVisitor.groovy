@@ -41,7 +41,7 @@ abstract class ModuleIdentificationVisitor implements FileVisitor {
         if (!matcher.find()) {
             matcher = MAVEN_LOCAL_PATTERN.matcher(absolutePath);
             if (!matcher.find()) {
-                throw new IllegalStateException("The file " + file + " is not either a remove dependency or a maven local dependency!");
+                throw new IllegalStateException("Cannot determine the GAV of " + file + ", since it is neither a remote nor a Maven local dependency!");
             }
         }
 
