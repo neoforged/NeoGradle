@@ -7,7 +7,9 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion
 import net.neoforged.gradle.dsl.common.util.DistributionType
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTree
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -41,7 +43,7 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
      * @return The unpacked mcp directory.
      */
     @Internal
-    abstract DirectoryProperty getUnpackedMcpZipDirectory();
+    abstract ConfigurableFileCollection getNeoFormArchive();
 
     /**
      * The steps directory, it is the location of the steps working directory.

@@ -1,7 +1,8 @@
 package net.neoforged.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DSLProperty;
+import net.minecraftforge.gdi.annotations.DSLProperty
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.*;
 
@@ -15,7 +16,7 @@ abstract class ArtifactProvider extends NeoGradleBase implements WithOutput {
     @TaskAction
     void doProvide() throws Exception {
         final Path output = ensureFileWorkspaceReady(getOutput()).toPath();
-        final Path source = getInput().get().getAsFile().toPath();
+        final Path source = getInputFiles().getSingleFile().toPath();
 
         if (!Files.exists(source)) {
             throw new IllegalStateException("Source file does not exist: " + source);
@@ -24,10 +25,10 @@ abstract class ArtifactProvider extends NeoGradleBase implements WithOutput {
         Files.copy(source, output);
     }
 
-    @InputFile
+    @InputFiles
     @DSLProperty
     @PathSensitive(PathSensitivity.NONE)
-    abstract RegularFileProperty getInput();
+    abstract ConfigurableFileCollection getInputFiles();
 
     @OutputFile
     @DSLProperty

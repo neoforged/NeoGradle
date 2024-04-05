@@ -40,7 +40,7 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
         });
         
         final TaskProvider<ArtifactProvider> sourcesProvider = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "sourceFromAppliedPatches"), ArtifactProvider.class, task -> {
-            task.getInput().set(patchApply.flatMap(ApplyPatches::getOutput));
+            task.getInputFiles().from(patchApply.flatMap(ApplyPatches::getOutput));
             task.getOutput().set(new File(workingDirectory, "patched.jar"));
         });
         

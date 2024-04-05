@@ -17,6 +17,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +31,7 @@ import java.util.Objects;
  */
 public final class UserDevRuntimeSpecification extends CommonRuntimeSpecification implements UserDevSpecification {
 
-    private final File userDevArchive;
+    private final FileTree userDevArchive;
     private final String forgeGroup;
     private final String forgeName;
     private final String forgeVersion;
@@ -40,7 +41,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
 
     public UserDevRuntimeSpecification(Project project,
                                        String version,
-                                       File userDevArchive,
+                                       FileTree userDevArchive,
                                        UserdevProfile profile,
                                        DistributionType distribution,
                                        Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
@@ -62,7 +63,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         return forgeVersion;
     }
 
-    public File getUserDevArchive() {
+    public FileTree getUserDevArchive() {
         return userDevArchive;
     }
 
@@ -209,7 +210,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
             return new UserDevRuntimeSpecification(
                     project,
                     effectiveVersion.getVersion(),
-                    userdevArchive,
+                    project.zipTree(userdevArchive),
                     profile,
                     distributionType.get(),
                     preTaskAdapters,

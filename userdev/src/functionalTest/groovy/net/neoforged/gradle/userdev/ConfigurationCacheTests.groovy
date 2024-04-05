@@ -7,7 +7,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
     @Override
     protected void configurePluginUnderTest() {
-        pluginUnderTest = "net.neoforged.gradle.neoform";
+        pluginUnderTest = "net.neoforged.gradle.userdev";
         injectIntoAllProject = true;
     }
 
@@ -16,10 +16,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("apply_supports_configuration_cache_build", {
             it.build("""
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-
             java {
                 toolchain {
                     languageVersion = JavaLanguageVersion.of(17)
@@ -47,10 +43,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build", {
             it.build("""
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-
             java {
                 toolchain {
                     languageVersion = JavaLanguageVersion.of(17)
@@ -73,15 +65,26 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.enableLocalBuildCache()
         })
 
         when:
         def run = project.run {
             it.tasks('compileJava')
-            it.arguments('--configuration-cache', '--build-cache')
+            it.arguments('--configuration-cache')
+        }
+
+        and:
+        def secondaryRun = project.run {
+            it.tasks('compileJava')
+            it.arguments('--configuration-cache')
         }
 
         then:
+        secondaryRun.output.contains('Reusing configuration cache.')
+        run.task(':neoFormDecompile').outcome == TaskOutcome.SUCCESS
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
+        secondaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
+        secondaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 }

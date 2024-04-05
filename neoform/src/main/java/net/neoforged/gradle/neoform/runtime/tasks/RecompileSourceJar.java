@@ -8,7 +8,6 @@ import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
@@ -53,10 +52,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         
         final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
         this.javaToolchainService = getProviderFactory().provider(() -> service);
-        
-        getRuntimeName().orElse("unknown");
-        getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
-        getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
+
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
         //And configure output default locations.

@@ -9,6 +9,7 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.TaskProvider;
 
 import java.io.File;
@@ -21,7 +22,7 @@ public final class CommonRuntimeTaskUtils {
         throw new IllegalStateException("Can not instantiate an instance of: CommonRuntimeTaskUtils. This is a utility class");
     }
 
-    public static TaskProvider<? extends AccessTransformer> createAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, Iterable<File> files, Collection<String> data) {
+    public static TaskProvider<? extends AccessTransformer> createAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data) {
         final Collection<TaskProvider<? extends WithOutput>> fileProducingTasks = new ArrayList<>();
         final Map<String, Integer> indexes = new HashMap<>();
         for (File file : files) {
@@ -31,7 +32,9 @@ public final class CommonRuntimeTaskUtils {
             final String name = CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerProvider" + file.getName() + (index == 0 ? "" : "_" + index));
             
             final TaskProvider<? extends WithOutput> provider = definition.getSpecification().getProject().getTasks().register(name, ArtifactProvider.class, task -> {
-                task.getInput().set(file);
+                task.getInputFiles().from(
+                        files.matching(f -> f.include(fileTreeElement -> fileTreeElement.getFile().equals(file)))
+                );
                 String outputFileName = file.getName();
                 if (index > 0) {
                     int extensionDot = outputFileName.lastIndexOf('.');

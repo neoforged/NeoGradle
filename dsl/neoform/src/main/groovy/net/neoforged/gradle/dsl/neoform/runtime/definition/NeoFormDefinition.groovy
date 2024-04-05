@@ -15,13 +15,6 @@ import org.jetbrains.annotations.NotNull
 interface NeoFormDefinition<S extends NeoFormSpecification> extends Definition<S> {
 
     /**
-     * The file which defines a directory containing the unpacked NeoForm runtime.
-     *
-     * @return The file which defines a directory containing the unpacked NeoForm runtime.
-     */
-    @NotNull File getUnpackedNeoFormZipDirectory();
-
-    /**
      * The deserialized NeoForm configuration.
      *
      * @return The deserialized NeoForm configuration.
