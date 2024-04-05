@@ -115,11 +115,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/functionalTest")
-    }
-
     def "the userdev runtime by default supports the build cache"() {
         given:
         def project = create("compile_with_gradle_and_official_mappings", {
