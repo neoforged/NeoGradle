@@ -9,8 +9,11 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
+import org.gradle.api.file.EmptyFileVisitor;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.*;
@@ -25,30 +28,34 @@ public final class CommonRuntimeTaskUtils {
     public static TaskProvider<? extends AccessTransformer> createAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data) {
         final Collection<TaskProvider<? extends WithOutput>> fileProducingTasks = new ArrayList<>();
         final Map<String, Integer> indexes = new HashMap<>();
-        for (File file : files) {
-            indexes.compute(file.getName(), (s, index) -> index == null ? 0 : index + 1);
-            final int index = indexes.get(file.getName());
-            
-            final String name = CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerProvider" + file.getName() + (index == 0 ? "" : "_" + index));
-            
-            final TaskProvider<? extends WithOutput> provider = definition.getSpecification().getProject().getTasks().register(name, ArtifactProvider.class, task -> {
-                task.getInputFiles().from(
-                        files.matching(f -> f.include(fileTreeElement -> fileTreeElement.getFile().equals(file)))
-                );
-                String outputFileName = file.getName();
-                if (index > 0) {
-                    int extensionDot = outputFileName.lastIndexOf('.');
-                    if (extensionDot == -1) {
-                        outputFileName += "_" + index;
-                    } else {
-                        outputFileName = outputFileName.substring(0, extensionDot) + "_" + index + outputFileName.substring(extensionDot);
+
+        files.visit(new EmptyFileVisitor() {
+            @Override
+            public void visitFile(@NotNull FileVisitDetails fileDetails) {
+                indexes.compute(fileDetails.getName(), (s, index) -> index == null ? 0 : index + 1);
+                final int index = indexes.get(fileDetails.getName());
+
+                final String name = CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerProvider" + fileDetails.getName() + (index == 0 ? "" : "_" + index));
+
+                final TaskProvider<? extends WithOutput> provider = definition.getSpecification().getProject().getTasks().register(name, ArtifactProvider.class, task -> {
+                    task.getInputFiles().from(
+                            files.matching(f -> f.include(fileDetails.getPath()))
+                    );
+                    String outputFileName = fileDetails.getName();
+                    if (index > 0) {
+                        int extensionDot = outputFileName.lastIndexOf('.');
+                        if (extensionDot == -1) {
+                            outputFileName += "_" + index;
+                        } else {
+                            outputFileName = outputFileName.substring(0, extensionDot) + "_" + index + outputFileName.substring(extensionDot);
+                        }
                     }
-                }
-                task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + namePreFix + "/" + outputFileName));
-            });
-            
-            fileProducingTasks.add(provider);
-        }
+                    task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + namePreFix + "/" + outputFileName));
+                });
+
+                fileProducingTasks.add(provider);
+            }
+        });
 
         if (!data.isEmpty()) {
             final TaskProvider<AccessTransformerFileGenerator> generator = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {

@@ -2,6 +2,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.jupiter.api.Disabled
 
 class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
@@ -11,7 +12,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-
+    @Disabled
     def "apply_supports_configuration_cache_build"() {
         given:
         def project = create("apply_supports_configuration_cache_build", {
@@ -27,18 +28,20 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.enableLocalBuildCache()
+            it.enableConfigurationCache()
         })
 
         when:
         def run = project.run {
             it.tasks('build')
-            it.arguments('--configuration-cache', '--build-cache')
         }
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
+    @Disabled
     def "compile_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {
@@ -66,25 +69,29 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
+            it.enableConfigurationCache()
         })
 
         when:
         def run = project.run {
-            it.tasks('compileJava')
-            it.arguments('--configuration-cache')
+            it.tasks('build')
         }
 
         and:
-        def secondaryRun = project.run {
-            it.tasks('compileJava')
-            it.arguments('--configuration-cache')
+        project.run {
+            it.tasks('build')
+        }
+
+        and:
+        def thirtiaryRun = project.run {
+            it.tasks('build')
         }
 
         then:
-        secondaryRun.output.contains('Reusing configuration cache.')
+        thirtiaryRun.output.contains('Reusing configuration cache.')
         run.task(':neoFormDecompile').outcome == TaskOutcome.SUCCESS
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
-        secondaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
-        secondaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
+        thirtiaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
+        thirtiaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 }

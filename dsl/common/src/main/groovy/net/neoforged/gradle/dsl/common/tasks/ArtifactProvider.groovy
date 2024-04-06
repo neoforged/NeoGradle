@@ -27,7 +27,7 @@ abstract class ArtifactProvider extends NeoGradleBase implements WithOutput {
 
     @InputFiles
     @DSLProperty
-    @PathSensitive(PathSensitivity.NONE)
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     abstract ConfigurableFileCollection getInputFiles();
 
     @OutputFile
