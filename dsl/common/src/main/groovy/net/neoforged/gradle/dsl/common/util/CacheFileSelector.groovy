@@ -9,7 +9,7 @@ import groovy.transform.CompileStatic;
 import org.gradle.api.tasks.Input;
 
 @CompileStatic
-abstract class CacheFileSelector {
+abstract class CacheFileSelector implements Serializable {
 
     static CacheFileSelector launcherMetadata() {
         return new CacheFileSelector() {
@@ -83,4 +83,20 @@ abstract class CacheFileSelector {
 
     @Input
     abstract String getCacheDirectory();
+
+    @Override
+    int hashCode() {
+        return this.getCacheFileName().hashCode();
+    }
+
+    @Override
+    boolean equals(Object obj) {
+        if (!(obj instanceof CacheFileSelector)) {
+            return false;
+        }
+
+        final CacheFileSelector cacheFileSelector = (CacheFileSelector) obj;
+
+        return cacheFileSelector.getCacheFileName() == this.getCacheFileName();
+    }
 }

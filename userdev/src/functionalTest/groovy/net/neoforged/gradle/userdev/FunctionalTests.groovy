@@ -149,6 +149,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         def initialRun = project.run {
             it.tasks('build')
             it.log(Runtime.LogLevel.INFO)
+            it.debug()
         }
 
         then:
