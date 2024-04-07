@@ -44,7 +44,19 @@ class ConfigurationUtils {
      * @return The detached configuration
      */
     static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final Dependency... dependencies) {
-        final Configuration configuration = configurations.detachedConfiguration(dependencies)
+        String name = "_ng_do_not_touch_lookup_configuration_"
+        for (final def dependency in dependencies) {
+            name += dependency.getGroup() + "-" + dependency.getName() + "-" + dependency.getVersion() + "_"
+        }
+
+        if (configurations.getNames().contains(name)) {
+            //noinspection ConfigurationAvoidance
+            return configurations.getByName(name)
+        }
+
+        final Configuration configuration = configurations.create(name)
+        configuration.getDependencies().addAll(dependencies)
+
         configuration.setCanBeConsumed(false)
         configuration.setCanBeResolved(true)
 

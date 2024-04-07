@@ -53,11 +53,13 @@ import net.neoforged.gradle.vanilla.VanillaProjectPlugin;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.apache.commons.lang3.StringUtils;
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
+import org.gradle.api.*;
+import org.gradle.api.artifacts.ConfigurablePublishArtifact;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.Category;
+import org.gradle.api.attributes.Usage;
+import org.gradle.api.attributes.java.TargetJvmVersion;
+import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
@@ -261,7 +263,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.exclude("com/**");
                 task.exclude("mcp/**");
             });
-            
+
             final EnumMap<DistributionType, TaskProvider<GenerateBinaryPatches>> binaryPatchGenerators = new EnumMap<>(DistributionType.class);
             for (DistributionType distribution : DistributionType.values()) {
                 final TaskProvider<? extends WithOutput> cleanProvider = cleanProviders.get(distribution);
@@ -634,7 +636,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             final AccessTransformers accessTransformers = project.getExtensions().getByType(AccessTransformers.class);
             
-            final TaskProvider<Jar> userdevJar = project.getTasks().register("userdevJar", Jar.class, task -> {
+            final TaskProvider<Jar> userdevJarProvider = project.getTasks().register("userdevJar", Jar.class, task -> {
                 task.getArchiveClassifier().set("userdev");
                 task.getArchiveAppendix().set("userdev");
                 task.getArchiveVersion().set(project.getVersion().toString());
@@ -662,12 +664,20 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     spec.into("patches/");
                 });
             });
-            
+
+            final Configuration runtimeElements = project.getConfigurations().getByName("runtimeElements");
+            runtimeElements.getOutgoing().artifact(userdevJarProvider.flatMap(Jar::getArchiveFile), artifact -> {
+                artifact.setExtension("jar");
+                artifact.setType("jar");
+                artifact.setClassifier("userdev");
+                artifact.builtBy(userdevJarProvider);
+            });
+
             final TaskProvider<?> assembleTask = project.getTasks().named("assemble");
             assembleTask.configure(task -> {
                 task.dependsOn(signInstallerJar);
                 task.dependsOn(signUniversalJar);
-                task.dependsOn(userdevJar);
+                task.dependsOn(userdevJarProvider);
                 task.dependsOn(sourcesJarProvider);
             });
         });
