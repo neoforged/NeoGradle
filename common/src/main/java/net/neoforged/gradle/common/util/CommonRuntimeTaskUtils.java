@@ -50,6 +50,7 @@ public final class CommonRuntimeTaskUtils {
                             outputFileName = outputFileName.substring(0, extensionDot) + "_" + index + outputFileName.substring(extensionDot);
                         }
                     }
+                    task.getOutputFileName().set(outputFileName);
                     task.getOutput().set(new File(workspaceDirectory, "accesstransformers/" + namePreFix + "/" + outputFileName));
                 });
 

@@ -142,23 +142,27 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
+            it.debugBuildCache()
         })
 
         when:
         def initialRun = project.run {
             it.tasks('build')
-            it.debug()
+            it.log(Runtime.LogLevel.INFO)
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
 
         and:
         def secondRun = project.run {
             it.tasks('build')
+            it.log(Runtime.LogLevel.INFO)
         }
 
         then:
         secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
+        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
 }

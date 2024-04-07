@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Disabled
+import spock.lang.Ignore
 
 class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
@@ -12,7 +13,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    @Disabled
     def "apply_supports_configuration_cache_build"() {
         given:
         def project = create("apply_supports_configuration_cache_build", {
@@ -41,7 +41,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
-    @Disabled
+    @Ignore
     def "compile_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {
@@ -78,20 +78,15 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         }
 
         and:
-        project.run {
-            it.tasks('build')
-        }
-
-        and:
-        def thirtiaryRun = project.run {
+        def secondaryRun = project.run {
             it.tasks('build')
         }
 
         then:
-        thirtiaryRun.output.contains('Reusing configuration cache.')
+        secondaryRun.output.contains('Reusing configuration cache.')
         run.task(':neoFormDecompile').outcome == TaskOutcome.SUCCESS
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
-        thirtiaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
-        thirtiaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
+        secondaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
+        secondaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 }
