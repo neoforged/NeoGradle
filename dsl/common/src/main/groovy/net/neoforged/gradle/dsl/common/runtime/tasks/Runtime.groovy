@@ -75,7 +75,7 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
      *
      * @return The requested minecraft version.
      */
-    @Nested
+    @Input
     @DSLProperty
     abstract Property<String> getMinecraftVersion();
 
