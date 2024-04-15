@@ -116,11 +116,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     
     @Override
+    @Nested
     public RuntimeArguments getArguments() {
         return arguments;
     }
     
     @Override
+    @Nested
     public RuntimeMultiArguments getMultiArguments() {
         return multiArguments;
     }

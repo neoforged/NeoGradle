@@ -56,11 +56,13 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
     }
 
     @Override
+    @Nested
     public RuntimeArguments getArguments() {
         return arguments;
     }
     
     @Override
+    @Nested
     public RuntimeMultiArguments getMultiArguments() {
         return multiArguments;
     }
