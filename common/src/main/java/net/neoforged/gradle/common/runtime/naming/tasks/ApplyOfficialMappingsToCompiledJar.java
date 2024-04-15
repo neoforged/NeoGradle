@@ -35,7 +35,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
             return result;
         }));
         getJvmArguments().set(Lists.newArrayList(RenameConstants.DEFAULT_JVM_ARGS));
-        getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
+        getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion, DistributionType.CLIENT)));
 
         getArguments().putRegularFile("input", getInput());
         getArguments().putRegularFile("mappings", getMappings());
