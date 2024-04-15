@@ -69,6 +69,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
@@ -615,7 +616,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
-            
+
             final TaskProvider<AccessTransformerFileGenerator> generateAts = project.getTasks().register("generateAccessTransformers", AccessTransformerFileGenerator.class, task -> {
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
@@ -665,13 +666,58 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
             });
 
-            final Configuration runtimeElements = project.getConfigurations().getByName("runtimeElements");
-            runtimeElements.getOutgoing().artifact(userdevJarProvider.flatMap(Jar::getArchiveFile), artifact -> {
-                artifact.setExtension("jar");
-                artifact.setType("jar");
-                artifact.setClassifier("userdev");
-                artifact.builtBy(userdevJarProvider);
+            final Configuration userdevConfigPublisher = project.getConfigurations().create("userdevConfig", userdev -> {
+                userdev.setCanBeConsumed(true);
+                userdev.setCanBeResolved(false);
+
+                userdev.getOutgoing().capability(
+                        String.format("%s:%s-userdev-config:%s", project.getGroup(), project.getName(), project.getVersion())
+                );
+
+                userdev.getOutgoing().artifact(createUserdevJson.flatMap(task -> task.getOutput()), artifact -> {
+                    artifact.setExtension("json");
+                    artifact.setType("json");
+                    artifact.setClassifier("userdev-config");
+                    artifact.builtBy(createUserdevJson);
+                });
+
+                userdev.setVisible(true);
+                userdev.setDescription("Defines the config that can be used to build a user development environment.");
+                userdev.attributes(attributes -> {
+                    attributes.attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.VERSION_CATALOG));
+                    attributes.attribute(Category.CATEGORY_ATTRIBUTE, project.getObjects().named(Category.class, "sdk-config"));
+                    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, Integer.valueOf(JavaVersion.current().getMajorVersion()));
+                });
+
             });
+
+            final Configuration userdevJarPublisher = project.getConfigurations().create("userdevJar", userdev -> {
+                userdev.setCanBeConsumed(true);
+                userdev.setCanBeResolved(false);
+
+                userdev.getOutgoing().capability(
+                        String.format("%s:%s-userdev:%s", project.getGroup(), project.getName(), project.getVersion())
+                );
+
+                userdev.getOutgoing().artifact(userdevJarProvider.flatMap(AbstractArchiveTask::getArchiveFile), artifact -> {
+                    artifact.setExtension("jar");
+                    artifact.setType("jar");
+                    artifact.setClassifier("userdev");
+                    artifact.builtBy(userdevJarProvider);
+                });
+
+                userdev.setVisible(true);
+                userdev.setDescription("Defines the jar that can be used to build a user development environment.");
+                userdev.attributes(attributes -> {
+                    attributes.attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.VERSION_CATALOG));
+                    attributes.attribute(Category.CATEGORY_ATTRIBUTE, project.getObjects().named(Category.class, "sdk"));
+                    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, Integer.valueOf(JavaVersion.current().getMajorVersion()));
+                });
+            });
+
+            AdhocComponentWithVariants javaComponent = (AdhocComponentWithVariants) project.getComponents().getByName("java");
+            javaComponent.addVariantsFromConfiguration(userdevConfigPublisher, variant -> variant.mapToOptional());
+            javaComponent.addVariantsFromConfiguration(userdevJarPublisher, variant -> variant.mapToOptional());
 
             final TaskProvider<?> assembleTask = project.getTasks().named("assemble");
             assembleTask.configure(task -> {
@@ -680,6 +726,13 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.dependsOn(userdevJarProvider);
                 task.dependsOn(sourcesJarProvider);
             });
+
+            //Force the creation of the userdev config json
+            try {
+                createUserdevJson.get().doTask();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
     }
     

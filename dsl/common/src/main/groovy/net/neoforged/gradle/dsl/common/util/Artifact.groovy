@@ -25,10 +25,12 @@ import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import org.apache.maven.artifact.versioning.ComparableVersion
+import org.apache.tools.ant.taskdefs.optional.depend.Depend
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencyArtifact
 import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.specs.Spec
 
@@ -144,6 +146,11 @@ class Artifact implements Comparable<Artifact>, Serializable {
         }
         return fullDescriptor;
     }
+
+    String getGAV() {
+        return String.join(":", this.group, this.name, this.version);
+    }
+
 
     String getPath() {
         if (path == null) {
@@ -261,5 +268,12 @@ class Artifact implements Comparable<Artifact>, Serializable {
 
     Dependency toDependency(Project project) {
         return project.getDependencies().create(getDescriptor());
+    }
+
+    Dependency toDependencyWithCapability(Project project) {
+        final ModuleDependency dependency = project.getDependencies().create(getGAV()) as ModuleDependency
+        dependency.capabilities {capabilities ->
+            capabilities.requireCapability(String.format("%s:%s-%s:%s", dependency.getGroup(), dependency.getName(), classifier, dependency.getVersion()))
+        }
     }
 }

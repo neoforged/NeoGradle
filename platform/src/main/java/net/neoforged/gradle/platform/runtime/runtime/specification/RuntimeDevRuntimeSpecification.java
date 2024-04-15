@@ -31,7 +31,8 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
                                           Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
                                           Directory patchesDirectory,
                                           Directory rejectsDirectory,
-                                          boolean isUpdating) {
+                                          boolean isUpdating,
+                                          Usage usage) {
         super(neoFormRuntime.getSpecification().getProject(),
                 "platform",
                 neoFormRuntime.getSpecification().getVersion(),
@@ -39,7 +40,8 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
                 preTaskTypeAdapters,
                 postTypeAdapters,
                 taskCustomizers,
-                RuntimeDevRuntimeExtension.class);
+                RuntimeDevRuntimeExtension.class,
+                usage);
         this.neoFormRuntime = neoFormRuntime;
         this.patchesDirectory = patchesDirectory;
         this.rejectsDirectory = rejectsDirectory;
@@ -168,7 +170,8 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
                     taskCustomizers,
                     patchesDirectory.get(),
                     rejectsDirectory.get(),
-                    isUpdating.get());
+                    isUpdating.get(),
+                    usage.get());
         }
     }
 }

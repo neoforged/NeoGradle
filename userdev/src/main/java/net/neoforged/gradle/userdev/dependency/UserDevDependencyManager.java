@@ -1,6 +1,7 @@
 package net.neoforged.gradle.userdev.dependency;
 
 import com.google.common.collect.Sets;
+import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
@@ -10,10 +11,12 @@ import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Project;
+import org.gradle.api.UnknownDomainObjectException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.initialization.IncludedBuild;
 import org.gradle.api.provider.Provider;
 
 import java.util.Objects;
@@ -35,19 +38,30 @@ public final class UserDevDependencyManager {
             if (isNotAMatchingDependency(context.getDependency())) {
                 return Optional.empty();
             }
-            
+
             if (!(context.getDependency() instanceof ExternalModuleDependency)) {
                 return Optional.empty();
             }
-            
+
+            boolean runOnly = false;
+            try {
+                project.getGradle().includedBuild("NeoForge");
+                runOnly = true;
+            } catch (UnknownDomainObjectException ignored) {
+            }
+
+
             final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) context.getDependency();
-            
-            final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency);
-            
+
+            final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency, runOnly);
+
             final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(project);
             additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getNeoFormRuntimeDefinition().getMinecraftDependenciesConfiguration());
             additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
-            
+
+            if (runOnly)
+                return Optional.empty();
+
             return Optional.of(
                     new DependencyReplacementResult(
                             project,
@@ -96,7 +110,7 @@ public final class UserDevDependencyManager {
     }
     
     
-    private static UserDevRuntimeDefinition buildForgeUserDevRuntimeFrom(Project project, ExternalModuleDependency dependency) {
+    private static UserDevRuntimeDefinition buildForgeUserDevRuntimeFrom(Project project, ExternalModuleDependency dependency, boolean runOnly) {
         final UserDevRuntimeExtension forgeRuntimeExtension = project.getExtensions().getByType(UserDevRuntimeExtension.class);
         final UserDev userDevExtension = project.getExtensions().getByType(UserDev.class);
         
@@ -109,6 +123,7 @@ public final class UserDevDependencyManager {
             builder.withForgeGroup(group);
             builder.withForgeName(name);
             builder.withDistributionType(DistributionType.JOINED);
+            builder.withUsage(runOnly ? Specification.Usage.RUN_ONLY : Specification.Usage.FULL);
         });
     }
 }

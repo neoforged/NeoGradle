@@ -23,7 +23,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Objects;
 
 /**
@@ -31,7 +34,6 @@ import java.util.Objects;
  */
 public final class UserDevRuntimeSpecification extends CommonRuntimeSpecification implements UserDevSpecification {
 
-    private final FileTree userDevArchive;
     private final String forgeGroup;
     private final String forgeName;
     private final String forgeVersion;
@@ -41,7 +43,6 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
 
     public UserDevRuntimeSpecification(Project project,
                                        String version,
-                                       FileTree userDevArchive,
                                        UserdevProfile profile,
                                        DistributionType distribution,
                                        Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
@@ -49,9 +50,9 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
                                        Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
                                        String forgeGroup,
                                        String forgeName,
-                                       String forgeVersion) {
-        super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, UserDevRuntimeExtension.class);
-        this.userDevArchive = userDevArchive;
+                                       String forgeVersion,
+                                       Usage usage) {
+        super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, UserDevRuntimeExtension.class, usage);
         this.profile = profile;
         this.forgeGroup = forgeGroup;
         this.forgeName = forgeName;
@@ -61,10 +62,6 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
     @Override
     public @NotNull String getForgeVersion() {
         return forgeVersion;
-    }
-
-    public FileTree getUserDevArchive() {
-        return userDevArchive;
     }
 
     public String getForgeGroup() {
@@ -193,16 +190,16 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
             final String name = forgeNameProvider.get();
             final String version = forgeVersionProvider.get();
 
-            final Artifact artifact = new Artifact(group, name, version, "userdev", "jar");
-            ResolvedArtifact userdevArchiveArtifact = ToolUtilities.resolveToolArtifact(project, artifact.getDescriptor());
+            final Artifact artifact = new Artifact(group, name, version, "userdev-config", "json");
+            ResolvedArtifact userdevArchiveArtifact = ToolUtilities.resolveToolArtifact(project, artifact.toDependencyWithCapability(project));
 
             File userdevArchive = userdevArchiveArtifact.getFile();
             ModuleVersionIdentifier effectiveVersion = userdevArchiveArtifact.getModuleVersion().getId();
 
             // Read the userdev profile from the archive
             UserdevProfile profile;
-            try {
-                profile = FileUtils.processFileFromZip(userdevArchive, "config.json", in -> UserdevProfile.get(project.getObjects(), in));
+            try(InputStream in = Files.newInputStream(userdevArchive.toPath())) {
+                profile = UserdevProfile.get(project.getObjects(), in);
             } catch (IOException e) {
                 throw new GradleException("Failed to read userdev config file for version " + effectiveVersion, e);
             }
@@ -210,7 +207,6 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
             return new UserDevRuntimeSpecification(
                     project,
                     effectiveVersion.getVersion(),
-                    project.zipTree(userdevArchive),
                     profile,
                     distributionType.get(),
                     preTaskAdapters,
@@ -218,7 +214,8 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
                     taskCustomizers,
                     effectiveVersion.getGroup(),
                     effectiveVersion.getName(),
-                    effectiveVersion.getVersion()
+                    effectiveVersion.getVersion(),
+                    usage.get()
             );
         }
     }

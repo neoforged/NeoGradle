@@ -30,6 +30,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
     @NotNull private final Multimap<String, TaskTreeAdapter> postTypeAdapters;
     @NotNull private final Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers;
     @NotNull private final CommonRuntimeExtension<?,?,?> runtimeExtension;
+    @NotNull private final Usage usage;
     protected CommonRuntimeSpecification(Project project,
                                          @NotNull String name,
                                          @NotNull String version,
@@ -37,7 +38,8 @@ public abstract class CommonRuntimeSpecification implements Specification {
                                          Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
                                          Multimap<String, TaskTreeAdapter> postTypeAdapters,
                                          Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
-                                         @NotNull Class<? extends CommonRuntimeExtension<?, ?, ?>> runtimeExtensionClass) {
+                                         @NotNull Class<? extends CommonRuntimeExtension<?, ?, ?>> runtimeExtensionClass,
+                                         @NotNull Usage usage) {
         this.project = project;
         this.name = name;
         this.version = version;
@@ -45,6 +47,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
         this.preTaskTypeAdapters = ImmutableMultimap.copyOf(preTaskTypeAdapters);
         this.postTypeAdapters = ImmutableMultimap.copyOf(postTypeAdapters);
         this.taskCustomizers = ImmutableMultimap.copyOf(taskCustomizers);
+        this.usage = usage;
         this.runtimeExtension = project.getExtensions().getByType(runtimeExtensionClass);
     }
 
@@ -110,6 +113,12 @@ public abstract class CommonRuntimeSpecification implements Specification {
         return taskCustomizers;
     }
 
+    @NotNull
+    @Override
+    public Usage getUsage() {
+        return usage;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -159,6 +168,8 @@ public abstract class CommonRuntimeSpecification implements Specification {
         protected final Project project;
         protected Provider<DistributionType> distributionType;
         protected boolean hasConfiguredDistributionType = false;
+        protected Provider<Usage> usage;
+        protected boolean hasConfiguredUsage = false;
         protected final Multimap<String, TaskTreeAdapter> preTaskAdapters = LinkedListMultimap.create();
         protected final Multimap<String, TaskTreeAdapter> postTaskAdapters = LinkedListMultimap.create();
         protected final Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers = LinkedListMultimap.create();
@@ -184,8 +195,8 @@ public abstract class CommonRuntimeSpecification implements Specification {
          * Configures the current builder instance from the project configured.
          */
         protected void configureBuilder() {
+            this.usage = project.provider(() -> Usage.FULL);
         }
-
 
         @Override
         @NotNull
@@ -208,6 +219,25 @@ public abstract class CommonRuntimeSpecification implements Specification {
                 return getThis();
 
             return withDistributionType(project.provider(() -> distributionType));
+        }
+
+        @Override
+        public B withUsage(Provider<Usage> usageProvider) {
+            if (usageProvider == null) // Additional null check for convenient loading of sides from dependencies.
+                return getThis();
+
+            this.usage = usageProvider;
+            this.hasConfiguredUsage = true;
+
+            return getThis();
+        }
+
+        @Override
+        public B withUsage(Usage usage) {
+            if (usage == null) // Additional null check for convenient loading of sides from dependencies.
+                return getThis();
+
+            return withUsage(project.provider(() -> usage));
         }
 
         @Override

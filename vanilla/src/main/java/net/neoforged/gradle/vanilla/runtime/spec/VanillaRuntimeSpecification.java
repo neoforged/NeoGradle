@@ -33,7 +33,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
                                        String fartVersion,
                                        String forgeFlowerVersion,
                                        String accessTransformerApplierVersion) {
-        super(project, name, version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, VanillaRuntimeExtension.class);
+        super(project, name, version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, VanillaRuntimeExtension.class, Usage.FULL);
         this.minecraftVersion = minecraftVersion;
         this.fartVersion = fartVersion;
         this.forgeFlowerVersion = forgeFlowerVersion;

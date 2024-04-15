@@ -13,6 +13,7 @@ import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.GradleException;
@@ -68,6 +69,10 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
     @Override
     public void handleConfiguration(Configuration configuration) {
+        if (ConfigurationUtils.isTemporaryUnhandledConfiguration(configuration)) {
+            return;
+        }
+
         configuration.getDependencies().whenObjectAdded(dependency -> {
             //We only support module based dependencies.
             if (dependency instanceof ModuleDependency) {

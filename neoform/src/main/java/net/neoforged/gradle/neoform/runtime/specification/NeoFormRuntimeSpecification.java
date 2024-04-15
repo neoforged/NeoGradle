@@ -40,7 +40,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
                                           Multimap<String, TaskTreeAdapter> postTypeAdapters,
                                           Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
                                           FileCollection additionalRecompileDependencies) {
-        super(project, "neoForm", version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, NeoFormRuntimeExtension.class);
+        super(project, "neoForm", version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, NeoFormRuntimeExtension.class, Usage.FULL);
         this.neoFormArchive = neoFormArchive;
         this.config = config;
         this.additionalRecompileDependencies = additionalRecompileDependencies;

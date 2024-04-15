@@ -11,21 +11,17 @@ plugins {
 rootProject.name = 'NeoGradle'
 
 include 'utils'
-include 'common'
-include 'vanilla'
-include 'neoform'
-include 'userdev'
-include 'mixin'
-include 'platform'
+includeWithDsl 'common'
+includeWithDsl 'vanilla'
+includeWithDsl 'neoform'
+includeWithDsl 'userdev'
+includeWithDsl 'mixin'
+includeWithDsl 'platform'
+includeWithDsl 'workspace'
 
-subProject 'dsl-common'
-subProject 'dsl-neoform'
-subProject 'dsl-vanilla'
-subProject 'dsl-userdev'
-subProject 'dsl-platform'
-subProject 'dsl-mixin'
-
-void subProject(final String name) {
+void includeWithDsl(final String name) {
     include name
-    project(":$name").projectDir = new File(rootDir, "${String.join('/', name.split('-'))}")
+
+    include "dsl-$name"
+    project(":dsl-$name").projectDir = new File(rootDir, "dsl/${name}")
 }

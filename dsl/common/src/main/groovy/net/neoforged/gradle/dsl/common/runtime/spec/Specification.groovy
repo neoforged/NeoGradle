@@ -94,6 +94,14 @@ interface Specification {
     @NotNull
     String getMinecraftVersion()
 
+    /**
+     * The usage of the specification.
+     *
+     * @return The usage.
+     */
+    @NotNull
+    Usage getUsage()
+
     interface Builder<S extends Specification, B extends Builder<S, B>> {
         /**
          * The project for which a specification is being built.
@@ -117,6 +125,22 @@ interface Specification {
          * @return The builder instance.
          */
         B withDistributionType(DistributionType distributionType);
+
+        /**
+         * Sets the usage of the specification which is about to be build.
+         *
+         * @param usageProvider The provider of the usage.
+         * @return The builder instance.
+         */
+        B withUsage(Provider<Usage> usageProvider);
+
+        /**
+         * Sets the usage of the specification which is about to be build.
+         *
+         * @param usage The usage.
+         * @return The builder instance.
+         */
+        B withUsage(Usage usage);
 
         /**
          * Adds a pre task tree adapter to the specification which is about to be build.
@@ -145,5 +169,21 @@ interface Specification {
          * @return The builder instance.
          */
          <T extends Task> B withTaskCustomizer(final String taskTypeName, Class<T> taskType, Consumer<T> customizer);
+    }
+
+    /**
+     * Defines the usage of this specification.
+     * Some specification types do not care for usage and are always baked and configured.
+     */
+    enum Usage {
+        /**
+         * The specification is only used to extract runs and tasks.
+         */
+        RUN_ONLY,
+
+        /**
+         * The specification is used to extract runs and tasks and is also used to configure the project.
+         */
+        FULL
     }
 }

@@ -18,6 +18,18 @@ class ConfigurationUtils {
         throw new IllegalStateException("Can not instantiate an instance of: ConfigurationUtils. This is a utility class")
     }
 
+    private static final String PREFIX = "_ng_do_not_touch_lookup_configuration_"
+
+    /**
+     * Determines if the configuration is a temporary configuration.
+     *
+     * @param configuration The configuration to check
+     * @return True if the configuration is temporary
+     */
+    static boolean isTemporaryUnhandledConfiguration(final Configuration configuration) {
+        return configuration.getName().startsWith(PREFIX)
+    }
+
     /**
      * Creates a detached configuration that can be resolved, but not consumed.
      *
@@ -44,7 +56,7 @@ class ConfigurationUtils {
      * @return The detached configuration
      */
     static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final Dependency... dependencies) {
-        String name = "_ng_do_not_touch_lookup_configuration_"
+        String name = PREFIX
         for (final def dependency in dependencies) {
             name += dependency.getGroup() + "-" + dependency.getName() + "-" + dependency.getVersion() + "_"
         }

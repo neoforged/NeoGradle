@@ -3,14 +3,17 @@ package net.neoforged.gradle.userdev.runtime.extension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
+import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
+import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -26,6 +29,7 @@ import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -48,7 +52,13 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
 
         final UserdevProfile userdevProfile = spec.getProfile();
-        final FileTree userDevJar = spec.getUserDevArchive();
+
+        final Artifact artifact = new Artifact(
+                spec.getForgeGroup(), spec.getForgeName(), spec.getForgeVersion(), "userdev", "jar");
+        ResolvedArtifact userdevArchiveArtifact = ToolUtilities.resolveToolArtifact(spec.getProject(), artifact.toDependencyWithCapability(spec.getProject()));
+
+        File userdevArchive = userdevArchiveArtifact.getFile();
+        final FileTree userDevJar = spec.getProject().zipTree(userdevArchive);
 
         final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
         for (String dependencyCoordinate : userdevProfile.getAdditionalDependencyArtifactCoordinates().get()) {
@@ -111,6 +121,9 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     @Override
     protected void bakeDefinition(UserDevRuntimeDefinition definition) {
         final UserDevRuntimeSpecification spec = definition.getSpecification();
+        if (spec.getUsage() == Specification.Usage.RUN_ONLY)
+            return;
+
         final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
         final Mappings mappingsExtension = minecraftExtension.getMappings();
         
