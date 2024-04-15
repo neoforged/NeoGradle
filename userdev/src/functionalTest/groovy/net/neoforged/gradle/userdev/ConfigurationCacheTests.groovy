@@ -24,17 +24,19 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:20.4.232'
             }
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
+            it.enableBuildScan()
         })
 
         when:
         def run = project.run {
             it.tasks('build')
+            it.debug()
         }
 
         then:
