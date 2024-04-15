@@ -77,7 +77,7 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
      */
     @Nested
     @DSLProperty
-    abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
+    abstract Property<String> getMinecraftVersion();
 
     /**
      * Symbolic data source references defined by the NeoForm package, already adjusted for the

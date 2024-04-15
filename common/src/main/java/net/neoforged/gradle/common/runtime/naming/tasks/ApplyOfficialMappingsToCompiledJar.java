@@ -52,7 +52,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
     }
 
     @Input
-    public abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
+    public abstract Property<String> getMinecraftVersion();
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)

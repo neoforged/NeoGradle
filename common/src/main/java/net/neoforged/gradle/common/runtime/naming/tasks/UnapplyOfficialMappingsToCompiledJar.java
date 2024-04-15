@@ -35,7 +35,7 @@ public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
     }
 
     @Input
-    public abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
+    public abstract Property<String> getMinecraftVersion();
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
