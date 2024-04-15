@@ -2,7 +2,15 @@ package net.neoforged.gradle.common;
 
 import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
-import net.neoforged.gradle.common.extensions.*;
+import net.neoforged.gradle.common.extensions.AccessTransformersExtension;
+import net.neoforged.gradle.common.extensions.ArtifactDownloaderExtension;
+import net.neoforged.gradle.common.extensions.ExtensionManager;
+import net.neoforged.gradle.common.extensions.IdeManagementExtension;
+import net.neoforged.gradle.common.extensions.MappingsExtension;
+import net.neoforged.gradle.common.extensions.MinecraftArtifactCacheExtension;
+import net.neoforged.gradle.common.extensions.MinecraftExtension;
+import net.neoforged.gradle.common.extensions.ProjectEvaluationExtension;
+import net.neoforged.gradle.common.extensions.ProjectHolderExtension;
 import net.neoforged.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
 import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
 import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
@@ -13,12 +21,17 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
-import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.run.RunsUtil;
-import net.neoforged.gradle.dsl.common.extensions.*;
+import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.dsl.common.extensions.ArtifactDownloader;
+import net.neoforged.gradle.dsl.common.extensions.Mappings;
+import net.neoforged.gradle.dsl.common.extensions.Minecraft;
+import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
+import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
+import net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
@@ -30,7 +43,11 @@ import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
+import org.gradle.api.attributes.AttributeContainer;
+import org.gradle.api.attributes.Category;
+import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
@@ -45,6 +62,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
     
     public static final String ASSETS_SERVICE = "ng_assets";
     public static final String LIBRARIES_SERVICE = "ng_libraries";
+    public static final String ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION = "accessTransformerElements";
+    public static final String ACCESS_TRANSFORMER_API_CONFIGURATION = "accessTransformerApi";
+    public static final String ACCESS_TRANSFORMER_CONFIGURATION = "accessTransformer";
+    static final String ACCESS_TRANSFORMER_CATEGORY = "accesstransformer";
     
     @Override
     public void apply(Project project) {
@@ -69,7 +90,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
-        project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
+        AccessTransformers accesTransformers = project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
         project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
 
@@ -113,10 +134,49 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 RunsConstants.Extensions.RUNS,
                 project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name))
         );
+
+        setupAccessTransformerConfigurations(project, accesTransformers);
         
         IdeRunIntegrationManager.getInstance().setup(project);
     }
-    
+
+    @SuppressWarnings("UnstableApiUsage")
+    private void setupAccessTransformerConfigurations(Project project, AccessTransformers accessTransformersExtension) {
+        Configuration accessTransformerElements = project.getConfigurations().maybeCreate(ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION);
+        Configuration accessTransformerApi = project.getConfigurations().maybeCreate(ACCESS_TRANSFORMER_API_CONFIGURATION);
+        Configuration accessTransformer = project.getConfigurations().maybeCreate(ACCESS_TRANSFORMER_CONFIGURATION);
+
+        accessTransformerApi.setCanBeConsumed(false);
+        accessTransformerApi.setCanBeResolved(false);
+
+        accessTransformer.setCanBeConsumed(false);
+        accessTransformer.setCanBeResolved(true);
+
+        accessTransformerElements.setCanBeConsumed(true);
+        accessTransformerElements.setCanBeResolved(false);
+        accessTransformerElements.setCanBeDeclared(false);
+
+        Action<AttributeContainer> action = attributes -> {
+            attributes.attribute(Category.CATEGORY_ATTRIBUTE, project.getObjects().named(Category.class, ACCESS_TRANSFORMER_CATEGORY));
+        };
+
+        accessTransformerElements.attributes(action);
+        accessTransformer.attributes(action);
+
+        accessTransformer.extendsFrom(accessTransformerApi);
+        accessTransformerElements.extendsFrom(accessTransformerApi);
+
+        // Now we set up the component, conditionally
+        AdhocComponentWithVariants java = (AdhocComponentWithVariants) project.getComponents().getByName("java");
+        Runnable enable = () -> java.addVariantsFromConfiguration(accessTransformerElements, variant -> {});
+
+        accessTransformerElements.getAllDependencies().configureEach(dep -> enable.run());
+        accessTransformerElements.getArtifacts().configureEach(artifact -> enable.run());
+
+        // And add resolved ATs to the extension
+        accessTransformersExtension.getFiles().from(accessTransformer);
+    }
+
     private void applyAfterEvaluate(final Project project) {
         RuntimesExtension runtimesExtension = project.getExtensions().getByType(RuntimesExtension.class);
         runtimesExtension.bakeDefinitions();
