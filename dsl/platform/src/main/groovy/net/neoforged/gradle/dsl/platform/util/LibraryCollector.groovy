@@ -37,7 +37,6 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         String url = getMavenServerFor(path) + "/" + path;
         int pos = 0
         while (attemptConnection(url) !== 200 && pos < repositoryUrls.size()) {
-            println("url request ${url}: ${attemptConnection(url)}")
             url = repositoryUrls.get(pos++).resolve(path).toString()
         }
 
