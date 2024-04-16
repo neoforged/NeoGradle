@@ -13,6 +13,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.internal.file.FileResolver;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.bundling.Jar;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,12 +46,14 @@ public abstract class JarJar extends Jar {
         setManifest(new DefaultInheritManifest(getServices().get(FileResolver.class)));
     }
 
-    @Nested
+    // Already included in the JarJarArtifacts
+    @Internal
     public DependencyFilter getDependencyFilter() {
         return getJarJarArtifacts().getDependencyFilter();
     }
 
-    @Nested
+    // Already included in the JarJarArtifacts
+    @Internal
     public DependencyVersionInformationHandler getDependencyVersionInformationHandler() {
         return getJarJarArtifacts().getDependencyVersionInformationHandler();
     }
@@ -98,6 +102,11 @@ public abstract class JarJar extends Jar {
     public void configuration(Configuration jarJarConfiguration) {
         getJarJarArtifacts().configuration(jarJarConfiguration);
         dependsOn(jarJarConfiguration);
+    }
+
+    public void setConfigurations(Collection<? extends Configuration> configurations) {
+        getJarJarArtifacts().setConfigurations(configurations);
+        configurations.forEach(this::dependsOn);
     }
 
     private Path getJarJarMetadataPath() {
