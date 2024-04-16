@@ -30,6 +30,7 @@ import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.dsl.platform.model.InstallerProfile;
 import net.neoforged.gradle.dsl.platform.model.LauncherProfile;
 import net.neoforged.gradle.dsl.platform.model.Library;
+import net.neoforged.gradle.dsl.platform.util.RepositoryCollection;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -62,6 +63,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
@@ -74,6 +76,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -324,13 +327,15 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 launcherProfile.getArguments().set(arguments);
             });
-            
+
+            final ListProperty<URI> repoCollection = new RepositoryCollection(project.getProviders(), project.getObjects(), project.getRepositories()).getURLs();
             final TaskProvider<CreateLauncherJson> createLauncherJson = project.getTasks().register("createLauncherJson", CreateLauncherJson.class, task -> {
                 task.getProfile().set(launcherProfile);
                 task.getLibraries().from(installerConfiguration);
                 task.getLibraries().from(pluginLayerLibraryConfiguration);
                 task.getLibraries().from(gameLayerLibraryConfiguration);
                 task.getLibraries().from(moduleOnlyConfiguration);
+                task.getRepositoryURLs().set(repoCollection);
                 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
@@ -461,6 +466,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             final TaskProvider<CreateLegacyInstallerJson> createLegacyInstallerJson = project.getTasks().register("createLegacyInstallerJson", CreateLegacyInstallerJson.class, task -> {
                 task.getProfile().set(installerProfile);
                 task.getLibraries().from(installerLibrariesConfiguration);
+                task.getRepositoryURLs().set(repoCollection);
                 
                 task.dependsOn(signUniversalJar);
                 
