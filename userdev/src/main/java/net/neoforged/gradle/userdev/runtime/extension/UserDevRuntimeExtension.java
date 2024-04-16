@@ -1,6 +1,5 @@
 package net.neoforged.gradle.userdev.runtime.extension;
 
-import com.google.gson.Gson;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
@@ -11,7 +10,6 @@ import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -73,10 +71,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
             
-            final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
+            final TaskTreeAdapter atAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
                                                             .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
             
-            builder.withPreTaskAdapter("decompile", atAndSASAdapter);
+            builder.withPostTaskAdapter("decompile", atAdapter);
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userdevProfile.getSourcePatchesDirectory().get()));
 

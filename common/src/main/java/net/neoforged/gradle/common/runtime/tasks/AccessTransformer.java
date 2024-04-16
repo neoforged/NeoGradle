@@ -10,6 +10,7 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 import java.io.File;
 import java.util.Collections;
@@ -23,25 +24,27 @@ public abstract class AccessTransformer extends Execute {
 
         setDescription("Runs the access transformer on the decompiled sources.");
 
-        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.ACCESSTRANSFORMER));
+        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.JST_TOOL_ARTIFACT));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();
                             final File outputFile = ensureFileWorkspaceReady(getOutput());
 
-                            args.add("--inJar");
-                            args.add(inputFile.getAsFile().getAbsolutePath());
-                            args.add("--outJar");
-                            args.add(outputFile.getAbsolutePath());
+                            args.add("--enable-accesstransformers");
                             getTransformers().forEach(f -> {
-                                args.add("--atFile");
+                                args.add("--access-transformer");
                                 args.add(f.getAbsolutePath());
                             });
+
+                            args.add(inputFile.getAsFile().getAbsolutePath());
+                            args.add(outputFile.getAbsolutePath());
 
                             return args;
                         }
                 )
         );
+
+        getJavaVersion().set(JavaLanguageVersion.of(17));
 
         getTransformers().finalizeValueOnRead();
     }
