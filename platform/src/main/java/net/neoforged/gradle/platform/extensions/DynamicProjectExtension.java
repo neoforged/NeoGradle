@@ -44,7 +44,7 @@ import net.neoforged.gradle.platform.runtime.runtime.extension.RuntimeDevRuntime
 import net.neoforged.gradle.platform.runtime.runtime.specification.RuntimeDevRuntimeSpecification;
 import net.neoforged.gradle.platform.runtime.runtime.tasks.GenerateBinaryPatches;
 import net.neoforged.gradle.platform.runtime.runtime.tasks.GenerateSourcePatches;
-import net.neoforged.gradle.platform.runtime.runtime.tasks.PackZip;
+import net.neoforged.gradle.neoform.runtime.tasks.PackZip;
 import net.neoforged.gradle.platform.tasks.*;
 import net.neoforged.gradle.platform.util.ArtifactPathsCollector;
 import net.neoforged.gradle.platform.util.SetupUtils;

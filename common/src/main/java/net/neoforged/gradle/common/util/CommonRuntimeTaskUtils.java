@@ -9,6 +9,8 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
 import java.io.File;
@@ -21,7 +23,7 @@ public final class CommonRuntimeTaskUtils {
         throw new IllegalStateException("Can not instantiate an instance of: CommonRuntimeTaskUtils. This is a utility class");
     }
 
-    public static TaskProvider<? extends AccessTransformer> createAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, Iterable<File> files, Collection<String> data) {
+    public static TaskProvider<? extends AccessTransformer> createAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, Iterable<File> files, Collection<String> data, TaskProvider<? extends WithOutput> listLibs) {
         final Collection<TaskProvider<? extends WithOutput>> fileProducingTasks = new ArrayList<>();
         final Map<String, Integer> indexes = new HashMap<>();
         for (File file : files) {
@@ -62,6 +64,8 @@ public final class CommonRuntimeTaskUtils {
                 task.getTransformers().from(fileRemapTask.flatMap(WithOutput::getOutput));
                 task.dependsOn(fileRemapTask);
             }
+            task.dependsOn(listLibs);
+            task.getLibraries().set(listLibs.flatMap(WithOutput::getOutput));
         });
     }
 }

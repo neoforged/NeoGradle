@@ -70,7 +70,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             builder.withNeoFormDependency(userdevProfile.getNeoForm().get())
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
-            
+
             final TaskTreeAdapter atAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
                                                             .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
             
@@ -120,9 +120,9 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     
     private TaskTreeAdapter createAccessTransformerAdapter(final String accessTransformerDirectory, final File unpackedForgeUserDevDirectory, final Project project) {
         final Set<File> accessTransformerFiles = project.fileTree(new File(unpackedForgeUserDevDirectory, accessTransformerDirectory)).getFiles();
-        
+
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends AccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createAccessTransformer(definition, "Forges", runtimeWorkspace, dependentTaskConfigurationHandler, accessTransformerFiles, Collections.emptyList());
+            final TaskProvider<? extends AccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createAccessTransformer(definition, "Forges", runtimeWorkspace, dependentTaskConfigurationHandler, accessTransformerFiles, Collections.emptyList(), definition.getListLibrariesTaskProvider());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

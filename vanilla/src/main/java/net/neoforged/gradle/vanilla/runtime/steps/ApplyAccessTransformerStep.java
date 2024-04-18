@@ -33,13 +33,15 @@ public class ApplyAccessTransformerStep implements IStep {
             });
         }
 
+
         final TaskProvider<? extends AccessTransformer> task = CommonRuntimeTaskUtils.createAccessTransformer(
                 definition,
                 "user",
                 workingDirectory,
                 additionalTaskConfigurator,
                 new ArrayList<>(accessTransformerFiles.getFiles().getFiles()),
-                accessTransformerFiles.getEntries().get()
+                accessTransformerFiles.getEntries().get(),
+                definition.getListLibrariesTaskProvider()
         );
 
         task.configure(t -> {
