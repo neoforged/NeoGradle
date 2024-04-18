@@ -36,7 +36,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks('build')
-            it.arguments('--configuration-cache', '--build-cache')
+            it.arguments('-Dorg.gradle.configuration-cache=true', '--build-cache')
         }
 
         then:
