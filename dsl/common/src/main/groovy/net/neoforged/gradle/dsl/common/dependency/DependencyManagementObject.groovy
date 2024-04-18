@@ -1,19 +1,42 @@
 package net.neoforged.gradle.dsl.common.dependency
 
 import groovy.transform.CompileStatic
+import groovy.transform.EqualsAndHashCode
+import org.gradle.api.Project
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.FileCollectionDependency
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.file.FileCollection
 import org.gradle.api.specs.Spec
+
+import javax.annotation.Nullable
 
 @CompileStatic
 interface DependencyManagementObject {
-/**
- * Create a spec that matches dependencies using the provided notation on group, name, and version
- * If a regex is supplied for any of the group, name, or version, the spec will match if the dependency matches the regex.
- *
- * @param notation The dependency notation to parse.
- * @return The spec that matches the dependency notation.
- */
-    Spec<? super ArtifactIdentifier> dependency(Object notation);
+    /**
+     * Create a spec that matches dependencies using the provided notation on group, name, and version
+     *
+     * @param notation The dependency notation to parse.
+     * @return The spec that matches the dependency notation.
+     */
+    Spec<? super ArtifactIdentifier> dependency(CharSequence dependencyNotation);
+
+    /**
+     * Create a spec that matches dependencies on the provided group, name, and version
+     *
+     * @param notation The dependency notation to parse.
+     * @return The spec that matches the dependency notation.
+     */
+    Spec<? super ArtifactIdentifier> dependency(@Nullable String group, String name, @Nullable String version);
+
+    /**
+     * Create a spec that matches dependencies using the provided project's group, name, and version
+     *
+     * @param notation The dependency notation to parse.
+     * @return The spec that matches the dependency notation.
+     */
+    Spec<? super ArtifactIdentifier> dependency(Project project);
 
     /**
      * Create a spec that matches the provided dependency on group, name, and version
@@ -35,10 +58,11 @@ interface DependencyManagementObject {
      * Simple artifact identifier class which only references group, name and version.
      */
     @CompileStatic
+    @EqualsAndHashCode(includeFields = true)
     final class ArtifactIdentifier {
-        private final String group;
-        private final String name;
-        private final String version;
+        private final String group
+        private final String name
+        private final String version
 
         /**
          * Creates a new instance of the given artifact details.
@@ -47,10 +71,10 @@ interface DependencyManagementObject {
          * @param name    The name of the artifact to identify.
          * @param version The version of the artifact to identify.
          */
-        public ArtifactIdentifier(String group, String name, String version) {
-            this.group = group;
-            this.name = name;
-            this.version = version;
+        ArtifactIdentifier(String group, String name, String version) {
+            this.group = group
+            this.name = name
+            this.version = version
         }
 
         /**
@@ -58,8 +82,8 @@ interface DependencyManagementObject {
          *
          * @return The group of the artifact.
          */
-        public String getGroup() {
-            return group;
+        String getGroup() {
+            return group
         }
 
         /**
@@ -67,8 +91,8 @@ interface DependencyManagementObject {
          *
          * @return The name of the artifact.
          */
-        public String getName() {
-            return name;
+        String getName() {
+            return name
         }
 
         /**
@@ -76,8 +100,8 @@ interface DependencyManagementObject {
          *
          * @return The version of the artifact.
          */
-        public String getVersion() {
-            return version;
+        String getVersion() {
+            return version
         }
     }
 }
