@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElementWithFilesAndEntries
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ConfigurablePublishArtifact
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.dsl.DependencyCollector
 
 /**
@@ -11,9 +12,11 @@ import org.gradle.api.artifacts.dsl.DependencyCollector
  */
 @CompileStatic
 interface AccessTransformers extends BaseDSLElementWithFilesAndEntries<AccessTransformers> {
-    void consume(Object notation)
+    Dependency consume(Object notation)
 
-    void consumeApi(Object notation)
+    Dependency consumeApi(Object notation)
+
+    void expose(Dependency dependency)
 
     void expose(Object path)
 
