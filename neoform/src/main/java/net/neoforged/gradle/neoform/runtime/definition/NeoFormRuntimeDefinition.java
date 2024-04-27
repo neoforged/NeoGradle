@@ -102,9 +102,9 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData(run));
 
         interpolationData.put("mcp_version", neoform.getVersion());
-        interpolationData.put("mcp_mappings", getSpecification().getNeoFormArchive()
-                .matching(artifact -> artifact.include("config/joined.srg"))
-                .getSingleFile().getAbsolutePath());
+        // NeoForge still references this in the environment variable MCP_MAPPINGS, which is unused since 1.20.2
+        // Remove this interpolation placeholder once NeoForge removes the environment variable from its config.json
+        interpolationData.put("mcp_mappings", "UNUSED_DEPRECATED");
         return interpolationData;
     }
 
