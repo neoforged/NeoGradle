@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.annotations.DefaultMethods
 import net.neoforged.gradle.dsl.common.tasks.specifications.ExecuteSpecification
 import net.neoforged.gradle.dsl.common.util.RegexUtils
+import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
@@ -25,7 +26,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
     default List<String> interpolateVariableSubstitution(String value, String previous) {
         final Map<String, Provider<String>> runtimeArguments = getRuntimeArguments().get()
         final Map<String, Provider<List<String>>> multiRuntimeArguments = getMultiRuntimeArguments().get()
-        final Map<String, Provider<File>> data = getRuntimeData().get()
+        final Map<String, FileTree> data = getRuntimeData().get()
 
         Matcher matcher = RegexUtils.REPLACE_PATTERN.matcher(value)
         if (!matcher.find()) return Lists.newArrayList(value) // Not a replaceable string
@@ -60,10 +61,12 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 }
             }
 
-
-            Provider<File> dataElement = data.get(argName)
+            FileTree dataElement = data.get(argName)
             if (dataElement != null) {
-                return Lists.newArrayList(dataElement.get().getAbsolutePath())
+                if (dataElement.isEmpty()) {
+                    throw new IllegalStateException("The data element " + argName + " is empty.")
+                }
+                return Lists.newArrayList(dataElement.getSingleFile().getAbsolutePath())
             }
         }
 

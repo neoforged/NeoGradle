@@ -38,5 +38,5 @@ public abstract class ExtractBundledServerTask extends DefaultRuntime {
     public abstract RegularFileProperty getInput();
 
     @Input
-    public abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
+    public abstract Property<String> getMinecraftVersion();
 }

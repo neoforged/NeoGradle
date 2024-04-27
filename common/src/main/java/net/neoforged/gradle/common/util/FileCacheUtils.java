@@ -36,14 +36,13 @@ public final class FileCacheUtils {
     
     
     @NotNull
-    public static TaskProvider<MinecraftVersionManifestFileCacheProvider> createVersionManifestFileCacheProvidingTask(final Project project, final String minecraftVersion, final TaskProvider<MinecraftLauncherFileCacheProvider> launcherProvider) {
+    public static TaskProvider<MinecraftVersionManifestFileCacheProvider> createVersionManifestFileCacheProvidingTask(final Project project, final String minecraftVersion) {
         if (project.getTasks().getNames().contains(NamingConstants.Task.CACHE_VERSION_MANIFEST + minecraftVersion)) {
             return project.getTasks().named(NamingConstants.Task.CACHE_VERSION_MANIFEST + minecraftVersion, MinecraftVersionManifestFileCacheProvider.class);
         }
         
         return project.getTasks().register(NamingConstants.Task.CACHE_VERSION_MANIFEST + minecraftVersion, MinecraftVersionManifestFileCacheProvider.class, task -> {
             task.getMinecraftVersion().set(minecraftVersion);
-            task.getLauncherManifest().set(launcherProvider.flatMap(WithOutput::getOutput));
         });
     }
     

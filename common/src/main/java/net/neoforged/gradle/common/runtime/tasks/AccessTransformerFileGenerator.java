@@ -34,6 +34,10 @@ public abstract class AccessTransformerFileGenerator extends DefaultRuntime {
         final File outputFile = ensureFileWorkspaceReady(getOutput());
         Files.deleteIfExists(outputFile.toPath());
         Files.write(outputFile.toPath(), getAdditionalTransformers().get(), StandardOpenOption.CREATE_NEW);
+
+        if (!Files.exists(outputFile.toPath())) {
+            Files.createFile(outputFile.toPath());
+        }
     }
 
     @Input

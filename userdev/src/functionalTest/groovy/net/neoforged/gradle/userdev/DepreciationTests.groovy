@@ -22,7 +22,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
 
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             """)
@@ -49,7 +49,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
 
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             

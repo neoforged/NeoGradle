@@ -777,12 +777,17 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         tokenizedTask.token("FORGE_VERSION", tokenizedTask.getProject().getVersion());
         tokenizedTask.token("FML_VERSION", tokenizedTask.getProject().getProperties().get("fancy_mod_loader_version"));
         tokenizedTask.token("MC_VERSION", runtimeDefinition.getSpecification().getMinecraftVersion());
-        tokenizedTask.token("MCP_VERSION", runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormVersion());
+        tokenizedTask.token("MCP_VERSION", extractNeoformVersion(runtimeDefinition));
         tokenizedTask.token("FORGE_GROUP", tokenizedTask.getProject().getGroup());
         tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("PLUGIN_LAYER_LIBRARIES", pluginLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("GAME_LAYER_LIBRARIES", gameLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("MODULES", "ALL-MODULE-PATH");
+    }
+
+    private static String extractNeoformVersion(RuntimeDevRuntimeDefinition runtimeDefinition) {
+        final String completeVersion = runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormVersion();
+        return completeVersion.substring(completeVersion.lastIndexOf("-") + 1);
     }
 
     private static Provider<String> collectFileNames(Configuration config, Project project) {

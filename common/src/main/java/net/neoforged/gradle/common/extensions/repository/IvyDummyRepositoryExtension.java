@@ -19,8 +19,10 @@ import org.jetbrains.annotations.NotNull;
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -164,18 +166,15 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
         final Path baseDir = jarFile.getParent();
         final Path metaFile = baseDir.resolve(String.format("ivy-%s-fg%d.xml", entry.getVersion(), METADATA_VERSION));
 
-        if (Files.exists(metaFile)) {
-            FileUtils.delete(metaFile);
-            writeIvyMetadataFile(entry, jarFile, baseDir, metaFile);
-            return;
-        }
-
         writeIvyMetadataFile(entry, jarFile, baseDir, metaFile);
 
+        Files.deleteIfExists(jarFile);
         Files.createFile(jarFile);
 
         final Path sourcesFile = entry.asSources().buildArtifactPath(getRepositoryDirectory().get().getAsFile().toPath());
+        Files.deleteIfExists(sourcesFile);
         Files.createFile(sourcesFile);
+
         writeDummyDependencyDataIfNeeded(entry);
     }
 

@@ -16,6 +16,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,13 +27,13 @@ import java.io.IOException;
  * Defines a specification for an MCP runtime.
  */
 public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification implements NeoFormSpecification {
-    private final File neoFormArchive;
+    private final FileTree neoFormArchive;
     private final NeoFormConfigConfigurationSpecV2 config;
     private final FileCollection additionalRecompileDependencies;
 
     private NeoFormRuntimeSpecification(Project project,
                                           String version,
-                                          File neoFormArchive,
+                                          FileTree neoFormArchive,
                                           NeoFormConfigConfigurationSpecV2 config,
                                           DistributionType side,
                                           Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
@@ -62,7 +63,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
         }
     }
 
-    public File getNeoFormArchive() {
+    public FileTree getNeoFormArchive() {
         return neoFormArchive;
     }
 
@@ -147,7 +148,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
             return new NeoFormRuntimeSpecification(
                     project,
                     effectiveVersion,
-                    archive,
+                    project.zipTree(archive),
                     config,
                     distributionType.get(),
                     preTaskAdapters,

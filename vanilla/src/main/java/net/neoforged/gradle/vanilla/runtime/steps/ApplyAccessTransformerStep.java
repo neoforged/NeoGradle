@@ -38,7 +38,7 @@ public class ApplyAccessTransformerStep implements IStep {
                 "user",
                 workingDirectory,
                 additionalTaskConfigurator,
-                new ArrayList<>(accessTransformerFiles.getFiles().getFiles()),
+                accessTransformerFiles.getFiles().getAsFileTree(),
                 accessTransformerFiles.getEntries().get()
         );
 
