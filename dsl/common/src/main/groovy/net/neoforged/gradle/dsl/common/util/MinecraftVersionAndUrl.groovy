@@ -24,9 +24,9 @@ class MinecraftVersionAndUrl {
     }
 
     /**
-     * The url to download the minecraft version from.
+     * The url to download the version manifest file for the minecraft version from.
      *
-     * @return The url to download the minecraft version from.
+     * @return The url to download the version manifest file for the minecraft version from
      */
     String getUrl() {
         return url
