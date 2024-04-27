@@ -94,7 +94,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
-        AccessTransformers accesTransformers = project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
+        AccessTransformers accessTransformers = project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
         project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
         final ConfigurationData configurationData = project.getExtensions().create( ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
@@ -140,7 +140,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name))
         );
 
-        setupAccessTransformerConfigurations(project, accesTransformers);
+        setupAccessTransformerConfigurations(project, accessTransformers);
         
         IdeRunIntegrationManager.getInstance().setup(project);
 
