@@ -74,7 +74,11 @@ public final class NeoFormOfficialNamingChannelConfigurator {
 
         final NeoFormRuntimeDefinition mcpRuntimeDefinition = runtimeDefinition.get();
         final String mappingsFilePath = mcpRuntimeDefinition.getNeoFormConfig().getData("mappings");
-        final File mappingsFile = new File(mcpRuntimeDefinition.getUnpackedNeoFormZipDirectory(), Objects.requireNonNull(mappingsFilePath));
+        final File mappingsFile =
+                mcpRuntimeDefinition.getSpecification()
+                        .getNeoFormArchive()
+                        .matching(filterable -> filterable.include(mappingsFilePath))
+                        .getSingleFile();
 
         applySourceMappingsTask.configure(task -> {
             if (task instanceof ApplyMappingsToSourceJar) {
@@ -143,7 +147,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
         
         final NeoFormRuntimeDefinition neoformRuntimeDefinition = runtimeDefinition.get();
         final String mappingsFilePath = neoformRuntimeDefinition.getNeoFormConfig().getData("mappings");
-        final File mappingsFile = new File(neoformRuntimeDefinition.getUnpackedNeoFormZipDirectory(), Objects.requireNonNull(mappingsFilePath));
+        final File mappingsFile = neoformRuntimeDefinition.getSpecification().getNeoFormArchive().matching(filterable -> filterable.include(mappingsFilePath)).getSingleFile();
         
         final TaskProvider<? extends Runtime> reverseMappingsTask = context.getProject().getTasks().register(context.getTaskNameBuilder().apply(String.format("combineMappingsFor%s", StringUtils.capitalize(context.getEnvironmentName()))), WriteIMappingsFile.class, task -> {
             task.getMappings().set(

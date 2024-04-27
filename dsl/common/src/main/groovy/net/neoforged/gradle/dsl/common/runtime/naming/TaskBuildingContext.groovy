@@ -126,16 +126,6 @@ class TaskBuildingContext {
     }
 
     /**
-     * Gives access to a task provider that has as output the launcher manifest.
-     *
-     * @return A task provider which has as output the launcher manifest.
-     */
-    @NotNull
-    TaskProvider<? extends WithOutput> getLauncherManifest() {
-        return getGameArtifactTask(GameArtifact.LAUNCHER_MANIFEST);
-    }
-
-    /**
      * Gives access to a task provider that has as output the current minecraft versions manifest.
      *
      * @return A task provider which has as output the current minecraft versions manifest.

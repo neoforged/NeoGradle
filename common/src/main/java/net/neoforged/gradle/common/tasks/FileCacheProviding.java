@@ -35,17 +35,7 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
 
     @Nested
     public abstract Property<CacheFileSelector> getSelector();
-    
-    @Optional
-    @InputFile
-    @PathSensitive(PathSensitivity.NONE)
-    public abstract RegularFileProperty getLauncherJson();
-    
-    @Optional
-    @InputFile
-    @PathSensitive(PathSensitivity.NONE)
-    public abstract RegularFileProperty getVersionManifest();
-    
+
     @Optional
     @Input
     public abstract Property<Boolean> getIsOffline();

@@ -206,11 +206,11 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final TaskProvider<? extends WithOutput> rawTask = definition.getTasks().get(stepData.getRawJarStep().getTaskName(definition));
 
         definition.getSourceJarTask().configure(task -> {
-            task.getInput().set(sourcesTask.flatMap(WithOutput::getOutput));
+            task.getInputFiles().from(sourcesTask.flatMap(WithOutput::getOutput));
             task.dependsOn(sourcesTask);
         });
         definition.getRawJarTask().configure(task -> {
-            task.getInput().set(rawTask.flatMap(WithOutput::getOutput));
+            task.getInputFiles().from(rawTask.flatMap(WithOutput::getOutput));
             task.dependsOn(rawTask);
         });
 

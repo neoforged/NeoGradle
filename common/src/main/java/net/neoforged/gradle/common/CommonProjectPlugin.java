@@ -49,6 +49,8 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
@@ -93,6 +95,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         AccessTransformers accesTransformers = project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
         project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
+        final ConfigurationData configurationData = project.getExtensions().create( ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
 
@@ -138,6 +141,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
         setupAccessTransformerConfigurations(project, accesTransformers);
         
         IdeRunIntegrationManager.getInstance().setup(project);
+
+        project.getTasks().named("clean", Delete.class, delete -> {
+            delete.delete(configurationData.getLocation());
+        });
     }
 
     @SuppressWarnings("UnstableApiUsage")

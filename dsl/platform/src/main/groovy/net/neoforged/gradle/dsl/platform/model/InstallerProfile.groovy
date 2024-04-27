@@ -19,6 +19,7 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -33,6 +34,7 @@ import javax.inject.Inject
 import java.lang.reflect.Type
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
+import java.util.stream.Collectors
 
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeBool
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeList
@@ -190,7 +192,8 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                 final Dependency[] dependencies = dependencyCoordinates.stream().map { coord -> project.getDependencies().create(coord) }.toArray(Dependency[]::new)
                 final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project, dependencies)
 
-                final LibraryCollector collector = new LibraryCollector(project.getObjects())
+                final LibraryCollector collector = new LibraryCollector(project.getObjects(), project.getRepositories()
+                    .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList()))
                 configuration.getAsFileTree().visit collector
                 return collector.getLibraries()
             }

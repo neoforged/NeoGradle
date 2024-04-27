@@ -5,6 +5,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
@@ -31,8 +32,6 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         setGroup("NeoGradle/runtimes");
 
         //Sets up the base configuration for directories and outputs.
-        getRuntimeDirectory().convention(getLayout().getBuildDirectory().dir("mcp"));
-        getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
         //And configure output default locations.
@@ -48,18 +47,22 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         }));
         getRuntimeData().convention(getSymbolicDataSources().map(dataSources -> dataSources.entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey,
-                entry -> getUnpackedMcpZipDirectory().map(unpackedMcpDirectory -> unpackedMcpDirectory.file(entry.getValue()).getAsFile())
-        ))));
+                entry -> getNeoFormArchive()
+                        .getAsFileTree()
+                        .matching(archive -> archive.include(entry.getValue())
+        )))));
         
         getOutputDirectory().finalizeValueOnRead();
     }
 
     @Override
+    @Nested
     public RuntimeArguments getArguments() {
         return arguments;
     }
     
     @Override
+    @Nested
     public RuntimeMultiArguments getMultiArguments() {
         return multiArguments;
     }
@@ -84,7 +87,7 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
     }
 
     @Internal
-    public abstract MapProperty<String, Provider<File>> getRuntimeData();
+    public abstract MapProperty<String, FileTree> getRuntimeData();
 
     @Input
     public abstract MapProperty<String, Provider<String>> getRuntimeArguments();
@@ -94,8 +97,6 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         arguments.computeIfAbsent("outputDir", key -> newProvider(getOutputDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("outputExtension", key -> newProvider(getOutputFileName().get().substring(getOutputFileName().get().lastIndexOf('.') + 1)));
         arguments.computeIfAbsent("outputFileName", key -> newProvider(getOutputFileName().get()));
-        arguments.computeIfAbsent("mcpDir", key -> newProvider(getRuntimeDirectory().get().getAsFile().getAbsolutePath()));
-        arguments.computeIfAbsent("unpackedMcpZip", key -> newProvider(getUnpackedMcpZipDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("stepsDir", key -> newProvider(getStepsDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("stepName", key -> getStepName());
         arguments.computeIfAbsent("side", key -> getDistribution().map(DistributionType::getName));

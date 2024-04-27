@@ -119,6 +119,10 @@ public class DefaultJarJarFeature implements JarJarFeature {
         configuration.getAllDependencies().configureEach(dep ->
                 this.enable()
         );
+        // jarJar configurations should be resolvable, but ought not to be exposed to consumers;
+        // as it has attributes, it could conflict with normal exposed configurations
+        configuration.setCanBeResolved(true);
+        configuration.setCanBeConsumed(false);
 
         JavaPluginExtension javaPlugin = project.getExtensions().getByType(JavaPluginExtension.class);
 
