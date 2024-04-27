@@ -5,6 +5,7 @@ import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.util.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -107,8 +108,9 @@ public abstract class InjectZipContent extends DefaultRuntime {
                     String pkg = entry.isDirectory() && !entry.getName().endsWith("/") ? entry.getName() : entry.getName().indexOf('/') == -1 ? "" : entry.getName().substring(0, entry.getName().lastIndexOf('/'));
                     if (visited.add(pkg)) {
                         if (!pkg.startsWith("net/minecraft/") &&
-                                (!pkg.startsWith("com/mojang/") || getMinecraftVersion().get().compareTo(minimalSupportedVersion) <= 0)) //Add com/mojang package-infos in 1.15+, could probably get away without the version check
+                                !pkg.startsWith("com/mojang/")) {
                             continue;
+                        }
                         zos.putNextEntry(FileUtils.getStableEntry(pkg + "/package-info.java"));
                         zos.write(packageInfoTemplateContent.replace("{PACKAGE}", pkg.replaceAll("/", ".")).getBytes(StandardCharsets.UTF_8));
                         zos.closeEntry();
@@ -139,19 +141,11 @@ public abstract class InjectZipContent extends DefaultRuntime {
     /**
      * Configures this task to inject the content of the given directory.
      */
-    public void injectDirectory(Provider<File> directory) {
-        injectDirectory(directory, filter -> {
-        });
-    }
+    public void injectFileTree(FileTree directory) {
+        InjectFromFileTreeSource zipInject = getProject().getObjects().newInstance(InjectFromFileTreeSource.class);
+        zipInject.getFiles().from(directory);
 
-    /**
-     * Configures this task to inject the content of the given directory that matches the given filter.
-     */
-    public void injectDirectory(Provider<File> directory, Consumer<PatternFilterable> filter) {
-        InjectFromDirectorySource zipInject = getProject().getObjects().newInstance(InjectFromDirectorySource.class);
-        zipInject.getDirectory().fileProvider(directory);
-
-        addSource(zipInject, filter);
+        addSource(zipInject, filter -> {});
     }
 
     private void addSource(AbstractInjectSource zipInject, Consumer<PatternFilterable> filter) {

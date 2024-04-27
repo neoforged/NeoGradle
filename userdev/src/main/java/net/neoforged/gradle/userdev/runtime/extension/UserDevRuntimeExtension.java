@@ -1,17 +1,16 @@
 package net.neoforged.gradle.userdev.runtime.extension;
 
-import com.google.gson.Gson;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
+import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -23,7 +22,6 @@ import net.neoforged.gradle.neoform.runtime.tasks.Patch;
 import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
-import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -32,6 +30,7 @@ import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collections;
@@ -49,15 +48,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
 
         final UserdevProfile userdevProfile = spec.getProfile();
-        final File userDevJar = spec.getUserDevArchive();
-
-        final File forgeDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForge/%s", spec.getIdentifier())).get().getAsFile();
-        final File unpackedForgeDirectory = new File(forgeDirectory, "unpacked");
-        unpackedForgeDirectory.mkdirs();
-        
-        final FileTree userDevJarZipTree = spec.getProject().zipTree(userDevJar);
-        final CopyingFileTreeVisitor unpackingVisitor = new CopyingFileTreeVisitor(unpackedForgeDirectory);
-        userDevJarZipTree.visit(unpackingVisitor);
+        final FileTree userDevJar = spec.getUserDevArchive();
 
         final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
         for (String dependencyCoordinate : userdevProfile.getAdditionalDependencyArtifactCoordinates().get()) {
@@ -73,19 +64,28 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
             
-            final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), unpackedForgeDirectory, getProject())
+            final TaskTreeAdapter atAndSASAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), userDevJar)
                                                             .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
             
             builder.withPreTaskAdapter("decompile", atAndSASAdapter);
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userdevProfile.getSourcePatchesDirectory().get()));
 
-            builder.withTaskCustomizer("inject", InjectZipContent.class, task -> configureNeoforgeInjects(
-                    task,
-                    userdevProfile.getInjectedFilesDirectory().map(injectedDir -> new File(unpackedForgeDirectory, injectedDir)),
-                    ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getSourcesJarArtifactCoordinate()),
-                    ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getUniversalJarArtifactCoordinate())
-            ));
+            builder.withTaskCustomizer("inject", InjectZipContent.class, task -> {
+                FileTree injectionDirectoryTree;
+                if (userdevProfile.getInjectedFilesDirectory().isPresent()) {
+                    injectionDirectoryTree = getProject().fileTree(new File(userdevProfile.getInjectedFilesDirectory().get()));
+                } else {
+                    injectionDirectoryTree = null;
+                }
+
+                configureNeoforgeInjects(
+                        task,
+                        injectionDirectoryTree,
+                        ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getSourcesJarArtifactCoordinate()),
+                        ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getUniversalJarArtifactCoordinate())
+                );
+            });
         });
         
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
@@ -97,7 +97,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         return new UserDevRuntimeDefinition(
                 spec,
                 mcpRuntimeDefinition,
-                unpackedForgeDirectory,
+                userDevJar,
                 userdevProfile,
                 userDevAdditionalDependenciesConfiguration
         );
@@ -120,9 +120,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         );
     }
     
-    private TaskTreeAdapter createAccessTransformerAdapter(final String accessTransformerDirectory, final File unpackedForgeUserDevDirectory, final Project project) {
-        final Set<File> accessTransformerFiles = project.fileTree(new File(unpackedForgeUserDevDirectory, accessTransformerDirectory)).getFiles();
-        
+    private TaskTreeAdapter createAccessTransformerAdapter(final String accessTransformerDirectory, final FileTree userDev) {
+        final FileTree accessTransformerFiles =
+                userDev.matching(filter -> filter.include(accessTransformerDirectory + "/**"));
+
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
             final TaskProvider<? extends AccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createAccessTransformer(definition, "Forges", runtimeWorkspace, dependentTaskConfigurationHandler, accessTransformerFiles, Collections.emptyList());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
@@ -131,10 +132,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         };
     }
 
-    private TaskTreeAdapter createPatchAdapter(File userDevArchive, String patchDirectory) {
+    private TaskTreeAdapter createPatchAdapter(FileTree userDevArchive, String patchDirectory) {
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "patchUserDev"), Patch.class, task -> {
             task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-            task.getPatchArchive().set(userDevArchive);
+            task.getPatchArchive().from(userDevArchive);
             task.getPatchDirectory().set(patchDirectory);
         });
     }
@@ -144,12 +145,12 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
      * adds to the Minecraft jar, such as the Neoforge sources and resources.
      */
     private void configureNeoforgeInjects(InjectZipContent task,
-                                          Provider<File> userDevInjectDir,
+                                          @Nullable FileTree userDevInjectDir,
                                           Provider<File> sourcesInjectArtifact,
                                           Provider<File> resourcesInjectArtifact) {
 
-        if (userDevInjectDir.isPresent()) {
-            task.injectDirectory(userDevInjectDir);
+        if (userDevInjectDir != null) {
+            task.injectFileTree(userDevInjectDir);
         }
 
         if (sourcesInjectArtifact.isPresent()) {

@@ -7,8 +7,10 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector
 import net.neoforged.gradle.dsl.common.util.DistributionType
 import net.neoforged.gradle.dsl.common.util.GameArtifact
+import net.neoforged.gradle.dsl.common.util.MinecraftVersionAndUrl
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 
@@ -121,4 +123,17 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      * @return The resolved version.
      */
     @NotNull
-    String resolveVersion(String gameVersion); }
+    MinecraftVersionAndUrl resolveVersion(String gameVersion);
+
+    /**
+     * Resolves a minecraft version to an actual version if it is not.
+     * Currently this method supports two formats:
+     * - x.y.z or 12w34a (so a normal version)
+     * - + (so a plus, indicating latest)
+     *
+     * @param gameVersion The game version to resolve in any of the above formats.
+     * @return The resolved version.
+     */
+    @NotNull
+    Provider<MinecraftVersionAndUrl> resolveVersion(Provider<String> gameVersion);
+}

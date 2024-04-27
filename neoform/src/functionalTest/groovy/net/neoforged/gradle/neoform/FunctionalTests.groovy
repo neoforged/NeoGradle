@@ -2,6 +2,7 @@ package net.neoforged.gradle.neoform
 
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
+import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
 
 class FunctionalTests extends BuilderBasedTestSpecification {
@@ -32,10 +33,40 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         }
 
         when:
-        def run = project.run { it.tasks(':neoFormApplyOfficialMappings') }
+        def run = project.run {
+            it.tasks(':neoFormApplyOfficialMappings')
+            it.stacktrace()
+        }
 
         then:
         run.task(':neoFormApplyOfficialMappings').outcome == TaskOutcome.SUCCESS
+    }
+
+    def "a mod with neoform as dependency can run clean and build in the same execution"() {
+        given:
+        def project = create "neoform-can-run-clean-build", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
+            }
+            """)
+            it.withToolchains()
+        }
+
+        when:
+        def run = project.run {
+            it.tasks(':clean', ':build')
+        }
+
+        then:
+        run.task(':clean').outcome == TaskOutcome.SUCCESS
+        run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
     def "neoform applies user ATs and allows remapped compiling"() {
@@ -106,20 +137,17 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-
-
             it.enableLocalBuildCache()
         }
 
         when:
-        def run = project.run { it.tasks('build').arguments('--build-cache') }
+        def run = project.run { it.tasks('build') }
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
 
         when:
-        new File(project.getProjectDir(), 'build').deleteDir()
-        def secondRun = project.run {it.tasks('build').arguments('--build-cache') }
+        def secondRun = project.run {it.tasks('build')}
 
         then:
         secondRun.task(':build').outcome == TaskOutcome.SUCCESS

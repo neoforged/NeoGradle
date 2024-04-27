@@ -17,6 +17,7 @@ import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecific
 import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,14 +32,14 @@ import java.util.stream.Collectors;
  */
 public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<UserDevRuntimeSpecification> implements UserDevDefinition<UserDevRuntimeSpecification>, IDelegatingRuntimeDefinition<UserDevRuntimeSpecification> {
     private final NeoFormRuntimeDefinition neoformRuntimeDefinition;
-    private final File unpackedUserDevJarDirectory;
+    private final FileTree unpackedUserDevJarDirectory;
     private final UserdevProfile userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
     
     private final List<TaskProvider<ClasspathSerializer>> classpathSerializers = new ArrayList<>();
     private TaskProvider<? extends WithOutput> repoWritingTask = null;
 
-    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition neoformRuntimeDefinition, File unpackedUserDevJarDirectory, UserdevProfile userdevConfiguration, Configuration additionalUserDevDependencies) {
+    public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition neoformRuntimeDefinition, FileTree unpackedUserDevJarDirectory, UserdevProfile userdevConfiguration, Configuration additionalUserDevDependencies) {
         super(specification, neoformRuntimeDefinition.getTasks(), neoformRuntimeDefinition.getSourceJarTask(), neoformRuntimeDefinition.getRawJarTask(), neoformRuntimeDefinition.getGameArtifactProvidingTasks(), neoformRuntimeDefinition.getMinecraftDependenciesConfiguration(), neoformRuntimeDefinition::configureAssociatedTask, neoformRuntimeDefinition.getVersionJson());
         this.neoformRuntimeDefinition = neoformRuntimeDefinition;
         this.unpackedUserDevJarDirectory = unpackedUserDevJarDirectory;
@@ -58,7 +59,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
-    public File getUnpackedUserDevJarDirectory() {
+    public FileTree getUnpackedUserDevJarDirectory() {
         return unpackedUserDevJarDirectory;
     }
 

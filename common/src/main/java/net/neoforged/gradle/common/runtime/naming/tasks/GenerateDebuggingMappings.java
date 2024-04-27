@@ -26,7 +26,7 @@ public abstract class GenerateDebuggingMappings extends DefaultRuntime {
     public GenerateDebuggingMappings() {
         getMappingsFile().convention(getMinecraftVersion()
                 .map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class)
-                        .cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT))
+                        .cacheVersionMappings(minecraftVersion, DistributionType.CLIENT))
                 .map(TransformerUtils.guard(IMappingFile::load))
                 .map(CacheableIMappingFile::new));
 
