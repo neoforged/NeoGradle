@@ -1,5 +1,5 @@
-name: 'Build Pull Request'
-run-name: Build for PR ${{ github.event.pull_request.number }}
+name: Test PRs
+run-name: Tests for PR ${{ github.event.pull_request.number }}
 
 on:
   pull_request:
@@ -60,9 +60,6 @@ jobs:
 
       - name: Build
         run: ./gradlew --info -s -x assemble
-
-      - name: Publish artifacts
-        uses: neoforged/action-pr-publishing/upload@v1
 
   test:
     name: Test

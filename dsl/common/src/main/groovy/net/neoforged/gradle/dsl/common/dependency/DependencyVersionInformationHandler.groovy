@@ -3,7 +3,6 @@ package net.neoforged.gradle.dsl.common.dependency
 import groovy.transform.CompileStatic
 import org.apache.maven.artifact.versioning.ArtifactVersion
 import org.apache.maven.artifact.versioning.VersionRange
-import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.specs.Spec
 
 @CompileStatic
@@ -55,7 +54,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param dependency The dependency to get the version range for.
      * @return The version range, if any.
      */
-    Optional<String> getVersionRange(ModuleDependency dependency);
+    Optional<String> getVersionRange(ArtifactIdentifier dependency);
 
     /**
      * Gets the version for the given dependency.
@@ -63,5 +62,5 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
      * @param dependency The dependency to get the version for.
      * @return The version, if any.
      */
-    Optional<String> getVersion(ModuleDependency dependency);
+    Optional<String> getVersion(ArtifactIdentifier dependency);
 }
