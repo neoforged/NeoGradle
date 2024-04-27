@@ -4,6 +4,7 @@ import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.AccessTransformersExtension;
 import net.neoforged.gradle.common.extensions.ArtifactDownloaderExtension;
+import net.neoforged.gradle.common.extensions.ConfigurationDataExtension;
 import net.neoforged.gradle.common.extensions.ExtensionManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.MappingsExtension;
@@ -27,6 +28,7 @@ import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundExcep
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.ArtifactDownloader;
+import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
