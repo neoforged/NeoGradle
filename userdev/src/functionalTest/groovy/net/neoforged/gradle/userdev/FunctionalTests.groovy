@@ -19,7 +19,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             
@@ -46,7 +46,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             
@@ -83,7 +83,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             
@@ -121,7 +121,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             
