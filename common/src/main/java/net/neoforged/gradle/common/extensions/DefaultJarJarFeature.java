@@ -119,6 +119,8 @@ public class DefaultJarJarFeature implements JarJarFeature {
         configuration.getAllDependencies().configureEach(dep ->
                 this.enable()
         );
+        configuration.setCanBeResolved(true);
+        configuration.setCanBeConsumed(false);
 
         JavaPluginExtension javaPlugin = project.getExtensions().getByType(JavaPluginExtension.class);
 
