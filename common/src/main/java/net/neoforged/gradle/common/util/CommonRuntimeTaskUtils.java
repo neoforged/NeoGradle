@@ -27,9 +27,6 @@ public final class CommonRuntimeTaskUtils {
     }
 
     public static TaskProvider<? extends AccessTransformer> createAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data) {
-        final ConfigurableFileCollection ats = definition.getSpecification().getProject().getObjects().fileCollection();
-        ats.from(files);
-
         final TaskProvider<AccessTransformerFileGenerator> generator;
         if (!data.isEmpty()) {
             generator = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {
@@ -37,15 +34,14 @@ public final class CommonRuntimeTaskUtils {
                 task.getAdditionalTransformers().set(data);
             });
             dependentTaskConfigurationHandler.accept(generator);
-            
-            ats.from(generator.flatMap(WithOutput::getOutput));
         } else {
             generator = null;
         }
 
         return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize(namePreFix))), AccessTransformer.class, task -> {
-            task.getTransformers().from(ats);
+            task.getTransformers().from(files);
             if (generator != null) {
+                task.getTransformers().from(generator.flatMap(WithOutput::getOutput));
                 task.dependsOn(generator);
             }
         });
