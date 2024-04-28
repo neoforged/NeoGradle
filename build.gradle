@@ -21,7 +21,6 @@ version = gradleutils.version.toString()
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
-    wrapperTask.gradleVersion = project.gradle_version
     wrapperTask.distributionType = Wrapper.DistributionType.ALL
 }
 

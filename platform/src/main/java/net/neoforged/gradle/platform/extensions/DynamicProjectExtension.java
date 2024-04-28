@@ -538,8 +538,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             //Note: We can not use a 'configureEach' here, because this causes issues with the config cache.
             userdevProfile.runType("client", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsClient().set(true);
                 type.getIsGameTest().set(true);
                 type.getSystemProperties().put("neoforge.enableGameTest", "true");
@@ -557,8 +556,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             userdevProfile.runType("server", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsServer().set(true);
                 
                 type.getArguments().add("--launchTarget");
@@ -568,8 +566,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             userdevProfile.runType("gameTestServer", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsServer().set(true);
                 type.getIsGameTest().set(true);
                 type.getSystemProperties().put("neoforge.enableGameTest", "true");
@@ -583,8 +580,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             userdevProfile.runType("data", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsDataGenerator().set(true);
                 
                 type.getArguments().add("--launchTarget");
