@@ -49,8 +49,8 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
                 Map.Entry::getKey,
                 entry -> getNeoFormArchive()
                         .getAsFileTree()
-                        .matching(archive -> archive.include(entry.getValue())
-        )))));
+                        .matching(archive -> archive.include(entry.getValue()))
+        ))));
         
         getOutputDirectory().finalizeValueOnRead();
     }

@@ -24,7 +24,7 @@ public class ZipBuildingFileTreeVisitor implements FileVisitor {
     @Override
     public void visitDir(FileVisitDetails fileVisitDetails) {
         try {
-            final ZipEntry directoryEntry = new ZipEntry(fileVisitDetails.getRelativePath().getPathString() + "/");
+            final ZipEntry directoryEntry = createDirectory(fileVisitDetails);
             outputZipStream.putNextEntry(directoryEntry);
             outputZipStream.closeEntry();
         } catch (IOException zip) {
@@ -33,16 +33,24 @@ public class ZipBuildingFileTreeVisitor implements FileVisitor {
             }
         }
     }
+    
+    protected ZipEntry createDirectory(FileVisitDetails fileVisitDetails) {
+        return new ZipEntry(fileVisitDetails.getRelativePath().getPathString() + "/");
+    }
 
     @Override
     public void visitFile(FileVisitDetails fileVisitDetails) {
         try {
-            final ZipEntry fileEntry = new ZipEntry(fileVisitDetails.getRelativePath().getPathString());
+            final ZipEntry fileEntry = createFile(fileVisitDetails);
             outputZipStream.putNextEntry(fileEntry);
             fileVisitDetails.copyTo(outputZipStream);
             outputZipStream.closeEntry();
         } catch (IOException e) {
             throw new RuntimeException("Could not create zip file: " + fileVisitDetails.getRelativePath().getPathString(), e);
         }
+    }
+
+    protected ZipEntry createFile(FileVisitDetails fileVisitDetails) {
+        return new ZipEntry(fileVisitDetails.getRelativePath().getPathString());
     }
 }
