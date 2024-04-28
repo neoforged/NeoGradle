@@ -2,8 +2,6 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
     }
-
-    includeBuild '../TrainingWheels'
 }
 
 plugins {
