@@ -128,6 +128,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                                                             }
                                                         })
                                                 );
+                                                fileTreeSource.getTreePrefix().set(task.getSymbolicDataSources().map(data -> data.get("inject")));
                                                 return fileTreeSource;
                                             })
                                     );
@@ -168,7 +169,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         // Filter out decompiler arguments that aren't related to its output (log-level and thread-count)
         List<String> decompilerArgs = new ArrayList<>(function.getArgs());
-        decompilerArgs.removeIf(arg -> arg.startsWith("-log=") || arg.startsWith("-thr="));
+        decompilerArgs.removeIf(arg -> arg.startsWith("--log-level") || arg.startsWith("-log=") || arg.startsWith("--thread-count") || arg.startsWith("-thr="));
 
         // Retrieve the default memory size from the JVM arguments configured in NeoForm
         String defaultMaxMemory = "4g";

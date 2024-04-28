@@ -44,13 +44,13 @@ plugins {
 
 dependencies {
   // For depending on a Minecraft JAR-file with both client- and server-classes
-  implementation "net.minecraft:neoform_joined:<neoform-version>'
+  implementation "net.minecraft:neoform_joined:<neoform-version>"
   
   // For depending on the Minecraft client JAR-file
-  implementation "net.minecraft:neoform_client:<neoform-version>'
+  implementation "net.minecraft:neoform_client:<neoform-version>"
   
   // For depending on the Minecraft dedicated server JAR-file
-  implementation "net.minecraft:neoform_server:<neoform-version>'
+  implementation "net.minecraft:neoform_server:<neoform-version>"
 }
 ```
 
