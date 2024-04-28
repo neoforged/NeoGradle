@@ -128,6 +128,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                                                             }
                                                         })
                                                 );
+                                                fileTreeSource.getTreePrefix().set(task.getSymbolicDataSources().map(data -> data.get("inject")));
                                                 return fileTreeSource;
                                             })
                                     );
