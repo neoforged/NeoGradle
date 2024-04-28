@@ -11,11 +11,6 @@ class RunTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/runsTest");
-    }
-
     def "userdev supports custom run dependencies"() {
         given:
         def project = create("run_with_custom_dependencies", {
@@ -37,7 +32,7 @@ class RunTests extends BuilderBasedTestSpecification {
             runs {
                 client {
                     dependencies {
-                        runtime 'org.jgrapht:jgrapht:1.5.1'
+                        runtime 'org.jgrapht:jgrapht-core:+'
                     }
                     
                     modSource project.sourceSets.main
@@ -45,16 +40,139 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.maxMemory("4g")
         })
 
         when:
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
-            it.debug()
         }
 
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
+
+        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def versionedNeoformDir = neoformDir.listFiles()[0]
+        def stepsDir = new File(versionedNeoformDir, "steps")
+        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
+        def classpathFile = new File(stepDir, "classpath.txt")
+
+        classpathFile.exists()
+
+        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+    }
+
+    def "userdev supports custom run dependencies from configuration"() {
+        given:
+        def project = create("run_with_custom_dependencies_from_configuration", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            configurations {
+                runRuntime
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+                runRuntime 'org.jgrapht:jgrapht-core:+'
+            }
+            
+            runs {
+                client {
+                    dependencies {
+                        runtime project.configurations.runRuntime
+                    }
+                    
+                    modSource project.sourceSets.main
+                }
+            }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':writeMinecraftClasspathClient')
+        }
+
+        then:
+        run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
+
+        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def versionedNeoformDir = neoformDir.listFiles()[0]
+        def stepsDir = new File(versionedNeoformDir, "steps")
+        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
+        def classpathFile = new File(stepDir, "classpath.txt")
+
+        classpathFile.exists()
+
+        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+    }
+
+    def "userdev supports custom run dependencies from catalog"() {
+        given:
+        def project = create("run_with_custom_dependencies_from_configuration", {
+            it.file("gradle/libs.versions.toml",
+                    """
+                    [libraries]
+                    jgrapht = { group = "org.jgrapht", name = "jgrapht-core", version = "+" }
+                    """.trim())
+
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            configurations {
+                runRuntime
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            
+            runs {
+                client {
+                    dependencies {
+                        runtime libs.jgrapht
+                    }
+                    
+                    modSource project.sourceSets.main
+                }
+            }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':writeMinecraftClasspathClient')
+        }
+
+        then:
+        run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
+
+        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def versionedNeoformDir = neoformDir.listFiles()[0]
+        def stepsDir = new File(versionedNeoformDir, "steps")
+        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
+        def classpathFile = new File(stepDir, "classpath.txt")
+
+        classpathFile.exists()
+
+        classpathFile.text.contains("org.jgrapht/jgrapht-core")
     }
 }

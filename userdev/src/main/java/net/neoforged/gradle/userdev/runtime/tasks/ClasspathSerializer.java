@@ -29,8 +29,6 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
                         .collect(Collectors.toSet()),
                 StandardCharsets.UTF_8
         );
-
-        getLogger().lifecycle("Serialized classpath to: {}", out.getAbsolutePath());
     }
 
     @InputFiles
