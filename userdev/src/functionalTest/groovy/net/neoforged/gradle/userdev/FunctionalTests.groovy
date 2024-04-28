@@ -6,7 +6,6 @@ import org.gradle.testkit.runner.TaskOutcome
 
 class FunctionalTests extends BuilderBasedTestSpecification {
 
-
     @Override
     protected void configurePluginUnderTest() {
         pluginUnderTest = "net.neoforged.gradle.userdev";
@@ -117,7 +116,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
     def "the userdev runtime by default supports the build cache"() {
         given:
-        def project = create("compile_with_gradle_and_official_mappings", {
+        def project = create("userdev_supports_loading_from_buildcache", {
             it.build("""
             java {
                 toolchain {
@@ -165,4 +164,5 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
         initialRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
+
 }
