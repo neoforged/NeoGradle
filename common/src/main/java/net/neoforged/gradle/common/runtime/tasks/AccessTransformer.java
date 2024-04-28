@@ -50,7 +50,6 @@ public abstract class AccessTransformer extends Execute {
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInputFile();
 
-
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getTransformers();
