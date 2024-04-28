@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.common.util
 
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
@@ -11,11 +12,38 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 
+import java.util.concurrent.atomic.AtomicInteger
+
 @CompileStatic
 class ConfigurationUtils {
 
+    private static AtomicInteger temporaryConfigurationCounter = new AtomicInteger(0)
+
     private ConfigurationUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: ConfigurationUtils. This is a utility class")
+    }
+
+    /**
+     * Creates an attached configuration that can be resolved, but not consumed.
+     *
+     * @param project The project to create the configuration for
+     * @param dependencies The dependencies to add to the configuration
+     * @return The detached configuration
+     */
+    static Configuration temporaryAttachedConfiguration(final Project project, final Dependency... dependencies) {
+        final Configuration configuration = project.getConfigurations().create("ng_do_not_use_this_configuration_${temporaryConfigurationCounter.incrementAndGet()}", new Action<Configuration>() {
+            @Override
+            void execute(Configuration files) {
+                files.setCanBeConsumed(false)
+                files.setCanBeResolved(true)
+                files.getDependencies().addAll(dependencies)
+
+                final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
+                dependencyReplacement.handleConfiguration(files)
+            }
+        });
+
+        return configuration
     }
 
     /**
@@ -26,7 +54,8 @@ class ConfigurationUtils {
      * @return The detached configuration
      */
     static Configuration temporaryConfiguration(final Project project, final Dependency... dependencies) {
-        final Configuration configuration = project.getConfigurations().detachedConfiguration(dependencies)
+        final Configuration configuration = project.getConfigurations().detachedConfiguration(dependencies);
+
         configuration.setCanBeConsumed(false)
         configuration.setCanBeResolved(true)
 

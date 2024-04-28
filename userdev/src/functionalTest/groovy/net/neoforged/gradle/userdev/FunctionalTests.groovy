@@ -32,7 +32,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':neoFormRecompile')
-            it.stacktrace()
         }
 
         then:
