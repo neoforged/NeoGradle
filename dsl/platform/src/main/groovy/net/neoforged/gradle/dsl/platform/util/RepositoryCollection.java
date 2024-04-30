@@ -13,14 +13,14 @@ public class RepositoryCollection {
 
     public RepositoryCollection(ProviderFactory providers, ObjectFactory objects, RepositoryHandler handler) {
         this.urls = objects.listProperty(URI.class);
-        handler.withType(MavenArtifactRepository.class).configureEach(repo -> urls.add(providers.provider(repo::getUrl).map(RepositoryCollection::addLeadingSlash)));
+        handler.withType(MavenArtifactRepository.class).configureEach(repo -> urls.add(providers.provider(repo::getUrl).map(RepositoryCollection::addTrailingSlash)));
     }
 
     public ListProperty<URI> getURLs() {
         return urls;
     }
 
-    private static URI addLeadingSlash(URI uri) {
+    private static URI addTrailingSlash(URI uri) {
         String asString = uri.toString();
         if (asString.endsWith("/")) return uri;
         return URI.create(asString + "/");
