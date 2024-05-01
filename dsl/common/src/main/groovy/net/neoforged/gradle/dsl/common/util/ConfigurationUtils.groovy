@@ -24,29 +24,6 @@ class ConfigurationUtils {
     }
 
     /**
-     * Creates an attached configuration that can be resolved, but not consumed.
-     *
-     * @param project The project to create the configuration for
-     * @param dependencies The dependencies to add to the configuration
-     * @return The detached configuration
-     */
-    static Configuration temporaryAttachedConfiguration(final Project project, final Dependency... dependencies) {
-        final Configuration configuration = project.getConfigurations().create("ng_do_not_use_this_configuration_${temporaryConfigurationCounter.incrementAndGet()}", new Action<Configuration>() {
-            @Override
-            void execute(Configuration files) {
-                files.setCanBeConsumed(false)
-                files.setCanBeResolved(true)
-                files.getDependencies().addAll(dependencies)
-
-                final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
-                dependencyReplacement.handleConfiguration(files)
-            }
-        });
-
-        return configuration
-    }
-
-    /**
      * Creates a detached configuration that can be resolved, but not consumed.
      *
      * @param project The project to create the configuration for

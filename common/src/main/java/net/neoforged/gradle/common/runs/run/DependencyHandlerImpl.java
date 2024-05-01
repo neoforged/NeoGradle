@@ -25,7 +25,7 @@ public abstract class DependencyHandlerImpl implements DependencyHandler {
     }
 
     public Configuration getConfiguration() {
-        final Configuration configuration = ConfigurationUtils.temporaryAttachedConfiguration(project);
+        final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project);
         configuration.fromDependencyCollector(this.getRuntime());
         return configuration;
     }
