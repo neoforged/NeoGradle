@@ -169,13 +169,13 @@ public abstract class IvyDummyRepositoryExtension implements ConfigurableDSLElem
         writeIvyMetadataFile(entry, jarFile, baseDir, metaFile);
 
         if (!Files.isRegularFile(jarFile)) {
-            Files.deleteIfExists(jarFile);
+            FileUtils.delete(jarFile);
             Files.createFile(jarFile);
         }
 
         final Path sourcesFile = entry.asSources().buildArtifactPath(getRepositoryDirectory().get().getAsFile().toPath());
         if (!Files.isRegularFile(sourcesFile)) {
-            Files.deleteIfExists(sourcesFile);
+            FileUtils.delete(sourcesFile);
             Files.createFile(sourcesFile);
         }
 
