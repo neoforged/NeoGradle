@@ -46,7 +46,7 @@ public abstract class CreateLegacyInstallerJson extends DefaultRuntime implement
         }
     }
     
-    @Internal
+    @Nested
     public abstract Property<InstallerProfile> getProfile();
     
     @InputFiles
