@@ -48,8 +48,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     private final Project project;
     private final DependencyCreator dependencyCreator;
     private final Set<ModuleReference> configuredReferences = Sets.newHashSet();
-    private final Set<ModuleReference> configuredGradleTasks = Sets.newHashSet();
-    private final Set<ModuleReference> configuredIdeTasks = Sets.newHashSet();
+    private final Set<ModuleReference> configuredTasks = Sets.newHashSet();
     private final Table<Dependency, Configuration, Optional<DependencyReplacementResult>> dependencyReplacementInformation = HashBasedTable.create();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
     private boolean hasBeenBaked = false;
@@ -154,7 +153,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
             }
         }
 
-        candidate.ifPresent(result -> handleDependencyReplacement(configuration, dependency, result, this::handleDependencyReplacementForIde, this::handleDependencyReplacementForGradle));
+        candidate.ifPresent(result -> handleDependencyReplacement(configuration, dependency, result));
     }
 
     /**
@@ -174,13 +173,11 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
      * @param configuration The configuration to handle the replacement in.
      * @param dependency The dependency to replace.
      * @param result The replacement result from one of the handlers.
-     * @param ideReplacer The replacer to use when the IDE is importing the project.
-     * @param gradleReplacer The replacer to use when the project is being built by Gradle.
      * @implNote This method is responsible for removing the dependency from the configuration and adding the dependency provider task to the configuration.
      * @implNote Currently the gradle importer is always used, the ide replacer is however only invoked when an IDE is detected.
      */
     @VisibleForTesting
-    void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result, DependencyReplacer ideReplacer, DependencyReplacer gradleReplacer) {
+    void handleDependencyReplacement(Configuration configuration, Dependency dependency, DependencyReplacementResult result) {
         configuration.getDependencies().remove(dependency);
 
         final List<Configuration> targetConfigurations = result.getTargetConfiguration().orElseGet(() -> {
@@ -188,51 +185,20 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
             list.add(configuration);
             return list;
         });
-        
-        final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
-        if (ideManagementExtension.isIdeImportInProgress()) {
-            ideReplacer.handle(targetConfigurations, configuration, dependency, result);
-        }
-        
-        gradleReplacer.handle(targetConfigurations, configuration, dependency, result);
-    }
 
-    private void handleDependencyReplacementForGradle(final List<Configuration> configurations, Configuration originalConfiguration, final Dependency dependency, final DependencyReplacementResult result) {
-        createDependencyReplacementResult(configurations, originalConfiguration, dependency, result, (repoBaseDir, entry) -> {
-            final ModuleReference reference = entry.toModuleReference();
-
-            final String artifactSelectionTaskName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
-            if (configuredGradleTasks.contains(reference))
-                return new RepositoryEntryGenerationTasks(project.getTasks().named(artifactSelectionTaskName, ArtifactFromOutput.class));
-
-            configuredGradleTasks.add(reference);
-
-            return new RepositoryEntryGenerationTasks(project.getTasks().register(artifactSelectionTaskName, ArtifactFromOutput.class, artifactFromOutput -> {
-                artifactFromOutput.setGroup("neogradle/dependencies");
-                artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
-
-                artifactFromOutput.getInput().set(result.getRawJarTaskProvider().flatMap(WithOutput::getOutput));
-                artifactFromOutput.getOutput().fileProvider(repoBaseDir.map(TransformerUtils.guard(dir -> entry.buildArtifactPath(dir.getAsFile().toPath()).toFile())));
-                artifactFromOutput.dependsOn(result.getRawJarTaskProvider());
-            }));
-        });
-    }
-
-    private void handleDependencyReplacementForIde(final List<Configuration> configurations, Configuration originalConfiguration, final Dependency dependency, final DependencyReplacementResult result) {
-        createDependencyReplacementResult(configurations, originalConfiguration, dependency, result, ((repoBaseDir, entry) -> {
+        createDependencyReplacementResult(targetConfigurations, configuration, dependency, result, ((repoBaseDir, entry) -> {
             final ModuleReference reference = entry.toModuleReference();
 
             final String rawArtifactSelectorName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectRawArtifact", reference));
             final String sourceArtifactSelectorName = result.getTaskNameBuilder().apply(CommonRuntimeUtils.buildTaskName("selectSourceArtifact", reference));
 
-            if (configuredIdeTasks.contains(reference)) {
+            if (!configuredTasks.add(reference)) {
                 final TaskProvider<? extends WithOutput> rawProvider = project.getTasks().named(rawArtifactSelectorName, WithOutput.class);
                 final TaskProvider<? extends WithOutput> sourceProvider = project.getTasks().named(sourceArtifactSelectorName, WithOutput.class);
 
                 return new RepositoryEntryGenerationTasks(rawProvider, sourceProvider);
             }
 
-            configuredIdeTasks.add(reference);
             final TaskProvider<? extends WithOutput> rawProvider = project.getTasks().register(rawArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
                 artifactFromOutput.setGroup("neogradle/dependencies");
                 artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
@@ -369,12 +335,5 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     interface TaskProviderGenerator {
 
         RepositoryEntryGenerationTasks generate(final Provider<Directory> repoBaseDir, final RepositoryEntry<?,?> entry);
-    }
-
-
-    @VisibleForTesting
-    @FunctionalInterface
-    interface DependencyReplacer {
-        void handle(final List<Configuration> configurations, Configuration originalConfiguration, final Dependency dependency, final DependencyReplacementResult result);
     }
 }
