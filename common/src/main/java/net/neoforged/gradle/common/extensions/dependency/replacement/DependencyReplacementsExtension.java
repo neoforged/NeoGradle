@@ -234,9 +234,9 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         try {
             extension.withDependency(
                     builder -> configureRepositoryReference(result, externalModuleDependency, builder),
-                    reference -> processRepositoryReference(configurations, result, generator, repoBaseDir, reference),
+                    reference -> processRepositoryReference(configurations, result, reference),
                     builder -> configureRepositoryEntry(result, externalModuleDependency, builder),
-                    entry -> processRepositoryEntry(configurations, originalConfiguration, result, generator, repoBaseDir, entry),
+                    entry -> processRepositoryEntry(originalConfiguration, result, generator, repoBaseDir, entry),
                     result.getProcessImmediately()
             );
         } catch (XMLStreamException | IOException e) {
@@ -244,7 +244,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         }
     }
 
-    private void processRepositoryReference(List<Configuration> configurations, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryReference entry) {
+    private void processRepositoryReference(List<Configuration> configurations, DependencyReplacementResult result, RepositoryReference entry) {
         final Dependency replacedDependency = entry.toGradle(project);
         
         configurations.forEach(configuration -> {
@@ -256,7 +256,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     }
 
 
-    private void processRepositoryEntry(List<Configuration> configurations, Configuration originalConfiguration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
+    private void processRepositoryEntry(Configuration originalConfiguration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
         final ModuleReference reference = entry.toModuleReference();
         if (configuredReferences.contains(reference))
             return;
@@ -264,15 +264,15 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         configuredReferences.add(reference);
 
         final RepositoryEntryGenerationTasks entryGenerationTasks = generator.generate(repoBaseDir, entry);
-        final Dependency replacedDependency = this.dependencyCreator.from(entryGenerationTasks.getRawJarProvider());
+        final Dependency replacedDependency = this.dependencyCreator.from(entryGenerationTasks.rawJarProvider);
         originalConfiguration.getDependencies().add(replacedDependency);
-        result.getOnRepoWritingTaskRegisteredCallback().accept(entryGenerationTasks.getRawJarProvider());
+        result.getOnRepoWritingTaskRegisteredCallback().accept(entryGenerationTasks.rawJarProvider);
 
         afterDefinitionBake(projectAfterBake -> {
             final IdeManagementExtension ideManagementExtension = getProject().getExtensions().getByType(IdeManagementExtension.class);
             if (ideManagementExtension.isIdeImportInProgress()) {
-                ideManagementExtension.registerTaskToRun(entryGenerationTasks.getRawJarProvider());
-                entryGenerationTasks.getSourceJarProvider().ifPresent(ideManagementExtension::registerTaskToRun);
+                ideManagementExtension.registerTaskToRun(entryGenerationTasks.rawJarProvider);
+                ideManagementExtension.registerTaskToRun(entryGenerationTasks.sourceJarProvider);
                 result.getAdditionalIdePostSyncTasks().forEach(ideManagementExtension::registerTaskToRun);
             }
         });
@@ -304,29 +304,13 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         this.afterDefinitionBakeCallbacks.add(callback);
     }
 
-    @VisibleForTesting
-    public static class RepositoryEntryGenerationTasks {
-        @NotNull
+    private static class RepositoryEntryGenerationTasks {
         private final TaskProvider<? extends WithOutput> rawJarProvider;
-        @Nullable
         private final TaskProvider<? extends WithOutput> sourceJarProvider;
 
-        public RepositoryEntryGenerationTasks(@NotNull TaskProvider<? extends WithOutput> rawJarProvider) {
-            this.rawJarProvider = rawJarProvider;
-            this.sourceJarProvider = null;
-        }
-
-        public RepositoryEntryGenerationTasks(@NotNull TaskProvider<? extends WithOutput> rawJarProvider, @Nullable TaskProvider<? extends WithOutput> sourceJarProvider) {
+        public RepositoryEntryGenerationTasks(TaskProvider<? extends WithOutput> rawJarProvider, TaskProvider<? extends WithOutput> sourceJarProvider) {
             this.rawJarProvider = rawJarProvider;
             this.sourceJarProvider = sourceJarProvider;
-        }
-
-        public TaskProvider<? extends WithOutput> getRawJarProvider() {
-            return rawJarProvider;
-        }
-
-        public Optional<TaskProvider<? extends WithOutput>> getSourceJarProvider() {
-            return Optional.ofNullable(sourceJarProvider);
         }
     }
 
