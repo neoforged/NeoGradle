@@ -118,33 +118,6 @@ final class DependencyReplacementResult {
         );
     }
 
-
-    DependencyReplacementResult(
-            Project project,
-            Function<String, String> taskNameBuilder,
-            TaskProvider<? extends WithOutput> sourcesJarTaskProvider,
-            TaskProvider<? extends WithOutput> rawJarTaskProvider,
-            Configuration additionalDependenciesConfiguration,
-            Consumer<RepositoryReference.Builder<?,?>> referenceConfigurator,
-            Consumer<RepositoryEntry.Builder<?, ?, ?>> metadataConfigurator,
-            Consumer<Dependency> onCreateReplacedDependencyCallback,
-            Consumer<TaskProvider<? extends WithOutput>> onRepoWritingTaskRegisteredCallback,
-            Supplier<Set<TaskProvider>> additionalIdePostSyncTasks) {
-        this(
-                project,
-                taskNameBuilder,
-                sourcesJarTaskProvider,
-                rawJarTaskProvider,
-                additionalDependenciesConfiguration,
-                referenceConfigurator,
-                metadataConfigurator,
-                onCreateReplacedDependencyCallback,
-                onRepoWritingTaskRegisteredCallback,
-                additionalIdePostSyncTasks,
-                false
-        );
-    }
-
     /**
      * Gets the project inside of which a dependency replacement is being performed.
      *
