@@ -225,9 +225,7 @@ public class DependencyReplacementsExtensionTest {
         dependencyReplacementsExtension.handleDependencyReplacement(
                 configuration,
                 mock(ProjectDependency.class),
-                mock(DependencyReplacementResult.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class)
+                mock(DependencyReplacementResult.class)
         );
 
         verify(dependencySet).remove(any());
@@ -268,9 +266,7 @@ public class DependencyReplacementsExtensionTest {
         dependencyReplacementsExtension.handleDependencyReplacement(
                 configuration,
                 mock(ProjectDependency.class),
-                mock(DependencyReplacementResult.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class)
+                mock(DependencyReplacementResult.class)
         );
 
         verify(dependencySet).whenObjectAdded((Action<? super Dependency>) any());
@@ -307,9 +303,7 @@ public class DependencyReplacementsExtensionTest {
         dependencyReplacementsExtension.handleDependencyReplacement(
                 configuration,
                 mock(ProjectDependency.class),
-                mock(DependencyReplacementResult.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class)
+                mock(DependencyReplacementResult.class)
         );
 
         verify(dependencySet, never()).add(any());
@@ -345,128 +339,6 @@ public class DependencyReplacementsExtensionTest {
         final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
 
         verify(dependencySet).whenObjectAdded((Action<? super Dependency>) any());
-    }
-
-    @Test
-    public void callingHandleDependencyReplacementAlwaysInvokesTheGradleReplacementHandler() {
-        final Project project = mock(Project.class);
-        final ExtensionContainer extensionContainer = mock(ExtensionContainer.class);
-        final TaskContainer taskContainer = mock(TaskContainer.class);
-        final ObjectFactory objectFactory = mock(ObjectFactory.class);
-        final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
-        final Configuration configuration = mock(Configuration.class);
-        final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?> repository = mock(Repository.class);
-        final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
-        final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
-        final DependencyReplacementsExtension.DependencyReplacer gradleReplacementHandler = mock(DependencyReplacementsExtension.DependencyReplacer.class);
-
-        when(project.getExtensions()).thenReturn(extensionContainer);
-        when(extensionContainer.getByType(Repository.class)).thenReturn(repository);
-        when(extensionContainer.getByType(IdeManagementExtension.class)).thenReturn(ideManagementExtension);
-        when(project.getConfigurations()).thenReturn(configurationContainer);
-        when(project.getTasks()).thenReturn(taskContainer);
-        when(project.getObjects()).thenReturn(objectFactory);
-        when(configuration.getDependencies()).thenReturn(dependencySet);
-        doAnswer(invocation -> {
-            final Action<Configuration> configurationAction = invocation.getArgument(0);
-            configurationAction.execute(configuration);
-            return null;
-        }).when(configurationContainer).configureEach(any());
-
-        final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-
-        dependencyReplacementsExtension.handleDependencyReplacement(
-                configuration,
-                mock(ProjectDependency.class),
-                mock(DependencyReplacementResult.class),
-                mock(DependencyReplacementsExtension.DependencyReplacer.class),
-                gradleReplacementHandler
-        );
-
-        verify(gradleReplacementHandler).handle(any(), any(), any(), any());
-    }
-
-    @Test
-    public void callingHandleDependencyReplacementAlwaysInvokesTheIdeReplacementHandlerWhenAnImportIsRunning() {
-        final Project project = mock(Project.class);
-        final ExtensionContainer extensionContainer = mock(ExtensionContainer.class);
-        final TaskContainer taskContainer = mock(TaskContainer.class);
-        final ObjectFactory objectFactory = mock(ObjectFactory.class);
-        final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
-        final Configuration configuration = mock(Configuration.class);
-        final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?> repository = mock(Repository.class);
-        final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
-        final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
-        final DependencyReplacementsExtension.DependencyReplacer ideReplacementHandler = mock(DependencyReplacementsExtension.DependencyReplacer.class);
-
-        when(project.getExtensions()).thenReturn(extensionContainer);
-        when(extensionContainer.getByType(Repository.class)).thenReturn(repository);
-        when(extensionContainer.getByType(IdeManagementExtension.class)).thenReturn(ideManagementExtension);
-        when(project.getConfigurations()).thenReturn(configurationContainer);
-        when(project.getTasks()).thenReturn(taskContainer);
-        when(project.getObjects()).thenReturn(objectFactory);
-        when(configuration.getDependencies()).thenReturn(dependencySet);
-        doAnswer(invocation -> {
-            final Action<Configuration> configurationAction = invocation.getArgument(0);
-            configurationAction.execute(configuration);
-            return null;
-        }).when(configurationContainer).configureEach(any());
-        when(ideManagementExtension.isIdeImportInProgress()).thenReturn(true);
-
-        final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-
-        dependencyReplacementsExtension.handleDependencyReplacement(
-                configuration,
-                mock(ProjectDependency.class),
-                mock(DependencyReplacementResult.class),
-                ideReplacementHandler,
-                mock(DependencyReplacementsExtension.DependencyReplacer.class)
-        );
-
-        verify(ideReplacementHandler).handle(any(), any(), any(), any());
-    }
-
-    @Test
-    public void callingHandleDependencyReplacementAlwaysInvokesTheIdeReplacementHandlerWhenNoImportIsRunning() {
-        final Project project = mock(Project.class);
-        final ExtensionContainer extensionContainer = mock(ExtensionContainer.class);
-        final TaskContainer taskContainer = mock(TaskContainer.class);
-        final ObjectFactory objectFactory = mock(ObjectFactory.class);
-        final ConfigurationContainer configurationContainer = mock(ConfigurationContainer.class);
-        final Configuration configuration = mock(Configuration.class);
-        final DependencySet dependencySet = mock(DependencySet.class);
-        final Repository<?> repository = mock(Repository.class);
-        final IdeManagementExtension ideManagementExtension = mock(IdeManagementExtension.class);
-        final DependencyCreator dependencyCreator = mock(DependencyCreator.class);
-        final DependencyReplacementsExtension.DependencyReplacer ideReplacementHandler = mock(DependencyReplacementsExtension.DependencyReplacer.class);
-
-        when(project.getExtensions()).thenReturn(extensionContainer);
-        when(extensionContainer.getByType(Repository.class)).thenReturn(repository);
-        when(extensionContainer.getByType(IdeManagementExtension.class)).thenReturn(ideManagementExtension);
-        when(project.getConfigurations()).thenReturn(configurationContainer);
-        when(project.getTasks()).thenReturn(taskContainer);
-        when(project.getObjects()).thenReturn(objectFactory);
-        when(configuration.getDependencies()).thenReturn(dependencySet);
-        doAnswer(invocation -> {
-            final Action<Configuration> configurationAction = invocation.getArgument(0);
-            configurationAction.execute(configuration);
-            return null;
-        }).when(configurationContainer).configureEach(any());
-        when(ideManagementExtension.isIdeImportInProgress()).thenReturn(false);
-
-        final DependencyReplacementsExtension dependencyReplacementsExtension = new SystemUnderTest(project, dependencyCreator);
-
-        dependencyReplacementsExtension.handleDependencyReplacement(
-                configuration,
-                mock(ProjectDependency.class),
-                mock(DependencyReplacementResult.class),
-                ideReplacementHandler,
-                mock(DependencyReplacementsExtension.DependencyReplacer.class)
-        );
-
-        verify(ideReplacementHandler, never()).handle(any(), any(), any(), any());
     }
 
     @Test
