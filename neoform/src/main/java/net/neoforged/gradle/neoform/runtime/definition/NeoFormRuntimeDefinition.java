@@ -26,7 +26,6 @@ import java.util.function.Consumer;
  * Represents a configured and registered runtime for Mcp.
  */
 public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRuntimeSpecification> implements NeoFormDefinition<NeoFormRuntimeSpecification> {
-    private final File unpackedneoformZipDirectory;
     private final NeoFormConfigConfigurationSpecV2 neoform;
 
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
@@ -41,22 +40,13 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
                                     @NotNull Configuration minecraftDependenciesConfiguration,
                                     @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
                                     @NotNull VersionJson versionJson,
-                                    @NotNull File unpackedneoformZipDirectory,
                                     @NotNull NeoFormConfigConfigurationSpecV2 neoform,
                                     @NotNull TaskProvider<DownloadAssets> assetsTaskProvider,
                                     @NotNull TaskProvider<ExtractNatives> nativesTaskProvider) {
         super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer, versionJson);
-        this.unpackedneoformZipDirectory = unpackedneoformZipDirectory;
         this.neoform = neoform;
         this.assetsTaskProvider = assetsTaskProvider;
         this.nativesTaskProvider = nativesTaskProvider;
-    }
-
-
-    @Override
-    @NotNull
-    public File getUnpackedNeoFormZipDirectory() {
-        return unpackedneoformZipDirectory;
     }
 
     @Override
@@ -73,14 +63,12 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
 
         NeoFormRuntimeDefinition that = (NeoFormRuntimeDefinition) o;
 
-        if (!unpackedneoformZipDirectory.equals(that.unpackedneoformZipDirectory)) return false;
         return neoform.equals(that.neoform);
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + unpackedneoformZipDirectory.hashCode();
         result = 31 * result + neoform.hashCode();
         return result;
     }
@@ -114,7 +102,9 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData(run));
 
         interpolationData.put("mcp_version", neoform.getVersion());
-        interpolationData.put("mcp_mappings", new File(unpackedneoformZipDirectory, "config/joined.srg").getAbsolutePath());
+        // NeoForge still references this in the environment variable MCP_MAPPINGS, which is unused since 1.20.2
+        // Remove this interpolation placeholder once NeoForge removes the environment variable from its config.json
+        interpolationData.put("mcp_mappings", "UNUSED_DEPRECATED");
         return interpolationData;
     }
 

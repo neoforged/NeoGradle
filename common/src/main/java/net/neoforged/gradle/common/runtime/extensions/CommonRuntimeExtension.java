@@ -47,7 +47,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         runtimeTask.getSymbolicDataSources().set(symbolicDataSources);
         runtimeTask.getStepName().set(step);
         runtimeTask.getDistribution().set(spec.getDistribution());
-        runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion(), spec.getProject()));
+        runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion(), spec.getProject()).getFull());
         runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
         runtimeTask.getRuntimeName().set(spec.getVersionedName());
         runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());

@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.common.tasks.specifications
 
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -95,7 +96,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      * @return The interpolated runtime data.
      */
     @Internal
-    MapProperty<String, Provider<File>> getRuntimeData();
+    MapProperty<String, FileTree> getRuntimeData();
 
     /**
      * The interpolated runtime arguments that will be used to interpolate the arguments.

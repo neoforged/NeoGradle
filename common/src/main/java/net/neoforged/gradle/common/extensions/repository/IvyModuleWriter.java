@@ -35,7 +35,9 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 
 public final class IvyModuleWriter implements AutoCloseable {
@@ -62,7 +64,7 @@ public final class IvyModuleWriter implements AutoCloseable {
 
     public IvyModuleWriter(final Path target) throws IOException, XMLStreamException {
         this.managedOutput = true;
-        this.output = Files.newBufferedWriter(target);
+        this.output = Files.newBufferedWriter(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         this.writer = new IndentingXmlStreamWriter(IvyModuleWriter.OUTPUT_FACTORY.createXMLStreamWriter(this.output), INDENT);
     }
 

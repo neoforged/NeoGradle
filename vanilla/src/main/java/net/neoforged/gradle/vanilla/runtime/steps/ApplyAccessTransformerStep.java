@@ -15,7 +15,6 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -39,7 +38,7 @@ public class ApplyAccessTransformerStep implements IStep {
                 "user",
                 workingDirectory,
                 additionalTaskConfigurator,
-                new ArrayList<>(accessTransformerFiles.getFiles().getFiles()),
+                accessTransformerFiles.getFiles().getAsFileTree(),
                 accessTransformerFiles.getEntries().get(),
                 definition.getListLibrariesTaskProvider()
         );

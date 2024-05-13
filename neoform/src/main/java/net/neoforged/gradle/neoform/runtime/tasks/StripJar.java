@@ -4,15 +4,12 @@ import net.neoforged.gradle.util.FileUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import org.apache.commons.io.IOUtils;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,18 +26,24 @@ public abstract class StripJar extends DefaultRuntime {
     public StripJar() {
         super();
 
-        getMappingsFile().fileProvider(getRuntimeData().flatMap(data -> data.get("mappings")));
+        getMappingsFiles().from(getRuntimeData().map(data -> data.get("mappings")));
         getIsWhitelistMode().convention(true);
         getFilters().convention(
-                getMappingsFile().map(
-                        TransformerUtils.guardWithResource(
-                                lines -> lines.filter(l -> !l.startsWith("\t")).map(s -> s.split(" ")[0] + ".class").collect(Collectors.toSet()),
-                                file -> FileUtils.readAllLines(file.getAsFile().toPath())
-                        )
-                )
+                getProject().provider(() -> {
+                    if (getMappingsFiles().isEmpty()) {
+                        return null;
+                    }
+
+                    return getMappingsFiles().getFiles()
+                            .stream()
+                            .flatMap(file -> FileUtils.readAllLines(file.toPath()))
+                            .filter(l -> !l.startsWith("\t"))
+                            .map(s -> s.split(" ")[0] + ".class")
+                            .distinct()
+                            .collect(Collectors.toList());
+                })
         );
 
-        getMappingsFile().finalizeValueOnRead();
         getIsWhitelistMode().finalizeValueOnRead();
         getFilters().finalizeValueOnRead();
     }
@@ -73,18 +76,27 @@ public abstract class StripJar extends DefaultRuntime {
     }
 
     private boolean isEntryValid(JarEntry entry, boolean whitelist) {
-        return !entry.isDirectory() && getFilters().get().contains(entry.getName()) == whitelist;
+        if (entry.isDirectory())
+            return false;
+
+        if (getFilters().isPresent()) {
+            return getFilters().get().contains(entry.getName()) == whitelist;
+        }
+
+        return true;
     }
 
-    @InputFile
+    @InputFiles
     @PathSensitive(PathSensitivity.NONE)
-    public abstract RegularFileProperty getMappingsFile();
+    @Optional
+    public abstract ConfigurableFileCollection getMappingsFiles();
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
 
     @Input
+    @Optional
     public abstract ListProperty<String> getFilters();
 
     @Input

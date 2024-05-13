@@ -14,12 +14,14 @@ import java.nio.file.Files
 class LibraryCollector extends ModuleIdentificationVisitor {
 
     private final ObjectFactory objectFactory;
+    private final List<URI> repositoryUrls
 
     private final List<Library> libraries = new ArrayList<>();
 
-    LibraryCollector(ObjectFactory objectFactory) {
+    LibraryCollector(ObjectFactory objectFactory, List<URI> repoUrl) {
         super(objectFactory);
         this.objectFactory = objectFactory;
+        this.repositoryUrls = repoUrl
     }
 
     @Override
@@ -32,7 +34,12 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         download.getArtifact().set(artifact);
 
         final String path = group.replace(".", "/") + "/" + module + "/" + version + "/" + module + "-" + version + (classifier.isEmpty() ? "" : "-" + classifier) + "." + extension;
-        final String url = getMavenServerFor(path) + "/" + path;
+        String url = getMavenServerFor(path) + "/" + path;
+        int pos = 0
+        while (attemptConnection(url) !== 200 && pos < repositoryUrls.size()) {
+            url = repositoryUrls.get(pos++).resolve(path).toString()
+        }
+
         final String name = group + ":" + module + ":" + version + (classifier.isEmpty() ? "" : ":" + classifier) + "@" + extension;
 
         library.getName().set(name);
@@ -46,6 +53,19 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         }
 
         libraries.add(library);
+    }
+
+    private static int attemptConnection(String url) {
+        try {
+            final conn = (HttpURLConnection) url.toURL().openConnection()
+            conn.setRequestMethod('HEAD')
+            conn.connect()
+            int rc = conn.responseCode
+            conn.disconnect()
+            return rc
+        } catch (Exception ignored) {
+            return 404
+        }
     }
 
     private static String getMavenServerFor(String path) {

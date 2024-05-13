@@ -14,7 +14,6 @@ import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 
 @CacheableTask

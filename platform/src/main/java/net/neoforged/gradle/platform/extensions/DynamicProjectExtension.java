@@ -30,6 +30,7 @@ import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.dsl.platform.model.InstallerProfile;
 import net.neoforged.gradle.dsl.platform.model.LauncherProfile;
 import net.neoforged.gradle.dsl.platform.model.Library;
+import net.neoforged.gradle.dsl.platform.util.RepositoryCollection;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -62,6 +63,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
@@ -74,6 +76,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -324,13 +327,15 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 
                 launcherProfile.getArguments().set(arguments);
             });
-            
+
+            final ListProperty<URI> repoCollection = new RepositoryCollection(project.getProviders(), project.getObjects(), project.getRepositories()).getURLs();
             final TaskProvider<CreateLauncherJson> createLauncherJson = project.getTasks().register("createLauncherJson", CreateLauncherJson.class, task -> {
                 task.getProfile().set(launcherProfile);
                 task.getLibraries().from(installerConfiguration);
                 task.getLibraries().from(pluginLayerLibraryConfiguration);
                 task.getLibraries().from(gameLayerLibraryConfiguration);
                 task.getLibraries().from(moduleOnlyConfiguration);
+                task.getRepositoryURLs().set(repoCollection);
                 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
@@ -461,6 +466,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             final TaskProvider<CreateLegacyInstallerJson> createLegacyInstallerJson = project.getTasks().register("createLegacyInstallerJson", CreateLegacyInstallerJson.class, task -> {
                 task.getProfile().set(installerProfile);
                 task.getLibraries().from(installerLibrariesConfiguration);
+                task.getRepositoryURLs().set(repoCollection);
                 
                 task.dependsOn(signUniversalJar);
                 
@@ -532,8 +538,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             //Note: We can not use a 'configureEach' here, because this causes issues with the config cache.
             userdevProfile.runType("client", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsClient().set(true);
                 type.getIsGameTest().set(true);
                 type.getSystemProperties().put("neoforge.enableGameTest", "true");
@@ -551,8 +556,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             userdevProfile.runType("server", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsServer().set(true);
                 
                 type.getArguments().add("--launchTarget");
@@ -562,8 +566,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             userdevProfile.runType("gameTestServer", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsServer().set(true);
                 type.getIsGameTest().set(true);
                 type.getSystemProperties().put("neoforge.enableGameTest", "true");
@@ -577,8 +580,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             userdevProfile.runType("data", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
-                type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
-                
+
                 type.getIsDataGenerator().set(true);
                 
                 type.getArguments().add("--launchTarget");
@@ -771,12 +773,17 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         tokenizedTask.token("FORGE_VERSION", tokenizedTask.getProject().getVersion());
         tokenizedTask.token("FML_VERSION", tokenizedTask.getProject().getProperties().get("fancy_mod_loader_version"));
         tokenizedTask.token("MC_VERSION", runtimeDefinition.getSpecification().getMinecraftVersion());
-        tokenizedTask.token("MCP_VERSION", runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormVersion());
+        tokenizedTask.token("MCP_VERSION", extractNeoformVersion(runtimeDefinition));
         tokenizedTask.token("FORGE_GROUP", tokenizedTask.getProject().getGroup());
         tokenizedTask.token("IGNORE_LIST", ignoreConfigurations.stream().flatMap(config -> config.getFiles().stream()).map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("PLUGIN_LAYER_LIBRARIES", pluginLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("GAME_LAYER_LIBRARIES", gameLayerLibraries.getFiles().stream().map(File::getName).collect(Collectors.joining(",")));
         tokenizedTask.token("MODULES", "ALL-MODULE-PATH");
+    }
+
+    private static String extractNeoformVersion(RuntimeDevRuntimeDefinition runtimeDefinition) {
+        final String completeVersion = runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSpecification().getNeoFormVersion();
+        return completeVersion.substring(completeVersion.lastIndexOf("-") + 1);
     }
 
     private static Provider<String> collectFileNames(Configuration config, Project project) {

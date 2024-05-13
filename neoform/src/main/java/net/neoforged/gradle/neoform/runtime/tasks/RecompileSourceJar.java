@@ -40,10 +40,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         
         final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
         this.javaToolchainService = getProviderFactory().provider(() -> service);
-        
-        getRuntimeName().orElse("unknown");
-        getRuntimeDirectory().convention(getProject().getLayout().getBuildDirectory().dir("mcp"));
-        getUnpackedMcpZipDirectory().convention(getRuntimeDirectory().dir("unpacked"));
+
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
         //And configure output default locations.
@@ -83,11 +80,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     }
 
     @Override
+    @Nested
     public RuntimeArguments getArguments() {
         return arguments;
     }
     
     @Override
+    @Nested
     public RuntimeMultiArguments getMultiArguments() {
         return multiArguments;
     }

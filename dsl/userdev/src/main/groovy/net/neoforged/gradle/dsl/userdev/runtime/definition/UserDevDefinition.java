@@ -6,6 +6,7 @@ import net.neoforged.gradle.dsl.neoform.runtime.definition.NeoFormDefinition;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.dsl.userdev.runtime.specification.UserDevSpecification;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileTree;
 
 import java.io.File;
 
@@ -13,7 +14,7 @@ import java.io.File;
 public interface UserDevDefinition<S extends UserDevSpecification> extends Definition<S> {
     NeoFormDefinition<?> getNeoFormRuntimeDefinition();
 
-    File getUnpackedUserDevJarDirectory();
+    FileTree getUnpackedUserDevJarDirectory();
 
     UserdevProfile getUserdevConfiguration();
 

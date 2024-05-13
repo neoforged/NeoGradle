@@ -32,6 +32,8 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
@@ -72,6 +74,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
         project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
+        final ConfigurationData configurationData = project.getExtensions().create( ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
 
@@ -115,6 +118,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
         );
         
         IdeRunIntegrationManager.getInstance().setup(project);
+
+        project.getTasks().named("clean", Delete.class, delete -> {
+            delete.delete(configurationData.getLocation());
+        });
     }
     
     private void applyAfterEvaluate(final Project project) {

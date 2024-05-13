@@ -29,7 +29,7 @@ public class NeoFormAccessTransformerUtils {
                 return null;
             }
 
-            final TaskProvider<? extends AccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createAccessTransformer(definition, "User", runtimeWorkspace, dependentTaskConfigurationHandler, new ArrayList<>(accessTransformerFiles.getFiles().getFiles().stream().filter(File::exists).collect(Collectors.toSet())), accessTransformerFiles.getEntries().get(), definition.getListLibrariesTaskProvider());
+            final TaskProvider<? extends AccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createAccessTransformer(definition, "User", runtimeWorkspace, dependentTaskConfigurationHandler, accessTransformerFiles.getFiles().getAsFileTree(), accessTransformerFiles.getEntries().get(), definition.getListLibrariesTaskProvider());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

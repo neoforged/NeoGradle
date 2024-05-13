@@ -7,12 +7,14 @@ import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.dsl.platform.model.InstallerProfile;
 import net.neoforged.gradle.dsl.platform.util.LibraryCollector;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.nio.file.Files;
 
 @CacheableTask
@@ -32,7 +34,7 @@ public abstract class CreateLegacyInstallerJson extends DefaultRuntime implement
         
         copy.getLibraries().addAll(
                 getProviderFactory().provider(() -> {
-                    final LibraryCollector profileFiller = new LibraryCollector(getObjectFactory());
+                    final LibraryCollector profileFiller = new LibraryCollector(getObjectFactory(), getRepositoryURLs().get());
                     getLibraries().getAsFileTree().visit(profileFiller);
                     return profileFiller.getLibraries();
                 })
@@ -50,4 +52,7 @@ public abstract class CreateLegacyInstallerJson extends DefaultRuntime implement
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getLibraries();
+
+    @Input
+    public abstract ListProperty<URI> getRepositoryURLs();
 }

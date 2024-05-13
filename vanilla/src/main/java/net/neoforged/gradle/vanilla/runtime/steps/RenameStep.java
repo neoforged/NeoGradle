@@ -77,11 +77,11 @@ public class RenameStep implements IStep {
             task.getMinecraftVersion()
                     .set(context.getMappingVersion().flatMap(versionData -> {
                         if (versionData.containsKey(NamingConstants.Version.VERSION) || versionData.containsKey(NamingConstants.Version.MINECRAFT_VERSION)) {
-                            return context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(versionData), context.getProject()));
+                            return context.getProject().provider(() -> CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(versionData), context.getProject()).getFull());
                         } else {
                             return context.getInputTask().map(t -> {
                                 try {
-                                    return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject());
+                                    return CacheableMinecraftVersion.from(MappingUtils.getVersionOrMinecraftVersion(TaskDependencyUtils.extractRuntimeDefinition(context.getProject(), t).getMappingVersionData()), context.getProject()).getFull();
                                 } catch (MultipleDefinitionsFoundException e) {
                                     throw new RuntimeException("Could not determine the runtime definition to use. Multiple definitions were found: " + e.getDefinitions().stream().map(r1 -> r1.getSpecification().getVersionedName()).collect(Collectors.joining(", ")), e);
                                 } catch (NoDefinitionsFoundException e) {
