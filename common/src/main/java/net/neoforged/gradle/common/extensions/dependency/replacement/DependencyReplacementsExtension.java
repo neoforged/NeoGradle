@@ -26,7 +26,6 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.inject.Inject;
@@ -128,7 +127,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
             dependencyReplacementInformation.put(dependency, configuration, candidate);
         } else if (dependencyReplacementInformation.contains(dependency, configuration)) {
             candidate = dependencyReplacementInformation.get(dependency, configuration);
-            if (candidate == null) {
+            if (candidate == null || !candidate.isPresent()) {
                 candidate = Optional.empty();
                 dependencyReplacementInformation.remove(dependency, configuration);
             }
@@ -236,7 +235,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
                     builder -> configureRepositoryReference(result, externalModuleDependency, builder),
                     reference -> processRepositoryReference(configurations, result, reference),
                     builder -> configureRepositoryEntry(result, externalModuleDependency, builder),
-                    entry -> processRepositoryEntry(originalConfiguration, result, generator, repoBaseDir, entry),
+                    entry -> processRepositoryEntry(configurations, result, generator, repoBaseDir, entry),
                     result.getProcessImmediately()
             );
         } catch (XMLStreamException | IOException e) {
@@ -256,7 +255,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
     }
 
 
-    private void processRepositoryEntry(Configuration originalConfiguration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
+    private void processRepositoryEntry(List<Configuration> originalConfiguration, DependencyReplacementResult result, TaskProviderGenerator generator, Provider<Directory> repoBaseDir, RepositoryEntry<?, ?> entry) {
         final ModuleReference reference = entry.toModuleReference();
         if (configuredReferences.contains(reference))
             return;
@@ -265,7 +264,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
 
         final RepositoryEntryGenerationTasks entryGenerationTasks = generator.generate(repoBaseDir, entry);
         final Dependency replacedDependency = this.dependencyCreator.from(entryGenerationTasks.rawJarProvider);
-        originalConfiguration.getDependencies().add(replacedDependency);
+        originalConfiguration.forEach(config -> config.getDependencies().add(replacedDependency));
         result.getOnRepoWritingTaskRegisteredCallback().accept(entryGenerationTasks.rawJarProvider);
 
         afterDefinitionBake(projectAfterBake -> {
@@ -304,7 +303,7 @@ public abstract class DependencyReplacementsExtension implements ConfigurableDSL
         this.afterDefinitionBakeCallbacks.add(callback);
     }
 
-    private static class RepositoryEntryGenerationTasks {
+    static class RepositoryEntryGenerationTasks {
         private final TaskProvider<? extends WithOutput> rawJarProvider;
         private final TaskProvider<? extends WithOutput> sourceJarProvider;
 
