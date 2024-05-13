@@ -1,4 +1,4 @@
-package net.neoforged.gradle.platform.runtime.runtime.tasks;
+package net.neoforged.gradle.neoform.runtime.tasks;
 
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;

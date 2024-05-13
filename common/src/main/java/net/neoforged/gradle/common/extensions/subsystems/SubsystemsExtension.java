@@ -21,7 +21,7 @@ import java.util.Locale;
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_ARTIFACT_PREFIX;
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_GROUP;
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_MAVEN_URL;
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_TOOL_ARTIFACT;
+import static net.neoforged.gradle.dsl.common.util.Constants.JST_TOOL_ARTIFACT;
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_RECOMPILER_MAX_MEMORY;
 import static net.neoforged.gradle.dsl.common.util.Constants.SUBSYSTEM_PROPERTY_PREFIX;
 
@@ -82,7 +82,7 @@ public abstract class SubsystemsExtension implements ConfigurableDSLElement<Subs
                 getStringProperty("parchment.mappingsVersion")
         );
         parchment.getToolArtifact().convention(
-                getStringProperty("parchment.toolArtifact").orElse(DEFAULT_PARCHMENT_TOOL_ARTIFACT)
+                getStringProperty("parchment.toolArtifact").orElse(JST_TOOL_ARTIFACT)
         );
         parchment.getAddRepository().convention(
                 getBooleanProperty("parchment.addRepository").orElse(true)

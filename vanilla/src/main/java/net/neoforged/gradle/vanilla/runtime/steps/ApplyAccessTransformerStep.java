@@ -15,7 +15,6 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -33,13 +32,15 @@ public class ApplyAccessTransformerStep implements IStep {
             });
         }
 
+
         final TaskProvider<? extends AccessTransformer> task = CommonRuntimeTaskUtils.createAccessTransformer(
                 definition,
                 "user",
                 workingDirectory,
                 additionalTaskConfigurator,
                 accessTransformerFiles.getFiles().getAsFileTree(),
-                accessTransformerFiles.getEntries().get()
+                accessTransformerFiles.getEntries().get(),
+                definition.getListLibrariesTaskProvider()
         );
 
         task.configure(t -> {
