@@ -214,3 +214,97 @@ runs {
 }
 ``` 
 No other action is needed.
+
+## Using conventions
+### Disabling conventions
+By default, conventions are enabled.
+If you want to disable conventions, you can do so by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.enabled=false
+```
+We will consider the conventions to be enabled going forward, so if you want to disable them, you will have to do so explicitly.
+### Configurations
+NeoGradle will add several `Configurations` to your project.
+This convention can be disabled by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.configurations.enabled=false
+```
+
+Per SourceSet the following configurations are added, where XXX is the SourceSet name:
+- XXXLocalRuntime
+- XXXLocalRunRuntime
+> [!NOTE]
+> For this to work, your SourceSets need to be defined before your dependency block.
+
+Per Run the following configurations are added:
+- XXXRunRuntime
+> [!NOTE]
+> For this to work, your Runs need to be defined before your dependency block.
+
+Globally the following configurations are added:
+- runRuntime
+
+#### LocalRuntime (Per SourceSet)
+This configuration is used to add dependencies to your local projects runtime only, without exposing them to the runtime of other projects.
+
+#### LocalRunRuntime (Per SourceSet)
+This configuration is used to add dependencies to the local runtime of the runs you add the SourceSets too, without exposing them to the runtime of other runs.
+
+#### RunRuntime (Per Run)
+This configuration is used to add dependencies to the runtime of a specific run only, without exposing them to the runtime of other runs.
+
+#### runRuntime (Global)
+This configuration is used to add dependencies to the runtime of all runs.
+
+### Sourceset Management
+#### Automatic inclusion of the current project in its runs
+By default, the current project is automatically included in its runs.
+If you want to disable this, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.sourceset.automatic-inclusion=false
+```
+This is equivalent to setting the following in your build.gradle:
+```groovy
+runs {
+    configureEach { run ->
+        run.modSource sourceSets.main
+    }
+}
+```
+
+### IDE Integrations
+To disable the IDE integrations, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.enabled=false
+```
+#### IDEA
+To disable the IDEA integration, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.enabled=false
+```
+##### Run with IDEA
+If you have configured your IDEA IDE to run with its own compiler, you can disable the autodetection of the IDEA compiler by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.compiler-detection=false
+```
+This will set the DSL property:
+```groovy
+idea {
+    runs {
+        runWithIdea = true / false
+    }
+}
+```
+##### IDEA Compiler output directory
+If you want to change the output directory of the IDEA compiler, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.compiler-output-dir=<path>
+```
+By default, this is set to 'out', and configured in the DSL as:
+```groovy
+idea {
+    runs {
+        outDirectory = '<path>'
+    }
+}
+```

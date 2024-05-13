@@ -11,6 +11,44 @@ class RunTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
+
+    def "runs can be declared before the dependencies block"() {
+        given:
+        def project = create("runs_before_dependencies", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            runs {
+                client {
+                    modSource project.sourceSets.main
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':tasks')
+        }
+
+        then:
+        run.task(':tasks').outcome == TaskOutcome.SUCCESS
+        run.output.contains('runClient')
+    }
+
     def "userdev supports custom run dependencies"() {
         given:
         def project = create("run_with_custom_dependencies", {
