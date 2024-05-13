@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.internal.file.FileOperations;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
@@ -13,10 +14,10 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,7 +55,7 @@ public abstract class UnpackJavaSources extends DefaultRuntime {
 
         final File input = getInputZip().getAsFile().get();
 
-        final FileTree source = getProject().zipTree(input);
+        final FileTree source = getOperations().zipTree(input);
         source.visit(fileVisitDetails -> {
             if (fileVisitDetails.isDirectory() || !fileVisitDetails.getName().endsWith(".java")) return;
             try (final InputStream is = fileVisitDetails.open()) {
@@ -87,4 +88,7 @@ public abstract class UnpackJavaSources extends DefaultRuntime {
 
     @OutputDirectory
     public abstract DirectoryProperty getUnpackingTarget();
+
+    @Inject
+    public abstract FileOperations getOperations();
 }
