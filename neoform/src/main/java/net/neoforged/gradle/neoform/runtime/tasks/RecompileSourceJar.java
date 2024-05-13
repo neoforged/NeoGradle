@@ -24,6 +24,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.internal.CurrentJvmToolchainSpec;
@@ -32,6 +33,7 @@ import org.gradle.work.InputChanges;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.zip.ZipOutputStream;
 
 @CacheableTask
@@ -63,7 +65,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
             if (!getJavaVersion().isPresent()) {
-                return toolChain.launcherFor(new CurrentJvmToolchainSpec(getObjectFactory()));
+                return toolChain.launcherFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(JavaLanguageVersion.of(Objects.requireNonNull(Jvm.current().getJavaVersion()).getMajorVersion())));
             }
 
             return toolChain.launcherFor(spec -> spec.getLanguageVersion().set(getJavaVersion()));
