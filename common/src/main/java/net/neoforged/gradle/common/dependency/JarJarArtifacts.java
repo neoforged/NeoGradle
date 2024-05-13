@@ -8,13 +8,15 @@ import net.neoforged.jarjar.metadata.ContainedJarIdentifier;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentSelector;
-import org.gradle.api.artifacts.result.*;
+import org.gradle.api.artifacts.result.DependencyResult;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.artifacts.result.ResolvedComponentResult;
+import org.gradle.api.artifacts.result.ResolvedDependencyResult;
+import org.gradle.api.artifacts.result.ResolvedVariantResult;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
-import org.gradle.api.capabilities.Capability;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.SetProperty;
@@ -23,7 +25,14 @@ import org.gradle.api.tasks.Nested;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class JarJarArtifacts {
@@ -68,6 +77,7 @@ public abstract class JarJarArtifacts {
 
         includedArtifacts.finalizeValueOnRead();
         includedRootComponents.finalizeValueOnRead();
+        getResolvedArtifacts().finalizeValueOnRead();
 
         final DependencyFilter filter = getDependencyFilter();
         final DependencyVersionInformationHandler versionHandler = getDependencyVersionInformationHandler();
@@ -81,6 +91,14 @@ public abstract class JarJarArtifacts {
             );
         }).getArtifacts().getResolvedArtifacts());
         getIncludedRootComponents().add(jarJarConfiguration.getIncoming().getResolutionResult().getRootComponent());
+    }
+
+    public void setConfigurations(Collection<? extends Configuration> configurations) {
+        includedRootComponents.empty();
+        includedArtifacts.empty();
+        for (Configuration configuration : configurations) {
+            configuration(configuration);
+        }
     }
 
     private static List<ResolvedJarJarArtifact> getIncludedJars(DependencyFilter filter, DependencyVersionInformationHandler versionHandler, Set<ResolvedComponentResult> rootComponents, Set<ResolvedArtifactResult> artifacts) {

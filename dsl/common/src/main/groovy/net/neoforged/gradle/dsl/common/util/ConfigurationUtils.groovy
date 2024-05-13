@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.common.util
 
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
@@ -10,8 +11,12 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 
+import java.util.concurrent.atomic.AtomicInteger
+
 @CompileStatic
 class ConfigurationUtils {
+
+    private static AtomicInteger temporaryConfigurationCounter = new AtomicInteger(0)
 
     private ConfigurationUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: ConfigurationUtils. This is a utility class")
@@ -25,7 +30,8 @@ class ConfigurationUtils {
      * @return The detached configuration
      */
     static Configuration temporaryConfiguration(final Project project, final Dependency... dependencies) {
-        final Configuration configuration = project.getConfigurations().detachedConfiguration(dependencies)
+        final Configuration configuration = project.getConfigurations().detachedConfiguration(dependencies);
+
         configuration.setCanBeConsumed(false)
         configuration.setCanBeResolved(true)
 
