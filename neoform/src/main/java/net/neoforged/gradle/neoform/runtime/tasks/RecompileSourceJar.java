@@ -19,9 +19,9 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
-import org.gradle.jvm.toolchain.internal.CurrentJvmToolchainSpec;
 
 import javax.inject.Inject;
+import java.util.Objects;
 
 @CacheableTask
 public abstract class RecompileSourceJar extends JavaCompile implements Runtime {
