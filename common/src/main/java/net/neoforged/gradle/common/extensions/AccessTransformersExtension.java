@@ -16,22 +16,19 @@ public abstract class AccessTransformersExtension extends BaseFilesWithEntriesEx
     private transient final DependencyHandler projectDependencies;
     private transient final ArtifactHandler projectArtifacts;
 
+    @SuppressWarnings("UnstableApiUsage")
     @Inject
     public AccessTransformersExtension(Project project) {
         super(project);
 
         this.projectDependencies = project.getDependencies();
         this.projectArtifacts = project.getArtifacts();
-    }
 
-    @Override
-    public Dependency consume(Object notation) {
-        return this.projectDependencies.add(CommonProjectPlugin.ACCESS_TRANSFORMER_CONFIGURATION, notation);
-    }
-
-    @Override
-    public Dependency consumeApi(Object notation) {
-        return this.projectDependencies.add(CommonProjectPlugin.ACCESS_TRANSFORMER_API_CONFIGURATION, notation);
+        // We have to add these after project evaluation because of dependency replacement making configurations non-lazy; adding them earlier would prevent further addition of dependencies
+        project.afterEvaluate(p -> {
+            p.getConfigurations().maybeCreate(CommonProjectPlugin.ACCESS_TRANSFORMER_CONFIGURATION).fromDependencyCollector(getConsume());
+            p.getConfigurations().maybeCreate(CommonProjectPlugin.ACCESS_TRANSFORMER_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());
+        });
     }
 
     @Override
