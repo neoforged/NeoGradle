@@ -27,6 +27,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.jetbrains.annotations.Nullable
 
@@ -155,7 +156,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         })
     }
 
-    @Input
+    @Nested
     @DSLProperty
     @Optional
     abstract ListProperty<Processor> getProcessors();
@@ -200,7 +201,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         })
     }
 
-    @Input
+    @Nested
     @DSLProperty
     @Optional
     abstract SetProperty<Library> getLibraries();
