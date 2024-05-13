@@ -7,6 +7,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 
 @CompileStatic
@@ -115,7 +116,7 @@ class ConfigurationUtils {
                 //Runtime is a special bunny, we need to make our own configuration in this state to handle it.
                 //TODO: Once we add the conventions subsystem use its standardized approach.
                 final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(
-                    GradleInternalUtils.getSourceSetName(sourceSet, "runtimeNotPublished")
+                        getSourceSetName(sourceSet, "runtimeNotPublished")
                 )
                 runtimeClasspath.extendsFrom(reallyRuntimeOnly)
                 targets.add(reallyRuntimeOnly)
@@ -140,5 +141,19 @@ class ConfigurationUtils {
                 getAllSuperConfigurationsRecursive(config, supers)
             }
         }}
+    }
+
+    /**
+     * Gets the name of the source set with the given post fix
+     *
+     * @param sourceSet The source set to get the name of
+     * @param postFix The post fix to append to the source set name
+     * @return The name of the source set with the post fix
+     */
+    private static String getSourceSetName(SourceSet sourceSet, String postFix) {
+        final String capitalized = postFix.capitalize()
+        final String name = sourceSet.getName() == SourceSet.MAIN_SOURCE_SET_NAME ? "" : sourceSet.getName().capitalize()
+
+        return (name + capitalized).uncapitalize()
     }
 }
