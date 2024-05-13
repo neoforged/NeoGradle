@@ -6,9 +6,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 
 @CompileStatic
@@ -65,54 +63,56 @@ class ConfigurationUtils {
     static List<Configuration> findReplacementConfigurations(final Project project, final Configuration configuration) {
         final Set<Configuration> resultContainer = new HashSet<>();
 
-        resultContainer.addAll(findCompileClasspathSourceSet(project, configuration))
-        resultContainer.addAll(findRuntimeClasspathSourceSet(project, configuration))
+        resultContainer.addAll(findCompileOnlyConfigurationForSourceSet(project, configuration))
+        resultContainer.addAll(findRuntimeOnlyConfigurationFromSourceSet(project, configuration))
 
         return resultContainer.toList()
     }
 
-    static List<Configuration> findCompileClasspathSourceSet(final Project project, final Configuration configuration) {
+    static List<Configuration> findCompileOnlyConfigurationForSourceSet(final Project project, final Configuration configuration) {
         final SourceSetContainer sourceSetContainer = project.getExtensions().getByType(SourceSetContainer.class)
         final List<Configuration> targets = new ArrayList<>();
 
         sourceSetContainer.forEach {sourceSet -> {
-            final Configuration sourceSetConfiguration = project.getConfigurations().findByName(sourceSet.getCompileClasspathConfigurationName())
-            if (sourceSetConfiguration == null)
+            final Configuration compileOnly = project.getConfigurations().findByName(sourceSet.getCompileOnlyConfigurationName())
+            final Configuration compileClasspath = project.getConfigurations().findByName(sourceSet.getCompileClasspathConfigurationName());
+            if (compileOnly == null)
                 return;
 
-            if (configuration == sourceSetConfiguration) {
+            if (configuration == compileOnly) {
                 targets.clear()
-                targets.add(sourceSetConfiguration)
+                targets.add(compileOnly)
                 return targets
             }
 
-            final Set<Configuration> supers = getAllSuperConfigurations(sourceSetConfiguration)
-            if (supers.contains(configuration)) {
-                targets.add(sourceSetConfiguration)
+            final Set<Configuration> supers = getAllSuperConfigurations(compileClasspath)
+            if (supers.contains(compileOnly) && supers.contains(configuration)) {
+                targets.add(compileOnly)
             }
         }}
 
         return targets
     }
 
-    static List<Configuration> findRuntimeClasspathSourceSet(final Project project, final Configuration configuration) {
+    static List<Configuration> findRuntimeOnlyConfigurationFromSourceSet(final Project project, final Configuration configuration) {
         final SourceSetContainer sourceSetContainer = project.getExtensions().getByType(SourceSetContainer.class)
         final List<Configuration> targets = new ArrayList<>();
 
         sourceSetContainer.forEach {sourceSet -> {
-            final Configuration sourceSetConfiguration = project.getConfigurations().findByName(sourceSet.getRuntimeClasspathConfigurationName())
-            if (sourceSetConfiguration == null)
+            final Configuration runtimeOnly = project.getConfigurations().findByName(sourceSet.getRuntimeOnlyConfigurationName())
+            final Configuration runtimeClasspath = project.getConfigurations().findByName(sourceSet.getRuntimeClasspathConfigurationName());
+            if (runtimeOnly == null)
                 return;
 
-            if (configuration == sourceSetConfiguration) {
+            if (configuration == runtimeOnly) {
                 targets.clear()
-                targets.add(sourceSetConfiguration)
+                targets.add(runtimeOnly)
                 return targets
             }
 
-            final Set<Configuration> supers = getAllSuperConfigurations(sourceSetConfiguration)
-            if (supers.contains(configuration)) {
-                targets.add(sourceSetConfiguration)
+            final Set<Configuration> supers = getAllSuperConfigurations(runtimeClasspath)
+            if (supers.contains(runtimeOnly) && supers.contains(configuration)) {
+                targets.add(runtimeOnly)
             }
         }}
 

@@ -52,7 +52,7 @@ public class ConfigurationUtilsTest {
 
         when(compileClasspath.getExtendsFrom()).thenReturn(buildConfigurationSet(implementation));
 
-        final List<Configuration> result = ConfigurationUtils.findCompileClasspathSourceSet(project, implementation);
+        final List<Configuration> result = ConfigurationUtils.findCompileOnlyConfigurationForSourceSet(project, implementation);
 
         Assertions.assertEquals(buildConfigurationList(compileClasspath), result);
     }
@@ -91,7 +91,7 @@ public class ConfigurationUtilsTest {
 
         when(runtimeClasspath.getExtendsFrom()).thenReturn(buildConfigurationSet(implementation));
 
-        final List<Configuration> result = ConfigurationUtils.findRuntimeClasspathSourceSet(project, implementation);
+        final List<Configuration> result = ConfigurationUtils.findRuntimeOnlyConfigurationFromSourceSet(project, implementation);
 
         Assertions.assertEquals(buildConfigurationList(runtimeClasspath), result);
     }
