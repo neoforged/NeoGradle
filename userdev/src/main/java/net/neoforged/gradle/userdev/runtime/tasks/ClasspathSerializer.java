@@ -14,6 +14,9 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
 
     public ClasspathSerializer() {
         getOutputFileName().convention("classpath.txt");
+
+        setGroup("NeoGradle/Runs");
+        setDescription("Serializes the classpath of the run to a file.");
     }
 
     @TaskAction

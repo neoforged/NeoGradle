@@ -3,7 +3,9 @@ plugins {
 }
 
 dependencies {
-    api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
+    api ("org.codehaus.groovy:groovy-all:${project.groovy_version}", {
+        exclude group: 'junit'
+    })
     api "commons-io:commons-io:${project.commons_io_version}"
     api "org.apache.maven:maven-artifact:${project.maven_artifact_version}"
     api "com.google.guava:guava:${project.guava_version}"
