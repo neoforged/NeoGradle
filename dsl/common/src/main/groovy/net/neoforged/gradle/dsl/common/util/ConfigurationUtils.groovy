@@ -63,13 +63,13 @@ class ConfigurationUtils {
     static List<Configuration> findReplacementConfigurations(final Project project, final Configuration configuration) {
         final Set<Configuration> resultContainer = new HashSet<>();
 
-        resultContainer.addAll(findCompileOnlyConfigurationForSourceSet(project, configuration))
-        resultContainer.addAll(findRuntimeOnlyConfigurationFromSourceSet(project, configuration))
+        resultContainer.addAll(findCompileOnlyConfigurationForSourceSetReplacement(project, configuration))
+        resultContainer.addAll(findRuntimeOnlyConfigurationFromSourceSetReplacement(project, configuration))
 
         return resultContainer.toList()
     }
 
-    static List<Configuration> findCompileOnlyConfigurationForSourceSet(final Project project, final Configuration configuration) {
+    static List<Configuration> findCompileOnlyConfigurationForSourceSetReplacement(final Project project, final Configuration configuration) {
         final SourceSetContainer sourceSetContainer = project.getExtensions().getByType(SourceSetContainer.class)
         final List<Configuration> targets = new ArrayList<>();
 
@@ -94,7 +94,7 @@ class ConfigurationUtils {
         return targets
     }
 
-    static List<Configuration> findRuntimeOnlyConfigurationFromSourceSet(final Project project, final Configuration configuration) {
+    static List<Configuration> findRuntimeOnlyConfigurationFromSourceSetReplacement(final Project project, final Configuration configuration) {
         final SourceSetContainer sourceSetContainer = project.getExtensions().getByType(SourceSetContainer.class)
         final List<Configuration> targets = new ArrayList<>();
 
@@ -112,7 +112,13 @@ class ConfigurationUtils {
 
             final Set<Configuration> supers = getAllSuperConfigurations(runtimeClasspath)
             if (supers.contains(runtimeOnly) && supers.contains(configuration)) {
-                targets.add(runtimeOnly)
+                //Runtime is a special bunny, we need to make our own configuration in this state to handle it.
+                //TODO: Once we add the conventions subsystem use its standardized approach.
+                final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(
+                    GradleInternalUtils.getSourceSetName(sourceSet, "runtimeNotPublished")
+                )
+                runtimeClasspath.extendsFrom(reallyRuntimeOnly)
+                targets.add(reallyRuntimeOnly)
             }
         }}
 
