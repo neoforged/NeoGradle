@@ -50,6 +50,8 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks('dependencies')
+            it.debug()
+            it.stacktrace()
         }
 
         then:

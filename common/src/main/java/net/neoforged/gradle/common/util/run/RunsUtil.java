@@ -40,7 +40,7 @@ public class RunsUtil {
     
     public static Run create(final Project project, final String name) {
         final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
-        
+
         final TaskProvider<RunExec> runTask = project.getTasks().register(createTaskName(name), RunExec.class, runExec -> {
             runExec.getRun().set(run);
         });

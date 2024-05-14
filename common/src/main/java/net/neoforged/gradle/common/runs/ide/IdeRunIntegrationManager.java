@@ -11,10 +11,12 @@ import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.RunsUtil;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.util.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -91,7 +93,32 @@ public class IdeRunIntegrationManager {
             ideManager.apply(new RunsImportAction());
         });
     }
-    
+
+    public void configureIdeaConventions(Project project, IDEA ideaConventions) {
+        final Project rootProject = project.getRootProject();
+        final IdeaModel ideaModel = rootProject.getExtensions().getByType(IdeaModel.class);
+        final IdeaProject ideaProject = ideaModel.getProject();
+        final ExtensionAware extensionAware = (ExtensionAware) ideaProject;
+        final IdeaRunsExtension runsExtension = extensionAware.getExtensions().getByType(IdeaRunsExtension.class);
+
+        runsExtension.getRunWithIdea().convention(
+                ideaConventions.getShouldUseCompilerDetection()
+                        .map(useCompilerDetection -> {
+                            if (!useCompilerDetection) {
+                                return false;
+                            }
+
+                            final File DotIdeaDirectory = new File(project.getProjectDir(), ".idea");
+                            final File GradleXml = new File(DotIdeaDirectory, "gradle.xml");
+                            return FileUtils.contains(GradleXml, "<option name=\"delegatedBuild\" value=\"false\" />");
+                        })
+        );
+
+        runsExtension.getOutDirectory().convention(
+                ideaConventions.getCompilerOutputDir()
+        );
+    }
+
     private static final class RunsImportAction implements IdeManagementExtension.IdeImportAction {
         
         @Override
