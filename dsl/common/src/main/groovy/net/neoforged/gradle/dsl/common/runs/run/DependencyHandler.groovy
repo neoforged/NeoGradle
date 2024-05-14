@@ -19,24 +19,10 @@ interface DependencyHandler extends BaseDSLElement<DependencyHandler>, Dependenc
     Configuration getRuntimeConfiguration();
 
     /**
-     * The dependency configuration that contains all the declared mod dependencies.
-     */
-    @Internal
-    Configuration getModsConfiguration();
-
-    /**
      * Adds a dependency to the runtime configuration.
      *
      * @return The dependency collector.
      */
     @Internal
     DependencyCollector getRuntime();
-
-    /**
-     * Adds a dependency to the mods configuration.
-     *
-     * @return The dependency collector.
-     */
-    @Internal
-    DependencyCollector getMod();
 }
