@@ -248,9 +248,11 @@ Globally the following configurations are added:
 
 #### LocalRuntime (Per SourceSet)
 This configuration is used to add dependencies to your local projects runtime only, without exposing them to the runtime of other projects.
+Requires source set conventions to be enabled
 
 #### LocalRunRuntime (Per SourceSet)
 This configuration is used to add dependencies to the local runtime of the runs you add the SourceSets too, without exposing them to the runtime of other runs.
+Requires source set conventions to be enabled
 
 #### Run (Per Run)
 This configuration is used to add dependencies to the runtime of a specific run only, without exposing them to the runtime of other runs.
@@ -267,14 +269,14 @@ This configuration is used to add dependencies (and their dependencies), straigh
 ### Sourceset Management
 To disable the sourceset management, you can set the following property in your gradle.properties:
 ```properties
-neogradle.subsystems.conventions.sourceset.enabled=false
+neogradle.subsystems.conventions.sourcesets.enabled=false
 ```
 
 #### Automatic inclusion of the current project in its runs
 By default, the current project is automatically included in its runs.
 If you want to disable this, you can set the following property in your gradle.properties:
 ```properties
-neogradle.subsystems.conventions.sourceset.automatic-inclusion=false
+neogradle.subsystems.conventions.sourcesets.automatic-inclusion=false
 ```
 
 This is equivalent to setting the following in your build.gradle:
@@ -289,13 +291,12 @@ runs {
 By default, the local run runtime configuration of a sourceset is automatically included in the runs configuration of the run.
 If you want to disable this, you can set the following property in your gradle.properties:
 ```properties
-neogradle.subsystems.conventions.sourceset.automatic-inclusion-local-run-runtime=false
+neogradle.subsystems.conventions.sourcesets.automatic-inclusion-local-run-runtime=false
 ```
 This is equivalent to setting the following in your build.gradle:
 ```groovy
 runs {
     configureEach { run ->
-        run.modSource sourceSets.main
         run.dependencies {
             runtime sourceSets.main.configurations.localRunRuntime
         }

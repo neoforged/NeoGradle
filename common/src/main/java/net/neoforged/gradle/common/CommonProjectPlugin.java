@@ -204,8 +204,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
                 final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName("configurations");
 
-                sourceSetConfigurations.add(project.getConfigurations().create(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getLocalRuntimeConfigurationPostFix().get())));
-                sourceSetConfigurations.add(project.getConfigurations().create(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
+                final Configuration sourceSetLocalRuntimeConfiguration = project.getConfigurations().create(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getLocalRuntimeConfigurationPostFix().get()));
+                sourceSetConfigurations.add(sourceSetLocalRuntimeConfiguration);
+
+                final Configuration sourceSetRunRuntimeConfiguration = project.getConfigurations().create(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get()));
+                sourceSetConfigurations.add(sourceSetRunRuntimeConfiguration);
+
+                final Configuration sourceSetRuntimeClasspath = project.getConfigurations().maybeCreate(sourceSet.getRuntimeClasspathConfigurationName());
+                sourceSetRuntimeClasspath.extendsFrom(sourceSetLocalRuntimeConfiguration);
             });
         }
 
@@ -228,14 +234,13 @@ public class CommonProjectPlugin implements Plugin<Project> {
         final Configurations configurations = conventions.getConfigurations();
         final Runs runs = conventions.getRuns();
 
-        if (!configurations.getIsEnabled().get())
+        if (!runs.getIsEnabled().get())
             return;
 
-        final Configuration runRuntimeConfiguration = project.getConfigurations().create(configurations.getRunRuntimeConfigurationName().get());
-        final Configuration runModsConfiguration = project.getConfigurations().create(configurations.getRunModsConfigurationName().get());
-
         if (runs.getShouldDefaultRunsBeCreated().get()) {
-            project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) runTypesContainer -> runTypesContainer.configureEach(runType -> {
+            final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) project.getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
+            //Force none lazy resolve here.
+            runTypes.whenObjectAdded(runType -> {
                 project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runContainer -> {
                     if (runContainer.getAsMap().containsKey(runType.getName()))
                         return;
@@ -244,8 +249,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
                         run.configure(runType);
                     });
                 });
-            }));
+            });
         }
+
+        if (!configurations.getIsEnabled().get())
+            return;
+
+        final Configuration runRuntimeConfiguration = project.getConfigurations().create(configurations.getRunRuntimeConfigurationName().get());
+        final Configuration runModsConfiguration = project.getConfigurations().create(configurations.getRunModsConfigurationName().get());
 
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runContainer -> runContainer.configureEach(run -> {
             final Configuration runSpecificRuntimeConfiguration = project.getConfigurations().create(ConfigurationUtils.getRunName(run, configurations.getPerRunRuntimeConfigurationPostFix().get()));

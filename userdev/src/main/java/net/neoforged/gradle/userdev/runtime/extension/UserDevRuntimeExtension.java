@@ -89,10 +89,11 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         });
         
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
-        
-        getProject().getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> userdevProfile.getRunTypes().forEach((type) -> {
-            TypesUtil.registerWithPotentialPrefix(types, spec.getIdentifier(), type.getName(), type::copyTo);
-        }));
+
+        final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
+        userdevProfile.getRunTypes().forEach((type) -> {
+            TypesUtil.registerWithPotentialPrefix(runTypes, spec.getIdentifier(), type.getName(), type::copyTo);
+        });
         
         return new UserDevRuntimeDefinition(
                 spec,

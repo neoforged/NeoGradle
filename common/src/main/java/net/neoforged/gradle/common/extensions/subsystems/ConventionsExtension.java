@@ -69,7 +69,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
 
         @Inject
         public SourceSetsExtension(WithEnabledProperty parent) {
-            super(parent, "sourceSets");
+            super(parent, "sourcesets");
 
             getShouldMainSourceSetBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion").orElse(true));
             getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion-local-run-runtime").orElse(true));
