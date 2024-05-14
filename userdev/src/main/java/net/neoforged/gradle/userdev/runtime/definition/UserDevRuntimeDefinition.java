@@ -139,7 +139,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     task.getInputFiles().from(this.additionalUserDevDependencies);
                     task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
 
-                    Configuration userDependencies = run.getDependencies().get().getConfiguration();
+                    Configuration userDependencies = run.getDependencies().get().getRuntimeConfiguration();
                     task.getInputFiles().from(userDependencies);
                 }
         );

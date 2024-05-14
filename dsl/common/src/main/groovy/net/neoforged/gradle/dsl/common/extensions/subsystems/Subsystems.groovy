@@ -32,4 +32,10 @@ interface Subsystems extends BaseDSLElement<Subsystems> {
     @DSLProperty
     Parchment getParchment();
 
+    /**
+     * @return settings for the conventions subsystem
+     */
+    @Nested
+    @DSLProperty
+    Conventions getConventions();
 }

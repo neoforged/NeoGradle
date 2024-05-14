@@ -1,21 +1,16 @@
 package net.neoforged.gradle.common.extensions.subsystems;
 
 import net.minecraftforge.gdi.ConfigurableDSLElement;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.common.extensions.base.WithPropertyLookup;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
-import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_ARTIFACT_PREFIX;
@@ -23,15 +18,16 @@ import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_G
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_MAVEN_URL;
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_TOOL_ARTIFACT;
 import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_RECOMPILER_MAX_MEMORY;
-import static net.neoforged.gradle.dsl.common.util.Constants.SUBSYSTEM_PROPERTY_PREFIX;
 
-public abstract class SubsystemsExtension implements ConfigurableDSLElement<Subsystems>, Subsystems {
+public abstract class SubsystemsExtension extends WithPropertyLookup implements ConfigurableDSLElement<Subsystems>, Subsystems {
 
-    private final Project project;
+    private final Conventions conventions;
 
     @Inject
     public SubsystemsExtension(Project project) {
-        this.project = project;
+        super(project);
+
+        this.conventions = project.getObjects().newInstance(ConventionsExtension.class, project);
 
         configureDecompilerDefaults();
         configureRecompilerDefaults();
@@ -106,29 +102,8 @@ public abstract class SubsystemsExtension implements ConfigurableDSLElement<Subs
         });
     }
 
-    private Provider<String> getStringProperty(String propertyName) {
-        return this.project.getProviders().gradleProperty(SUBSYSTEM_PROPERTY_PREFIX + propertyName);
-    }
-
-    private Provider<Boolean> getBooleanProperty(String propertyName) {
-        String fullPropertyName = SUBSYSTEM_PROPERTY_PREFIX + propertyName;
-        return this.project.getProviders().gradleProperty(fullPropertyName)
-                .map(value -> {
-                    try {
-                        return Boolean.valueOf(value);
-                    } catch (Exception e) {
-                        throw new GradleException("Gradle Property " + fullPropertyName + " is not set to a boolean value: '" + value + "'");
-                    }
-                });
-    }
-
-    private Provider<List<String>> getSpaceSeparatedListProperty(String propertyName) {
-        return this.project.getProviders().gradleProperty(SUBSYSTEM_PROPERTY_PREFIX + propertyName)
-                .map(s -> Arrays.asList(s.split("\\s+")));
-    }
-
     @Override
-    public Project getProject() {
-        return project;
+    public Conventions getConventions() {
+        return conventions;
     }
 }

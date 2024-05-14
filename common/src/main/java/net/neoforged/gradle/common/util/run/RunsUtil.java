@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.tasks.RunExec;
+import net.neoforged.gradle.common.tasks.DownloadModsTask;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
@@ -40,7 +41,13 @@ public class RunsUtil {
     
     public static Run create(final Project project, final String name) {
         final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
-        
+
+        final TaskProvider<DownloadModsTask> downloadMods = project.getTasks().register(createTaskName("downloadMods", name), DownloadModsTask.class, downloadModsTask -> {
+            downloadModsTask.getRun().set(run);
+        });
+
+        run.dependsOn(downloadMods);
+
         final TaskProvider<RunExec> runTask = project.getTasks().register(createTaskName(name), RunExec.class, runExec -> {
             runExec.getRun().set(run);
         });

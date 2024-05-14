@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.common.util
 
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement
+import net.neoforged.gradle.dsl.common.runs.run.Run
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -156,9 +157,23 @@ class ConfigurationUtils {
      * @param postFix The post fix to append to the source set name
      * @return The name of the source set with the post fix
      */
-    private static String getSourceSetName(SourceSet sourceSet, String postFix) {
+    static String getSourceSetName(SourceSet sourceSet, String postFix) {
         final String capitalized = postFix.capitalize()
         final String name = sourceSet.getName() == SourceSet.MAIN_SOURCE_SET_NAME ? "" : sourceSet.getName().capitalize()
+
+        return (name + capitalized).uncapitalize()
+    }
+
+    /**
+     * Gets the name of the source set with the given post fix
+     *
+     * @param sourceSet The source set to get the name of
+     * @param postFix The post fix to append to the source set name
+     * @return The name of the source set with the post fix
+     */
+    static String getRunName(Run sourceSet, String postFix) {
+        final String capitalized = postFix.capitalize()
+        final String name = sourceSet.getName().capitalize()
 
         return (name + capitalized).uncapitalize()
     }

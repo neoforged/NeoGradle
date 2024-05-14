@@ -237,33 +237,46 @@ Per SourceSet the following configurations are added, where XXX is the SourceSet
 > For this to work, your SourceSets need to be defined before your dependency block.
 
 Per Run the following configurations are added:
-- XXXRunRuntime
+- XXXRun
+- XXXMod
 > [!NOTE]
 > For this to work, your Runs need to be defined before your dependency block.
 
 Globally the following configurations are added:
-- runRuntime
+- runs
+- mods
 
 #### LocalRuntime (Per SourceSet)
 This configuration is used to add dependencies to your local projects runtime only, without exposing them to the runtime of other projects.
 
 #### LocalRunRuntime (Per SourceSet)
 This configuration is used to add dependencies to the local runtime of the runs you add the SourceSets too, without exposing them to the runtime of other runs.
-This requires automatic dependency injection from sourcesets per run to be enabled (see below).
 
-#### RunRuntime (Per Run)
+#### Run (Per Run)
 This configuration is used to add dependencies to the runtime of a specific run only, without exposing them to the runtime of other runs.
 
-#### runRuntime (Global)
+#### Mod (Per Run)
+This configuration is used to add dependencies (and their dependencies), straight into the mods folder, without exposing them to the runtime of the run itself, or other runs.
+
+#### run (Global)
 This configuration is used to add dependencies to the runtime of all runs.
 
+#### mods (Global)
+This configuration is used to add dependencies (and their dependencies), straight into the mods folder of all runs, without exposing them to the runtime of the runs.
+
 ### Sourceset Management
+To disable the sourceset management, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.sourceset.enabled=false
+```
+
 #### Automatic inclusion of the current project in its runs
 By default, the current project is automatically included in its runs.
 If you want to disable this, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.sourceset.automatic-inclusion=false
 ```
+
 This is equivalent to setting the following in your build.gradle:
 ```groovy
 runs {
@@ -326,4 +339,17 @@ idea {
         outDirectory = '<path>'
     }
 }
+```
+
+### Runs
+To disable the runs conventions, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.runs.enabled=false
+```
+
+#### Automatic default run per type
+By default, a run is created for each type of run.
+If you want to disable this, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.runs.create-default-run-per-type=false
 ```
