@@ -133,31 +133,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
             sourceSet.getExtensions().create(ProjectHolder.class, ProjectHolderExtension.NAME, ProjectHolderExtension.class, project);
             sourceSet.getExtensions().create(RunnableSourceSet.NAME, RunnableSourceSet.class, project);
             sourceSet.getExtensions().add("runtimeDefinition", project.getObjects().property(CommonRuntimeDefinition.class));
-
-            sourceSet.getExtensions().add(Constants.SOURCESET_CONFIGURATIONS_EXTENSION, project.getObjects().domainObjectContainer(Configuration.class));
-            final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = new DelegatingDomainObjectContainer<Configuration>((NamedDomainObjectContainer<Configuration>) sourceSet.getExtensions().getByName(Constants.SOURCESET_CONFIGURATIONS_EXTENSION)) {
-                @Override
-                public boolean add(@Nullable Configuration e) {
-                    if (e == null)
-                        return false;
-
-                    return super.add(e);
-                }
-            };
-
-            //Add the gradle default configurations
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getApiConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getApiElementsConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getImplementationConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getCompileOnlyConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getCompileOnlyApiConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getCompileClasspathConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getAnnotationProcessorConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getRuntimeOnlyConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getRuntimeClasspathConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getRuntimeElementsConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getJavadocElementsConfigurationName()));
-            sourceSetConfigurations.add(project.getConfigurations().findByName(sourceSet.getSourcesElementsConfigurationName()));
         });
 
         project.getExtensions().add(
@@ -203,13 +178,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         if (configurations.getIsEnabled().get()) {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName(Constants.SOURCESET_CONFIGURATIONS_EXTENSION);
-
                 final Configuration sourceSetLocalRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getLocalRuntimeConfigurationPostFix().get()));
-                sourceSetConfigurations.add(sourceSetLocalRuntimeConfiguration);
-
-                final Configuration sourceSetRunRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get()));
-                sourceSetConfigurations.add(sourceSetRunRuntimeConfiguration);
+                project.getConfigurations().maybeCreate(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get()));
 
                 final Configuration sourceSetRuntimeClasspath = project.getConfigurations().maybeCreate(sourceSet.getRuntimeClasspathConfigurationName());
                 sourceSetRuntimeClasspath.extendsFrom(sourceSetLocalRuntimeConfiguration);
@@ -223,8 +193,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
                 if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get())
                     run.getModSources().get().forEach(sourceSet -> {
-                        final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName(Constants.SOURCESET_CONFIGURATIONS_EXTENSION);
-                        run.getDependencies().get().getRuntime().add(sourceSetConfigurations.getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
+                        run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
                     });
             }));
         });
