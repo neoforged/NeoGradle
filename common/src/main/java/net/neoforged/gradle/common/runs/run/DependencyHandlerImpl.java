@@ -25,11 +25,4 @@ public abstract class DependencyHandlerImpl implements DependencyHandler {
         configuration.fromDependencyCollector(this.getRuntime());
         return configuration;
     }
-
-    @Override
-    public Configuration getModsConfiguration() {
-        final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project);
-        configuration.fromDependencyCollector(this.getMod());
-        return configuration;
-    }
 }
