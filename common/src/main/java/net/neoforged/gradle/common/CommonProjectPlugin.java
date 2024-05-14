@@ -204,10 +204,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
                 final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName("configurations");
 
-                final Configuration sourceSetLocalRuntimeConfiguration = project.getConfigurations().create(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getLocalRuntimeConfigurationPostFix().get()));
+                final Configuration sourceSetLocalRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getLocalRuntimeConfigurationPostFix().get()));
                 sourceSetConfigurations.add(sourceSetLocalRuntimeConfiguration);
 
-                final Configuration sourceSetRunRuntimeConfiguration = project.getConfigurations().create(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get()));
+                final Configuration sourceSetRunRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get()));
                 sourceSetConfigurations.add(sourceSetRunRuntimeConfiguration);
 
                 final Configuration sourceSetRuntimeClasspath = project.getConfigurations().maybeCreate(sourceSet.getRuntimeClasspathConfigurationName());
@@ -255,18 +255,13 @@ public class CommonProjectPlugin implements Plugin<Project> {
         if (!configurations.getIsEnabled().get())
             return;
 
-        final Configuration runRuntimeConfiguration = project.getConfigurations().create(configurations.getRunRuntimeConfigurationName().get());
-        final Configuration runModsConfiguration = project.getConfigurations().create(configurations.getRunModsConfigurationName().get());
+        final Configuration runRuntimeConfiguration = project.getConfigurations().maybeCreate(configurations.getRunRuntimeConfigurationName().get());
 
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runContainer -> runContainer.configureEach(run -> {
-            final Configuration runSpecificRuntimeConfiguration = project.getConfigurations().create(ConfigurationUtils.getRunName(run, configurations.getPerRunRuntimeConfigurationPostFix().get()));
-            final Configuration runSpecificModsConfiguration = project.getConfigurations().create(ConfigurationUtils.getRunName(run, configurations.getPerRunModsConfigurationPostFix().get()));
+            final Configuration runSpecificRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getRunName(run, configurations.getPerRunRuntimeConfigurationPostFix().get()));
 
             run.getDependencies().get().getRuntime().add(runRuntimeConfiguration);
-            run.getDependencies().get().getMod().add(runModsConfiguration);
-
             run.getDependencies().get().getRuntime().add(runSpecificRuntimeConfiguration);
-            run.getDependencies().get().getMod().add(runSpecificModsConfiguration);
         }));
     }
 

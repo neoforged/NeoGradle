@@ -203,39 +203,6 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         run.output.contains("Could not find method clientRun() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
     }
 
-    def "disabling conventions globally prevents creation of runs configuration mod"() {
-        given:
-        def project = create("disable_globally_errors_mod", {
-            it.property('neogradle.subsystems.conventions.enabled', 'false')
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'                
-                clientMod 'org.jgrapht:jgrapht-core:+'
-            }
-            """)
-            it.withToolchains()
-        })
-
-        when:
-        def run = project.run {
-            it.tasks(':dependencies')
-            it.shouldFail()
-        }
-
-        then:
-        run.output.contains("Could not find method clientMod() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
-    }
-
     def "disabling conventions globally prevents creation of runs configuration runs"() {
         given:
         def project = create("disable_globally_errors_runs", {
@@ -266,72 +233,6 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Could not find method runs() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
-    }
-
-    def "disabling conventions globally prevents creation of runs configuration mods"() {
-        given:
-        def project = create("disable_globally_errors_mods", {
-            it.property('neogradle.subsystems.conventions.enabled', 'false')
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                mods 'org.jgrapht:jgrapht-core:+'
-            }
-            """)
-            it.withToolchains()
-        })
-
-        when:
-        def run = project.run {
-            it.tasks(':dependencies')
-            it.shouldFail()
-        }
-
-        then:
-        run.output.contains("Could not find method mods() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
-    }
-
-    def "using the mod convention configuration downloads the referenced mod"() {
-        given:
-        def project = create("mod_can_download_mods", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-                clientMod 'org.jgrapht:jgrapht-core:+'
-            }
-            """)
-            it.withToolchains()
-        })
-
-        when:
-        def run = project.run {
-            it.tasks(':downloadModsClient')
-        }
-
-        then:
-        def modsDir = run.file("runs/client/mods")
-
-        run.task(':downloadModsClient').outcome == TaskOutcome.SUCCESS
-        modsDir.listFiles().length >= 1 //At least one file has to be download, generally more.
     }
 
     def "using the run convention configuration puts the dependency on the runtime config"() {
@@ -368,40 +269,6 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run contains cp entry: true")
-    }
-
-    def "using the mods convention configuration downloads the referenced mod"() {
-        given:
-        def project = create("mods_can_download_mods", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-                mods 'org.jgrapht:jgrapht-core:+'
-            }
-            """)
-            it.withToolchains()
-        })
-
-        when:
-        def run = project.run {
-            it.tasks(':downloadModsClient')
-        }
-
-        then:
-        def modsDir = run.file("runs/client/mods")
-
-        run.task(':downloadModsClient').outcome == TaskOutcome.SUCCESS
-        modsDir.listFiles().length >= 1 //At least one file has to be download, generally more.
     }
 
     def "using the runs convention configuration puts the dependency on the runtime config"() {

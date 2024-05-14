@@ -39,22 +39,9 @@ interface Configurations extends BaseDSLElement<Configurations> {
     Property<String> getPerRunRuntimeConfigurationPostFix();
 
     /**
-     * The post-fix to apply to the per-run mods configuration added to a runs dependencies
-     */
-    @DSLProperty
-    Property<String> getPerRunModsConfigurationPostFix();
-
-    /**
      * The name of the runtime configuration that will be used for the local runtime configuration.
      * Note: this can not be configured via the buildscript and needs to be set in the gradle.properties file.
      */
     @DSLProperty
     Property<String> getRunRuntimeConfigurationName();
-
-    /**
-     * The name of the runtime configuration that will be used for the per-source-set runtime configuration.
-     * Note: this can not be configured via the buildscript and needs to be set in the gradle.properties file.
-     */
-    @DSLProperty
-    Property<String> getRunModsConfigurationName();
 }

@@ -59,9 +59,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
             getLocalRuntimeConfigurationPostFix().convention(getStringProperty("localRuntimeConfigurationPostFix").orElse("LocalRuntime"));
             getRunRuntimeConfigurationPostFix().convention(getStringProperty("perSourceSetRunRuntimeConfigurationPostFix").orElse("LocalRunRuntime"));
             getPerRunRuntimeConfigurationPostFix().convention(getStringProperty("perRunRuntimeConfigurationPostFix").orElse("Run"));
-            getPerRunModsConfigurationPostFix().convention(getStringProperty("perRunModsConfigurationPostFix").orElse("Mod"));
             getRunRuntimeConfigurationName().convention(getStringProperty("runRuntimeConfigurationName").orElse("runs"));
-            getRunModsConfigurationName().convention(getStringProperty("runModsConfigurationName").orElse("mods"));
         }
     }
 

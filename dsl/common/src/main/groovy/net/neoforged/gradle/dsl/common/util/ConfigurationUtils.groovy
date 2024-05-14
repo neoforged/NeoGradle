@@ -2,8 +2,10 @@ package net.neoforged.gradle.dsl.common.util
 
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems
 import net.neoforged.gradle.dsl.common.runs.run.Run
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
@@ -81,23 +83,25 @@ class ConfigurationUtils {
         final SourceSetContainer sourceSetContainer = project.getExtensions().getByType(SourceSetContainer.class)
         final List<Configuration> targets = new ArrayList<>();
 
-        sourceSetContainer.forEach {sourceSet -> {
-            final Configuration compileOnly = project.getConfigurations().findByName(sourceSet.getCompileOnlyConfigurationName())
-            final Configuration compileClasspath = project.getConfigurations().findByName(sourceSet.getCompileClasspathConfigurationName());
-            if (compileOnly == null)
-                return;
+        sourceSetContainer.forEach { sourceSet ->
+            {
+                final Configuration compileOnly = project.getConfigurations().findByName(sourceSet.getCompileOnlyConfigurationName())
+                final Configuration compileClasspath = project.getConfigurations().findByName(sourceSet.getCompileClasspathConfigurationName());
+                if (compileOnly == null)
+                    return;
 
-            if (configuration == compileOnly) {
-                targets.clear()
-                targets.add(compileOnly)
-                return targets
-            }
+                if (configuration == compileOnly) {
+                    targets.clear()
+                    targets.add(compileOnly)
+                    return targets
+                }
 
-            final Set<Configuration> supers = getAllSuperConfigurations(compileClasspath)
-            if (supers.contains(compileOnly) && supers.contains(configuration)) {
-                targets.add(compileOnly)
+                final Set<Configuration> supers = getAllSuperConfigurations(compileClasspath)
+                if (supers.contains(compileOnly) && supers.contains(configuration)) {
+                    targets.add(compileOnly)
+                }
             }
-        }}
+        }
 
         return targets
     }
@@ -106,29 +110,30 @@ class ConfigurationUtils {
         final SourceSetContainer sourceSetContainer = project.getExtensions().getByType(SourceSetContainer.class)
         final List<Configuration> targets = new ArrayList<>();
 
-        sourceSetContainer.forEach {sourceSet -> {
-            final Configuration runtimeOnly = project.getConfigurations().findByName(sourceSet.getRuntimeOnlyConfigurationName())
-            final Configuration runtimeClasspath = project.getConfigurations().findByName(sourceSet.getRuntimeClasspathConfigurationName());
-            if (runtimeOnly == null)
-                return;
+        sourceSetContainer.forEach { sourceSet ->
+            {
+                final Configuration runtimeOnly = project.getConfigurations().findByName(sourceSet.getRuntimeOnlyConfigurationName())
+                final Configuration runtimeClasspath = project.getConfigurations().findByName(sourceSet.getRuntimeClasspathConfigurationName());
+                if (runtimeOnly == null)
+                    return;
 
-            if (configuration == runtimeOnly) {
-                targets.clear()
-                targets.add(runtimeOnly)
-                return targets
-            }
+                if (configuration == runtimeOnly) {
+                    targets.clear()
+                    targets.add(runtimeOnly)
+                    return targets
+                }
 
-            final Set<Configuration> supers = getAllSuperConfigurations(runtimeClasspath)
-            if (supers.contains(runtimeOnly) && supers.contains(configuration)) {
-                //Runtime is a special bunny, we need to make our own configuration in this state to handle it.
-                //TODO: Once we add the conventions subsystem use its standardized approach.
-                final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(
-                        getSourceSetName(sourceSet, "runtimeNotPublished")
-                )
-                runtimeClasspath.extendsFrom(reallyRuntimeOnly)
-                targets.add(reallyRuntimeOnly)
+                final Set<Configuration> supers = getAllSuperConfigurations(runtimeClasspath)
+                if (supers.contains(runtimeOnly) && supers.contains(configuration)) {
+                    final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(getSourceSetName(
+                            sourceSet,
+                            project.getExtensions().getByType(Subsystems.class).getConventions().getConfigurations().getLocalRuntimeConfigurationPostFix().get()
+                    ))
+                    runtimeClasspath.extendsFrom(reallyRuntimeOnly)
+                    targets.add(reallyRuntimeOnly)
+                }
             }
-        }}
+        }
 
         return targets
     }
@@ -143,11 +148,13 @@ class ConfigurationUtils {
 
 
     private static void getAllSuperConfigurationsRecursive(final Configuration configuration, final Set<Configuration> supers) {
-        configuration.getExtendsFrom().forEach {config -> {
-            if (supers.add(config)) {
-                getAllSuperConfigurationsRecursive(config, supers)
+        configuration.getExtendsFrom().forEach { config ->
+            {
+                if (supers.add(config)) {
+                    getAllSuperConfigurationsRecursive(config, supers)
+                }
             }
-        }}
+        }
     }
 
     /**
