@@ -226,9 +226,9 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                 .add(new CollectLibraryInformationStep())
                 .add(new ExtractBundledServerStep())
                 .add(new RenameStep())
-                .add(new ApplyAccessTransformerStep())
                 .add(rawJarStep)
                 .add(new DecompileStep())
+                .add(new ApplyAccessTransformerStep())
                 .add(sourcesStep)
                 .build();
 
