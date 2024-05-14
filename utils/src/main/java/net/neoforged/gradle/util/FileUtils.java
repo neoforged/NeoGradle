@@ -312,11 +312,9 @@ public final class FileUtils {
     }
 
     public static boolean contains(final File file, final String shouldContain) {
-        try (final InputStream in = Files.newInputStream(file.toPath())) {
-            final byte[] bytes = new byte[in.available()];
-            in.read(bytes);
-            return new String(bytes).contains(shouldContain);
-        } catch (final IOException e) {
+        try {
+            return new String(Files.readAllBytes(file.toPath())).contains(shouldContain);
+        } catch (IOException e) {
             return false;
         }
     }
