@@ -30,4 +30,5 @@ class Constants {
     public static final String DEFAULT_RECOMPILER_MAX_MEMORY = "1g"
 
     public static final String SUBSYSTEM_PROPERTY_PREFIX = "neogradle.subsystems."
+    public static final String SOURCESET_CONFIGURATIONS_EXTENSION = "sourceSetConfigurations"
 }

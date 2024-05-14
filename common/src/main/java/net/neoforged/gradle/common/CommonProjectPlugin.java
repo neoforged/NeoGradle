@@ -48,6 +48,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDE
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.util.Constants;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.*;
@@ -133,8 +134,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
             sourceSet.getExtensions().create(RunnableSourceSet.NAME, RunnableSourceSet.class, project);
             sourceSet.getExtensions().add("runtimeDefinition", project.getObjects().property(CommonRuntimeDefinition.class));
 
-            sourceSet.getExtensions().add("configurations", project.getObjects().domainObjectContainer(Configuration.class));
-            final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = new DelegatingDomainObjectContainer<Configuration>((NamedDomainObjectContainer<Configuration>) sourceSet.getExtensions().getByName("configurations")) {
+            sourceSet.getExtensions().add(Constants.SOURCESET_CONFIGURATIONS_EXTENSION, project.getObjects().domainObjectContainer(Configuration.class));
+            final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = new DelegatingDomainObjectContainer<Configuration>((NamedDomainObjectContainer<Configuration>) sourceSet.getExtensions().getByName(Constants.SOURCESET_CONFIGURATIONS_EXTENSION)) {
                 @Override
                 public boolean add(@Nullable Configuration e) {
                     if (e == null)
@@ -202,7 +203,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         if (configurations.getIsEnabled().get()) {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName("configurations");
+                final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName(Constants.SOURCESET_CONFIGURATIONS_EXTENSION);
 
                 final Configuration sourceSetLocalRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getLocalRuntimeConfigurationPostFix().get()));
                 sourceSetConfigurations.add(sourceSetLocalRuntimeConfiguration);
@@ -222,7 +223,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
                 if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get())
                     run.getModSources().get().forEach(sourceSet -> {
-                        final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName("configurations");
+                        final NamedDomainObjectCollection<Configuration> sourceSetConfigurations = (NamedDomainObjectCollection<Configuration>) sourceSet.getExtensions().getByName(Constants.SOURCESET_CONFIGURATIONS_EXTENSION);
                         run.getDependencies().get().getRuntime().add(sourceSetConfigurations.getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
                     });
             }));
