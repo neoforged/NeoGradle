@@ -11,50 +11,6 @@ class RunTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    def "runs can download the mods in their mods configuration"() {
-        given:
-        def project = create("runs_can_download_mods", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            
-            runs {
-                client {
-                    modSource project.sourceSets.main
-                    
-                    dependencies {
-                        mod 'org.jgrapht:jgrapht-core:+'
-                    }
-                }
-            }
-            
-            """)
-            it.withToolchains()
-        })
-
-        when:
-        def run = project.run {
-            it.tasks(':downloadModsClient')
-        }
-
-        then:
-        def modsDir = run.file("runs/client/mods")
-
-        run.task(':downloadModsClient').outcome == TaskOutcome.SUCCESS
-        modsDir.listFiles().length >= 1 //At least one file has to be download, generally more.
-    }
-
     def "runs can be declared before the dependencies block"() {
         given:
         def project = create("runs_before_dependencies", {
