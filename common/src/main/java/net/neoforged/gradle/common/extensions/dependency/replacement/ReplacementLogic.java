@@ -70,7 +70,6 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
             //We only support module based dependencies.
             if (dependency instanceof ModuleDependency) {
                 final ModuleDependency moduleDependency = (ModuleDependency) dependency;
-                project.getLogger().lifecycle("Handling dependency " + moduleDependency.getGroup() + ":" + moduleDependency.getName() + " in configuration " + configuration.getName());
                 //Try replacing the dependency.
                 handleDependency(configuration, moduleDependency);
             }

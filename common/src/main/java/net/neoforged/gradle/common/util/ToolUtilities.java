@@ -44,16 +44,15 @@ public class ToolUtilities {
     private static <T> T resolveTool(final Project project, final Supplier<T> searcher) {
         //Grab the dynamic repository
         final Repository repository = project.getExtensions().getByType(Repository.class);
-        final ArtifactRepository artifactRepository = repository.getRepository();
 
-        //Remove it from the project, tools can never be in there, and we can get into trouble else-
-        project.getRepositories().remove(artifactRepository);
+        //Disable the repository
+        repository.disable();
 
         //Resolve the tool
         final T resolvedArtifact = searcher.get();
 
         //Re-add the repository
-        project.getRepositories().add(artifactRepository);
+        repository.enable();
 
         //Return the resolved artifact
         return resolvedArtifact;

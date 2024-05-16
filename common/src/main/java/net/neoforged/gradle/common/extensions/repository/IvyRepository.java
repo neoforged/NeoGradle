@@ -46,23 +46,18 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
 
     private final Project project;
 
-    private final ArtifactRepository gradleRepository;
+    private ArtifactRepository gradleRepository;
 
     @Inject
     public IvyRepository(Project project) {
         this.project = project;
         this.getRepositoryDirectory().convention(project.getLayout().getProjectDirectory().dir(".gradle/repositories"));
-        this.gradleRepository = this.createRepositories();
+        this.enable();
     }
 
     @Override
     public Project getProject() {
         return project;
-    }
-
-    @Override
-    public ArtifactRepository getRepository() {
-        return gradleRepository;
     }
 
     private ArtifactRepository createRepositories() {
@@ -75,6 +70,16 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     @Override
     @NotNull
     public abstract DirectoryProperty getRepositoryDirectory();
+
+    @Override
+    public void enable() {
+        this.gradleRepository = this.createRepositories();
+    }
+
+    @Override
+    public void disable() {
+        project.getRepositories().remove(gradleRepository);
+    }
 
     @SuppressWarnings("SameParameterValue") // Potentially this needs extension in the future.
     private Action<IvyArtifactRepository> repositoryConfiguration(
