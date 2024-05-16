@@ -147,24 +147,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //Needs to be before after evaluate
         configureConventions(project);
 
-        //Enforce parallel task execution.
-        final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
-        ideManagementExtension.apply(new IdeManagementExtension.IdeImportAction() {
-            @Override
-            public void eclipse(Project project, EclipseModel eclipse) {
-                setParallel(project);
-            }
-
-            @Override
-            public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
-                setParallel(project);
-            }
-
-            private void setParallel(Project project) {
-                project.getGradle().getStartParameter().setParallelProjectExecutionEnabled(true);
-            }
-        });
-
         project.afterEvaluate(this::applyAfterEvaluate);
     }
 
