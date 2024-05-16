@@ -201,4 +201,71 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         initialRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
 
+    def "the userdev runtime supports restricted repositories"() {
+        given:
+        def project = create("userdev_supports_loading_from_buildcache", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            //Note: This cannot be static so that fg.repository can be properly accessed
+            void exclusiveRepo(RepositoryHandler handler, String url, String... groups) {
+                handler.exclusiveContent {
+                    it.forRepositories(handler.maven {
+                        setUrl(url)
+                    })
+                    it.filter { f ->
+                        for (def group : groups) {
+                            f.includeGroup(group)
+                        } 
+                    }
+                }
+            }
+            
+            repositories {
+                exclusiveRepo(it, 'https://maven.tterrag.com/', 'team.chisel.ctm')
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.enableLocalBuildCache()
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('build')
+        }
+
+        then:
+        initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+
+        and:
+        def secondRun = project.run {
+            it.tasks('build')
+            it.stacktrace()
+        }
+
+        then:
+        secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
+        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+    }
+
 }
