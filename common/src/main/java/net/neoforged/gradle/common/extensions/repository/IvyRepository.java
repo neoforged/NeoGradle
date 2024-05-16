@@ -77,7 +77,14 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
             throw new IllegalStateException("Repository already enabled");
         }
 
+        //Create the repo and register it.
         this.gradleRepository = this.createRepositories();
+
+        //Now we write all data to the repo.
+        //Due to the way dep replacement works, and the fact that this set is a linked hashset,
+        //we do not need to sort these. And dependency that is dynamic and uses this repo,
+        //while also depending on another dynamic dependency, will have the other dynamic dependency
+        //written first.
         this.entries.forEach(this::write);
     }
 
@@ -144,6 +151,12 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     }
 
     private void create(Entry entry) {
+        //We only register here.
+        //The repo is not active yet, if we were to write now, we could get into trouble
+        //when somebody tries to resolve a dependency with the same module identifier,
+        //while having a different classifier.
+        //So we write when the repo is enabled in an after evaluate, at that point all entries
+        //are registered, and we are good to go.
         this.entries.add(entry);
     }
 
