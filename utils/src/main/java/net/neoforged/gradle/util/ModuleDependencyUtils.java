@@ -155,4 +155,12 @@ public final class ModuleDependencyUtils {
 
         return builder.toString();
     }
+
+    public static String toConfigurationName(String s) {
+        return s.toLowerCase(Locale.ROOT).replace('-', '_').replace('.', '_').replace(":","_");
+    }
+
+    public static String toConfigurationName(Dependency dependency) {
+        return toConfigurationName(format(dependency));
+    }
 }

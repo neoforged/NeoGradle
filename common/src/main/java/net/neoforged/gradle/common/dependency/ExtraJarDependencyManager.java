@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.runtime.tasks.GenerateExtraJar;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
@@ -76,6 +77,9 @@ public abstract class ExtraJarDependencyManager {
 
     private ReplacementResult generateReplacement(final Project project, final Dependency dependency) {
         final String minecraftVersion = dependency.getVersion();
+        if (minecraftVersion == null)
+            throw new IllegalArgumentException("Dependency version is null");
+
         return replacements.computeIfAbsent(minecraftVersion, (v) -> {
             final MinecraftArtifactCache minecraftArtifactCacheExtension = project.getExtensions().getByType(MinecraftArtifactCache.class);
 
@@ -87,7 +91,10 @@ public abstract class ExtraJarDependencyManager {
             return new ReplacementResult(
                     project,
                     extraJarTaskProvider,
-                    project.getConfigurations().detachedConfiguration(),
+                    ConfigurationUtils.temporaryUnhandledConfiguration(
+                            project.getConfigurations(),
+                            "EmptyExtraJarConfigurationFor" + minecraftVersion.replace(".", "_")
+                    ),
                     Collections.emptySet()
             );
         });

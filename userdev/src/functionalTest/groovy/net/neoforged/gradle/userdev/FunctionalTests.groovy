@@ -140,12 +140,12 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
-            it.debugBuildCache()
         })
 
         when:
         def initialRun = project.run {
             it.tasks('build')
+            it.stacktrace()
         }
 
         then:
@@ -155,6 +155,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         and:
         def secondRun = project.run {
             it.tasks('build')
+            it.stacktrace()
         }
 
         then:

@@ -10,10 +10,12 @@ import javax.inject.Inject;
 public abstract class DependencyHandlerImpl implements DependencyHandler {
 
     private final Project project;
+    private final String context;
 
     @Inject
-    public DependencyHandlerImpl(Project project) {
+    public DependencyHandlerImpl(Project project, String context) {
         this.project = project;
+        this.context = context;
     }
 
     public Project getProject() {
@@ -21,7 +23,7 @@ public abstract class DependencyHandlerImpl implements DependencyHandler {
     }
 
     public Configuration getRuntimeConfiguration() {
-        final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project);
+        final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project, context);
         configuration.fromDependencyCollector(this.getRuntime());
         return configuration;
     }

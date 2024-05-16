@@ -91,7 +91,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create("allRuntimes", RuntimesExtension.class);
-        project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyRepository.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);

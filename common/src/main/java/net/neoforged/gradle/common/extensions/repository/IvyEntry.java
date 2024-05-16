@@ -2,6 +2,7 @@ package net.neoforged.gradle.common.extensions.repository;
 
 import net.minecraftforge.gdi.BaseDSLElement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -75,7 +76,10 @@ public abstract class IvyEntry implements BaseDSLElement<Entry>, Entry, Serializ
         public Entry.Builder from(Dependency dependency) {
             return from(
                     dependency,
-                    project.getConfigurations().detachedConfiguration()
+                    ConfigurationUtils.temporaryUnhandledConfiguration(
+                            project.getConfigurations(),
+                            "EmptyDependenciesFor" + ModuleDependencyUtils.toConfigurationName(dependency)
+                    )
             );
         }
 
