@@ -37,6 +37,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     static Gson createGson(ObjectFactory objectFactory) {
         return new GsonBuilder().disableHtmlEscaping()
                 .registerTypeHierarchyAdapter(UserdevProfile.class, new Serializer(objectFactory))
+                .registerTypeAdapter(RunType.class, new RunType.Serializer(objectFactory))
                 .registerTypeHierarchyAdapter(ToolExecution.class, new ToolExecution.Serializer(objectFactory))
                 .create()
     }
@@ -90,6 +91,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @Input
     @DSLProperty
     @Optional
+    abstract ListProperty<String> getAdditionalTestDependencyArtifactCoordinates();
+
+    @Input
+    @DSLProperty
+    @Optional
     abstract Property<String> getInjectedFilesDirectory();
 
     @Nested
@@ -102,6 +108,18 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
         final RunType runType = factory.newInstance(RunType.class, name)
         configurer.execute(runType)
         runTypes.add(runType)
+    }
+
+    @Nested
+    @DSLProperty
+    @Optional
+    abstract Property<RunType> getUnitTestRunType();
+
+    @ClosureEquivalent
+    void unitTestRunType(Action<RunType> configurer) {
+        final RunType runType = factory.newInstance(RunType.class, "unitTest")
+        configurer.execute(runType)
+        unitTestRunType.set(runType)
     }
 
     @Input
@@ -135,6 +153,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
             deserializeString(instance.sourcesJarArtifactCoordinate, object, "sources")
             deserializeString(instance.universalJarArtifactCoordinate, object, "universal")
             deserializeList(instance.additionalDependencyArtifactCoordinates, object, "libraries", String.class, jsonDeserializationContext)
+            deserializeList(instance.additionalTestDependencyArtifactCoordinates, object, "testLibraries", String.class, jsonDeserializationContext)
             deserializeString(instance.injectedFilesDirectory, object, "inject")
             deserializeNamedDomainCollection(instance.runTypes, object, "runs", new BiFunction<String, JsonElement, RunType>() {
                 @Override
@@ -151,6 +170,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 }
             })
             deserializeList(instance.modules, object, "modules", String.class, jsonDeserializationContext)
+            deserialize(instance.unitTestRunType, object, "unitTestRunType", RunType.class, jsonDeserializationContext)
 
             return instance
         }
@@ -169,6 +189,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
             serializeString(userdevProfile.sourcesJarArtifactCoordinate, object, "sources")
             serializeString(userdevProfile.universalJarArtifactCoordinate, object, "universal")
             serializeList(userdevProfile.additionalDependencyArtifactCoordinates, object, "libraries", jsonSerializationContext)
+            serializeList(userdevProfile.additionalTestDependencyArtifactCoordinates, object, "testLibraries", jsonSerializationContext)
             serializeString(userdevProfile.injectedFilesDirectory, object, "inject")
             serializeNamedDomainCollection(userdevProfile.runTypes, object, "runs", new Function<RunType, JsonElement>() {
                 @Override
@@ -177,6 +198,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 }
             })
             serializeList(userdevProfile.modules, object, "modules", jsonSerializationContext)
+            serialize(userdevProfile.unitTestRunType, object, "unitTestRunType", jsonSerializationContext)
 
             return object
         }

@@ -38,6 +38,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         getIsServer().convention(false)
         getIsDataGenerator().convention(false)
         getIsGameTest().convention(false)
+        getIsJUnit().convention(false)
     }
 
     private static Boolean or(Boolean a, Boolean b) {
@@ -90,7 +91,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      *
      * @return The property which indicates if this is a client run type.
      */
-    @DSLProperty
+    @DSLProperty(propertyName = 'client')
     @Input
     abstract Property<Boolean> getIsClient();
 
@@ -99,16 +100,25 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      *
      * @return {@code true} if this run is a server run; otherwise, {@code false}.
      */
-    @DSLProperty
+    @DSLProperty(propertyName = 'server')
     @Input
     abstract Property<Boolean> getIsServer();
+
+    /**
+     * Indicates if this run is a JUnit run.
+     *
+     * @return {@code true} if this run is a JUnit run; otherwise, {@code false}.
+     */
+    @DSLProperty(propertyName = 'junit')
+    @Input
+    abstract Property<Boolean> getIsJUnit();
 
     /**
      * Indicates if this run is a data generation run.
      *
      * @return {@code true} if this run is a data generation run; otherwise, {@code false}.
      */
-    @DSLProperty
+    @DSLProperty(propertyName = 'dataGenerator')
     @Input
     abstract Property<Boolean> getIsDataGenerator();
 
@@ -118,7 +128,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      * @return {@code true} if this run is a game test run; otherwise, {@code false}.
      */
     @Input
-    @DSLProperty
+    @DSLProperty(propertyName = 'gameTest')
     abstract Property<Boolean> getIsGameTest();
 
     /**
@@ -174,6 +184,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         other.getIsServer().set(getIsServer())
         other.getIsDataGenerator().set(getIsDataGenerator())
         other.getIsGameTest().set(getIsGameTest())
+        other.getIsJUnit().set(getIsJUnit())
         other.getEnvironmentVariables().set(getEnvironmentVariables())
         other.getSystemProperties().set(getSystemProperties())
         other.getClasspath().from(getClasspath())
@@ -224,6 +235,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
             deserializeBool(instance.isServer, object, "server")
             deserializeBool(instance.isDataGenerator, object, "dataGenerator")
             deserializeBool(instance.isGameTest, object, "gameTest")
+            deserializeBool(instance.isJUnit, object, "junit")
             deserializeMap(instance.environmentVariables, object, "env", String.class, jsonDeserializationContext)
             deserializeMap(instance.systemProperties, object, "props", String.class, jsonDeserializationContext)
 
@@ -248,6 +260,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
             serializeBool(runType.isServer, object, "server")
             serializeBool(runType.isDataGenerator, object, "dataGenerator")
             serializeBool(runType.isGameTest, object, "gameTest")
+            serializeBool(runType.isJUnit, object, "junit")
             serializeMap(runType.environmentVariables, object, "env", jsonSerializationContext)
             serializeMap(runType.systemProperties, object, "props", jsonSerializationContext)
 
