@@ -54,7 +54,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsDataGenerator().convention(false);
         getIsGameTest().convention(false);
         getShouldBuildAllProjects().convention(false);
-        getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project, String.format("Run%s", StringCapitalizationUtils.capitalize(name))));
+        getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project, String.format("RunRuntimeDependencies%s", StringCapitalizationUtils.capitalize(name))));
 
         getConfigureAutomatically().convention(true);
         getConfigureFromTypeWithName().convention(getConfigureAutomatically());
