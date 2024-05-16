@@ -45,16 +45,7 @@ public class ToolUtilities {
         //Grab the dynamic repository
         final Repository repository = project.getExtensions().getByType(Repository.class);
 
-        //Disable the repository
-        repository.disable();
-
-        //Resolve the tool
-        final T resolvedArtifact = searcher.get();
-
-        //Re-add the repository
-        repository.enable();
-
         //Return the resolved artifact
-        return resolvedArtifact;
+        return searcher.get();
     }
 }

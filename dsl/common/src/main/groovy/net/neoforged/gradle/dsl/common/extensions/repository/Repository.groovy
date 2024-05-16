@@ -64,11 +64,6 @@ interface Repository extends BaseDSLElement<Repository> {
     Set<Entry> getEntries()
 
     /**
-     * Disables the repository.
-     */
-    void disable()
-
-    /**
      * Enables the repository.
      */
     void enable()

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,7 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
      */
     public static final String IVY_METADATA_PATTERN = "[organisation]/[module]/[revision]/ivy-[revision]-ng" + METADATA_VERSION + ".xml";
 
-    private final Set<Entry> entries = Sets.newConcurrentHashSet();
+    private final Set<Entry> entries = Collections.synchronizedSet(new LinkedHashSet<>());
 
     private final Project project;
 
@@ -52,7 +53,6 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     public IvyRepository(Project project) {
         this.project = project;
         this.getRepositoryDirectory().convention(project.getLayout().getProjectDirectory().dir(".gradle/repositories"));
-        this.enable();
     }
 
     @Override
@@ -73,12 +73,12 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
 
     @Override
     public void enable() {
-        this.gradleRepository = this.createRepositories();
-    }
+        if (this.gradleRepository != null) {
+            throw new IllegalStateException("Repository already enabled");
+        }
 
-    @Override
-    public void disable() {
-        project.getRepositories().remove(gradleRepository);
+        this.gradleRepository = this.createRepositories();
+        this.entries.forEach(this::write);
     }
 
     @SuppressWarnings("SameParameterValue") // Potentially this needs extension in the future.
@@ -144,6 +144,10 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     }
 
     private void create(Entry entry) {
+        this.entries.add(entry);
+    }
+
+    private void write(Entry entry) {
         final Dependency dependency = entry.getDependency();
         final Configuration dependencies = entry.getDependencies();
         final boolean hasSources = entry.hasSources();
@@ -154,8 +158,6 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         } catch (IOException | XMLStreamException e) {
             throw new RuntimeException("Failed to write dummy data", e);
         }
-
-        this.entries.add(entry);
     }
 
     private void writeDummyDataIfNeeded(
