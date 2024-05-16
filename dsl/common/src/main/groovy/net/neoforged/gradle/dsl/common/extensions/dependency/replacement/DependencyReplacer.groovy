@@ -18,5 +18,5 @@ interface DependencyReplacer {
      * @return An optional, potentially containing a replacement for the dependency.
      */
     @NotNull
-    Optional<DependencyReplacementResult> get(@NotNull Context context);
+    Optional<ReplacementResult> get(@NotNull Context context);
 }

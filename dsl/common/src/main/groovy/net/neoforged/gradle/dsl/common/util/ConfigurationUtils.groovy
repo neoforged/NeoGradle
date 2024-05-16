@@ -76,6 +76,10 @@ class ConfigurationUtils {
         resultContainer.addAll(findCompileOnlyConfigurationForSourceSetReplacement(project, configuration))
         resultContainer.addAll(findRuntimeOnlyConfigurationFromSourceSetReplacement(project, configuration))
 
+        if (resultContainer.isEmpty()) {
+            resultContainer.add(configuration)
+        }
+
         return resultContainer.toList()
     }
 

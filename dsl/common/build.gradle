@@ -11,4 +11,6 @@ dependencies {
     api "com.google.guava:guava:${project.guava_version}"
     api "com.google.code.gson:gson:${project.gson_version}"
     api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}"
+
+    api project(':utils')
 }

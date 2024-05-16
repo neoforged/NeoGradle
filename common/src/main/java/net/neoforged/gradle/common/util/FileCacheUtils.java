@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvid
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.common.util.MinecraftVersionAndUrl;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
@@ -36,13 +37,14 @@ public final class FileCacheUtils {
     
     
     @NotNull
-    public static TaskProvider<MinecraftVersionManifestFileCacheProvider> createVersionManifestFileCacheProvidingTask(final Project project, final String minecraftVersion) {
-        if (project.getTasks().getNames().contains(NamingConstants.Task.CACHE_VERSION_MANIFEST + minecraftVersion)) {
-            return project.getTasks().named(NamingConstants.Task.CACHE_VERSION_MANIFEST + minecraftVersion, MinecraftVersionManifestFileCacheProvider.class);
+    public static TaskProvider<MinecraftVersionManifestFileCacheProvider> createVersionManifestFileCacheProvidingTask(final Project project, final MinecraftVersionAndUrl resolvedVersion) {
+        if (project.getTasks().getNames().contains(NamingConstants.Task.CACHE_VERSION_MANIFEST + resolvedVersion.getVersion())) {
+            return project.getTasks().named(NamingConstants.Task.CACHE_VERSION_MANIFEST + resolvedVersion.getVersion(), MinecraftVersionManifestFileCacheProvider.class);
         }
-        
-        return project.getTasks().register(NamingConstants.Task.CACHE_VERSION_MANIFEST + minecraftVersion, MinecraftVersionManifestFileCacheProvider.class, task -> {
-            task.getMinecraftVersion().set(minecraftVersion);
+
+        return project.getTasks().register(NamingConstants.Task.CACHE_VERSION_MANIFEST + resolvedVersion.getVersion(), MinecraftVersionManifestFileCacheProvider.class, task -> {
+            task.getMinecraftVersion().set(resolvedVersion.getVersion());
+            task.getDownloadUrl().set(resolvedVersion.getUrl());
         });
     }
     

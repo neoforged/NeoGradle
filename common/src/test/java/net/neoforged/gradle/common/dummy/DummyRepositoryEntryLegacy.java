@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.dummy;
 
 import com.google.common.collect.ImmutableSet;
-import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
+import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntryLegacy;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.ModuleDependencyUtils;
@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public final class DummyRepositoryEntry implements RepositoryEntry<DummyRepositoryEntry, DummyRepositoryDependency>, RepositoryEntry.Builder<DummyRepositoryEntry, DummyRepositoryDependency, DummyRepositoryDependency> {
+public final class DummyRepositoryEntryLegacy implements RepositoryEntryLegacy<DummyRepositoryEntryLegacy, DummyRepositoryDependency>, RepositoryEntryLegacy.Builder<DummyRepositoryEntryLegacy, DummyRepositoryDependency, DummyRepositoryDependency> {
     private Project project;
     private String group;
     private String name;
@@ -38,11 +38,11 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
     private String extension;
     private Set<RepositoryReference> dependencies = new HashSet<>();
 
-    public DummyRepositoryEntry(Project project) {
+    public DummyRepositoryEntryLegacy(Project project) {
         this.project = project;
     }
 
-    public DummyRepositoryEntry(Project project, String group, String name, String version, String classifier, String extension, Set<RepositoryReference> dependencies) {
+    public DummyRepositoryEntryLegacy(Project project, String group, String name, String version, String classifier, String extension, Set<RepositoryReference> dependencies) {
         this.project = project;
         this.group = group;
         this.name = name;
@@ -81,7 +81,7 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
 
     @NotNull
     @Override
-    public DummyRepositoryEntry asSources() {
+    public DummyRepositoryEntryLegacy asSources() {
         return but().setClassifier("sources");
     }
 
@@ -159,42 +159,42 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
 
     @NotNull
     @Override
-    public DummyRepositoryEntry setGroup(@NotNull String group) {
+    public DummyRepositoryEntryLegacy setGroup(@NotNull String group) {
         this.group = group;
         return this;
     }
 
     @NotNull
     @Override
-    public DummyRepositoryEntry setName(@NotNull String name) {
+    public DummyRepositoryEntryLegacy setName(@NotNull String name) {
         this.name = name;
         return this;
     }
 
     @NotNull
     @Override
-    public DummyRepositoryEntry setVersion(@NotNull String version) {
+    public DummyRepositoryEntryLegacy setVersion(@NotNull String version) {
         this.version = version;
         return this;
     }
 
     @NotNull
     @Override
-    public DummyRepositoryEntry setClassifier(@Nullable String classifier) {
+    public DummyRepositoryEntryLegacy setClassifier(@Nullable String classifier) {
         this.classifier = classifier;
         return this;
     }
 
     @NotNull
     @Override
-    public DummyRepositoryEntry setExtension(@Nullable String extension) {
+    public DummyRepositoryEntryLegacy setExtension(@Nullable String extension) {
         this.extension = extension;
         return this;
     }
 
     @NotNull
     @Override
-    public DummyRepositoryEntry from(@NotNull ModuleDependency dependency) {
+    public DummyRepositoryEntryLegacy from(@NotNull ModuleDependency dependency) {
         setGroup(dependency.getGroup());
         setName(dependency.getName());
         setVersion(dependency.getVersion());
@@ -205,7 +205,7 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
 
     @NotNull
     @Override
-    public DummyRepositoryEntry from(@NotNull ResolvedDependency resolvedDependency) {
+    public DummyRepositoryEntryLegacy from(@NotNull ResolvedDependency resolvedDependency) {
         setGroup(resolvedDependency.getModuleGroup());
         setName(resolvedDependency.getModuleName());
         setVersion(resolvedDependency.getModuleVersion());
@@ -216,21 +216,21 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
 
     @NotNull
     @Override
-    public DummyRepositoryEntry setDependencies(@NotNull Collection<? extends RepositoryReference> dummyRepositoryDependencies) {
+    public DummyRepositoryEntryLegacy setDependencies(@NotNull Collection<? extends RepositoryReference> dummyRepositoryDependencies) {
         this.dependencies = new HashSet<>(dummyRepositoryDependencies);
         return this;
     }
 
     @NotNull
     @Override
-    public DummyRepositoryEntry setDependencies(@NotNull RepositoryReference... dummyRepositoryDependencies) {
+    public DummyRepositoryEntryLegacy setDependencies(@NotNull RepositoryReference... dummyRepositoryDependencies) {
         this.dependencies = new HashSet<>(Arrays.asList(dummyRepositoryDependencies));
         return this;
     }
 
     @NotNull
     @Override
-    public DummyRepositoryEntry withDependency(@NotNull Consumer<DummyRepositoryDependency> consumer) {
+    public DummyRepositoryEntryLegacy withDependency(@NotNull Consumer<DummyRepositoryDependency> consumer) {
         final DummyRepositoryDependency dependency = new DummyRepositoryDependency(project);
         consumer.accept(dependency);
         this.dependencies.add(dependency);
@@ -239,8 +239,8 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
 
     @NotNull
     @Override
-    public DummyRepositoryEntry withProcessedDependency(@NotNull Consumer<DummyRepositoryEntry> consumer) {
-        final DummyRepositoryEntry dependency = new DummyRepositoryEntry(project);
+    public DummyRepositoryEntryLegacy withProcessedDependency(@NotNull Consumer<DummyRepositoryEntryLegacy> consumer) {
+        final DummyRepositoryEntryLegacy dependency = new DummyRepositoryEntryLegacy(project);
         consumer.accept(dependency);
         this.dependencies.add(dependency);
         return this;
@@ -248,8 +248,8 @@ public final class DummyRepositoryEntry implements RepositoryEntry<DummyReposito
 
     @NotNull
     @Override
-    public DummyRepositoryEntry but() {
-        return new DummyRepositoryEntry(project, group, name, version, classifier, extension, dependencies);
+    public DummyRepositoryEntryLegacy but() {
+        return new DummyRepositoryEntryLegacy(project, group, name, version, classifier, extension, dependencies);
     }
 
     @Override

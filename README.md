@@ -342,6 +342,14 @@ idea {
 }
 ```
 
+#### Post Sync Task Usage
+By default, the import in IDEA is run during the sync task.
+If you want to disable this, and use a post sync task, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.use-post-sync-task=true
+
+```
+
 ### Runs
 To disable the runs conventions, you can set the following property in your gradle.properties:
 ```properties

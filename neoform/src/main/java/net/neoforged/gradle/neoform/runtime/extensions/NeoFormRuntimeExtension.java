@@ -45,6 +45,7 @@ import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -114,29 +115,29 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             case "listLibraries":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), ListLibraries.class, task -> {
                     task.getDownloadedVersionJsonFile()
-                                    .fileProvider(task.newProvider(cache.cacheVersionManifest(spec.getMinecraftVersion())));
+                            .fileProvider(task.newProvider(cache.cacheVersionManifest(spec.getMinecraftVersion())));
                 });
             case "inject":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), InjectZipContent.class, task -> {
                     task.getInjectionSource().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task));
                     task.getInjectedSources()
-                                    .add(task.getRuntimeData().map(data -> data.get("inject"))
-                                            .map(inject -> {
-                                                final InjectFromFileTreeSource fileTreeSource = task.getObjectFactory()
-                                                        .newInstance(InjectFromFileTreeSource.class);
-                                                fileTreeSource.getFiles().from(inject
-                                                        .matching(fileTree -> {
-                                                            if (spec.getDistribution().equals(DistributionType.SERVER)) {
-                                                                fileTree.include("**/server/**");
-                                                            } else if (spec.getDistribution().equals(DistributionType.CLIENT)) {
-                                                                fileTree.include("**/client/**");
-                                                            }
-                                                        })
-                                                );
-                                                fileTreeSource.getTreePrefix().set(task.getSymbolicDataSources().map(data -> data.get("inject")));
-                                                return fileTreeSource;
-                                            })
-                                    );
+                            .add(task.getRuntimeData().map(data -> data.get("inject"))
+                                    .map(inject -> {
+                                        final InjectFromFileTreeSource fileTreeSource = task.getObjectFactory()
+                                                .newInstance(InjectFromFileTreeSource.class);
+                                        fileTreeSource.getFiles().from(inject
+                                                .matching(fileTree -> {
+                                                    if (spec.getDistribution().equals(DistributionType.SERVER)) {
+                                                        fileTree.include("**/server/**");
+                                                    } else if (spec.getDistribution().equals(DistributionType.CLIENT)) {
+                                                        fileTree.include("**/client/**");
+                                                    }
+                                                })
+                                        );
+                                        fileTreeSource.getTreePrefix().set(task.getSymbolicDataSources().map(data -> data.get("inject")));
+                                        return fileTreeSource;
+                                    })
+                            );
                 });
             case "patch":
                 return spec.getProject().getTasks().register(
@@ -260,7 +261,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
     @NotNull
     protected NeoFormRuntimeDefinition doCreate(final NeoFormRuntimeSpecification spec) {
-        if (this.runtimes.containsKey(spec.getIdentifier()))
+        if (this.definitions.containsKey(spec.getIdentifier()))
             throw new IllegalArgumentException("Cannot register runtime with identifier '" + spec.getIdentifier() + "' because it already exists");
 
         final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
@@ -309,8 +310,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(neoFormDirectory, "raw.jar"));
         });
-        
-        return new NeoFormRuntimeDefinition(
+
+        final NeoFormRuntimeDefinition definition = new NeoFormRuntimeDefinition(
                 spec,
                 new LinkedHashMap<>(),
                 sourceJarTask,
@@ -325,6 +326,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 createDownloadAssetsTasks(spec, symbolicDataSources, neoFormDirectory, versionJson),
                 createExtractNativesTasks(spec, symbolicDataSources, neoFormDirectory, versionJson)
         );
+
+        //TODO: Right now this is needed so that runs and other components can be order free in the buildscript,
+        //TODO: We should consider making this somehow lazy and remove the unneeded complexity because of it.
+        spec.getProject().afterEvaluate(project -> this.bakeDefinition(definition));
+
+        return definition;
     }
 
     @Override
@@ -332,7 +339,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         return NeoFormRuntimeSpecification.Builder.from(getProject());
     }
 
-    @Override
     protected void bakeDefinition(NeoFormRuntimeDefinition definition) {
         final NeoFormRuntimeSpecification spec = definition.getSpecification();
         final NeoFormConfigConfigurationSpecV2 neoFormConfig = definition.getNeoFormConfig();
@@ -467,15 +473,18 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
+
+                    for (Task dependency : recompileDependencies.getBuildDependencies().getDependencies(task)) {
+                        task.dependsOn(dependency);
+                    }
                 });
 
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
         final TaskProvider<PackZip> packTask = spec.getProject()
-                        .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackZip.class, task -> {
-                            task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
-                            task.getInputFiles().from(getProject().fileTree(recompileInput)
-                                    .matching(sp -> sp.exclude("**/*.java")));
+                .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackZip.class, task -> {
+                    task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
+                    task.getInputFiles().from(recompileInput.map(file -> getProject().zipTree(file).matching(sp -> sp.exclude("**/*.java")).getAsFileTree()));
                 });
 
         packTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));

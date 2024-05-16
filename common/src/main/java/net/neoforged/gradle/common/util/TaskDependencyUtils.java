@@ -11,6 +11,7 @@ import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
@@ -166,11 +167,12 @@ public final class TaskDependencyUtils {
         private final Set<CommonRuntimeDefinition<?>> found = new HashSet<>();
         private final SourceSetContainer sourceSets;
         private final Collection<? extends Definition<?>> runtimes;
-        @SuppressWarnings("unchecked")
+        private final Map<String, Dependency> dependencies;
 
         public RuntimeFindingTaskDependencyResolveContext(Project project) {
             this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
             this.runtimes = project.getExtensions().getByType(RuntimesExtension.class).getAllDefinitions();
+            this.dependencies = project.getExtensions().getByType(RuntimesExtension.class).getAllDependencies();
         }
 
         @Override
@@ -195,9 +197,11 @@ public final class TaskDependencyUtils {
 
         private void processConfiguration(Configuration configuration) {
             DependencySet dependencies = configuration.getDependencies();
-            this.runtimes.stream().filter(runtime -> {
+            this.runtimes.stream()
+                    .filter(runtime -> this.dependencies.containsKey(runtime.getSpecification().getIdentifier()))
+                    .filter(runtime -> {
                 try {
-                    final Artifact artifact = Artifact.from(runtime.getReplacedDependency());
+                    final Artifact artifact = Artifact.from(this.dependencies.get(runtime.getSpecification().getIdentifier()));
                     return dependencies.stream().anyMatch(artifact.asDependencyMatcher());
                 } catch (IllegalStateException e) {
                     return false;

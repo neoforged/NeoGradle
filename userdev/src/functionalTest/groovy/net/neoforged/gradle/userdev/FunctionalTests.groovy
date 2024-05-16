@@ -146,7 +146,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         when:
         def initialRun = project.run {
             it.tasks('build')
-            it.log(Runtime.LogLevel.INFO)
         }
 
         then:
@@ -156,7 +155,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         and:
         def secondRun = project.run {
             it.tasks('build')
-            it.log(Runtime.LogLevel.INFO)
         }
 
         then:

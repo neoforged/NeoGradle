@@ -1,23 +1,22 @@
 package net.neoforged.gradle.common.extensions.dependency.replacement;
 
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class DependencyReplacementContext implements Context {
+public final class Context implements net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context {
     private final @NotNull Project project;
     private final @NotNull Configuration configuration;
     private final @NotNull ModuleDependency dependency;
-    private final @Nullable DependencyReplacementContext parent;
+    private final @Nullable Context parent;
 
-    public DependencyReplacementContext(
+    public Context(
             @NotNull Project project,
             @NotNull Configuration configuration,
             @NotNull ModuleDependency dependency,
-            @Nullable DependencyReplacementContext parent) {
+            @Nullable Context parent) {
         this.project = project;
         this.configuration = configuration;
         this.dependency = dependency;
@@ -41,16 +40,16 @@ public final class DependencyReplacementContext implements Context {
 
     @Nullable
     @Override
-    public DependencyReplacementContext getParent() {
+    public Context getParent() {
         return parent;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DependencyReplacementContext)) return false;
+        if (!(o instanceof Context)) return false;
 
-        DependencyReplacementContext that = (DependencyReplacementContext) o;
+        Context that = (Context) o;
 
         if (!getProject().equals(that.getProject())) return false;
         if (!getConfiguration().equals(that.getConfiguration())) return false;

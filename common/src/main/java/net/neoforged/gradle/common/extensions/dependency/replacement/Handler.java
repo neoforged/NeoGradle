@@ -9,13 +9,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
-public abstract class DependencyReplacementHandlerImpl implements ConfigurableDSLElement<DependencyReplacementHandler>, DependencyReplacementHandler {
+public abstract class Handler implements ConfigurableDSLElement<DependencyReplacementHandler>, DependencyReplacementHandler {
 
     private final Project project;
     private final String name;
 
     @Inject
-    public DependencyReplacementHandlerImpl(Project project, String name) {
+    public Handler(Project project, String name) {
         this.project = project;
         this.name = name;
     }

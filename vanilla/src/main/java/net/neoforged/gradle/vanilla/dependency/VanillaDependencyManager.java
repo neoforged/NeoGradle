@@ -1,13 +1,10 @@
 package net.neoforged.gradle.vanilla.dependency;
 
-import com.google.common.collect.Sets;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.gradle.api.Action;
@@ -16,6 +13,7 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
 
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -46,21 +44,15 @@ public final class VanillaDependencyManager {
 
                     final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) context.getDependency();
 
-                    final VanillaRuntimeDefinition runtimeDefinition = buildVanillaRuntimeDefinition(project, context.getProject(), externalModuleDependency);
+                    final VanillaRuntimeDefinition runtimeDefinition = buildVanillaRuntimeDefinition(project, externalModuleDependency);
                     return Optional.of(
-                            new DependencyReplacementResult(
+                            new ReplacementResult(
                                     project,
-                                    Optional.of(ConfigurationUtils.findReplacementConfigurations(project, context.getConfiguration())),
-                                    name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition, name),
                                     runtimeDefinition.getSourceJarTask(),
                                     runtimeDefinition.getRawJarTask(),
                                     runtimeDefinition.getMinecraftDependenciesConfiguration(),
-                                    builder -> builder.setVersion(runtimeDefinition.getSpecification().getMinecraftVersion()),
-                                    builder -> builder.setVersion(runtimeDefinition.getSpecification().getMinecraftVersion()),
-                                    runtimeDefinition::setReplacedDependency,
-                                    runtimeDefinition::onRepoWritten,
-                                    Sets::newHashSet
-                    ));
+                                    Collections.emptySet()
+                            ));
                 });
             }
         });
@@ -81,7 +73,7 @@ public final class VanillaDependencyManager {
     }
 
     private boolean hasMatchingArtifact(ExternalModuleDependency externalModuleDependency) {
-        if (externalModuleDependency.getArtifacts().isEmpty()){
+        if (externalModuleDependency.getArtifacts().isEmpty()) {
             return true;
         }
 
@@ -98,10 +90,10 @@ public final class VanillaDependencyManager {
     }
 
 
-    private static VanillaRuntimeDefinition buildVanillaRuntimeDefinition(Project project, Project configureProject, ExternalModuleDependency dependency) {
+    private static VanillaRuntimeDefinition buildVanillaRuntimeDefinition(Project project, ExternalModuleDependency dependency) {
         final VanillaRuntimeExtension runtimeExtension = project.getExtensions().getByType(VanillaRuntimeExtension.class);
 
-        return runtimeExtension.maybeCreate(builder -> {
+        return runtimeExtension.maybeCreateFor(dependency, builder -> {
             final String version = dependency.getVersion() == null ? runtimeExtension.getVersion().get() : dependency.getVersion();
 
             builder.withMinecraftArtifact(StringCapitalizationUtils.deCapitalize(dependency.getName()));

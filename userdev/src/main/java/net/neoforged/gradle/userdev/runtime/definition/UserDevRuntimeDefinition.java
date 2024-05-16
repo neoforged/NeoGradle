@@ -8,6 +8,8 @@ import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.common.util.run.RunsUtil;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
+import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
@@ -22,8 +24,6 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -35,9 +35,8 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     private final FileTree unpackedUserDevJarDirectory;
     private final UserdevProfile userdevConfiguration;
     private final Configuration additionalUserDevDependencies;
-    
-    private final List<TaskProvider<ClasspathSerializer>> classpathSerializers = new ArrayList<>();
-    private TaskProvider<? extends WithOutput> repoWritingTask = null;
+
+    private TaskProvider<? extends WithOutput> userdevClasspathElementProducer;
 
     public UserDevRuntimeDefinition(@NotNull UserDevRuntimeSpecification specification, NeoFormRuntimeDefinition neoformRuntimeDefinition, FileTree unpackedUserDevJarDirectory, UserdevProfile userdevConfiguration, Configuration additionalUserDevDependencies) {
         super(specification, neoformRuntimeDefinition.getTasks(), neoformRuntimeDefinition.getSourceJarTask(), neoformRuntimeDefinition.getRawJarTask(), neoformRuntimeDefinition.getGameArtifactProvidingTasks(), neoformRuntimeDefinition.getMinecraftDependenciesConfiguration(), neoformRuntimeDefinition::configureAssociatedTask, neoformRuntimeDefinition.getVersionJson());
@@ -46,11 +45,20 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         this.userdevConfiguration = userdevConfiguration;
         this.additionalUserDevDependencies = additionalUserDevDependencies;
 
-        this.additionalUserDevDependencies.getDependencies().add(
-                this.getSpecification().getProject().getDependencies().create(
-                        ExtraJarDependencyManager.generateClientCoordinateFor(this.getSpecification().getMinecraftVersion())
-                )
+        //Create the client-extra jar dependency.
+        final Dependency clientExtraJar = this.getSpecification().getProject().getDependencies().create(
+                ExtraJarDependencyManager.generateClientCoordinateFor(this.getSpecification().getMinecraftVersion())
         );
+
+        //Add it as a user dev dependency, this will trigger replacement, which will need to be addressed down-below.
+        this.additionalUserDevDependencies.getDependencies().add(
+                clientExtraJar
+        );
+
+        //We also need to get the replacement building dependencies from the replacement logic, this is because the compiler wants to lookup the client-extra jar
+        //During recompile, and that can not happen until the replacement logic has been applied, and has triggered the copying of the client-extra jar to the repository
+        final DependencyReplacement replacement = this.getSpecification().getProject().getExtensions().getByType(DependencyReplacement.class);
+        this.additionalUserDevDependencies.getDependencies().add(replacement.getRawJarDependency(clientExtraJar, this.additionalUserDevDependencies));
     }
 
     @Override
@@ -74,24 +82,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
-    public void setReplacedDependency(@NotNull Dependency dependency) {
-        super.setReplacedDependency(dependency);
-        neoformRuntimeDefinition.setReplacedDependency(dependency);
-    }
-
-
-    @Override
-    public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
-        neoformRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
-        
-        classpathSerializers.forEach(taskProvider -> taskProvider.configure(task -> {
-            task.getInputFiles().from(finalRepoWritingTask);
-        }));
-        classpathSerializers.clear();
-        this.repoWritingTask = finalRepoWritingTask;
-    }
-
-    @Override
     public @NotNull TaskProvider<DownloadAssets> getAssets() {
         return neoformRuntimeDefinition.getAssets();
     }
@@ -105,7 +95,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     public @NotNull Map<String, String> getMappingVersionData() {
         return neoformRuntimeDefinition.getMappingVersionData();
     }
-    
+
     @NotNull
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
@@ -121,8 +111,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
             final Configuration modulesCfg;
             if (getSpecification().getProject().getConfigurations().getNames().contains(name)) {
                 modulesCfg = getSpecification().getProject().getConfigurations().getByName(name);
-            }
-            else {
+            } else {
                 modulesCfg = getSpecification().getProject().getConfigurations().create(name);
                 modulesCfg.setCanBeResolved(true);
                 userdevConfiguration.getModules().get().forEach(m -> modulesCfg.getDependencies().add(getSpecification().getProject().getDependencies().create(m)));
@@ -130,7 +119,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
             interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
         }
-        
+
         final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer = getSpecification().getProject().getTasks().register(
                 RunsUtil.createTaskName("writeMinecraftClasspath", run),
                 ClasspathSerializer.class,
@@ -138,6 +127,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     this.additionalUserDevDependencies.getExtendsFrom().forEach(task.getInputFiles()::from);
                     task.getInputFiles().from(this.additionalUserDevDependencies);
                     task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
+                    task.getInputFiles().from(this.userdevClasspathElementProducer.flatMap(WithOutput::getOutput));
 
                     Configuration userDependencies = run.getDependencies().get().getRuntimeConfiguration();
                     task.getInputFiles().from(userDependencies);
@@ -148,15 +138,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
 
         run.dependsOn(minecraftClasspathSerializer);
-        
-        if (repoWritingTask == null) {
-            classpathSerializers.add(minecraftClasspathSerializer);
-        } else {
-            minecraftClasspathSerializer.configure(task -> {
-                task.getInputFiles().from(repoWritingTask);
-            });
-        }
-        
+
         return interpolationData;
     }
 
@@ -164,9 +146,17 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     public Definition<?> getDelegate() {
         return neoformRuntimeDefinition;
     }
-    
+
     @Override
     public @NotNull VersionJson getVersionJson() {
         return getNeoFormRuntimeDefinition().getVersionJson();
+    }
+
+    public TaskProvider<? extends WithOutput> getUserdevClasspathElementProducer() {
+        return userdevClasspathElementProducer;
+    }
+
+    public void setUserdevClasspathElementProducer(TaskProvider<? extends WithOutput> userdevClasspathElementProducer) {
+        this.userdevClasspathElementProducer = userdevClasspathElementProducer;
     }
 }

@@ -8,6 +8,7 @@ import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
+import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runtime.extensions.CommonRuntimes;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
@@ -20,6 +21,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -33,11 +35,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecification, B extends CommonRuntimeSpecification.Builder<S, B>, D extends CommonRuntimeDefinition<S>> implements CommonRuntimes<S, B, D> {
-    protected final Map<String, D> runtimes = Maps.newHashMap();
+    protected final Map<String, D> definitions = Maps.newHashMap();
+    protected final Map<String, Dependency> dependencies = Maps.newHashMap();
     private final Project project;
-    private boolean baked = false;
-    private boolean bakedDelegates = false;
-    
+
     protected CommonRuntimeExtension(Project project) {
         this.project = project;
         this.project.getExtensions().getByType(RuntimesExtension.class).add(this);
@@ -80,17 +81,30 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     }
     
     @Override
-    public final Provider<Map<String, D>> getRuntimes() {
-        return getProject().provider(() -> this.runtimes);
+    public final Map<String, D> getDefinitions() {
+        return this.definitions;
     }
+
+    @Deprecated
+    public final Provider<Map<String, D>> getRuntimes() {
+        return project.provider(this::getDefinitions);
+    }
+
     @Override
     @NotNull
     public final D maybeCreate(final Action<B> configurator) {
         final S spec = createSpec(configurator);
-        if (runtimes.containsKey(spec.getIdentifier()))
-            return runtimes.get(spec.getIdentifier());
+        if (definitions.containsKey(spec.getIdentifier()))
+            return definitions.get(spec.getIdentifier());
 
         return create(configurator);
+    }
+
+    @Override
+    public D maybeCreateFor(Dependency dependency, Action<B> configurator) {
+        final D result = maybeCreate(configurator);
+        dependencies.put(result.getSpecification().getIdentifier(), dependency);
+        return result;
     }
 
     @Override
@@ -102,8 +116,15 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             throw new IllegalArgumentException(String.format("Runtime with identifier '%s' already exists", spec.getIdentifier()));
 
         final D runtime = doCreate(spec);
-        runtimes.put(spec.getIdentifier(), runtime);
+        definitions.put(spec.getIdentifier(), runtime);
         return runtime;
+    }
+
+    @Override
+    public D create(Dependency dependency, Action<B> configurator) {
+        final D result = create(configurator);
+        dependencies.put(result.getSpecification().getIdentifier(), dependency);
+        return result;
     }
 
     @NotNull
@@ -119,7 +140,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     @Override
     @NotNull
     public final D getByName(final String name) {
-        return this.runtimes.computeIfAbsent(name, (n) -> {
+        return this.definitions.computeIfAbsent(name, (n) -> {
             throw new RuntimeException(String.format("Failed to find runtime with name: %s", n));
         });
     }
@@ -127,58 +148,40 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     @Override
     @Nullable
     public final D findByNameOrIdentifier(final String name) {
-        final D byIdentifier = this.runtimes.get(name);
+        final D byIdentifier = this.definitions.get(name);
         if (byIdentifier != null)
             return byIdentifier;
 
-        return runtimes.values().stream().filter(r -> r.getSpecification().getVersionedName().equals(name)).findAny().orElse(null);
+        return definitions.values().stream().filter(r -> r.getSpecification().getVersionedName().equals(name)).findAny().orElse(null);
     }
 
     protected abstract B createBuilder();
 
-    protected abstract void bakeDefinition(D definition);
-
-    public final void bakeDefinitions() {
-        if (this.baked)
-            return;
-        
-        baked = true;
-        
-        this.runtimes.values()
-                .stream()
-                .filter(def -> !(def instanceof IDelegatingRuntimeDefinition))
-                .forEach(this::bakeDefinition);
-    }
-
-    public final void bakeDelegateDefinitions() {
-        if (!this.baked)
-            throw new IllegalStateException("Cannot bake delegate definitions before baking normal definitions");
-
-        if (this.bakedDelegates)
-            return;
-        
-        bakedDelegates = true;
-        
-        this.runtimes.values()
-                .stream()
-                .filter(def -> def instanceof IDelegatingRuntimeDefinition)
-                .forEach(this::bakeDefinition);
-    }
-
     @Override
     @NotNull
     public Set<D> findIn(final Configuration configuration) {
+
+        final Repository repository = project.getExtensions().getByType(Repository.class);
+
         final Set<D> directDependency = configuration.getAllDependencies().
-                stream().flatMap(dep -> getRuntimes().get().values().stream().filter(runtime -> runtime.getReplacedDependency().equals(dep)))
+                stream().flatMap(dep -> getDefinitions().values().stream()
+                        .filter(runtime -> dependencies.containsKey(runtime.getSpecification().getIdentifier()))
+                        .filter(runtime -> repository.getEntries().stream().anyMatch(entry -> entry.getOriginal().equals(
+                                dependencies.get(runtime.getSpecification().getIdentifier())
+                        ))))
                 .collect(Collectors.toSet());
 
-        if (directDependency.isEmpty())
+        if (!directDependency.isEmpty())
             return directDependency;
 
         return project.getConfigurations().stream()
                 .filter(config -> config.getHierarchy().contains(configuration))
                 .flatMap(config -> config.getAllDependencies().stream())
-                .flatMap(dep -> getRuntimes().get().values().stream().filter(runtime -> runtime.getReplacedDependency().equals(dep)))
+                .flatMap(dep -> getDefinitions().values().stream()
+                        .filter(runtime -> dependencies.containsKey(runtime.getSpecification().getIdentifier()))
+                        .filter(runtime -> repository.getEntries().stream().anyMatch(entry -> entry.getOriginal().equals(
+                                dependencies.get(runtime.getSpecification().getIdentifier())
+                        ))))
                 .collect(Collectors.toSet());
     }
 

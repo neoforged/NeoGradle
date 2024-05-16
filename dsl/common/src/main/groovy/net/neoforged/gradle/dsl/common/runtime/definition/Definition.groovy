@@ -67,14 +67,6 @@ interface Definition<S extends Specification> {
     @NotNull Configuration getMinecraftDependenciesConfiguration();
 
     /**
-     * Gives access to the gradle dependency which represents this runtime.
-     * If the dependency has not been baked yet, this method will throw an exception.
-     *
-     * @return The representing gradle dependency.
-     */
-    @NotNull Dependency getReplacedDependency();
-
-    /**
      * Returns a map of versioning information for the configured naming channel that was used during the baking.
      *
      * @return The baking versioning information for the naming channel.

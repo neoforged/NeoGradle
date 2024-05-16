@@ -35,7 +35,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':neoFormApplyOfficialMappings')
-            it.stacktrace()
         }
 
         then:
@@ -104,7 +103,9 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         }
 
         when:
-        def run = project.run { it.tasks('build') }
+        def run = project.run {
+            it.tasks('build')
+        }
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS

@@ -1,8 +1,9 @@
 package net.neoforged.gradle.vanilla.runtime.steps;
 
+import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
-import net.neoforged.gradle.common.runtime.tasks.AccessTransformer;
+import net.neoforged.gradle.common.runtime.tasks.SourceAccessTransformer;
 import net.neoforged.gradle.common.runtime.tasks.NoopRuntime;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
@@ -32,15 +33,13 @@ public class ApplyAccessTransformerStep implements IStep {
             });
         }
 
-
-        final TaskProvider<? extends AccessTransformer> task = CommonRuntimeTaskUtils.createAccessTransformer(
+        final TaskProvider<? extends BinaryAccessTransformer> task = CommonRuntimeTaskUtils.createBinaryAccessTransformer(
                 definition,
                 "user",
                 workingDirectory,
                 additionalTaskConfigurator,
                 accessTransformerFiles.getFiles().getAsFileTree(),
-                accessTransformerFiles.getEntries().get(),
-                definition.getListLibrariesTaskProvider()
+                accessTransformerFiles.getEntries().get()
         );
 
         task.configure(t -> {

@@ -5,7 +5,7 @@ import com.google.common.collect.Sets;
 import net.neoforged.gradle.common.runtime.tasks.GenerateExtraJar;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
@@ -15,13 +15,14 @@ import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.tasks.TaskProvider;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 public abstract class ExtraJarDependencyManager {
 
-    private final Map<String, DependencyReplacementResult> replacements = Maps.newHashMap();
+    private final Map<String, ReplacementResult> replacements = Maps.newHashMap();
 
     public static String generateClientCoordinateFor(final String version) {
         return "net.minecraft:client:" + version + ":client-extra";
@@ -73,7 +74,7 @@ public abstract class ExtraJarDependencyManager {
         return Objects.equals(artifact.getClassifier(), "client-extra") || Objects.equals(artifact.getClassifier(), "server-extra");
     }
 
-    private DependencyReplacementResult generateReplacement(final Project project, final Dependency dependency) {
+    private ReplacementResult generateReplacement(final Project project, final Dependency dependency) {
         final String minecraftVersion = dependency.getVersion();
         return replacements.computeIfAbsent(minecraftVersion, (v) -> {
             final MinecraftArtifactCache minecraftArtifactCacheExtension = project.getExtensions().getByType(MinecraftArtifactCache.class);
@@ -83,18 +84,11 @@ public abstract class ExtraJarDependencyManager {
                 task.getOutput().set(project.getLayout().getBuildDirectory().dir("jars/extra/" + dependency.getName()).map(cacheDir -> cacheDir.dir(Objects.requireNonNull(minecraftVersion)).file( dependency.getName() + "-extra.jar")));
             });
 
-            return new DependencyReplacementResult(
+            return new ReplacementResult(
                     project,
-                    name -> name,
-                    extraJarTaskProvider,
                     extraJarTaskProvider,
                     project.getConfigurations().detachedConfiguration(),
-                    builder -> { },
-                    builder -> { },
-                    (dep) -> { },
-                    (task) -> { },
-                    Sets::newHashSet,
-                    true
+                    Collections.emptySet()
             );
         });
     }

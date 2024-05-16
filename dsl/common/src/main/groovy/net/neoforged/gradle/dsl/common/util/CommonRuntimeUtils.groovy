@@ -7,8 +7,10 @@ import net.neoforged.gradle.dsl.common.runtime.spec.Specification
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
+import net.neoforged.gradle.util.ModuleDependencyUtils
 import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -61,6 +63,16 @@ final class CommonRuntimeUtils {
 
     static String buildTaskName(String prefix, ModuleReference reference) {
         final String dependencyName = StringUtils.capitalize(reference.toString());
+        final String validDependencyName = dependencyName.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        final String validPrefix = prefix.replaceAll("[/\\\\:<>\"?*|]", "_");
+
+        return String.format("%s%s", validPrefix, validDependencyName);
+    }
+
+    static String buildTaskName(String prefix, Dependency reference) {
+        final String dependencyId = ModuleDependencyUtils.format(reference);
+        final String dependencyName = StringUtils.capitalize(dependencyId);
         final String validDependencyName = dependencyName.replaceAll("[/\\\\:<>\"?*|]", "_");
 
         final String validPrefix = prefix.replaceAll("[/\\\\:<>\"?*|]", "_");

@@ -13,6 +13,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -58,9 +59,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @NotNull
     private final VersionJson versionJson;
 
-    @Nullable
-    private Dependency replacedDependency = null;
-    
     protected CommonRuntimeDefinition(
             @NotNull final S specification,
             @NotNull final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
@@ -129,22 +127,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
     @Override
     @NotNull
-    public final Dependency getReplacedDependency() {
-        if (this.replacedDependency == null)
-            throw new IllegalStateException("No dependency has been replaced yet.");
-
-        return this.replacedDependency;
-    }
-
-    public void setReplacedDependency(@NotNull final Dependency dependency) {
-        this.replacedDependency = dependency;
-    }
-
-    public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
-    }
-
-    @Override
-    @NotNull
     public Map<String, String> getMappingVersionData() {
         return mappingVersionData;
     }
@@ -169,7 +151,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     public VersionJson getVersionJson() {
         return versionJson;
     }
-    
+
     public void configureRun(RunImpl run) {
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData(run);
 
@@ -200,10 +182,6 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         interpolationData.put("natives", getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
 
         return interpolationData;
-    }
-
-    public void onBake(final NamingChannel namingChannel, final File runtimeDirectory) {
-
     }
 
     protected ListProperty<String> interpolate(final ListProperty<String> input, final Map<String, String> values) {

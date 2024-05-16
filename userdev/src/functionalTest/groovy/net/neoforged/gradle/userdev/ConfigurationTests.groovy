@@ -1,8 +1,7 @@
 package net.neoforged.gradle.userdev
 
-import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryEntry
+
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
-import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
 
 class ConfigurationTests extends BuilderBasedTestSpecification {
@@ -50,8 +49,6 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks('dependencies')
-            it.debug()
-            it.stacktrace()
         }
 
         then:
@@ -114,7 +111,7 @@ No dependencies
 
         then:
         run.task(':generateMetadataFileForMavenPublication').outcome == TaskOutcome.SUCCESS
-        !run.file('build/publications/maven/module.json').text.contains(IvyDummyRepositoryEntry.NG_DUMMY_NG_MARKER)
-        !run.file('build/publications/maven/pom-default.xml').text.contains(IvyDummyRepositoryEntry.NG_DUMMY_NG_MARKER)
+        !run.file('build/publications/maven/module.json').text.contains("dependencies")
+        !run.file('build/publications/maven/pom-default.xml').text.contains("dependencies")
     }
 }

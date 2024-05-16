@@ -3,7 +3,7 @@ package net.neoforged.gradle.userdev.dependency;
 import com.google.common.collect.Sets;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.extension.UserDev;
@@ -16,6 +16,7 @@ import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.provider.Provider;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -49,18 +50,13 @@ public final class UserDevDependencyManager {
             additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
             
             return Optional.of(
-                    new DependencyReplacementResult(
+                    new UserDevReplacementResult(
                             project,
-                            Optional.of(ConfigurationUtils.findReplacementConfigurations(project, context.getConfiguration())),
-                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition.getNeoFormRuntimeDefinition(), name),
                             runtimeDefinition.getNeoFormRuntimeDefinition().getSourceJarTask(),
                             runtimeDefinition.getNeoFormRuntimeDefinition().getRawJarTask(),
                             additionalDependenciesConfiguration,
-                            builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
-                            builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
-                            runtimeDefinition::setReplacedDependency,
-                            runtimeDefinition::onRepoWritten,
-                            Sets::newHashSet
+                            Collections.emptySet(),
+                            runtimeDefinition
                     ));
         }));
     }
@@ -100,7 +96,7 @@ public final class UserDevDependencyManager {
         final UserDevRuntimeExtension forgeRuntimeExtension = project.getExtensions().getByType(UserDevRuntimeExtension.class);
         final UserDev userDevExtension = project.getExtensions().getByType(UserDev.class);
         
-        return forgeRuntimeExtension.maybeCreate(builder -> {
+        return forgeRuntimeExtension.maybeCreateFor(dependency, builder -> {
             final Provider<String> version = project.provider(dependency::getVersion).orElse(userDevExtension.getDefaultForgeVersion());
             final Provider<String> group = project.provider(dependency::getGroup).orElse(userDevExtension.getDefaultForgeGroup());
             final Provider<String> name = project.provider(dependency::getName).orElse(userDevExtension.getDefaultForgeName());
