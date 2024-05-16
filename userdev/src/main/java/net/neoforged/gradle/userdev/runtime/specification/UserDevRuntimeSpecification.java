@@ -18,6 +18,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -188,7 +189,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
             return withForgeGroup(project.provider(() -> mcpGroup));
         }
 
-        public UserDevRuntimeSpecification build() {
+        public @NotNull UserDevRuntimeSpecification build() {
             final String group = forgeGroupProvider.get();
             final String name = forgeNameProvider.get();
             final String version = forgeVersionProvider.get();

@@ -24,9 +24,11 @@
  */
 package net.neoforged.gradle.common.extensions.repository;
 
-import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntry;
-import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
+import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntryLegacy;
 import net.neoforged.gradle.util.IndentingXmlStreamWriter;
+import net.neoforged.gradle.util.ModuleDependencyUtils;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLOutputFactory;
@@ -35,16 +37,14 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Collection;
 
 public final class IvyModuleWriter implements AutoCloseable {
 
     private static final String XSI = XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI;
     private static final String IVY = "http://ant.apache.org/ivy/schemas/ivy.xsd";
-    private static final String VANILLAGRADLE = "https://minecraftforge.net/neogradle/ivy-extra";
+    private static final String NEOGRADLE = "https://neoforged.net/neogradle/ivy-extra";
 
     private static final XMLOutputFactory OUTPUT_FACTORY = XMLOutputFactory.newInstance();
     private static final String INDENT = "  ";
@@ -52,9 +52,6 @@ public final class IvyModuleWriter implements AutoCloseable {
     private final boolean managedOutput;
     private final Writer output;
     private final XMLStreamWriter writer;
-
-    //TODO: Handle dependencies!
-    //private final Set<GroupArtifactVersion> dependencies = new HashSet<>();
 
     public IvyModuleWriter(final Writer output) throws XMLStreamException {
         this.managedOutput = false;
@@ -68,25 +65,27 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer = new IndentingXmlStreamWriter(IvyModuleWriter.OUTPUT_FACTORY.createXMLStreamWriter(this.output), INDENT);
     }
 
-    public void write(final RepositoryEntry<?,?> descriptor) throws XMLStreamException {
+    public void write(final Dependency descriptor, Configuration dependencies) throws XMLStreamException {
         this.writer.writeStartDocument("UTF-8", "1.0");
         this.writer.writeStartElement("ivy-module");
         this.writer.writeNamespace("xsi", IvyModuleWriter.XSI);
-        this.writer.writeNamespace("NeoGradle", IvyModuleWriter.VANILLAGRADLE);
+        this.writer.writeNamespace("NeoGradle", IvyModuleWriter.NEOGRADLE);
         this.writer.writeAttribute(IvyModuleWriter.XSI, "noNamespaceSchemaLocation", IvyModuleWriter.IVY);
         this.writer.writeAttribute("version", "2.0");
 
         this.writeInfo(descriptor);
-        this.writeDependencies(descriptor.getDependencies());
+        this.writeDependencies(dependencies);
 
         this.writer.writeEndElement();
         this.writer.writeEndDocument();
     }
 
-    private void writeInfo(final RepositoryEntry<?,?> entry) throws XMLStreamException {
+    private void writeInfo(final Dependency entry) throws XMLStreamException {
         this.writer.writeStartElement("info");
         // Common attributes
-        this.writer.writeAttribute("organisation", entry.getFullGroup());
+        if (entry.getGroup() != null)
+            this.writer.writeAttribute("organisation", entry.getGroup());
+
         this.writer.writeAttribute("module", entry.getName());
         this.writer.writeAttribute("revision", entry.getVersion());
         this.writer.writeAttribute("status", "release"); // gradle wants release... we must please the gradle...
@@ -101,19 +100,19 @@ public final class IvyModuleWriter implements AutoCloseable {
         this.writer.writeEndElement();
     }
 
-
-    private void writeDependencies(final Collection<? extends RepositoryReference> dependencies) throws XMLStreamException {
+    private void writeDependencies(final Configuration dependencies) throws XMLStreamException {
         this.writer.writeStartElement("dependencies");
 
-        for (final RepositoryReference extra : dependencies) {
+        for (final Dependency extra : dependencies.getDependencies()) {
             this.writeDependency(extra);
         }
 
         this.writer.writeEndElement();
     }
 
-    private void writeDependency(final RepositoryReference dep) throws XMLStreamException {
-        boolean hasClassifier = dep.getClassifier() != null;
+    private void writeDependency(final Dependency dep) throws XMLStreamException {
+        final String classifier = ModuleDependencyUtils.getClassifierOrEmpty(dep);
+        final boolean hasClassifier = !classifier.isEmpty();
 
         if (hasClassifier) {
             this.writer.writeStartElement("dependency");
@@ -121,8 +120,8 @@ public final class IvyModuleWriter implements AutoCloseable {
             this.writer.writeEmptyElement("dependency");
         }
 
-        if (dep instanceof RepositoryEntry) {
-            final RepositoryEntry<?,?> entry = (RepositoryEntry<?,?>) dep;
+        if (dep instanceof RepositoryEntryLegacy) {
+            final RepositoryEntryLegacy<?,?> entry = (RepositoryEntryLegacy<?,?>) dep;
             this.writer.writeAttribute("org", entry.getFullGroup());
         } else {
             this.writer.writeAttribute("org", dep.getGroup());
@@ -134,7 +133,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         if (hasClassifier) {
             this.writer.writeEmptyElement("artifact");
             this.writer.writeAttribute("name", dep.getName());
-            this.writer.writeAttribute("classifier", dep.getClassifier());
+            this.writer.writeAttribute("classifier", classifier);
             this.writer.writeAttribute("ext", "jar");
             this.writer.writeEndElement();
         }

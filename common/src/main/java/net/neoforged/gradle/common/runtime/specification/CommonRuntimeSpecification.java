@@ -33,7 +33,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
     protected CommonRuntimeSpecification(Project project,
                                          @NotNull String name,
                                          @NotNull String version,
-                                         DistributionType distribution,
+                                         @NotNull DistributionType distribution,
                                          Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
                                          Multimap<String, TaskTreeAdapter> postTypeAdapters,
                                          Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
@@ -73,7 +73,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
     
     @NotNull
     public final String getVersionedName() {
-        final Map<String, ? extends CommonRuntimeDefinition<?>> runtimes = runtimeExtension.getRuntimes().get();
+        final Map<String, ? extends CommonRuntimeDefinition<?>> runtimes = runtimeExtension.getDefinitions();
         if (runtimes.isEmpty())
             return getIdentifier();
 

@@ -17,9 +17,9 @@ import java.io.File;
 import java.util.List;
 
 @CacheableTask
-public abstract class AccessTransformer extends Execute {
+public abstract class SourceAccessTransformer extends Execute {
 
-    public AccessTransformer() {
+    public SourceAccessTransformer() {
         super();
 
         setDescription("Runs the access transformer on the decompiled sources.");

@@ -2,19 +2,9 @@ package net.neoforged.gradle.common;
 
 import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
-import net.neoforged.gradle.common.extensions.AccessTransformersExtension;
-import net.neoforged.gradle.common.extensions.ArtifactDownloaderExtension;
-import net.neoforged.gradle.common.extensions.ConfigurationDataExtension;
-import net.neoforged.gradle.common.extensions.ExtensionManager;
-import net.neoforged.gradle.common.extensions.IdeManagementExtension;
-import net.neoforged.gradle.common.extensions.MappingsExtension;
-import net.neoforged.gradle.common.extensions.MinecraftArtifactCacheExtension;
-import net.neoforged.gradle.common.extensions.MinecraftExtension;
-import net.neoforged.gradle.common.extensions.ProjectEvaluationExtension;
-import net.neoforged.gradle.common.extensions.ProjectHolderExtension;
-import net.neoforged.gradle.common.extensions.dependency.creation.ProjectBasedDependencyCreator;
-import net.neoforged.gradle.common.extensions.dependency.replacement.DependencyReplacementsExtension;
-import net.neoforged.gradle.common.extensions.repository.IvyDummyRepositoryExtension;
+import net.neoforged.gradle.common.extensions.*;
+import net.neoforged.gradle.common.extensions.dependency.replacement.ReplacementLogic;
+import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
@@ -22,20 +12,12 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
-import net.neoforged.gradle.common.util.DelegatingDomainObjectContainer;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.run.RunsUtil;
-import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
-import net.neoforged.gradle.dsl.common.extensions.ArtifactDownloader;
-import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
-import net.neoforged.gradle.dsl.common.extensions.Mappings;
-import net.neoforged.gradle.dsl.common.extensions.Minecraft;
-import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
-import net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet;
+import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
@@ -48,26 +30,33 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDE
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
-import net.neoforged.gradle.dsl.common.util.Constants;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
-import org.gradle.api.*;
+import org.gradle.StartParameter;
+import org.gradle.TaskExecutionRequest;
+import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.component.AdhocComponentWithVariants;
+import org.gradle.api.initialization.Settings;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskProvider;
+import org.gradle.internal.DefaultTaskExecutionRequest;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
+import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
-import org.jetbrains.annotations.Nullable;
+import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
+import org.jetbrains.gradle.ext.ProjectSettings;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class CommonProjectPlugin implements Plugin<Project> {
 
@@ -95,22 +84,24 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(IdeaExtPlugin.class);
         project.getPluginManager().apply(EclipsePlugin.class);
 
-        project.getExtensions().create("allRuntimes", RuntimesExtension.class);
-        project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
-        project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
-        project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyDummyRepositoryExtension.class, project);
-        project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
-        project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", DependencyReplacementsExtension.class, project, project.getObjects().newInstance(ProjectBasedDependencyCreator.class, project));
-        AccessTransformers accessTransformers = project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create("extensionManager", ExtensionManager.class, project);
-        project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
-        final ConfigurationData configurationData = project.getExtensions().create(ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
+        extensionManager.registerExtension("subsystems", Subsystems.class, (p) -> p.getObjects().newInstance(SubsystemsExtension.class, p));
+
+        project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
+        project.getExtensions().create("allRuntimes", RuntimesExtension.class);
+        project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
+        project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyRepository.class, project);
+        project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
+        project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
+        AccessTransformers accessTransformers = project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
 
         extensionManager.registerExtension("minecraft", Minecraft.class, (p) -> p.getObjects().newInstance(MinecraftExtension.class, p));
         extensionManager.registerExtension("mappings", Mappings.class, (p) -> p.getObjects().newInstance(MappingsExtension.class, p));
-        extensionManager.registerExtension("subsystems", Subsystems.class, (p) -> p.getObjects().newInstance(SubsystemsExtension.class, p));
+
+        project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
+        final ConfigurationData configurationData = project.getExtensions().create(ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
         OfficialNamingChannelConfigurator.getInstance().configure(project);
 
@@ -200,6 +191,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
     }
 
+    @SuppressWarnings("unchecked")
     private void configureRunConventions(Project project, Conventions conventions) {
         final Configurations configurations = conventions.getConfigurations();
         final Runs runs = conventions.getRuns();
@@ -248,6 +240,46 @@ public class CommonProjectPlugin implements Plugin<Project> {
         if (!ideaConventions.getIsEnabled().get())
             return;
 
+        //We need to configure the tasks to run during sync.
+        final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
+        ideManagementExtension
+                .onIdea((innerProject, idea, ideaExtension) -> {
+                    if (!ideaConventions.getIsEnabled().get())
+                        return;
+
+                    if (ideaConventions.getShouldUsePostSyncTask().get())
+                        return;
+
+                    final StartParameter startParameter = innerProject.getGradle().getStartParameter();
+                    final List<TaskExecutionRequest> taskRequests = new ArrayList<>(startParameter.getTaskRequests());
+
+                    final TaskProvider<?> ideImportTask = ideManagementExtension.getOrCreateIdeImportTask();
+                    final List<String> taskPaths = new ArrayList<>();
+
+                    final String ideImportTaskName = ideImportTask.getName();
+                    final String projectPath = innerProject.getPath();
+
+                    String taskPath;
+                    if (ideImportTaskName.startsWith(":")) {
+                        if (projectPath.equals(":")) {
+                            taskPath = ideImportTaskName;
+                        } else {
+                            taskPath = String.format("%s%s", projectPath, ideImportTaskName);
+                        }
+                    } else {
+                        if (projectPath.equals(":")) {
+                            taskPath = String.format(":%s", ideImportTaskName);
+                        } else {
+                            taskPath = String.format("%s:%s", projectPath, ideImportTaskName);
+                        }
+                    }
+
+                    taskPaths.add(taskPath);
+
+                    taskRequests.add(new DefaultTaskExecutionRequest(taskPaths));
+                    startParameter.setTaskRequests(taskRequests);
+                });
+
         IdeRunIntegrationManager.getInstance().configureIdeaConventions(project, ideaConventions);
     }
 
@@ -289,24 +321,11 @@ public class CommonProjectPlugin implements Plugin<Project> {
         accessTransformersExtension.getFiles().from(accessTransformer);
     }
 
+    @SuppressWarnings("unchecked")
     private void applyAfterEvaluate(final Project project) {
-        RuntimesExtension runtimesExtension = project.getExtensions().getByType(RuntimesExtension.class);
-        runtimesExtension.bakeDefinitions();
-        runtimesExtension.bakeDelegateDefinitions();
-
-        final Repository<?> repositoryExtension = project.getExtensions().getByType(Repository.class);
-        if (repositoryExtension instanceof IvyDummyRepositoryExtension) {
-            final IvyDummyRepositoryExtension ivyDummyRepositoryExtension = (IvyDummyRepositoryExtension) repositoryExtension;
-            ivyDummyRepositoryExtension.onPostDefinitionBake(project);
-        }
-
-        final DependencyReplacement dependencyReplacementExtension = project.getExtensions().getByType(DependencyReplacement.class);
-        if (dependencyReplacementExtension instanceof DependencyReplacementsExtension) {
-            final DependencyReplacementsExtension dependencyReplacementsExtension = (DependencyReplacementsExtension) dependencyReplacementExtension;
-            dependencyReplacementsExtension.onPostDefinitionBakes(project);
-        }
-
-        project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.forEach(run -> {
+        //We now eagerly get all runs and configure them.
+        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
+        runs.forEach(run -> {
             if (run instanceof RunImpl) {
                 run.configure();
 
@@ -329,7 +348,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     });
                 }
             }
-        }));
+        });
 
         IdeRunIntegrationManager.getInstance().apply(project);
     }

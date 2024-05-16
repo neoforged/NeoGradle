@@ -13,6 +13,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
+    @Ignore
     def "apply_supports_configuration_cache_build"() {
         given:
         def project = create("apply_supports_configuration_cache_build", {

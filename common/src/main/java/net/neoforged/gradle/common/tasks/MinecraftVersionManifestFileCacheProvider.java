@@ -12,11 +12,6 @@ public abstract class MinecraftVersionManifestFileCacheProvider extends FileCach
     public MinecraftVersionManifestFileCacheProvider() {
         getSelector().set(getMinecraftVersion().map(CacheFileSelector::forVersionJson));
         getMinecraftVersion().convention("+");
-        getDownloadUrl().set(
-                getProject().getExtensions().getByType(MinecraftArtifactCache.class)
-                        .resolveVersion(getMinecraftVersion())
-                        .map(MinecraftVersionAndUrl::getUrl)
-        );
     }
     
     @TaskAction

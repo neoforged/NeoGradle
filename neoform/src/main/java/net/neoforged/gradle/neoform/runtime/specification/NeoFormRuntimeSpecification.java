@@ -132,7 +132,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
             return getThis();
         }
 
-        public NeoFormRuntimeSpecification build() {
+        public @NotNull NeoFormRuntimeSpecification build() {
             ResolvedArtifact artifact = ToolUtilities.resolveToolArtifact(project, neoFormDependency);
             File archive = artifact.getFile();
             String effectiveVersion = artifact.getModuleVersion().getId().getVersion();

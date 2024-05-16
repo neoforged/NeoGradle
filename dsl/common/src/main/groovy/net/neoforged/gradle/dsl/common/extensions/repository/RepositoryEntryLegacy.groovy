@@ -3,8 +3,6 @@ package net.neoforged.gradle.dsl.common.extensions.repository
 import com.google.common.collect.ImmutableSet
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
-import org.gradle.api.Project
-import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
@@ -21,7 +19,7 @@ import java.util.function.Consumer
  * @param <TDependency> The type for the dependencies of the entry.
  */
 @CompileStatic
-interface RepositoryEntry<TSelf extends RepositoryEntry<TSelf, TDependency>, TDependency extends RepositoryReference> extends Serializable, RepositoryReference {
+interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDependency>, TDependency extends RepositoryReference> extends Serializable, RepositoryReference {
 
     /**
      * Indicates if the entry matches a given dependency in gradles dependency management system.

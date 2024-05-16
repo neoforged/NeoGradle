@@ -83,20 +83,6 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         return nativesTaskProvider;
     }
 
-    public @NotNull TaskProvider<? extends WithOutput> getDebuggingMappingsTaskProvider() {
-        return debuggingMappingsTaskProvider;
-    }
-
-    public void setDebuggingMappingsTaskProvider(TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider) {
-        this.debuggingMappingsTaskProvider = debuggingMappingsTaskProvider;
-    }
-
-    @Override
-    public void configureRun(RunImpl run) {
-        super.configureRun(run);
-        run.getClasspath().from(this.getDebuggingMappingsTaskProvider());
-    }
-
     @Override
     public Map<String, String> buildRunInterpolationData(RunImpl run) {
         final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData(run));

@@ -55,16 +55,4 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
     protected RuntimeDevRuntimeSpecification.Builder createBuilder() {
         return RuntimeDevRuntimeSpecification.Builder.from(getProject());
     }
-    
-    @Override
-    protected void bakeDefinition(RuntimeDevRuntimeDefinition definition) {
-        final RuntimeDevRuntimeSpecification spec = definition.getSpecification();
-        final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
-        final Mappings mappingsExtension = minecraftExtension.getMappings();
-        
-        definition.onBake(
-                mappingsExtension.getChannel().get(),
-                spec.getProject().getLayout().getBuildDirectory().get().dir("userdev").dir(spec.getIdentifier()).getAsFile()
-        );
-    }
 }

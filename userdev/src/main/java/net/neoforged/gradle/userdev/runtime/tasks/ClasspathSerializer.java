@@ -7,6 +7,7 @@ import org.gradle.api.tasks.*;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 @CacheableTask
@@ -26,7 +27,8 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
                 out.toPath(),
                 getInputFiles().getFiles().stream()
                         .map(File::getAbsolutePath)
-                        .collect(Collectors.toSet()),
+                        .sorted()
+                        .collect(Collectors.toCollection(LinkedHashSet::new)),
                 StandardCharsets.UTF_8
         );
     }

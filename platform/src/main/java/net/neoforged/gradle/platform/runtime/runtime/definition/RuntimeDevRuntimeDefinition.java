@@ -31,18 +31,6 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
     public NeoFormRuntimeDefinition getJoinedNeoFormRuntimeDefinition() {
         return joinedNeoFormRuntimeDefinition;
     }
-    
-    @Override
-    public void setReplacedDependency(@NotNull Dependency dependency) {
-        super.setReplacedDependency(dependency);
-        joinedNeoFormRuntimeDefinition.setReplacedDependency(dependency);
-    }
-
-
-    @Override
-    public void onRepoWritten(@NotNull final TaskProvider<? extends WithOutput> finalRepoWritingTask) {
-        joinedNeoFormRuntimeDefinition.onRepoWritten(finalRepoWritingTask);
-    }
 
     @Override
     public @NotNull TaskProvider<DownloadAssets> getAssets() {

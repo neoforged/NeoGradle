@@ -112,7 +112,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
         return tasks.computeIfAbsent(key, k -> {
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
-            final TaskProvider<MinecraftVersionManifestFileCacheProvider> manifest = FileCacheUtils.createVersionManifestFileCacheProvidingTask(project, resolvedVersion.getVersion());
+            final TaskProvider<MinecraftVersionManifestFileCacheProvider> manifest = FileCacheUtils.createVersionManifestFileCacheProvidingTask(project, resolvedVersion);
             
             GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, manifest));
             GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), DistributionType.CLIENT, MinecraftArtifactType.EXECUTABLE, manifest, results.values())));

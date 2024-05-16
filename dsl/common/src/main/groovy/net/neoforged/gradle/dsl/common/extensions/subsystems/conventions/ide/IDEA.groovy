@@ -27,4 +27,10 @@ interface IDEA extends BaseDSLElement<IDEA> {
      */
     @DSLProperty
     DirectoryProperty getCompilerOutputDir();
+
+    /**
+     * Whether or not the IDEA sync should use the post sync task.
+     */
+    @DSLProperty
+    Property<Boolean> getShouldUsePostSyncTask();
 }

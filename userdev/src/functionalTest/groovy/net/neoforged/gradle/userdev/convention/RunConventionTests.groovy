@@ -159,7 +159,6 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
-            it.debug()
         }
 
         then:
