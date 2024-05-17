@@ -335,7 +335,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
                     runImpl.getModSources().get().forEach(sourceSet -> {
                         try {
-                            final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(project, sourceSet);
+                            final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
                             definition.ifPresent(definitionSet::add);
                         } catch (MultipleDefinitionsFoundException e) {
                             throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);

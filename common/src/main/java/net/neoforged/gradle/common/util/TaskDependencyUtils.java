@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefiniti
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.Buildable;
@@ -93,7 +94,8 @@ public final class TaskDependencyUtils {
         return validateAndUnwrapDefinitions(project, "source sets", sourceSets.stream().map(SourceSet::getName).collect(Collectors.joining(", ", "[", "]")), findRuntimes(project, sourceSets));
     }
     
-    public static Optional<CommonRuntimeDefinition<?>> findRuntimeDefinition(Project project, SourceSet sourceSet) throws MultipleDefinitionsFoundException {
+    public static Optional<CommonRuntimeDefinition<?>> findRuntimeDefinition(SourceSet sourceSet) throws MultipleDefinitionsFoundException {
+        final Project project = SourceSetUtils.getProject(sourceSet);
         return unwrapDefinitions(project, findRuntimes(project, sourceSet));
     }
 
@@ -168,8 +170,10 @@ public final class TaskDependencyUtils {
         private final SourceSetContainer sourceSets;
         private final Collection<? extends Definition<?>> runtimes;
         private final Map<String, Dependency> dependencies;
+        private final Project project;
 
         public RuntimeFindingTaskDependencyResolveContext(Project project) {
+            this.project = project;
             this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
             this.runtimes = project.getExtensions().getByType(RuntimesExtension.class).getAllDefinitions();
             this.dependencies = project.getExtensions().getByType(RuntimesExtension.class).getAllDependencies();
@@ -197,12 +201,18 @@ public final class TaskDependencyUtils {
 
         private void processConfiguration(Configuration configuration) {
             DependencySet dependencies = configuration.getDependencies();
+
+            final DependencyReplacement replacement = project.getExtensions().getByType(DependencyReplacement.class);
+            final Set<Dependency> operatingSet = dependencies.stream()
+                    .map(dependency -> replacement.optionallyConvertBackToOriginal(dependency, configuration))
+                    .collect(Collectors.toSet());
+
             this.runtimes.stream()
                     .filter(runtime -> this.dependencies.containsKey(runtime.getSpecification().getIdentifier()))
                     .filter(runtime -> {
                 try {
                     final Artifact artifact = Artifact.from(this.dependencies.get(runtime.getSpecification().getIdentifier()));
-                    return dependencies.stream().anyMatch(artifact.asDependencyMatcher());
+                    return operatingSet.stream().anyMatch(artifact.asDependencyMatcher());
                 } catch (IllegalStateException e) {
                     return false;
                 }

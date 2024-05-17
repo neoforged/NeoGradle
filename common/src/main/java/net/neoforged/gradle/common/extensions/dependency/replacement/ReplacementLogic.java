@@ -41,6 +41,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
     private final Project project;
 
     private final Table<Dependency, Configuration, Optional<ReplacementResult>> dependencyReplacementInformation = HashBasedTable.create();
+    private final Table<Dependency, Configuration, Dependency> originalDependencyLookup = HashBasedTable.create();
     private final Table<Dependency, Configuration, TaskProvider<?>> rawJarTasks = HashBasedTable.create();
     private final Table<Dependency, Configuration, TaskProvider<?>> sourceJarTasks = HashBasedTable.create();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
@@ -107,6 +108,13 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         }
 
         return createDependencyFromTask(taskProvider);
+    }
+
+    @NotNull
+    @Override
+    public Dependency optionallyConvertBackToOriginal(Dependency dependency, Configuration configuration) {
+        final Dependency originalDependency = originalDependencyLookup.get(dependency, configuration);
+        return originalDependency == null ? dependency : originalDependency;
     }
 
     /**
@@ -246,6 +254,10 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
             //Add the new dependency to the target configuration.
             targetConfiguration.getDependencies().add(newRepoEntry.getDependency());
             targetConfiguration.getDependencies().add(replacedDependency);
+
+            //Keep track of the original dependency, so we can convert back if needed.
+            originalDependencyLookup.put(newRepoEntry.getDependency(), targetConfiguration, dependency);
+            originalDependencyLookup.put(replacedDependency, targetConfiguration, dependency);
 
             //Store the tasks we generate.
             rawJarTasks.put(dependency, targetConfiguration, rawTask);
