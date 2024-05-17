@@ -211,22 +211,13 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            //Note: This cannot be static so that fg.repository can be properly accessed
-            void exclusiveRepo(RepositoryHandler handler, String url, String... groups) {
-                handler.exclusiveContent {
-                    it.forRepositories(handler.maven {
-                        setUrl(url)
-                    })
-                    it.filter { f ->
-                        for (def group : groups) {
-                            f.includeGroup(group)
-                        } 
-                    }
-                }
-            }
-            
             repositories {
-                exclusiveRepo(it, 'https://maven.tterrag.com/', 'team.chisel.ctm')
+                exclusiveContent {
+                    forRepository {
+                        maven { url 'https://maven.tterrag.com/' }
+                    }
+                    filter { includeGroup('team.chisel.ctm') }
+                }
             }
             
             dependencies {
