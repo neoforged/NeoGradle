@@ -8,7 +8,6 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
-import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.dsl.userdev.runtime.specification.UserDevSpecification;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import net.neoforged.gradle.util.FileUtils;
@@ -18,7 +17,6 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -106,9 +104,6 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
 
     public static final class Builder extends CommonRuntimeSpecification.Builder<UserDevRuntimeSpecification, Builder> implements UserDevSpecification.Builder<UserDevRuntimeSpecification, Builder> {
 
-        private boolean hasConfiguredForgeVersion;
-        private boolean hasConfiguredForgeName;
-        private boolean hasConfiguredForgeGroup;
         private Provider<String> forgeVersionProvider;
         private Provider<String> forgeGroupProvider;
         private Provider<String> forgeNameProvider;
@@ -127,27 +122,8 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         @Override
-        protected void configureBuilder() {
-            super.configureBuilder();
-            final UserDev runtimeExtension = getProject().getExtensions().getByType(UserDev.class);
-
-            if (!hasConfiguredForgeVersion) {
-                forgeVersionProvider = runtimeExtension.getDefaultForgeVersion();
-            }
-
-            if (!hasConfiguredForgeGroup) {
-                forgeGroupProvider = runtimeExtension.getDefaultForgeGroup();
-            }
-
-            if (!hasConfiguredForgeName) {
-                forgeNameProvider = runtimeExtension.getDefaultForgeName();
-            }
-        }
-
-        @Override
         public Builder withForgeVersion(final Provider<String> forgeVersion) {
             this.forgeVersionProvider = forgeVersion;
-            this.hasConfiguredForgeVersion = true;
             return this;
         }
 
@@ -162,7 +138,6 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         @Override
         public Builder withForgeName(final Provider<String> mcpName) {
             this.forgeNameProvider = mcpName;
-            this.hasConfiguredForgeName = true;
             return this;
         }
 
@@ -177,7 +152,6 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
         @Override
         public Builder withForgeGroup(final Provider<String> mcpGroup) {
             this.forgeGroupProvider = mcpGroup;
-            this.hasConfiguredForgeGroup = true;
             return this;
         }
 

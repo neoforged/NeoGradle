@@ -335,7 +335,14 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         }
 
         // Create a new repository entry for the dependency, using the replacement result.
-        final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
+        ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
+        //Check if the result is replacement aware.
+        if (result instanceof ReplacementAware) {
+            final ReplacementAware replacementAware = (ReplacementAware) result;
+            //Let it alter the dependency, this allows support for version ranges, and strict versioning.
+            externalModuleDependency = replacementAware.getReplacementDependency(externalModuleDependency);
+        }
+
         final Repository extension = project.getExtensions().getByType(Repository.class);
         return extension.withEntry(
                 project.getObjects().newInstance(

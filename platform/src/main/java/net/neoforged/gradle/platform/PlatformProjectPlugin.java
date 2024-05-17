@@ -5,12 +5,7 @@ import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.userdev.extension.UserDev;
-import net.neoforged.gradle.neoform.NeoFormPlugin;
 import net.neoforged.gradle.platform.extensions.DynamicProjectExtension;
-import net.neoforged.gradle.platform.runtime.runtime.definition.RuntimeDevRuntimeDefinition;
-import net.neoforged.gradle.userdev.extension.UserDevExtension;
-import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -44,9 +39,5 @@ public class PlatformProjectPlugin implements Plugin<Project> {
         run.getModSources().add(mainSourceSet);
         
         project.getExtensions().getByType(IdeManagementExtension.class).onIdea((project1, idea, ideaExtension) -> run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().convention(mainSourceSet));
-    }
-    
-    private Provider<String> buildModClasses(final Project project, final Run run) {
-        return project.provider(() -> Stream.concat(run.getModSources().get().stream().map(source -> source.getOutput().getResourcesDir()), run.getModSources().get().stream().map(source -> source.getOutput().getClassesDirs().getFiles()).flatMap(Collection::stream)).map(File::getAbsolutePath).map(path -> String.format("minecraft%%%%%s", path)).collect(Collectors.joining(File.pathSeparator)));
     }
 }

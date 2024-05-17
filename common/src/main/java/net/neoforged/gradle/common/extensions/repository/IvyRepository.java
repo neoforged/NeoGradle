@@ -61,10 +61,15 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     }
 
     private ArtifactRepository createRepositories() {
-        return project.getRepositories().ivy(repositoryConfiguration(
+        final ArtifactRepository repository = project.getRepositories().ivy(repositoryConfiguration(
                 "NeoGradle Artifacts",
                 getRepositoryDirectory()
         ));
+
+        project.getRepositories().remove(repository);
+        project.getRepositories().addFirst(repository);
+
+        return repository;
     }
 
     @Override
