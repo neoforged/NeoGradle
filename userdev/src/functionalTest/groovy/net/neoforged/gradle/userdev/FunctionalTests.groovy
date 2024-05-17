@@ -38,6 +38,125 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         run.task(':neoFormRecompile').outcome == TaskOutcome.SUCCESS
     }
 
+    def "userdev supports version range resolution"() {
+        given:
+        def project = create("userdev_supports_version_ranges", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:[20,)'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('dependencies', "--configuration", "compileClasspath")
+        }
+
+        then:
+        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.output.contains("\\--- net.neoforged:neoforge:")
+    }
+
+    def "userdev supports complex version resolution"() {
+        given:
+        def project = create("userdev_supports_complex_versions", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation ('net.neoforged:neoforge') {
+                    version {
+                        strictly '[20.4.167, 20.5)'
+                        require '20.4.188'
+                    }
+                }
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('dependencies', "--configuration", "compileClasspath")
+        }
+
+        then:
+        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.output.contains("\\--- net.neoforged:neoforge:20.4.188")
+    }
+
+    def "a mod with userdev as dependency has a mixin-extra dependency on the compile classpath"() {
+        given:
+        def project = create("userdev_adds_mixin_extra_on_compile_classpath", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('dependencies', "--configuration", "compileClasspath")
+        }
+
+        then:
+        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.output.contains("+--- io.github.llamalad7:mixinextras-neoforge")
+    }
+
     def "a mod with userdev as dependency and official mappings can compile through gradle"() {
         given:
         def project = create("compile_with_gradle_and_official_mappings", {
