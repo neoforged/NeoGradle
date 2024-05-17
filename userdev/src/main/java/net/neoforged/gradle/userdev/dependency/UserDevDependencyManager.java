@@ -45,7 +45,10 @@ public final class UserDevDependencyManager {
             
             final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency);
             
-            final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(project);
+            final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(
+                    project,
+                    "NeoForgeUserDevAdditionalReplacementDependenciesFor" + runtimeDefinition.getSpecification().getIdentifier()
+            );
             additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getNeoFormRuntimeDefinition().getMinecraftDependenciesConfiguration());
             additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
             

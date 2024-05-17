@@ -25,11 +25,6 @@ interface Repository extends BaseDSLElement<Repository> {
     DirectoryProperty getRepositoryDirectory();
 
     /**
-     * @returns The gradle repository which should be used to resolve the dependencies.
-     */
-    ArtifactRepository getRepository()
-
-    /**
      * Adds a new dependency to the dummy repository.
      *
      * @param entryBuilder The builder for creating entries.
@@ -67,6 +62,11 @@ interface Repository extends BaseDSLElement<Repository> {
      * @returns the entries that are currently in the repository.
      */
     Set<Entry> getEntries()
+
+    /**
+     * Enables the repository.
+     */
+    void enable()
 
     public static enum Variant {
         RETAINED_CLASSIFIER(""),

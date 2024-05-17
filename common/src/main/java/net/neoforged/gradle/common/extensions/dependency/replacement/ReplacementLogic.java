@@ -60,6 +60,13 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         //TODO: Figure out if there is any way to do this lazily.
         //TODO: Configure each runs in an immutable context, so we can't add a listener to the dependencies.
         configuration.getDependencies().whenObjectAdded(dependency -> {
+            //We need to check if our configuration is unhandled, we can only do this here and not in the register because of way we register unhandled configurations after their creation:
+            //TODO: Find a better way to handle this.
+            if (ConfigurationUtils.isUnhandledConfiguration(configuration)) {
+                //We don't handle this configuration.
+                return;
+            }
+
             //We only support module based dependencies.
             if (dependency instanceof ModuleDependency) {
                 final ModuleDependency moduleDependency = (ModuleDependency) dependency;

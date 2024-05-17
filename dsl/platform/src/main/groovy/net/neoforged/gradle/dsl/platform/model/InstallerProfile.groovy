@@ -15,6 +15,7 @@ import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils
 import net.neoforged.gradle.dsl.platform.util.CoordinateCollector
 import net.neoforged.gradle.dsl.platform.util.LibraryCollector
+import net.neoforged.gradle.util.ModuleDependencyUtils
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -171,6 +172,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                 processor.getClasspath().set(processor.getJar().map(tool -> {
                     final Configuration detached = ConfigurationUtils.temporaryConfiguration(
                             project,
+                            "InstallerProfileCoordinateLookup" + ModuleDependencyUtils.toConfigurationName(tool),
                             project.getDependencies().create(tool)
                     )
 
@@ -191,7 +193,10 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                 dependencyCoordinates.add(tool)
 
                 final Dependency[] dependencies = dependencyCoordinates.stream().map { coord -> project.getDependencies().create(coord) }.toArray(Dependency[]::new)
-                final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project, dependencies)
+                final Configuration configuration = ConfigurationUtils.temporaryConfiguration(
+                        project,
+                        "InstallerProfileLibraryLookup",
+                        dependencies)
 
                 final LibraryCollector collector = new LibraryCollector(project.getObjects(), project.getRepositories()
                     .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList()))

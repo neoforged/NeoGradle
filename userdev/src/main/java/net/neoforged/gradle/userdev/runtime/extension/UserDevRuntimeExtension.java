@@ -47,7 +47,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final UserdevProfile userdevProfile = spec.getProfile();
         final FileTree userDevJar = spec.getUserDevArchive();
 
-        final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
+        final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(
+                getProject(),
+                "AdditionalDependenciesFor" + spec.getIdentifier()
+        );
         for (String dependencyCoordinate : userdevProfile.getAdditionalDependencyArtifactCoordinates().get()) {
             userDevAdditionalDependenciesConfiguration.getDependencies().add(getProject().getDependencies().create(dependencyCoordinate));
         }
@@ -79,8 +82,8 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 configureNeoforgeInjects(
                         task,
                         injectionDirectoryTree,
-                        ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getSourcesJarArtifactCoordinate()),
-                        ConfigurationUtils.getArtifactProvider(getProject(), userdevProfile.getUniversalJarArtifactCoordinate())
+                        ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeSourceLookupFor" + spec.getIdentifier(), userdevProfile.getSourcesJarArtifactCoordinate()),
+                        ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeRawLookupFor" + spec.getIdentifier(), userdevProfile.getUniversalJarArtifactCoordinate())
                 );
             });
         });

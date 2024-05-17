@@ -129,6 +129,7 @@ public class RunsUtil {
             
             return sourceSetsByRunId.entries()
                            .stream().flatMap(entry -> directoryBuilder.apply(entry.getValue())
+                                                              .peek(directory -> directory.mkdirs())
                                                               .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath())))
                            .collect(Collectors.joining(File.pathSeparator));
         });

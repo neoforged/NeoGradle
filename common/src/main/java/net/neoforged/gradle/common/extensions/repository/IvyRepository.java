@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,27 +43,21 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
      */
     public static final String IVY_METADATA_PATTERN = "[organisation]/[module]/[revision]/ivy-[revision]-ng" + METADATA_VERSION + ".xml";
 
-    private final Set<Entry> entries = Sets.newConcurrentHashSet();
+    private final Set<Entry> entries = Collections.synchronizedSet(new LinkedHashSet<>());
 
     private final Project project;
 
-    private final ArtifactRepository gradleRepository;
+    private ArtifactRepository gradleRepository;
 
     @Inject
     public IvyRepository(Project project) {
         this.project = project;
         this.getRepositoryDirectory().convention(project.getLayout().getProjectDirectory().dir(".gradle/repositories"));
-        this.gradleRepository = this.createRepositories();
     }
 
     @Override
     public Project getProject() {
         return project;
-    }
-
-    @Override
-    public ArtifactRepository getRepository() {
-        return gradleRepository;
     }
 
     private ArtifactRepository createRepositories() {
@@ -75,6 +70,23 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     @Override
     @NotNull
     public abstract DirectoryProperty getRepositoryDirectory();
+
+    @Override
+    public void enable() {
+        if (this.gradleRepository != null) {
+            throw new IllegalStateException("Repository already enabled");
+        }
+
+        //Create the repo and register it.
+        this.gradleRepository = this.createRepositories();
+
+        //Now we write all data to the repo.
+        //Due to the way dep replacement works, and the fact that this set is a linked hashset,
+        //we do not need to sort these. And dependency that is dynamic and uses this repo,
+        //while also depending on another dynamic dependency, will have the other dynamic dependency
+        //written first.
+        this.entries.forEach(this::write);
+    }
 
     @SuppressWarnings("SameParameterValue") // Potentially this needs extension in the future.
     private Action<IvyArtifactRepository> repositoryConfiguration(
@@ -139,6 +151,16 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     }
 
     private void create(Entry entry) {
+        //We only register here.
+        //The repo is not active yet, if we were to write now, we could get into trouble
+        //when somebody tries to resolve a dependency with the same module identifier,
+        //while having a different classifier.
+        //So we write when the repo is enabled in an after evaluate, at that point all entries
+        //are registered, and we are good to go.
+        this.entries.add(entry);
+    }
+
+    private void write(Entry entry) {
         final Dependency dependency = entry.getDependency();
         final Configuration dependencies = entry.getDependencies();
         final boolean hasSources = entry.hasSources();
@@ -149,8 +171,6 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         } catch (IOException | XMLStreamException e) {
             throw new RuntimeException("Failed to write dummy data", e);
         }
-
-        this.entries.add(entry);
     }
 
     private void writeDummyDataIfNeeded(

@@ -25,10 +25,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.specifications.OutputSpecification;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
+import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -279,9 +276,10 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
         }
 
-        final Configuration minecraftDependenciesConfiguration = spec.getProject().getConfigurations().detachedConfiguration();
-        minecraftDependenciesConfiguration.setCanBeResolved(true);
-        minecraftDependenciesConfiguration.setCanBeConsumed(false);
+        final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                spec.getProject().getConfigurations(),
+                "NeoFormMinecraftDependenciesFor" + spec.getIdentifier()
+        );
         for (VersionJson.Library library : versionJson.getLibraries()) {
             minecraftDependenciesConfiguration.getDependencies().add(
                     spec.getProject().getDependencies().create(library.getName())
@@ -483,8 +481,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final TaskProvider<PackZip> packTask = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackZip.class, task -> {
-                    task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
                     task.getInputFiles().from(recompileInput.map(file -> getProject().zipTree(file).matching(sp -> sp.exclude("**/*.java")).getAsFileTree()));
+                    task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
                 });
 
         packTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
