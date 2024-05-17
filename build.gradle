@@ -17,7 +17,7 @@ gradleutils {
     }
 }
 
-version = "7.4.3" //gradleutils.version.toString()
+version = gradleutils.version.toString()
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
