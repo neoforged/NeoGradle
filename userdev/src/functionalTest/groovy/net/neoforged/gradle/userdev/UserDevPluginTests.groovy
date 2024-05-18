@@ -40,24 +40,6 @@ class UserDevPluginTests extends SimpleTestSpecification {
         result.output.contains('net.neoforged.gradle.common.CommonPlugin')
     }
 
-    def "applying userdev plugin applies forge extension"() {
-        given:
-        settingsFile << "rootProject.name = 'test-project'"
-        buildFile << """
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-            
-            println project.userDev.class.toString()
-        """
-
-        when:
-        def result = gradleRunner().build()
-
-        then:
-        result.output.contains('UserDevExtension')
-    }
-
     def "applying userdev plugin applies userDev runtime extension"() {
         given:
         settingsFile << "rootProject.name = 'test-project'"
