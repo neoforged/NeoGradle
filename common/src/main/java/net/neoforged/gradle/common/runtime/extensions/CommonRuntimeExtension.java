@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.runtime.extensions;
 
 import com.google.common.collect.Maps;
+import net.neoforged.gradle.common.extensions.JavaVersionManager;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
@@ -116,6 +117,10 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
             throw new IllegalArgumentException(String.format("Runtime with identifier '%s' already exists", spec.getIdentifier()));
 
         final D runtime = doCreate(spec);
+
+        final JavaVersionManager javaVersionManager = project.getExtensions().getByType(JavaVersionManager.class);
+        javaVersionManager.setJavaVersion(runtime.getVersionJson().getJavaVersion().getMajorVersion(), runtime.getSpecification().getIdentifier());
+
         definitions.put(spec.getIdentifier(), runtime);
         return runtime;
     }

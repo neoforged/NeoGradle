@@ -164,13 +164,13 @@ public class VersionJson implements Serializable {
 
     public static class JavaVersion implements Serializable {
         private String component;
-        private String majorVersion;
+        private int majorVersion;
 
         public String getComponent() {
             return component;
         }
 
-        public String getMajorVersion() {
+        public int getMajorVersion() {
             return majorVersion;
         }
     }
