@@ -378,4 +378,64 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         initialRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
 
+
+
+    def "a mod with userdev can have multiple sourcesets with neoforge"() {
+        given:
+        def project = create("gradle_multi_sourceset", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            sourceSets {
+                content {
+                    java {
+                        srcDir 'src/content/java'
+                    }
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+                contentImplementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.file("src/content/java/net/neoforged/gradle/userdev/ContentTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class ContentTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('clean', 'build')
+            it.stacktrace()
+        }
+
+        then:
+        run.task(':clean').outcome == TaskOutcome.SUCCESS
+        run.task(':build').outcome == TaskOutcome.SUCCESS
+    }
 }

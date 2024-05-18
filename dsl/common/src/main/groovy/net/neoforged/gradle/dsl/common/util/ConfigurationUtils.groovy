@@ -41,10 +41,37 @@ class ConfigurationUtils {
 
             configuration.setCanBeConsumed(false)
             configuration.setCanBeResolved(true)
+
+            final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
+            dependencyReplacement.handleConfiguration(configuration)
         }
 
-        final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
-        dependencyReplacement.handleConfiguration(configuration)
+        return configuration
+    }
+
+    /**
+     * Creates a configuration that can be resolved, but not consumed.
+     *
+     * @param project The project to create the configuration for
+     * @param context The context of the configuration
+     * @param processor The processor to apply to the configuration
+     * @return The detached configuration
+     */
+    static Configuration temporaryConfiguration(final Project project, final String context, final Action<Configuration> processor) {
+        final String name = "neoGradleInternal${context.capitalize()}"
+        final boolean exists = project.getConfigurations().getNames().contains(name)
+
+        final Configuration configuration = project.getConfigurations().maybeCreate("neoGradleInternal${context.capitalize()}")
+
+        if (!exists) {
+            processor.execute(configuration)
+
+            configuration.setCanBeConsumed(false)
+            configuration.setCanBeResolved(true)
+
+            final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
+            dependencyReplacement.handleConfiguration(configuration)
+        }
 
         return configuration
     }

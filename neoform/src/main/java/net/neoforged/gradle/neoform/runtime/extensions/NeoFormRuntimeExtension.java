@@ -50,6 +50,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.ForkOptions;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -471,6 +472,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
+
+                    task.getJavaVersion().set(JavaLanguageVersion.of(definition.getVersionJson().getJavaVersion().getMajorVersion()));
 
                     for (Task dependency : recompileDependencies.getBuildDependencies().getDependencies(task)) {
                         task.dependsOn(dependency);
