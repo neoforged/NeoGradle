@@ -13,11 +13,7 @@ import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
@@ -510,6 +506,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                                                              Provider<RegularFile> listLibrariesOutput) {
         Project project = spec.getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
+        Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
         if (!parchment.getEnabled().get()) {
             return recompileInput;
         }
@@ -517,7 +514,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
-            File toolExecutable = ToolUtilities.resolveTool(project, parchment.getToolArtifact().get());
+            File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
             task.getInputs().file(mappingFile);
             task.getInputs().file(recompileInput);

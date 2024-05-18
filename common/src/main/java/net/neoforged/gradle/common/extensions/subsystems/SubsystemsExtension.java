@@ -32,6 +32,14 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         configureDecompilerDefaults();
         configureRecompilerDefaults();
         configureParchmentDefaults();
+        configureToolsDefaults();
+    }
+
+    private void configureToolsDefaults() {
+        Tools tools = getTools();
+        tools.getJST().convention(
+                getStringProperty("tools.jst").orElse(JST_TOOL_ARTIFACT)
+        );
     }
 
     private void configureDecompilerDefaults() {
@@ -77,9 +85,6 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         );
         parchment.getMappingsVersion().convention(
                 getStringProperty("parchment.mappingsVersion")
-        );
-        parchment.getToolArtifact().convention(
-                getStringProperty("parchment.toolArtifact").orElse(JST_TOOL_ARTIFACT)
         );
         parchment.getAddRepository().convention(
                 getBooleanProperty("parchment.addRepository").orElse(true)

@@ -89,11 +89,6 @@ subsystems {
     // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.parchmentArtifact
     // parchmentArtifact = "org.parchmentmc.data:parchment-$minecraftVersion:$mappingsVersion:checked@zip"
     
-    // Overrides the full Maven coordinate of the tool used to apply the Parchment mappings
-    // See https://github.com/neoforged/JavaSourceTransformer
-    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.toolArtifact
-    // toolArtifact = "net.neoforged.jst:jst-cli-bundle:1.0.30"
-    
     // Set this to false if you don't want the https://maven.parchmentmc.org/ repository to be added automatically when
     // applying Parchment mappings is enabled
     // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.addRepository
@@ -354,4 +349,13 @@ By default, a run is created for each type of run.
 If you want to disable this, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.runs.create-default-run-per-type=false
+```
+
+## Tool overrides
+To configure tools used by different subsystems of NG, the subsystems dsl and properties can be used to configure the following tools:
+### JST
+This tool is used by the parchment subsystem to apply its names and javadoc, as well as by the source access transformer system to apply its transformations.
+The following properties can be used to configure the JST tool:
+```properties
+neogradle.subsystems.tools.jst=<artifact coordinate for jst cli tool>
 ```
