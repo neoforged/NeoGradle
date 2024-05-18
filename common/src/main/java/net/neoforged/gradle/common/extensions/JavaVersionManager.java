@@ -24,6 +24,6 @@ public class JavaVersionManager {
         }
 
         this.javaVersion = javaVersion;
-        project.getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion().set(JavaLanguageVersion.of(javaVersion));
+        project.getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion().convention(JavaLanguageVersion.of(javaVersion));
     }
 }
