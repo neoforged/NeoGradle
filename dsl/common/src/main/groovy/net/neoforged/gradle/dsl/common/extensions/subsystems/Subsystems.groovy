@@ -38,4 +38,11 @@ interface Subsystems extends BaseDSLElement<Subsystems> {
     @Nested
     @DSLProperty
     Conventions getConventions();
+
+    /**
+     * @return settings for the tools subsystem
+     */
+    @Nested
+    @DSLProperty
+    Tools getTools();
 }

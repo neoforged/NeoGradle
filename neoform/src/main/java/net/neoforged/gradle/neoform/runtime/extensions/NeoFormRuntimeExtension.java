@@ -13,11 +13,7 @@ import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
@@ -50,6 +46,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.ForkOptions;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -467,10 +464,13 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     // Consider user-settings
                     Recompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getRecompiler();
                     String maxMemory = settings.getMaxMemory().get();
+                    task.getOptions().setFork(settings.getShouldFork().get());
                     ForkOptions forkOptions = task.getOptions().getForkOptions();
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
+
+                    task.getJavaVersion().set(JavaLanguageVersion.of(definition.getVersionJson().getJavaVersion().getMajorVersion()));
 
                     for (Task dependency : recompileDependencies.getBuildDependencies().getDependencies(task)) {
                         task.dependsOn(dependency);
@@ -506,6 +506,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                                                              Provider<RegularFile> listLibrariesOutput) {
         Project project = spec.getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
+        Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
         if (!parchment.getEnabled().get()) {
             return recompileInput;
         }
@@ -513,7 +514,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
-            File toolExecutable = ToolUtilities.resolveTool(project, parchment.getToolArtifact().get());
+            File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
             task.getInputs().file(mappingFile);
             task.getInputs().file(recompileInput);

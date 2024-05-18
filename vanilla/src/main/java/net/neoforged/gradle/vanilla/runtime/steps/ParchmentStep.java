@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.runtime.tasks.NoopRuntime;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -44,6 +45,8 @@ public class ParchmentStep implements IStep {
                                                                        Provider<RegularFile> listLibrariesOutput) {
         Project project = spec.getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
+        Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
+
         if (!parchment.getEnabled().get()) {
             return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchmentNoop"), NoopRuntime.class, task -> {
                 task.getInput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
@@ -53,7 +56,7 @@ public class ParchmentStep implements IStep {
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
-            File toolExecutable = ToolUtilities.resolveTool(project, parchment.getToolArtifact().get());
+            File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
             task.getInputs().file(mappingFile);
             task.getInputs().file(inputProvidingTask.flatMap(WithOutput::getOutput));
