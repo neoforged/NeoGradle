@@ -126,11 +126,12 @@ This can be useful to run NeoGradle on lower-end machines, at the cost of slower
 The settings used by Neogradle for recompiling the decompiled Minecraft source code can be customized
 using [Gradle properties](https://docs.gradle.org/current/userguide/project_properties.html).
 
-| Property                                    | Description                                                                                                                          |
-|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| `neogradle.subsystems.recompiler.maxMemory` | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`). Defaults to `1g`. |
-| `neogradle.subsystems.recompiler.jvmArgs`   | Pass arbitrary JVM arguments to the forked Gradle process that runs the compiler. I.e. `-XX:+HeapDumpOnOutOfMemoryError`             |
-| `neogradle.subsystems.recompiler.args`      | Pass additional command line arguments to the Java compiler.                                                                         |
+| Property                                     | Description                                                                                                                          |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `neogradle.subsystems.recompiler.maxMemory`  | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`). Defaults to `1g`. |
+| `neogradle.subsystems.recompiler.jvmArgs`    | Pass arbitrary JVM arguments to the forked Gradle process that runs the compiler. I.e. `-XX:+HeapDumpOnOutOfMemoryError`             |
+| `neogradle.subsystems.recompiler.args`       | Pass additional command line arguments to the Java compiler.                                                                         |
+| `neogradle.subsystems.recompiler.shouldFork` | Indicates whether or not a process fork should be used for the recompiler. (Default is true).                                        |
 
 ## Run specific dependency management
 This implements run specific dependency management for the classpath of a run.
@@ -238,13 +239,11 @@ Per SourceSet the following configurations are added, where XXX is the SourceSet
 
 Per Run the following configurations are added:
 - XXXRun
-- XXXMod
 > [!NOTE]
 > For this to work, your Runs need to be defined before your dependency block.
 
 Globally the following configurations are added:
 - runs
-- mods
 
 #### LocalRuntime (Per SourceSet)
 This configuration is used to add dependencies to your local projects runtime only, without exposing them to the runtime of other projects.
@@ -257,14 +256,8 @@ Requires source set conventions to be enabled
 #### Run (Per Run)
 This configuration is used to add dependencies to the runtime of a specific run only, without exposing them to the runtime of other runs.
 
-#### Mod (Per Run)
-This configuration is used to add dependencies (and their dependencies), straight into the mods folder, without exposing them to the runtime of the run itself, or other runs.
-
 #### run (Global)
 This configuration is used to add dependencies to the runtime of all runs.
-
-#### mods (Global)
-This configuration is used to add dependencies (and their dependencies), straight into the mods folder of all runs, without exposing them to the runtime of the runs.
 
 ### Sourceset Management
 To disable the sourceset management, you can set the following property in your gradle.properties:

@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -46,8 +47,7 @@ public abstract class SourceAccessTransformer extends Execute {
                 )
         );
 
-        getJavaVersion().set(JavaLanguageVersion.of(17));
-
+        getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getTransformers().finalizeValueOnRead();
     }
 

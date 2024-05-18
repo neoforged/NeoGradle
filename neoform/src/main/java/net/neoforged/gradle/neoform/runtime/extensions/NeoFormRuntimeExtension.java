@@ -468,6 +468,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     // Consider user-settings
                     Recompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getRecompiler();
                     String maxMemory = settings.getMaxMemory().get();
+                    task.getOptions().setFork(settings.getShouldFork().get());
                     ForkOptions forkOptions = task.getOptions().getForkOptions();
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());

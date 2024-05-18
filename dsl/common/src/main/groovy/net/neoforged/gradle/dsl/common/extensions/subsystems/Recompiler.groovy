@@ -40,4 +40,12 @@ interface Recompiler extends ConfigurableDSLElement<Recompiler> {
     @DSLProperty
     ListProperty<String> getArgs();
 
+    /**
+     * Indicates whether the compiler should fork the process.
+     */
+    @Input
+    @Optional
+    @DSLProperty
+    Property<Boolean> getShouldFork();
+
 }
