@@ -73,7 +73,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains("\\--- net.neoforged:neoforge:")
+        run.output.contains("\\--- ng_dummy_ng.net.neoforged:neoforge:")
     }
 
     def "userdev supports complex version resolution"() {
@@ -116,7 +116,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains("\\--- net.neoforged:neoforge:20.4.188")
+        run.output.contains("\\--- ng_dummy_ng.net.neoforged:neoforge:20.4.188")
     }
 
     def "a mod with userdev as dependency has a mixin-extra dependency on the compile classpath"() {

@@ -175,8 +175,15 @@ public final class TaskDependencyUtils {
         public RuntimeFindingTaskDependencyResolveContext(Project project) {
             this.project = project;
             this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-            this.runtimes = project.getExtensions().getByType(RuntimesExtension.class).getAllDefinitions();
-            this.dependencies = project.getExtensions().getByType(RuntimesExtension.class).getAllDependencies();
+
+            final RuntimesExtension runtimesExtension = project.getExtensions().findByType(RuntimesExtension.class);
+            if (runtimesExtension == null) {
+                this.runtimes = Collections.emptyList();
+                this.dependencies = Collections.emptyMap();
+            } else {
+                this.runtimes = runtimesExtension.getAllDefinitions();
+                this.dependencies = runtimesExtension.getAllDependencies();
+            }
         }
 
         @Override
@@ -202,8 +209,9 @@ public final class TaskDependencyUtils {
         private void processConfiguration(Configuration configuration) {
             DependencySet dependencies = configuration.getDependencies();
 
-            final DependencyReplacement replacement = project.getExtensions().getByType(DependencyReplacement.class);
-            final Set<Dependency> operatingSet = dependencies.stream()
+            //Grab the original dependencies if we have a replacement extension
+            final DependencyReplacement replacement = project.getExtensions().findByType(DependencyReplacement.class);
+            final Set<Dependency> operatingSet = replacement == null ? dependencies : dependencies.stream()
                     .map(dependency -> replacement.optionallyConvertBackToOriginal(dependency, configuration))
                     .collect(Collectors.toSet());
 
@@ -238,7 +246,7 @@ public final class TaskDependencyUtils {
             Property<CommonRuntimeDefinition<?>> runtimeDefinition = (Property<CommonRuntimeDefinition<?>>) sourceSet.getExtensions().findByName("runtimeDefinition");
             if (runtimeDefinition != null && runtimeDefinition.isPresent()) {
                 this.add(runtimeDefinition.get());
-            } else {
+            } else if (runtimeDefinition != null) {
                 Set<CommonRuntimeDefinition<?>> tmp = new HashSet<>(this.found);
                 this.found.clear();
                 this.add(sourceSet.getCompileClasspath());

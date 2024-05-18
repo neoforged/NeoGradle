@@ -22,16 +22,21 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class IvyRepository implements ConfigurableDSLElement<Repository>, Repository
 {
+    public static final String GAV_PREFIX_DIRECTORY = "ng_dummy_ng";
+    public static final String GAV_PREFIX = GAV_PREFIX_DIRECTORY + ".";
     /**
      * A version for stored metadata.
      */
@@ -95,6 +100,19 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         //We primarily configure the metadata supplier here, but we also need to configure the repository itself.
         //We follow standard IVY patterns, and we also set M2 compatibility to true.
         return ivy -> {
+            final File rootDir = root.get().getAsFile();
+            if (!rootDir.exists() && !rootDir.mkdirs()) {
+                throw new IllegalStateException("Failed to create repository directory");
+            }
+
+            for (File file : Objects.requireNonNull(rootDir.listFiles(pathname -> pathname.isDirectory() && !pathname.getName().equals(GAV_PREFIX_DIRECTORY)))) {
+                try {
+                    FileUtils.delete(file.toPath());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to delete old repository directory", e);
+                }
+            }
+
             ivy.setName(name);
             ivy.setUrl(root.get().getAsFile().toURI());
             ivy.patternLayout(layout -> {

@@ -109,7 +109,7 @@ public abstract class IvyEntry implements BaseDSLElement<Entry>, Entry, Serializ
 
             final String gav = ModuleDependencyUtils.format((ExternalModuleDependency) dependency);
 
-            return project.getDependencies().create("ng_dummy_ng." + gav);
+            return project.getDependencies().create(IvyRepository.GAV_PREFIX + gav);
         }
     }
 }
