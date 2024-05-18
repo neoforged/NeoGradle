@@ -95,6 +95,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyRepository.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
+        project.getExtensions().create("minecraftJavaVersionManager", JavaVersionManager.class, project);
         AccessTransformers accessTransformers = project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
 
         extensionManager.registerExtension("minecraft", Minecraft.class, (p) -> p.getObjects().newInstance(MinecraftExtension.class, p));
