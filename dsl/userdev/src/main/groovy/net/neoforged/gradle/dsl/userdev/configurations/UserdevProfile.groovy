@@ -110,18 +110,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
         runTypes.add(runType)
     }
 
-    @Nested
-    @DSLProperty
-    @Optional
-    abstract Property<RunType> getUnitTestRunType();
-
-    @ClosureEquivalent
-    void unitTestRunType(Action<RunType> configurer) {
-        final RunType runType = factory.newInstance(RunType.class, "unitTest")
-        configurer.execute(runType)
-        unitTestRunType.set(runType)
-    }
-
     @Input
     @DSLProperty
     @Optional
@@ -170,7 +158,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 }
             })
             deserializeList(instance.modules, object, "modules", String.class, jsonDeserializationContext)
-            deserialize(instance.unitTestRunType, object, "unitTestRunType", RunType.class, jsonDeserializationContext)
 
             return instance
         }
@@ -198,7 +185,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 }
             })
             serializeList(userdevProfile.modules, object, "modules", jsonSerializationContext)
-            serialize(userdevProfile.unitTestRunType, object, "unitTestRunType", jsonSerializationContext)
 
             return object
         }

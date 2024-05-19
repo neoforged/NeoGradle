@@ -589,7 +589,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 configureUserdevRunType(type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, userdevCompileOnlyConfiguration, project);
             });
 
-            userdevProfile.unitTestRunType(type -> {
+            userdevProfile.runType("jUnit", type -> {
                 type.getEnvironmentVariables().put("MOD_CLASSES", "{source_roots}");
                 type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
 
