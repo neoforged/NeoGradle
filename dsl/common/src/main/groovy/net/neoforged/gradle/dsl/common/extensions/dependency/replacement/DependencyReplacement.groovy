@@ -49,4 +49,14 @@ interface DependencyReplacement extends BaseDSLElement<DependencyReplacement> {
      */
     @NotNull
     Dependency getSourcesJarDependency(Dependency dependency, Configuration configuration);
+
+    /**
+     * Optionally converts the given dependency back to the original dependency it replaced.
+     *
+     * @param dependency The dependency to optionally convert back.
+     * @param configuration The configuration the given dependency can be found it resides in.
+     * @return The original dependency if it can be converted back, otherwise the given dependency.
+     */
+    @NotNull
+    Dependency optionallyConvertBackToOriginal(Dependency dependency, Configuration configuration)
 }

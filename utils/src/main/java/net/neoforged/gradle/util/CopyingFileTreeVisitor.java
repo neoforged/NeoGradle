@@ -53,7 +53,7 @@ public class CopyingFileTreeVisitor implements FileVisitor {
         try {
             FileUtils.delete(directory);
         } catch (IOException e) {
-            throw new RuntimeException("Cloud not clean up target directory: " + directory, e);
+            throw new RuntimeException("Could not clean up target directory: " + directory, e);
         }
 
         try {

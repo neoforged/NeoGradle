@@ -6,6 +6,9 @@ import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
+import net.neoforged.gradle.util.StringCapitalizationUtils;
+import org.apache.ivy.util.StringUtils;
+import org.codehaus.groovy.util.StringUtil;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -52,7 +55,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsGameTest().convention(false);
         getIsUnitTest().convention(false);
         getShouldBuildAllProjects().convention(false);
-        getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project));
+        getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project, String.format("RunRuntimeDependencies%s", StringCapitalizationUtils.capitalize(name))));
 
         getConfigureAutomatically().convention(true);
         getConfigureFromTypeWithName().convention(getConfigureAutomatically());

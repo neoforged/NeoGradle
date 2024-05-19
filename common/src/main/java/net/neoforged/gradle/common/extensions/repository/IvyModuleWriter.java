@@ -24,11 +24,10 @@
  */
 package net.neoforged.gradle.common.extensions.repository;
 
-import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntryLegacy;
 import net.neoforged.gradle.util.IndentingXmlStreamWriter;
-import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ResolvedArtifact;
 
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLOutputFactory;
@@ -103,15 +102,15 @@ public final class IvyModuleWriter implements AutoCloseable {
     private void writeDependencies(final Configuration dependencies) throws XMLStreamException {
         this.writer.writeStartElement("dependencies");
 
-        for (final Dependency extra : dependencies.getDependencies()) {
+        for (final ResolvedArtifact extra : dependencies.getResolvedConfiguration().getResolvedArtifacts()) {
             this.writeDependency(extra);
         }
 
         this.writer.writeEndElement();
     }
 
-    private void writeDependency(final Dependency dep) throws XMLStreamException {
-        final String classifier = ModuleDependencyUtils.getClassifierOrEmpty(dep);
+    private void writeDependency(final ResolvedArtifact dep) throws XMLStreamException {
+        final String classifier = dep.getClassifier() == null ? "" : dep.getClassifier();
         final boolean hasClassifier = !classifier.isEmpty();
 
         if (hasClassifier) {
@@ -120,19 +119,14 @@ public final class IvyModuleWriter implements AutoCloseable {
             this.writer.writeEmptyElement("dependency");
         }
 
-        if (dep instanceof RepositoryEntryLegacy) {
-            final RepositoryEntryLegacy<?,?> entry = (RepositoryEntryLegacy<?,?>) dep;
-            this.writer.writeAttribute("org", entry.getFullGroup());
-        } else {
-            this.writer.writeAttribute("org", dep.getGroup());
-        }
-        this.writer.writeAttribute("name", dep.getName());
-        this.writer.writeAttribute("rev", dep.getVersion());
+        this.writer.writeAttribute("org", dep.getModuleVersion().getId().getGroup());
+        this.writer.writeAttribute("name", dep.getModuleVersion().getId().getName());
+        this.writer.writeAttribute("rev", dep.getModuleVersion().getId().getVersion());
         this.writer.writeAttribute("transitive", "false");
 
         if (hasClassifier) {
             this.writer.writeEmptyElement("artifact");
-            this.writer.writeAttribute("name", dep.getName());
+            this.writer.writeAttribute("name", dep.getModuleVersion().getId().getName());
             this.writer.writeAttribute("classifier", classifier);
             this.writer.writeAttribute("ext", "jar");
             this.writer.writeEndElement();

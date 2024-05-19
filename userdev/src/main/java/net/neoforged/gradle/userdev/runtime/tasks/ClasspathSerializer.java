@@ -25,7 +25,15 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
         final File out = ensureFileWorkspaceReady(getOutput());
         Files.write(
                 out.toPath(),
-                getInputFiles().getFiles().stream()
+                getInputFiles()
+                        .getAsFileTree()
+                        //Filter out valid classpath elements, this can put .pom files in the input files, so we need to remove those.
+                        .matching(filter -> {
+                            filter.include(fileTreeElement -> fileTreeElement.isDirectory() ||
+                                    fileTreeElement.getName().endsWith(".jar") ||
+                                    fileTreeElement.getName().endsWith(".zip"));
+                        })
+                        .getFiles().stream()
                         .map(File::getAbsolutePath)
                         .sorted()
                         .collect(Collectors.toCollection(LinkedHashSet::new)),

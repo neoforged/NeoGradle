@@ -41,6 +41,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
     private final Project project;
 
     private final Table<Dependency, Configuration, Optional<ReplacementResult>> dependencyReplacementInformation = HashBasedTable.create();
+    private final Table<Dependency, Configuration, Dependency> originalDependencyLookup = HashBasedTable.create();
     private final Table<Dependency, Configuration, TaskProvider<?>> rawJarTasks = HashBasedTable.create();
     private final Table<Dependency, Configuration, TaskProvider<?>> sourceJarTasks = HashBasedTable.create();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
@@ -60,6 +61,13 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         //TODO: Figure out if there is any way to do this lazily.
         //TODO: Configure each runs in an immutable context, so we can't add a listener to the dependencies.
         configuration.getDependencies().whenObjectAdded(dependency -> {
+            //We need to check if our configuration is unhandled, we can only do this here and not in the register because of way we register unhandled configurations after their creation:
+            //TODO: Find a better way to handle this.
+            if (ConfigurationUtils.isUnhandledConfiguration(configuration)) {
+                //We don't handle this configuration.
+                return;
+            }
+
             //We only support module based dependencies.
             if (dependency instanceof ModuleDependency) {
                 final ModuleDependency moduleDependency = (ModuleDependency) dependency;
@@ -100,6 +108,13 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         }
 
         return createDependencyFromTask(taskProvider);
+    }
+
+    @NotNull
+    @Override
+    public Dependency optionallyConvertBackToOriginal(Dependency dependency, Configuration configuration) {
+        final Dependency originalDependency = originalDependencyLookup.get(dependency, configuration);
+        return originalDependency == null ? dependency : originalDependency;
     }
 
     /**
@@ -240,6 +255,10 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
             targetConfiguration.getDependencies().add(newRepoEntry.getDependency());
             targetConfiguration.getDependencies().add(replacedDependency);
 
+            //Keep track of the original dependency, so we can convert back if needed.
+            originalDependencyLookup.put(newRepoEntry.getDependency(), targetConfiguration, dependency);
+            originalDependencyLookup.put(replacedDependency, targetConfiguration, dependency);
+
             //Store the tasks we generate.
             rawJarTasks.put(dependency, targetConfiguration, rawTask);
 
@@ -328,7 +347,14 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         }
 
         // Create a new repository entry for the dependency, using the replacement result.
-        final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
+        ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependency;
+        //Check if the result is replacement aware.
+        if (result instanceof ReplacementAware) {
+            final ReplacementAware replacementAware = (ReplacementAware) result;
+            //Let it alter the dependency, this allows support for version ranges, and strict versioning.
+            externalModuleDependency = replacementAware.getReplacementDependency(externalModuleDependency);
+        }
+
         final Repository extension = project.getExtensions().getByType(Repository.class);
         return extension.withEntry(
                 project.getObjects().newInstance(

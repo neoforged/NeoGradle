@@ -89,11 +89,6 @@ subsystems {
     // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.parchmentArtifact
     // parchmentArtifact = "org.parchmentmc.data:parchment-$minecraftVersion:$mappingsVersion:checked@zip"
     
-    // Overrides the full Maven coordinate of the tool used to apply the Parchment mappings
-    // See https://github.com/neoforged/JavaSourceTransformer
-    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.toolArtifact
-    // toolArtifact = "net.neoforged.jst:jst-cli-bundle:1.0.30"
-    
     // Set this to false if you don't want the https://maven.parchmentmc.org/ repository to be added automatically when
     // applying Parchment mappings is enabled
     // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.addRepository
@@ -126,11 +121,12 @@ This can be useful to run NeoGradle on lower-end machines, at the cost of slower
 The settings used by Neogradle for recompiling the decompiled Minecraft source code can be customized
 using [Gradle properties](https://docs.gradle.org/current/userguide/project_properties.html).
 
-| Property                                    | Description                                                                                                                          |
-|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| `neogradle.subsystems.recompiler.maxMemory` | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`). Defaults to `1g`. |
-| `neogradle.subsystems.recompiler.jvmArgs`   | Pass arbitrary JVM arguments to the forked Gradle process that runs the compiler. I.e. `-XX:+HeapDumpOnOutOfMemoryError`             |
-| `neogradle.subsystems.recompiler.args`      | Pass additional command line arguments to the Java compiler.                                                                         |
+| Property                                     | Description                                                                                                                          |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `neogradle.subsystems.recompiler.maxMemory`  | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`). Defaults to `1g`. |
+| `neogradle.subsystems.recompiler.jvmArgs`    | Pass arbitrary JVM arguments to the forked Gradle process that runs the compiler. I.e. `-XX:+HeapDumpOnOutOfMemoryError`             |
+| `neogradle.subsystems.recompiler.args`       | Pass additional command line arguments to the Java compiler.                                                                         |
+| `neogradle.subsystems.recompiler.shouldFork` | Indicates whether or not a process fork should be used for the recompiler. (Default is true).                                        |
 
 ## Run specific dependency management
 This implements run specific dependency management for the classpath of a run.
@@ -238,13 +234,11 @@ Per SourceSet the following configurations are added, where XXX is the SourceSet
 
 Per Run the following configurations are added:
 - XXXRun
-- XXXMod
 > [!NOTE]
 > For this to work, your Runs need to be defined before your dependency block.
 
 Globally the following configurations are added:
 - runs
-- mods
 
 #### LocalRuntime (Per SourceSet)
 This configuration is used to add dependencies to your local projects runtime only, without exposing them to the runtime of other projects.
@@ -257,14 +251,8 @@ Requires source set conventions to be enabled
 #### Run (Per Run)
 This configuration is used to add dependencies to the runtime of a specific run only, without exposing them to the runtime of other runs.
 
-#### Mod (Per Run)
-This configuration is used to add dependencies (and their dependencies), straight into the mods folder, without exposing them to the runtime of the run itself, or other runs.
-
 #### run (Global)
 This configuration is used to add dependencies to the runtime of all runs.
-
-#### mods (Global)
-This configuration is used to add dependencies (and their dependencies), straight into the mods folder of all runs, without exposing them to the runtime of the runs.
 
 ### Sourceset Management
 To disable the sourceset management, you can set the following property in your gradle.properties:
@@ -361,4 +349,13 @@ By default, a run is created for each type of run.
 If you want to disable this, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.runs.create-default-run-per-type=false
+```
+
+## Tool overrides
+To configure tools used by different subsystems of NG, the subsystems dsl and properties can be used to configure the following tools:
+### JST
+This tool is used by the parchment subsystem to apply its names and javadoc, as well as by the source access transformer system to apply its transformations.
+The following properties can be used to configure the JST tool:
+```properties
+neogradle.subsystems.tools.jst=<artifact coordinate for jst cli tool>
 ```

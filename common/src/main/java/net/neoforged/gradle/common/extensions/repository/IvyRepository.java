@@ -22,15 +22,21 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class IvyRepository implements ConfigurableDSLElement<Repository>, Repository
 {
+    public static final String GAV_PREFIX_DIRECTORY = "ng_dummy_ng";
+    public static final String GAV_PREFIX = GAV_PREFIX_DIRECTORY + ".";
     /**
      * A version for stored metadata.
      */
@@ -42,17 +48,17 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
      */
     public static final String IVY_METADATA_PATTERN = "[organisation]/[module]/[revision]/ivy-[revision]-ng" + METADATA_VERSION + ".xml";
 
-    private final Set<Entry> entries = Sets.newConcurrentHashSet();
+    private final Set<Entry> entries = Collections.synchronizedSet(new LinkedHashSet<>());
 
     private final Project project;
 
-    private final ArtifactRepository gradleRepository;
+    private ArtifactRepository gradleRepository;
 
     @Inject
     public IvyRepository(Project project) {
         this.project = project;
         this.getRepositoryDirectory().convention(project.getLayout().getProjectDirectory().dir(".gradle/repositories"));
-        this.gradleRepository = this.createRepositories();
+        this.enable();
     }
 
     @Override
@@ -60,21 +66,31 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         return project;
     }
 
-    @Override
-    public ArtifactRepository getRepository() {
-        return gradleRepository;
-    }
-
     private ArtifactRepository createRepositories() {
-        return project.getRepositories().ivy(repositoryConfiguration(
+        final ArtifactRepository repository = project.getRepositories().ivy(repositoryConfiguration(
                 "NeoGradle Artifacts",
                 getRepositoryDirectory()
         ));
+
+        project.getRepositories().remove(repository);
+        project.getRepositories().addFirst(repository);
+
+        return repository;
     }
 
     @Override
     @NotNull
     public abstract DirectoryProperty getRepositoryDirectory();
+
+    @Override
+    public void enable() {
+        if (this.gradleRepository != null) {
+            throw new IllegalStateException("Repository already enabled");
+        }
+
+        //Create the repo and register it.
+        this.gradleRepository = this.createRepositories();
+    }
 
     @SuppressWarnings("SameParameterValue") // Potentially this needs extension in the future.
     private Action<IvyArtifactRepository> repositoryConfiguration(
@@ -84,6 +100,19 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         //We primarily configure the metadata supplier here, but we also need to configure the repository itself.
         //We follow standard IVY patterns, and we also set M2 compatibility to true.
         return ivy -> {
+            final File rootDir = root.get().getAsFile();
+            if (!rootDir.exists() && !rootDir.mkdirs()) {
+                throw new IllegalStateException("Failed to create repository directory");
+            }
+
+            for (File file : Objects.requireNonNull(rootDir.listFiles(pathname -> pathname.isDirectory() && !pathname.getName().equals(GAV_PREFIX_DIRECTORY)))) {
+                try {
+                    FileUtils.delete(file.toPath());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to delete old repository directory", e);
+                }
+            }
+
             ivy.setName(name);
             ivy.setUrl(root.get().getAsFile().toURI());
             ivy.patternLayout(layout -> {
@@ -139,6 +168,11 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     }
 
     private void create(Entry entry) {
+        this.entries.add(entry);
+        write(entry);
+    }
+
+    private void write(Entry entry) {
         final Dependency dependency = entry.getDependency();
         final Configuration dependencies = entry.getDependencies();
         final boolean hasSources = entry.hasSources();
@@ -149,8 +183,6 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         } catch (IOException | XMLStreamException e) {
             throw new RuntimeException("Failed to write dummy data", e);
         }
-
-        this.entries.add(entry);
     }
 
     private void writeDummyDataIfNeeded(

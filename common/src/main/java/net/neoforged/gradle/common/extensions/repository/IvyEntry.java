@@ -2,10 +2,12 @@ package net.neoforged.gradle.common.extensions.repository;
 
 import net.minecraftforge.gdi.BaseDSLElement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ExternalModuleDependency;
 
 import javax.inject.Inject;
 import java.io.Serializable;
@@ -75,7 +77,10 @@ public abstract class IvyEntry implements BaseDSLElement<Entry>, Entry, Serializ
         public Entry.Builder from(Dependency dependency) {
             return from(
                     dependency,
-                    project.getConfigurations().detachedConfiguration()
+                    ConfigurationUtils.temporaryUnhandledConfiguration(
+                            project.getConfigurations(),
+                            "EmptyDependenciesFor" + ModuleDependencyUtils.toConfigurationName(dependency)
+                    )
             );
         }
 
@@ -99,7 +104,12 @@ public abstract class IvyEntry implements BaseDSLElement<Entry>, Entry, Serializ
         }
 
         private Dependency wrap(Dependency dependency) {
-            return dependency.copy();
+            if (!(dependency instanceof ExternalModuleDependency))
+                throw new IllegalArgumentException("Dependency must be an ExternalModuleDependency");
+
+            final String gav = ModuleDependencyUtils.format((ExternalModuleDependency) dependency);
+
+            return project.getDependencies().create(IvyRepository.GAV_PREFIX + gav);
         }
     }
 }

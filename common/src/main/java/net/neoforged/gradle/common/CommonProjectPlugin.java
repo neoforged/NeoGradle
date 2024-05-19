@@ -13,6 +13,7 @@ import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.ProjectUtils;
+import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
@@ -91,7 +92,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create("allRuntimes", RuntimesExtension.class);
-        project.getExtensions().create(ArtifactDownloader.class, "artifactDownloader", ArtifactDownloaderExtension.class, project);
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyRepository.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
@@ -336,18 +336,29 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
 
-                    final Set<CommonRuntimeDefinition<?>> definitionSet = new HashSet<>();
+                    //Let's keep track of all runtimes that have been configured.
+                    //TODO: Determine handling of multiple different runtimes, in multiple projects....
+                    final Map<String, CommonRuntimeDefinition<?>> definitionSet = new HashMap<>();
 
                     runImpl.getModSources().get().forEach(sourceSet -> {
                         try {
-                            final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(project, sourceSet);
-                            definition.ifPresent(definitionSet::add);
+                            final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
+                            if (definition.isPresent()) {
+                                final CommonRuntimeDefinition<?> runtimeDefinition = definition.get();
+                                //First time we see this runtime add, it.
+                                if (!definitionSet.containsKey(runtimeDefinition.getSpecification().getIdentifier())) {
+                                    definitionSet.put(runtimeDefinition.getSpecification().getIdentifier(), runtimeDefinition);
+                                } else if (SourceSetUtils.getProject(sourceSet) == project) {
+                                    //We have seen this runtime before, but this time it is our own, which we prefer.
+                                    definitionSet.put(runtimeDefinition.getSpecification().getIdentifier(), runtimeDefinition);
+                                }
+                            }
                         } catch (MultipleDefinitionsFoundException e) {
                             throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
                         }
                     });
 
-                    definitionSet.forEach(definition -> {
+                    definitionSet.forEach((identifier, definition) -> {
                         definition.configureRun(runImpl);
                     });
                 }

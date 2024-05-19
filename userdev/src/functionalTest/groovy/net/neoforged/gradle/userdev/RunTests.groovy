@@ -11,6 +11,56 @@ class RunTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
+    def "configuring of the configurations after the dependencies block should work"() {
+        given:
+        def project = create("runs_configuration_after_dependencies", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            sourceSets {
+                modRun {
+                    java.setSrcDirs(['src/main/mod'])
+                    resources.setSrcDirs(['src/main/modResources'])
+                }
+            }
+            
+            runs {
+                client {
+                    modSource sourceSets.modRun
+                }
+            }
+            
+            dependencies {
+                implementation "net.neoforged:neoforge:+"
+            }
+            
+            configurations {
+                modRunImplementation.extendsFrom implementation
+            }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':runData')
+            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
+            it.shouldFail()
+        }
+
+        then:
+        run.task(':writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
+        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") //Validate that we are failing because of the missing mod file, and not something else.
+    }
+
     def "runs can be declared before the dependencies block"() {
         given:
         def project = create("runs_before_dependencies", {
@@ -46,6 +96,57 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':tasks').outcome == TaskOutcome.SUCCESS
         run.output.contains('runClient')
+    }
+
+    def "when referencing pom on run classpath, it should not list it on the LCP, but it should list its dependencies"() {
+        given:
+        def project = create("runs_support_poms", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            
+            runs {
+                client {
+                    dependencies {
+                        runtime 'org.graalvm.polyglot:python:23.1.2'
+                    }
+                    
+                    modSource project.sourceSets.main
+                }
+            }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':writeMinecraftClasspathClient')
+        }
+
+        then:
+        run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
+
+        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def versionedNeoformDir = neoformDir.listFiles()[0]
+        def stepsDir = new File(versionedNeoformDir, "steps")
+        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
+        def classpathFile = new File(stepDir, "classpath.txt")
+
+        classpathFile.exists()
+
+        classpathFile.text.contains("org.graalvm.polyglot/polyglot")
+        !classpathFile.text.contains(".pom")
     }
 
     def "userdev supports custom run dependencies"() {

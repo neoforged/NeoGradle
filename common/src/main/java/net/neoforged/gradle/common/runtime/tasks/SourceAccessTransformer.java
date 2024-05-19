@@ -2,9 +2,11 @@ package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.util.ToolUtilities;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -24,7 +26,7 @@ public abstract class SourceAccessTransformer extends Execute {
 
         setDescription("Runs the access transformer on the decompiled sources.");
 
-        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.JST_TOOL_ARTIFACT));
+        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), getProject().getExtensions().getByType(Subsystems.class).getTools().getJST().get()));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();
@@ -46,8 +48,7 @@ public abstract class SourceAccessTransformer extends Execute {
                 )
         );
 
-        getJavaVersion().set(JavaLanguageVersion.of(17));
-
+        getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getTransformers().finalizeValueOnRead();
     }
 

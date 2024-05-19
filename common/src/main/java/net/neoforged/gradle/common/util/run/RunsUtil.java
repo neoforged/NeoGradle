@@ -222,7 +222,8 @@ public class RunsUtil {
             final Multimap<String, SourceSet> sourceSetsByRunId = HashMultimap.create();
             sourceSets.forEach(sourceSet -> sourceSetsByRunId.put(SourceSetUtils.getModIdentifier(sourceSet), sourceSet));
 
-            return sourceSetsByRunId.entries().stream().flatMap(entry -> directoryBuilder.apply(entry.getValue()).map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath()))).collect(Collectors.joining(File.pathSeparator));
+            return sourceSetsByRunId.entries().stream().flatMap(entry -> directoryBuilder.apply(entry.getValue()).peek(directory -> directory.mkdirs())
+                                                              .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath()))).collect(Collectors.joining(File.pathSeparator));
         });
     }
 

@@ -32,6 +32,14 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         configureDecompilerDefaults();
         configureRecompilerDefaults();
         configureParchmentDefaults();
+        configureToolsDefaults();
+    }
+
+    private void configureToolsDefaults() {
+        Tools tools = getTools();
+        tools.getJST().convention(
+                getStringProperty("tools.jst").orElse(JST_TOOL_ARTIFACT)
+        );
     }
 
     private void configureDecompilerDefaults() {
@@ -53,6 +61,7 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         recompiler.getArgs().convention(getSpaceSeparatedListProperty("recompiler.args").orElse(Collections.emptyList()));
         recompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("recompiler.jvmArgs").orElse(Collections.emptyList()));
         recompiler.getMaxMemory().convention(getStringProperty("recompiler.maxMemory").orElse(DEFAULT_RECOMPILER_MAX_MEMORY));
+        recompiler.getShouldFork().convention(getBooleanProperty("recompiler.shouldFork").orElse(true));
     }
 
     private void configureParchmentDefaults() {
@@ -76,9 +85,6 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         );
         parchment.getMappingsVersion().convention(
                 getStringProperty("parchment.mappingsVersion")
-        );
-        parchment.getToolArtifact().convention(
-                getStringProperty("parchment.toolArtifact").orElse(JST_TOOL_ARTIFACT)
         );
         parchment.getAddRepository().convention(
                 getBooleanProperty("parchment.addRepository").orElse(true)

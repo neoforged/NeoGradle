@@ -3,13 +3,16 @@ package net.neoforged.gradle.userdev;
 import net.neoforged.gradle.common.extensions.DefaultJarJarFeature;
 import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.dsl.common.extensions.JarJar;
-import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.neoform.NeoFormPlugin;
+import net.neoforged.gradle.neoform.NeoFormProjectPlugin;
 import net.neoforged.gradle.userdev.dependency.UserDevDependencyManager;
-import net.neoforged.gradle.userdev.extension.UserDevExtension;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
+import net.neoforged.gradle.util.UrlConstants;
+import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.repositories.ArtifactRepository;
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 
 public class UserDevProjectPlugin implements Plugin<Project> {
     public static final String JAR_JAR_TASK_NAME = DefaultJarJarFeature.JAR_JAR_TASK_NAME;
@@ -22,7 +25,6 @@ public class UserDevProjectPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(NeoFormPlugin.class);
 
-        project.getExtensions().create(UserDev.class, "userDev", UserDevExtension.class, project);
         project.getExtensions().create("userDevRuntime", UserDevRuntimeExtension.class, project);
 
         UserDevDependencyManager.getInstance().apply(project);

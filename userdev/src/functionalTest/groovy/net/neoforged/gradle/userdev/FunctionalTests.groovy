@@ -38,6 +38,125 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         run.task(':neoFormRecompile').outcome == TaskOutcome.SUCCESS
     }
 
+    def "userdev supports version range resolution"() {
+        given:
+        def project = create("userdev_supports_version_ranges", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:[20,)'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('dependencies', "--configuration", "compileClasspath")
+        }
+
+        then:
+        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.output.contains("\\--- ng_dummy_ng.net.neoforged:neoforge:")
+    }
+
+    def "userdev supports complex version resolution"() {
+        given:
+        def project = create("userdev_supports_complex_versions", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation ('net.neoforged:neoforge') {
+                    version {
+                        strictly '[20.4.167, 20.5)'
+                        require '20.4.188'
+                    }
+                }
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('dependencies', "--configuration", "compileClasspath")
+        }
+
+        then:
+        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.output.contains("\\--- ng_dummy_ng.net.neoforged:neoforge:20.4.188")
+    }
+
+    def "a mod with userdev as dependency has a mixin-extra dependency on the compile classpath"() {
+        given:
+        def project = create("userdev_adds_mixin_extra_on_compile_classpath", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('dependencies', "--configuration", "compileClasspath")
+        }
+
+        then:
+        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.output.contains("+--- io.github.llamalad7:mixinextras-neoforge")
+    }
+
     def "a mod with userdev as dependency and official mappings can compile through gradle"() {
         given:
         def project = create("compile_with_gradle_and_official_mappings", {
@@ -106,11 +225,50 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks('clean', 'build')
+            it.stacktrace()
         }
 
         then:
         run.task(':clean').outcome == TaskOutcome.SUCCESS
         run.task(':build').outcome == TaskOutcome.SUCCESS
+    }
+
+    def "a mod with userdev as dependency and official mappings has the client-extra jar as a dependency"() {
+        given:
+        def project = create("gradle_userdev_references_client", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('dependencies')
+        }
+
+        then:
+        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.output.contains("net.minecraft:client")
     }
 
     def "the userdev runtime by default supports the build cache"() {
@@ -140,7 +298,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
-            it.debugBuildCache()
         })
 
         when:
@@ -155,6 +312,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         and:
         def secondRun = project.run {
             it.tasks('build')
+            it.stacktrace()
         }
 
         then:
@@ -162,4 +320,122 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         initialRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
 
+    def "the userdev runtime supports restricted repositories"() {
+        given:
+        def project = create("userdev_supports_loading_from_buildcache", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                exclusiveContent {
+                    forRepository {
+                        maven { url 'https://maven.tterrag.com/' }
+                    }
+                    filter { includeGroup('team.chisel.ctm') }
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.enableLocalBuildCache()
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('build')
+        }
+
+        then:
+        initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+
+        and:
+        def secondRun = project.run {
+            it.tasks('build')
+            it.stacktrace()
+        }
+
+        then:
+        secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
+        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+    }
+
+
+
+    def "a mod with userdev can have multiple sourcesets with neoforge"() {
+        given:
+        def project = create("gradle_multi_sourceset", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            sourceSets {
+                content {
+                    java {
+                        srcDir 'src/content/java'
+                    }
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+                contentImplementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.file("src/content/java/net/neoforged/gradle/userdev/ContentTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class ContentTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('clean', 'build')
+            it.stacktrace()
+        }
+
+        then:
+        run.task(':clean').outcome == TaskOutcome.SUCCESS
+        run.task(':build').outcome == TaskOutcome.SUCCESS
+    }
 }

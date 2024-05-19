@@ -7,6 +7,8 @@ import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,5 +37,18 @@ public class UserDevReplacementResult extends ReplacementResult implements Repla
     public void onTasksCreated(TaskProvider<? extends WithOutput> copiesRawJar, TaskProvider<? extends WithOutput> copiesMappedJar) {
         //Register the classpath element producer
         definition.setUserdevClasspathElementProducer(copiesRawJar);
+    }
+
+    @Override
+    public ExternalModuleDependency getReplacementDependency(ExternalModuleDependency externalModuleDependency) {
+        final Dependency resolvedExactVersionDependency = getProject().getDependencies()
+                .create(
+                        definition.getSpecification().getForgeGroup() + ":" + definition.getSpecification().getForgeName() + ":" + definition.getSpecification().getForgeVersion()
+                );
+
+        if (!(resolvedExactVersionDependency instanceof ExternalModuleDependency))
+            throw new IllegalStateException("Resolved dependency is not an ExternalModuleDependency");
+
+        return (ExternalModuleDependency) resolvedExactVersionDependency;
     }
 }

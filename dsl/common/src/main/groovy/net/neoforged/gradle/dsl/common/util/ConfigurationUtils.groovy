@@ -19,42 +19,114 @@ import java.util.concurrent.atomic.AtomicInteger
 @CompileStatic
 class ConfigurationUtils {
 
-    private static AtomicInteger temporaryConfigurationCounter = new AtomicInteger(0)
+    private static Set<Configuration> UNHANDLED_CONFIGURATIONS = new HashSet<>()
 
     private ConfigurationUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: ConfigurationUtils. This is a utility class")
     }
 
     /**
-     * Creates a detached configuration that can be resolved, but not consumed.
+     * Creates a configuration that can be resolved, but not consumed.
      *
      * @param project The project to create the configuration for
+     * @param context The context of the configuration
      * @param dependencies The dependencies to add to the configuration
      * @return The detached configuration
      */
-    static Configuration temporaryConfiguration(final Project project, final Dependency... dependencies) {
-        final Configuration configuration = project.getConfigurations().detachedConfiguration(dependencies);
+    static Configuration temporaryConfiguration(final Project project, final String context, final Dependency... dependencies) {
+        final Configuration configuration = project.getConfigurations().maybeCreate("neoGradleInternal${context.capitalize()}")
 
-        configuration.setCanBeConsumed(false)
-        configuration.setCanBeResolved(true)
+        if (configuration.getDependencies().isEmpty()) {
+            configuration.getDependencies().addAll(dependencies)
 
-        final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
-        dependencyReplacement.handleConfiguration(configuration)
+            configuration.setCanBeConsumed(false)
+            configuration.setCanBeResolved(true)
+
+            final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
+            dependencyReplacement.handleConfiguration(configuration)
+        }
 
         return configuration
     }
 
     /**
-     * Creates a detached configuration that can be resolved, but not consumed.
+     * Creates a configuration that can be resolved, but not consumed.
+     *
+     * @param project The project to create the configuration for
+     * @param context The context of the configuration
+     * @param processor The processor to apply to the configuration
+     * @return The detached configuration
+     */
+    static Configuration temporaryConfiguration(final Project project, final String context, final Action<Configuration> processor) {
+        final String name = "neoGradleInternal${context.capitalize()}"
+        final boolean exists = project.getConfigurations().getNames().contains(name)
+
+        final Configuration configuration = project.getConfigurations().maybeCreate("neoGradleInternal${context.capitalize()}")
+
+        if (!exists) {
+            processor.execute(configuration)
+
+            configuration.setCanBeConsumed(false)
+            configuration.setCanBeResolved(true)
+
+            final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class)
+            dependencyReplacement.handleConfiguration(configuration)
+        }
+
+        return configuration
+    }
+
+    /**
+     * Indicates if the given configuration is an unhandled configuration.
+     *
+     * @param configuration The configuration to check
+     * @return True if the configuration is unhandled, false otherwise
+     */
+    public static boolean isUnhandledConfiguration(Configuration configuration) {
+        return UNHANDLED_CONFIGURATIONS.contains(configuration)
+    }
+
+    /**
+     * Creates a configuration that can be resolved, but not consumed, but on which no dependency replacement is applied.
      *
      * @param configurations The configuration handler.
+     * @param context The context of the configuration
      * @param dependencies The dependencies to add to the configuration
      * @return The detached configuration
      */
-    static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final Dependency... dependencies) {
-        final Configuration configuration = configurations.detachedConfiguration(dependencies)
-        configuration.setCanBeConsumed(false)
-        configuration.setCanBeResolved(true)
+    static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final String context, final Dependency... dependencies) {
+        final Configuration configuration = configurations.maybeCreate("neoGradleInternalUnhandled${context.capitalize()}")
+        UNHANDLED_CONFIGURATIONS.add(configuration)
+
+        if (configuration.getDependencies().isEmpty()) {
+            configuration.getDependencies().addAll(dependencies)
+
+            configuration.setCanBeConsumed(false)
+            configuration.setCanBeResolved(true)
+        }
+
+        return configuration
+    }
+
+    /**
+     * Creates a configuration that can be resolved, but not consumed, and does not report its dependencies as transitive.
+     *
+     * @param configurations The configuration handler.
+     * @param context The context of the configuration
+     * @param dependencies The dependencies to add to the configuration
+     * @return The detached configuration
+     */
+    static Configuration temporaryUnhandledNotTransitiveConfiguration(final ConfigurationContainer configurations, final String context, final Dependency... dependencies) {
+        final Configuration configuration = configurations.maybeCreate("neoGradleInternalUnhandled${context.capitalize()}")
+        UNHANDLED_CONFIGURATIONS.add(configuration)
+
+        if (configuration.getDependencies().isEmpty()) {
+            configuration.getDependencies().addAll(dependencies)
+
+            configuration.setCanBeConsumed(false)
+            configuration.setCanBeResolved(true)
+            configuration.setTransitive(false)
+        }
 
         return configuration
     }
@@ -62,10 +134,9 @@ class ConfigurationUtils {
     /**
      * Creates a provider that will resolve a temporary configuration containing the given dependency.
      */
-    static Provider<File> getArtifactProvider(Project project, Provider<? extends Object> dependencyNotationProvider) {
+    static Provider<File> getArtifactProvider(Project project, String context, Provider<? extends Object> dependencyNotationProvider) {
         return dependencyNotationProvider.flatMap(dependencyNotation -> {
-            Configuration configuration = temporaryConfiguration(project, project.getDependencies().create(dependencyNotation));
-            configuration.transitive = false;
+            Configuration configuration = temporaryUnhandledNotTransitiveConfiguration(project.getConfigurations(), context, project.getDependencies().create(dependencyNotation));
             return configuration.getElements().map(files -> files.iterator().next().getAsFile());
         });
     }

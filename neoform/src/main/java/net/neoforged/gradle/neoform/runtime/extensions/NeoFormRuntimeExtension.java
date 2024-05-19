@@ -13,11 +13,7 @@ import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.DecompilerLogLevel;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
@@ -25,10 +21,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.specifications.OutputSpecification;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
+import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -53,6 +46,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.ForkOptions;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -279,9 +273,10 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
         }
 
-        final Configuration minecraftDependenciesConfiguration = spec.getProject().getConfigurations().detachedConfiguration();
-        minecraftDependenciesConfiguration.setCanBeResolved(true);
-        minecraftDependenciesConfiguration.setCanBeConsumed(false);
+        final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                spec.getProject().getConfigurations(),
+                "NeoFormMinecraftDependenciesFor" + spec.getIdentifier()
+        );
         for (VersionJson.Library library : versionJson.getLibraries()) {
             minecraftDependenciesConfiguration.getDependencies().add(
                     spec.getProject().getDependencies().create(library.getName())
@@ -469,10 +464,13 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     // Consider user-settings
                     Recompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getRecompiler();
                     String maxMemory = settings.getMaxMemory().get();
+                    task.getOptions().setFork(settings.getShouldFork().get());
                     ForkOptions forkOptions = task.getOptions().getForkOptions();
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
+
+                    task.getJavaVersion().set(JavaLanguageVersion.of(definition.getVersionJson().getJavaVersion().getMajorVersion()));
 
                     for (Task dependency : recompileDependencies.getBuildDependencies().getDependencies(task)) {
                         task.dependsOn(dependency);
@@ -483,8 +481,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final TaskProvider<PackZip> packTask = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackZip.class, task -> {
-                    task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
                     task.getInputFiles().from(recompileInput.map(file -> getProject().zipTree(file).matching(sp -> sp.exclude("**/*.java")).getAsFileTree()));
+                    task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
                 });
 
         packTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
@@ -508,6 +506,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                                                              Provider<RegularFile> listLibrariesOutput) {
         Project project = spec.getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
+        Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
         if (!parchment.getEnabled().get()) {
             return recompileInput;
         }
@@ -515,7 +514,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
-            File toolExecutable = ToolUtilities.resolveTool(project, parchment.getToolArtifact().get());
+            File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
             task.getInputs().file(mappingFile);
             task.getInputs().file(recompileInput);
