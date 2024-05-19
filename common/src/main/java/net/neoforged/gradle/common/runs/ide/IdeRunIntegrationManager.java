@@ -130,6 +130,11 @@ public class IdeRunIntegrationManager {
                 final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
                 
                 final RunImpl runImpl = (RunImpl) run;
+
+                //Do not generate a run configuration for unit tests
+                if (runImpl.getIsUnitTest().get())
+                    return;
+
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
                 final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
                 
@@ -164,6 +169,11 @@ public class IdeRunIntegrationManager {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     
                     final RunImpl runImpl = (RunImpl) run;
+
+                    //Do not generate a run configuration for unit tests
+                    if (runImpl.getIsUnitTest().get())
+                        return;
+
                     final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
                     final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
                     ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(t -> task.dependsOn(t)));
