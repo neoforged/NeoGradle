@@ -179,8 +179,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         ProjectUtils.afterEvaluate(project, () -> {
             project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
-                if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get())
+                if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+                    //We always register main
                     run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
+                    if (run.getIsUnitTest().get())
+                        run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
+                }
 
                 if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get())
                     run.getModSources().get().forEach(sourceSet -> {

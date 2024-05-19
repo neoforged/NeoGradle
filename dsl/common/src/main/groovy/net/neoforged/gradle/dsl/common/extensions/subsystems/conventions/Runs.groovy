@@ -21,4 +21,10 @@ interface Runs extends BaseDSLElement<Runs> {
      */
     @DSLProperty
     Property<Boolean> getShouldDefaultRunsBeCreated()
+
+    /**
+     * Whether or not the default test task should be reused.
+     */
+    @DSLProperty
+    Property<Boolean> getShouldDefaultTestTaskBeReused();
 }

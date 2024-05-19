@@ -45,8 +45,4 @@ public class PlatformProjectPlugin implements Plugin<Project> {
         
         project.getExtensions().getByType(IdeManagementExtension.class).onIdea((project1, idea, ideaExtension) -> run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().convention(mainSourceSet));
     }
-    
-    private Provider<String> buildModClasses(final Project project, final Run run) {
-        return project.provider(() -> Stream.concat(run.getModSources().get().stream().map(source -> source.getOutput().getResourcesDir()), run.getModSources().get().stream().map(source -> source.getOutput().getClassesDirs().getFiles()).flatMap(Collection::stream)).map(File::getAbsolutePath).map(path -> String.format("minecraft%%%%%s", path)).collect(Collectors.joining(File.pathSeparator)));
-    }
 }

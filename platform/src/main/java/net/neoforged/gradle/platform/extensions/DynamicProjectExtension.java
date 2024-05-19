@@ -594,7 +594,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 type.getEnvironmentVariables().put("MCP_MAPPINGS", "{mcp_mappings}");
 
                 type.getIsClient().set(true);
-                type.getIsJUnit().set(true);
+                type.getIsUnitTest().set(true);
 
                 type.getArguments().add("--launchTarget");
                 type.getArguments().add("forgejunituserdev");
@@ -777,14 +777,14 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
             }
 
-            if (run.getIsDataGenerator().get() || run.getIsClient().get() || runType.getIsJUnit().get()) {
+            if (run.getIsDataGenerator().get() || run.getIsClient().get() || runType.getIsUnitTest().get()) {
                 run.getProgramArguments().add("--assetsDir");
                 run.getProgramArguments().add(assetsDir);
                 run.getProgramArguments().add("--assetIndex");
                 run.getProgramArguments().add(assetIndex);
             }
 
-            if (runType.getIsJUnit().get()) {
+            if (run.getIsUnitTest().get()) {
                 run.getProgramArguments().addAll("--launchTarget", "forgejunitdev");
             }
         });

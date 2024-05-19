@@ -50,6 +50,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsServer().convention(false);
         getIsDataGenerator().convention(false);
         getIsGameTest().convention(false);
+        getIsUnitTest().convention(false);
         getShouldBuildAllProjects().convention(false);
         getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project));
 
@@ -163,6 +164,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsServer().convention(spec.getIsServer());
         getIsDataGenerator().convention(spec.getIsDataGenerator());
         getIsGameTest().convention(spec.getIsGameTest());
+        getIsUnitTest().convention(spec.getIsUnitTest());
         getClasspath().from(spec.getClasspath());
 
         if (spec.getRunAdapter().isPresent()) {
