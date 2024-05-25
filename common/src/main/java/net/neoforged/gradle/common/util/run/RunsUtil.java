@@ -13,6 +13,7 @@ import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
@@ -149,11 +150,12 @@ public class RunsUtil {
         testTask.getEnvironment().putAll(run.getEnvironmentVariables().get());
         testTask.setJvmArgs(run.getJvmArguments().get());
 
-        testTask.setClasspath(testTask.getClasspath().filter(file -> Stream.concat(run.getModSources().get().stream(), run.getUnitTestSources().get().stream())
-                .noneMatch(sourceSet -> (sourceSet.getOutput().getResourcesDir() != null &&
-                        sourceSet.getOutput().getResourcesDir().equals(file)) ||
-                        sourceSet.getOutput().getClassesDirs().getFiles().contains(file)
-                )));
+        final ConfigurableFileCollection testCP = project.files();
+        testCP.from(run.getDependencies().get().getRuntimeConfiguration());
+        Stream.concat(run.getModSources().get().stream(), run.getUnitTestSources().get().stream())
+                .forEach(src -> testCP.from(filterOutput(src)));
+
+        testTask.setClasspath(testCP);
 
         final ConfigurableFileCollection testClassesDirs = project.files();
         for (SourceSet sourceSet : run.getUnitTestSources().get()) {
@@ -161,6 +163,14 @@ public class RunsUtil {
         }
 
         testTask.setTestClassesDirs(testClassesDirs);
+    }
+
+    private static FileCollection filterOutput(SourceSet srcSet) {
+        FileCollection collection = srcSet.getRuntimeClasspath().minus(srcSet.getOutput().getClassesDirs());
+        if (srcSet.getOutput().getResourcesDir() != null) {
+            collection = collection.filter(file -> !file.equals(srcSet.getOutput().getResourcesDir()));
+        }
+        return collection;
     }
 
     public static void addRunSourcesDependenciesToTask(Task task, Run run) {
