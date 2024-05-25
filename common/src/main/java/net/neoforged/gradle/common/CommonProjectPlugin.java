@@ -44,18 +44,14 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.component.AdhocComponentWithVariants;
-import org.gradle.api.initialization.Settings;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.DefaultTaskExecutionRequest;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
-import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
-import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
-import org.jetbrains.gradle.ext.ProjectSettings;
 
 import java.util.*;
 
@@ -182,7 +178,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
                     //We always register main
                     run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
-                    if (run.getIsUnitTest().get())
+                    if (run.getIsJUnit().get())
                         run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
                 }
 

@@ -7,8 +7,6 @@ import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
-import org.apache.ivy.util.StringUtils;
-import org.codehaus.groovy.util.StringUtil;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -53,7 +51,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsServer().convention(false);
         getIsDataGenerator().convention(false);
         getIsGameTest().convention(false);
-        getIsUnitTest().convention(false);
+        getIsJUnit().convention(false);
         getShouldBuildAllProjects().convention(false);
         getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project, String.format("RunRuntimeDependencies%s", StringCapitalizationUtils.capitalize(name))));
 
@@ -167,7 +165,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsServer().convention(spec.getIsServer());
         getIsDataGenerator().convention(spec.getIsDataGenerator());
         getIsGameTest().convention(spec.getIsGameTest());
-        getIsUnitTest().convention(spec.getIsUnitTest());
+        getIsJUnit().convention(spec.getIsJUnit());
         getClasspath().from(spec.getClasspath());
 
         if (spec.getRunAdapter().isPresent()) {

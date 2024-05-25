@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -132,7 +131,7 @@ public class IdeRunIntegrationManager {
                 final RunImpl runImpl = (RunImpl) run;
 
                 //Do not generate a run configuration for unit tests
-                if (runImpl.getIsUnitTest().get())
+                if (runImpl.getIsJUnit().get())
                     return;
 
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
@@ -171,7 +170,7 @@ public class IdeRunIntegrationManager {
                     final RunImpl runImpl = (RunImpl) run;
 
                     //Do not generate a run configuration for unit tests
-                    if (runImpl.getIsUnitTest().get())
+                    if (runImpl.getIsJUnit().get())
                         return;
 
                     final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);

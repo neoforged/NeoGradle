@@ -53,7 +53,7 @@ public class RunsUtil {
         final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
 
         project.afterEvaluate(evaluatedProject -> {
-            if (!run.getIsUnitTest().get()) {
+            if (!run.getIsJUnit().get()) {
                 //Create run exec tasks for all none unit test runs
                 project.getTasks().register(createTaskName(name), RunExec.class, runExec -> {
                     runExec.getRun().set(run);
@@ -70,7 +70,7 @@ public class RunsUtil {
         project.afterEvaluate(evaluatedProject -> {
             //Create a combined provider for the mod and unit test sources
             Provider<? extends Collection<SourceSet>> sourceSets = run.getModSources().map(modSources -> {
-                if (!run.getIsUnitTest().get())
+                if (!run.getIsJUnit().get())
                     //No Unit test sources for non unit test runs
                     return modSources;
 

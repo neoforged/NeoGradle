@@ -131,9 +131,9 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      * @return {@code true} if this run is a unit test run; otherwise, {@code false}.
      */
     @Input
-    @DSLProperty
+    @DSLProperty(propertyName = 'junit')
     @Optional
-    abstract Property<Boolean> getIsUnitTest();
+    abstract Property<Boolean> getIsJUnit();
 
 
     /**
