@@ -7,6 +7,7 @@ import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -90,11 +91,16 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
 
+        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
+        spec.getProject().afterEvaluate(project -> runs.stream().filter(run -> run.getIsJUnit().get())
+                .forEach(run -> spec.getProfile().getAdditionalTestDependencyArtifactCoordinates()
+                        .get().forEach(run.getDependencies().get().getRuntime()::add)));
+
         final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
         userdevProfile.getRunTypes().forEach((type) -> {
             TypesUtil.registerWithPotentialPrefix(runTypes, spec.getIdentifier(), type.getName(), type::copyTo);
         });
-        
+
         return new UserDevRuntimeDefinition(
                 spec,
                 mcpRuntimeDefinition,
