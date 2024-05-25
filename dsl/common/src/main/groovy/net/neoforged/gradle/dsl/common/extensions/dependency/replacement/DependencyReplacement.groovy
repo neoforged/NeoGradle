@@ -31,26 +31,6 @@ interface DependencyReplacement extends BaseDSLElement<DependencyReplacement> {
     NamedDomainObjectContainer<DependencyReplacementHandler> getReplacementHandlers();
 
     /**
-     * Gives access to the task that produces the raw jar for the given dependency in our dynamic repository.
-     *
-     * @param dependency The dependency to get the raw jar producing task for.
-     * @param configuration The configuration to get the raw jar producing task for.
-     * @return The raw jar dependency that will trigger the copying of the raw jar into the repository.
-     */
-    @NotNull
-    Dependency getRawJarDependency(Dependency dependency, Configuration configuration);
-
-    /**
-     * Gives access to the task that produces the sources jar for the given dependency in our dynamic repository.
-     *
-     * @param dependency The dependency to get the sources jar producing task for.
-     * @param configuration The configuration to get the sources jar producing task for.
-     * @return The sources jar dependency that will trigger the copying the sources jar into the repository.
-     */
-    @NotNull
-    Dependency getSourcesJarDependency(Dependency dependency, Configuration configuration);
-
-    /**
      * Optionally converts the given dependency back to the original dependency it replaced.
      *
      * @param dependency The dependency to optionally convert back.

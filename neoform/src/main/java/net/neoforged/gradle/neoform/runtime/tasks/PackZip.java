@@ -5,13 +5,14 @@ import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.*;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.zip.ZipOutputStream;
 
-@CacheableTask
+@DisableCachingByDefault(because = "Jar tasks are not cached either")
 public abstract class PackZip extends DefaultRuntime {
    
    @TaskAction

@@ -26,13 +26,7 @@ import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfiguration
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
-import net.neoforged.gradle.neoform.runtime.tasks.InjectFromFileTreeSource;
-import net.neoforged.gradle.neoform.runtime.tasks.InjectZipContent;
-import net.neoforged.gradle.neoform.runtime.tasks.PackZip;
-import net.neoforged.gradle.neoform.runtime.tasks.Patch;
-import net.neoforged.gradle.neoform.runtime.tasks.RecompileSourceJar;
-import net.neoforged.gradle.neoform.runtime.tasks.StripJar;
-import net.neoforged.gradle.neoform.runtime.tasks.UnpackJavaSources;
+import net.neoforged.gradle.neoform.runtime.tasks.*;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeConstants;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -139,7 +133,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                         Patch.class,
                         task -> {
                             task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task));
-                            task.getPatchArchive().from(spec.getNeoFormArchive());
+                            task.getPatchArchive().from(spec.getProject().fileTree(spec.getNeoFormArchive()));
                             task.getPatchDirectory().set(neoFormConfigV2.getData("patches", spec.getDistribution().getName()));
                         }
                 );
@@ -441,23 +435,27 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         additionalRuntimeTasks.forEach(taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task)));
         remapTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task));
 
-        Provider<RegularFile> recompileInput = maybeApplyParchment(
+        TaskProvider<? extends WithOutput> recompileInput = maybeApplyParchment(
                 spec,
-                remapTask.flatMap(WithOutput::getOutput),
+                remapTask,
                 symbolicDataSources,
                 neoFormDirectory,
                 context.getLibrariesTask().flatMap(WithOutput::getOutput)
         );
 
         final FileCollection recompileDependencies = spec.getAdditionalRecompileDependencies().plus(spec.getProject().files(definition.getMinecraftDependenciesConfiguration()));
-        final TaskProvider<UnpackJavaSources> unpackSources = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "unzipSources"), UnpackJavaSources.class, task -> {
-            task.getInputZip().set(recompileInput);
+
+        final TaskProvider<UnpackZip> unpackSources = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "unzipSources"), UnpackZip.class, task -> {
+            task.getInput().from(
+                    recompileInput.flatMap(WithOutput::getOutput)
+                            .map(sourceJar -> task.getArchiveOperations().zipTree(sourceJar).matching(sp -> sp.include("**/*.java")).getAsFileTree())
+            );
         });
         unpackSources.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
         final TaskProvider<RecompileSourceJar> recompileTask = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, task -> {
-                    task.setSource(unpackSources.flatMap(UnpackJavaSources::getUnpackingTarget));
+                    task.setSource(unpackSources.flatMap(UnpackZip::getUnpackingTarget));
                     task.getCompileClasspath().setFrom(recompileDependencies);
                     task.getStepName().set("recompile");
 
@@ -481,7 +479,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final TaskProvider<PackZip> packTask = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackZip.class, task -> {
-                    task.getInputFiles().from(recompileInput.map(file -> getProject().zipTree(file).matching(sp -> sp.exclude("**/*.java")).getAsFileTree()));
+                    task.getInputFiles().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
                     task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
                 });
 
@@ -499,8 +497,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         });
     }
 
-    private static Provider<RegularFile> maybeApplyParchment(NeoFormRuntimeSpecification spec,
-                                                             Provider<RegularFile> recompileInput,
+    private static TaskProvider<? extends WithOutput> maybeApplyParchment(NeoFormRuntimeSpecification spec,
+                                                             TaskProvider<? extends WithOutput> recompileInput,
                                                              Map<String, String> symbolicDataSources,
                                                              File neoFormDirectory,
                                                              Provider<RegularFile> listLibrariesOutput) {
@@ -525,11 +523,11 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             task.getProgramArguments().add("--parchment-mappings=" + mappingFile.getAbsolutePath());
             task.getProgramArguments().add("--in-format=archive");
             task.getProgramArguments().add("--out-format=archive");
-            task.getProgramArguments().add(recompileInput.map(f -> f.getAsFile().getAbsolutePath()));
+            task.getProgramArguments().add(recompileInput.flatMap(WithOutput::getOutput).map(f -> f.getAsFile().getAbsolutePath()));
             task.getProgramArguments().add("{output}");
             configureCommonRuntimeTaskParameters(task, symbolicDataSources, "applyParchment", spec, neoFormDirectory);
         });
 
-        return applyParchmentTask.flatMap(WithOutput::getOutput);
+        return applyParchmentTask;
     }
 }

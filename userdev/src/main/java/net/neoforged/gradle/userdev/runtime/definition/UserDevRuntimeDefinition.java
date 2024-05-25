@@ -54,11 +54,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         this.additionalUserDevDependencies.getDependencies().add(
                 clientExtraJar
         );
-
-        //We also need to get the replacement building dependencies from the replacement logic, this is because the compiler wants to lookup the client-extra jar
-        //During recompile, and that can not happen until the replacement logic has been applied, and has triggered the copying of the client-extra jar to the repository
-        final DependencyReplacement replacement = this.getSpecification().getProject().getExtensions().getByType(DependencyReplacement.class);
-        this.additionalUserDevDependencies.getDependencies().add(replacement.getRawJarDependency(clientExtraJar, this.additionalUserDevDependencies));
     }
 
     @Override

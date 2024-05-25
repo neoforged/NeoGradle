@@ -30,11 +30,18 @@ public abstract class Patch extends DefaultRuntime {
         final File output = ensureFileWorkspaceReady(getOutput());
         final File rejects = getRejectsFile().get().getAsFile();
 
-        final ExtractingAndRootCollectingVisitor patchArchiveLocator = new ExtractingAndRootCollectingVisitor();
+        final String patchDirectory = getPatchDirectory().get();
+        final ExtractingAndRootCollectingVisitor patchArchiveLocator = new ExtractingAndRootCollectingVisitor(patchDirectory);
         getPatchArchive()
                 .getAsFileTree()
                 .matching(filterable -> filterable.include(
-                        fileTreeElement -> (fileTreeElement.getPath() + "/") .startsWith(getPatchDirectory().get()) //NeoForm: Added trailing slash because has this in the data block.
+                        fileTreeElement -> {
+                            final String path = fileTreeElement.getPath();
+                            if (patchDirectory.startsWith(path))
+                                return true;
+
+                            return (fileTreeElement.getPath() + "/").startsWith(patchDirectory);
+                        } //NeoForm: Added trailing slash because has this in the data block.
                 ))
                 .visit(patchArchiveLocator);
         if (patchArchiveLocator.directory == null) {
@@ -94,22 +101,22 @@ public abstract class Patch extends DefaultRuntime {
 
     private static final class ExtractingAndRootCollectingVisitor implements FileVisitor {
 
+        private final String filter;
         private File directory;
+
+        private ExtractingAndRootCollectingVisitor(String filter) {
+            this.filter = filter;
+        }
 
         @Override
         public void visitDir(@NotNull FileVisitDetails dirDetails) {
-            if (directory == null) {
+            if (directory == null && (dirDetails.getRelativePath().getPathString() + "/").startsWith(filter)) {
                 directory = dirDetails.getFile();
             }
-
-            //Force the extraction.
-            dirDetails.getFile();
         }
 
         @Override
         public void visitFile(@NotNull FileVisitDetails fileDetails) {
-            //Force the extraction.
-            fileDetails.getFile();
         }
     }
 }

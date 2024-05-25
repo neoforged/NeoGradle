@@ -250,7 +250,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
             
             final TaskProvider<? extends UnpackZip> unpackZip = project.getTasks().register("unpackSourcePatches", UnpackZip.class, task -> {
-                task.getInputZip().set(createPatches.flatMap(WithOutput::getOutput));
+                task.getInput().from(createPatches.flatMap(WithOutput::getOutput));
                 task.getUnpackingTarget().set(patches);
                 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);

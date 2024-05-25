@@ -22,6 +22,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,9 +43,6 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
     private final Project project;
 
     private final Table<Dependency, Configuration, Optional<ReplacementResult>> dependencyReplacementInformation = HashBasedTable.create();
-    private final Table<Dependency, Configuration, Dependency> originalDependencyLookup = HashBasedTable.create();
-    private final Table<Dependency, Configuration, TaskProvider<?>> rawJarTasks = HashBasedTable.create();
-    private final Table<Dependency, Configuration, TaskProvider<?>> sourceJarTasks = HashBasedTable.create();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
 
     @Inject
@@ -90,31 +89,8 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
 
     @NotNull
     @Override
-    public Dependency getRawJarDependency(Dependency dependency, Configuration configuration) {
-        final TaskProvider<?> taskProvider = rawJarTasks.get(dependency, configuration);
-        if (taskProvider == null) {
-            throw new IllegalStateException("No raw jar task found for dependency " + dependency + " in configuration " + configuration);
-        }
-
-        return createDependencyFromTask(taskProvider);
-    }
-
-    @NotNull
-    @Override
-    public Dependency getSourcesJarDependency(Dependency dependency, Configuration configuration) {
-        final TaskProvider<?> taskProvider = sourceJarTasks.get(dependency, configuration);
-        if (taskProvider == null) {
-            throw new IllegalStateException("No sources jar task found for dependency " + dependency + " in configuration " + configuration);
-        }
-
-        return createDependencyFromTask(taskProvider);
-    }
-
-    @NotNull
-    @Override
     public Dependency optionallyConvertBackToOriginal(Dependency dependency, Configuration configuration) {
-        final Dependency originalDependency = originalDependencyLookup.get(dependency, configuration);
-        return originalDependency == null ? dependency : originalDependency;
+        return dependency;
     }
 
     /**
@@ -249,30 +225,12 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         for (Configuration targetConfiguration : targetConfigurations) {
             //Create a dependency from the tasks that copies the raw jar to the repository.
             //The sources jar is not needed here.
-            final Dependency replacedDependency = createDependencyFromTask(rawTask);
+            final Provider<ConfigurableFileCollection> replacedDependency = createDependencyFromTask(rawTask);
 
             //Add the new dependency to the target configuration.
-            targetConfiguration.getDependencies().add(newRepoEntry.getDependency());
-            targetConfiguration.getDependencies().add(replacedDependency);
-
-            //Keep track of the original dependency, so we can convert back if needed.
-            originalDependencyLookup.put(newRepoEntry.getDependency(), targetConfiguration, dependency);
-            originalDependencyLookup.put(replacedDependency, targetConfiguration, dependency);
-
-            //Store the tasks we generate.
-            rawJarTasks.put(dependency, targetConfiguration, rawTask);
-
-            //Check if we have a source task.
-            if (sourceTask != null)
-                sourceJarTasks.put(dependency, targetConfiguration, sourceTask);
+            project.getDependencies().addProvider(targetConfiguration.getName(), replacedDependency);
+            targetConfiguration.extendsFrom(result.getDependencies());
         }
-
-        //We need these as well, in-case somebody only has access to for example 'implementation'
-        rawJarTasks.put(dependency, configuration, rawTask);
-
-        //Check if we have a source task.
-        if (sourceTask != null)
-            sourceJarTasks.put(dependency, configuration, sourceTask);
     }
 
     /**
@@ -367,7 +325,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         );
     }
 
-    public Dependency createDependencyFromTask(TaskProvider<? extends Task> task) {
-        return this.getProject().getDependencies().create(this.project.files(task));
+    public Provider<ConfigurableFileCollection> createDependencyFromTask(TaskProvider<? extends WithOutput> task) {
+        return task.map(taskWithOutput -> project.files(taskWithOutput.getOutput()));
     }
 }

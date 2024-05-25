@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.extensions.repository;
 
-import com.google.common.collect.Sets;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gradle.common.util.ConfigurationPhaseFileUtils;
 import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
 import net.neoforged.gradle.dsl.common.extensions.repository.EntryDefinition;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
@@ -23,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.inject.Inject;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,11 +100,12 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         //We follow standard IVY patterns, and we also set M2 compatibility to true.
         return ivy -> {
             final File rootDir = root.get().getAsFile();
-            if (!rootDir.exists() && !rootDir.mkdirs()) {
+
+            if (!ConfigurationPhaseFileUtils.exists(rootDir) && !ConfigurationPhaseFileUtils.mkdirs(rootDir)) {
                 throw new IllegalStateException("Failed to create repository directory");
             }
 
-            for (File file : Objects.requireNonNull(rootDir.listFiles(pathname -> pathname.isDirectory() && !pathname.getName().equals(GAV_PREFIX_DIRECTORY)))) {
+            for (File file : Objects.requireNonNull(ConfigurationPhaseFileUtils.listFiles(rootDir, pathname -> pathname.isDirectory() && !pathname.getName().equals(GAV_PREFIX_DIRECTORY)))) {
                 try {
                     FileUtils.delete(file.toPath());
                 } catch (IOException e) {
@@ -199,18 +199,20 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         writeIvyMetadataFile(entry, dependencies, baseDir, metaFile);
 
         //Create the raw artifact file and sources file if they don't exist.
-        if (!Files.isRegularFile(jarFile)) {
+        /*
+        if (!ConfigurationPhaseFileUtils.isRegularFile(jarFile)) {
             FileUtils.delete(jarFile);
-            Files.createFile(jarFile);
+            ConfigurationPhaseFileUtils.createFile(jarFile);
         }
 
         if (hasSource) {
             final Path sourcesFile = buildArtifactPath(entry, "sources");
-            if (!Files.isRegularFile(sourcesFile)) {
+            if (!ConfigurationPhaseFileUtils.isRegularFile(sourcesFile)) {
                 FileUtils.delete(sourcesFile);
-                Files.createFile(sourcesFile);
+                ConfigurationPhaseFileUtils.createFile(sourcesFile);
             }
         }
+        */
     }
 
     private static void writeIvyMetadataFile(Dependency entry, Configuration dependencies, Path baseDir, Path metaFile) throws IOException, XMLStreamException {

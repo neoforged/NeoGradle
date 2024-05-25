@@ -13,10 +13,9 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    @Ignore
-    def "apply_supports_configuration_cache_build"() {
+    def "build_supports_configuration_cache_build"() {
         given:
-        def project = create("apply_supports_configuration_cache_build", {
+        def project = create("build_supports_configuration_cache_build", {
             it.build("""
             java {
                 toolchain {
@@ -43,7 +42,11 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
-    @Ignore
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("build/functionalTest")
+    }
+
     def "compile_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {

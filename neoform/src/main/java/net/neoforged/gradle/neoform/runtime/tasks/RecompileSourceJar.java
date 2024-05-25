@@ -11,14 +11,12 @@ import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
+import org.gradle.work.InputChanges;
 
 import javax.inject.Inject;
 import java.util.Objects;
@@ -78,6 +76,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setFork(true);
         getOptions().setIncremental(true);
         getOptions().getIncrementalAfterFailure().set(true);
+
+        doFirst(task -> {
+            System.out.println("Recompiling source jar: " + getStepName().get());
+            getClasspath().getFiles().forEach(file -> {
+                System.out.println("Classpath: " + file);
+            });
+        });
     }
 
     @Override
@@ -123,4 +128,15 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @Inject
     @Override
     public abstract ProviderFactory getProviderFactory();
+
+    @TaskAction
+    @Override
+    protected void compile(InputChanges inputs) {
+        System.out.println("Recompiling source jar: " + getStepName().get());
+        getClasspath().getFiles().forEach(file -> {
+            System.out.println("Classpath: " + file);
+        });
+
+        super.compile(inputs);
+    }
 }
