@@ -44,18 +44,14 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.component.AdhocComponentWithVariants;
-import org.gradle.api.initialization.Settings;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.DefaultTaskExecutionRequest;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
-import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
-import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
-import org.jetbrains.gradle.ext.ProjectSettings;
 
 import java.util.*;
 
@@ -179,8 +175,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         ProjectUtils.afterEvaluate(project, () -> {
             project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
-                if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get())
+                if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+                    //We always register main
                     run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
+                }
 
                 if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get())
                     run.getModSources().get().forEach(sourceSet -> {
@@ -328,6 +326,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
         runs.forEach(run -> {
             if (run instanceof RunImpl) {
                 run.configure();
+
+                // We add default junit sourcesets here because we need to know the type of the run first
+                final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
+                if (conventions.getIsEnabled().get() && conventions.getSourceSets().getIsEnabled().get() && conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+                    if (run.getIsJUnit().get()) {
+                        run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
+                    }
+                }
 
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;

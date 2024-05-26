@@ -98,6 +98,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
             super(parent, "runs");
 
             getShouldDefaultRunsBeCreated().convention(getBooleanProperty("create-default-run-per-type").orElse(true));
+            getShouldDefaultTestTaskBeReused().convention(getBooleanProperty("reuse-default-test-task").orElse(true));
         }
     }
 

@@ -126,6 +126,17 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Property<Boolean> getIsServer();
 
     /**
+     * Indicates if this run is a unit test run.
+     *
+     * @return {@code true} if this run is a unit test run; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty(propertyName = 'junit')
+    @Optional
+    abstract Property<Boolean> getIsJUnit();
+
+
+    /**
      * Indicates if this run is a data generation run.
      *
      * @return {@code true} if this run is a data generation run; otherwise, {@code false}.
@@ -156,6 +167,18 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Internal
     @DSLProperty
     abstract ListProperty<SourceSet> getModSources();
+
+    /**
+     * Defines the source sets that are used as a test.
+     * <p>
+     * For changing the mod identifier a source set belongs to see
+     * {@link net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet#getModIdentifier RunnableSourceSet#getModIdentifier}.
+     *
+     * @return The source sets that are used as a mod.
+     */
+    @Internal
+    @DSLProperty
+    abstract ListProperty<SourceSet> getUnitTestSources();
 
     /**
      * Gives access to the classpath for this run.
