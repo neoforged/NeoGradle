@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev.runtime.extension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.SourceAccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
@@ -25,6 +26,8 @@ import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecific
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.DependencySet;
+import org.gradle.api.artifacts.dsl.DependencyCollector;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -92,9 +95,15 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
 
         final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
-        spec.getProject().afterEvaluate(project -> runs.stream().filter(run -> run.getIsJUnit().get())
-                .forEach(run -> spec.getProfile().getAdditionalTestDependencyArtifactCoordinates()
-                        .get().forEach(run.getDependencies().get().getRuntime()::add)));
+        ProjectUtils.afterEvaluate(spec.getProject(), () -> runs.stream()
+                .filter(run -> run.getIsJUnit().get())
+                .flatMap(run -> run.getUnitTestSources().get().stream())
+                .distinct()
+                .forEach(src -> {
+                    DependencyCollector coll = spec.getProject().getObjects().dependencyCollector();
+                    spec.getProfile().getAdditionalTestDependencyArtifactCoordinates().get().forEach(coll::add);
+                    spec.getProject().getConfigurations().getByName(src.getImplementationConfigurationName()).fromDependencyCollector(coll);
+                }));
 
         final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
         userdevProfile.getRunTypes().forEach((type) -> {

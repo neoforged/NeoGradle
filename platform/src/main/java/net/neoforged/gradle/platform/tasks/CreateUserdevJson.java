@@ -32,15 +32,9 @@ public abstract class CreateUserdevJson  extends DefaultRuntime implements WithO
         final UserdevProfile profile = getProfile().get();
         final UserdevProfile clone = gson.fromJson(gson.toJson(profile), UserdevProfile.class);
         
-        final CoordinateCollector libraryCollector = new CoordinateCollector(getObjectFactory());
-        getLibraries().getAsFileTree().visit(libraryCollector);
-        clone.getAdditionalDependencyArtifactCoordinates().addAll(libraryCollector.getCoordinates());
-
-        clone.getAdditionalTestDependencyArtifactCoordinates().addAll(getTestLibraries());
-
-        final CoordinateCollector moduleCollector = new CoordinateCollector(getObjectFactory());
-        getModules().getAsFileTree().visit(moduleCollector);
-        clone.getModules().addAll(moduleCollector.getCoordinates());
+        collect(getLibraries(), clone.getAdditionalDependencyArtifactCoordinates());
+        collect(getTestLibraries(), clone.getAdditionalTestDependencyArtifactCoordinates());
+        collect(getModules(), clone.getModules());
         
         final String json = gson.toJson(clone);
         
@@ -50,6 +44,12 @@ public abstract class CreateUserdevJson  extends DefaultRuntime implements WithO
             throw new UncheckedIOException(e);
         }
     }
+
+    private void collect(ConfigurableFileCollection libraries, ListProperty<String> coords) {
+        final CoordinateCollector collector = new CoordinateCollector(getObjectFactory());
+        libraries.getAsFileTree().visit(collector);
+        coords.addAll(collector.getCoordinates());
+    }
     
     @Nested
     public abstract Property<UserdevProfile> getProfile();
@@ -58,8 +58,9 @@ public abstract class CreateUserdevJson  extends DefaultRuntime implements WithO
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getLibraries();
 
-    @Input
-    public abstract ListProperty<String> getTestLibraries();
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract ConfigurableFileCollection getTestLibraries();
 
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
