@@ -82,11 +82,16 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             it.tasks('build')
         }
 
+        and:
+        def thirdRun = project.run {
+            it.tasks('build')
+        }
+
         then:
-        secondaryRun.output.contains('Reusing configuration cache.')
+        thirdRun.output.contains('Reusing configuration cache.')
         run.task(':neoFormDecompile').outcome == TaskOutcome.SUCCESS
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
-        secondaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
-        secondaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
+        thirdRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
+        thirdRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 }

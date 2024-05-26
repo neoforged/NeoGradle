@@ -45,7 +45,7 @@ import net.neoforged.gradle.platform.runtime.runtime.extension.RuntimeDevRuntime
 import net.neoforged.gradle.platform.runtime.runtime.specification.RuntimeDevRuntimeSpecification;
 import net.neoforged.gradle.platform.runtime.runtime.tasks.GenerateBinaryPatches;
 import net.neoforged.gradle.platform.runtime.runtime.tasks.GenerateSourcePatches;
-import net.neoforged.gradle.neoform.runtime.tasks.PackZip;
+import net.neoforged.gradle.neoform.runtime.tasks.PackJar;
 import net.neoforged.gradle.platform.tasks.*;
 import net.neoforged.gradle.platform.util.ArtifactPathsCollector;
 import net.neoforged.gradle.platform.util.SetupUtils;
@@ -237,7 +237,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             final TaskProvider<? extends WithOutput> neoFormSources = runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getSourceJarTask();
             
-            final TaskProvider<? extends WithOutput> packChanges = project.getTasks().register("packForgeChanges", PackZip.class, task -> {
+            final TaskProvider<? extends WithOutput> packChanges = project.getTasks().register("packForgeChanges", PackJar.class, task -> {
                 task.getInputFiles().from(SetupUtils.getSetupSourceTarget(getProject()));
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
@@ -640,7 +640,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
             
-            final TaskProvider<PackZip> packPatches = project.getTasks().register("packPatches", PackZip.class, task -> {
+            final TaskProvider<PackJar> packPatches = project.getTasks().register("packPatches", PackJar.class, task -> {
                 task.getInputFiles().from(project.fileTree(patches).matching(filterable -> {
                     filterable.include("**/*.patch");
                 }));

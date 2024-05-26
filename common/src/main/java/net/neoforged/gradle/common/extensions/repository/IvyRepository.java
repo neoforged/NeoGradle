@@ -199,7 +199,6 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         writeIvyMetadataFile(entry, dependencies, baseDir, metaFile);
 
         //Create the raw artifact file and sources file if they don't exist.
-        /*
         if (!ConfigurationPhaseFileUtils.isRegularFile(jarFile)) {
             FileUtils.delete(jarFile);
             ConfigurationPhaseFileUtils.createFile(jarFile);
@@ -212,7 +211,6 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
                 ConfigurationPhaseFileUtils.createFile(sourcesFile);
             }
         }
-        */
     }
 
     private static void writeIvyMetadataFile(Dependency entry, Configuration dependencies, Path baseDir, Path metaFile) throws IOException, XMLStreamException {

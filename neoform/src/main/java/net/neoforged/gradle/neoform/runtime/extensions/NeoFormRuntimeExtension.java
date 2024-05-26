@@ -477,12 +477,11 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
-        final TaskProvider<PackZip> packTask = spec.getProject()
-                .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackZip.class, task -> {
+        final TaskProvider<PackJar> packTask = spec.getProject()
+                .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackJar.class, task -> {
                     task.getInputFiles().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
                     task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
                 });
-
         packTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
         taskOutputs.put(recompileTask.getName(), packTask);
