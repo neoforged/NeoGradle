@@ -514,8 +514,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
             task.getInputs().file(mappingFile);
-            task.getInputs().file(recompileInput);
-            task.getInputs().file(listLibrariesOutput);
             task.getExecutingJar().set(toolExecutable);
             task.getProgramArguments().add(listLibrariesOutput.map(f -> "--libraries-list=" + f.getAsFile().getAbsolutePath()));
             task.getProgramArguments().add("--enable-parchment");
