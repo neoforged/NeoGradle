@@ -1,10 +1,5 @@
 package net.neoforged.gradle.common.runs.ide;
 
-import cz.nightenom.vsclaunch.BatchedLaunchWriter;
-import cz.nightenom.vsclaunch.LaunchConfiguration;
-import cz.nightenom.vsclaunch.attribute.PathLike;
-import cz.nightenom.vsclaunch.attribute.ShortCmdBehaviour;
-import cz.nightenom.vsclaunch.writer.WritingMode;
 import net.neoforged.elc.configs.GradleLaunchConfig;
 import net.neoforged.elc.configs.JavaApplicationLaunchConfig;
 import net.neoforged.elc.configs.LaunchConfig;
@@ -22,6 +17,11 @@ import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.util.FileUtils;
+import net.neoforged.vsclc.BatchedLaunchWriter;
+import net.neoforged.vsclc.LaunchConfiguration;
+import net.neoforged.vsclc.attribute.PathLike;
+import net.neoforged.vsclc.attribute.ShortCmdBehaviour;
+import net.neoforged.vsclc.writer.WritingMode;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -221,8 +220,10 @@ public class IdeRunIntegrationManager {
                 project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     final RunImpl runImpl = (RunImpl) run;
-
                     final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+
+                    final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
+                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(t -> task.dependsOn(t)));
 
                     final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
                         .createLaunchConfiguration()
@@ -235,14 +236,12 @@ public class IdeRunIntegrationManager {
                         .withProjectName(project.getName())
                         .withName(runName);
 
-                    if (IdeManagementExtension.isDefinitelyVscodeImport(project))
+                    if (IdeManagementExtension.isVscodePluginImport(project))
                     {
-                        ideBeforeRunTask.configure(task -> addEclipseCopyResourcesTasks(eclipse, run, t -> task.dependsOn(t)));
                         cfg.withPreTaskName("gradle: " + ideBeforeRunTask.getName());
                     }
                     else
                     {
-                        addEclipseCopyResourcesTasks(eclipse, run, eclipse::autoBuildTasks);
                         eclipse.autoBuildTasks(ideBeforeRunTask);
                     }
                 }));
@@ -288,10 +287,6 @@ public class IdeRunIntegrationManager {
             }
             
             return ideBeforeRunTask;
-        }
-
-        private void addEclipseCopyResourcesTasks(EclipseModel eclipse, Run run, Consumer<TaskProvider<?>> tasksConsumer) {
-            createEclipseCopyResourcesTasks(eclipse, run).forEach(tasksConsumer::accept);
         }
       
         private List<TaskProvider<?>> createEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
