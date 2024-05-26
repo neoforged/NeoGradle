@@ -10,6 +10,7 @@ import net.neoforged.gradle.dsl.common.util.DistributionType
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.jetbrains.annotations.NotNull
@@ -46,7 +47,7 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      *
      * @return The provider.
      */
-    Provider<Map<String, D>> getRuntimes();
+    Map<String, D> getDefinitions();
 
     /**
      * Potentially creates a new runtime based on the specification created by the given builder.
@@ -60,6 +61,18 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
     D maybeCreate(Action<B> configurator);
 
     /**
+     * Potentially creates a new runtime based on the specification created by the given builder.
+     * If a runtime with the same name already exists, the existing runtime is returned.
+     * If the specification of the existing runtime, and the one configured via the builder do not line up, an exception is thrown.
+     *
+     * @param dependency The dependency to create the runtime for.
+     * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
+     * @return The runtime definition, unbaked.
+     */
+    @ClosureEquivalent
+    D maybeCreateFor(Dependency dependency, Action < B > configurator);
+
+    /**
      * Creates a new runtime based on the specification created by the given builder.
      * If a runtime with the same name already exists, an exception is thrown.
      *
@@ -68,6 +81,17 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      */
     @ClosureEquivalent
     D create(Action<B> configurator);
+
+    /**
+     * Creates a new runtime based on the specification created by the given builder.
+     * If a runtime with the same name already exists, an exception is thrown.
+     *
+     * @param dependency The dependency to create the runtime for.
+     * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
+     * @return The runtime definition, unbaked.
+     */
+    @ClosureEquivalent
+    D create(Dependency dependency, Action<B> configurator);
 
     /**
      * Looks up a runtime definition by name.

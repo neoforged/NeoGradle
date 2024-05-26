@@ -33,7 +33,7 @@ public abstract class CreateClasspathFiles extends DefaultRuntime implements Tok
     
     @TaskAction
     public void doTask() throws Exception {
-        final Map<String, Object> tokens = new HashMap<>(getTokens().get());
+        final Map<String, String> tokens = new HashMap<>(getTokens().get());
         
         ArtifactPathsCollector modulePathCollector = new ArtifactPathsCollector(getObjectFactory(), getPathSeparator().get(), "libraries/");
         ArtifactPathsCollector classpathCollector = new ArtifactPathsCollector(getObjectFactory(), getPathSeparator().get(), "libraries/");

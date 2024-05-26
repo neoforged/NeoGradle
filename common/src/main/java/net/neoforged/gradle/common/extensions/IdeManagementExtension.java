@@ -1,6 +1,10 @@
 package net.neoforged.gradle.common.extensions;
 
 import net.neoforged.gradle.common.tasks.IdePostSyncExecutionTask;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.ExtensionAware;
@@ -22,6 +26,8 @@ import javax.inject.Inject;
  * Defines interactions with the IDE plugins.
  */
 public abstract class IdeManagementExtension {
+
+    public static final String IDE_POST_SYNC_TASK_NAME = "idePostSync";
 
     private final Project project;
     private final Project rootProject;
@@ -121,15 +127,22 @@ public abstract class IdeManagementExtension {
     public TaskProvider<? extends Task> getOrCreateIdeImportTask() {
         final TaskProvider<? extends Task> idePostSyncTask;
         //Check for the existence of the idePostSync task, which is created by us as a central entry point for all IDE post-sync tasks
-        if (!project.getTasks().getNames().contains("idePostSync")) {
+        if (!project.getTasks().getNames().contains(IDE_POST_SYNC_TASK_NAME)) {
 
             //None found -> Create one.
-            idePostSyncTask = project.getTasks().register("idePostSync", IdePostSyncExecutionTask.class);
+            idePostSyncTask = project.getTasks().register(IDE_POST_SYNC_TASK_NAME, IdePostSyncExecutionTask.class);
 
             //Register the task to run after the IDE import is complete
             apply(new IdeImportAction() {
                 @Override
                 public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
+                    final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
+                    final IDE ideConventions = conventions.getIde();
+                    final IDEA ideaConventions = ideConventions.getIdea();
+                    if (!ideaConventions.getShouldUsePostSyncTask().get() &&
+                            ideaConventions.getIsEnabled().get())
+                        return;
+
                     //Register the task to run after the IDEA import is complete, via its custom extension.
                     final TaskTriggersConfig taskTriggers = ((ExtensionAware) ideaExtension).getExtensions().getByType(TaskTriggersConfig.class);
                     taskTriggers.afterSync(idePostSyncTask);
@@ -150,7 +163,7 @@ public abstract class IdeManagementExtension {
         }
         else {
             //Found -> Use it.
-            idePostSyncTask = project.getTasks().named("idePostSync");
+            idePostSyncTask = project.getTasks().named(IDE_POST_SYNC_TASK_NAME);
         }
         return idePostSyncTask;
     }

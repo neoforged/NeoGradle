@@ -35,6 +35,8 @@ import javax.annotation.Nonnull;
 
 public class NeoFormProjectPlugin implements Plugin<Project> {
 
+    public static final String NEO_FORM_MAVEN = "NeoForm Maven";
+
     @Override
     public void apply(@Nonnull Project project) {
         // Needed to gain access to the common systems
@@ -49,6 +51,7 @@ public class NeoFormProjectPlugin implements Plugin<Project> {
 
         // Add Known repos
         project.getRepositories().maven(e -> {
+            e.setName(NEO_FORM_MAVEN);
             e.setUrl(UrlConstants.NEO_FORGE_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
         });

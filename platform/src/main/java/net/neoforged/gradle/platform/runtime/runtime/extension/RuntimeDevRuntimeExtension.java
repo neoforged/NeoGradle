@@ -40,7 +40,7 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
         });
         
         final TaskProvider<ArtifactProvider> sourcesProvider = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "sourceFromAppliedPatches"), ArtifactProvider.class, task -> {
-            task.getInput().set(patchApply.flatMap(ApplyPatches::getOutput));
+            task.getInputFiles().from(patchApply.flatMap(ApplyPatches::getOutput));
             task.getOutput().set(new File(workingDirectory, "patched.jar"));
         });
         
@@ -54,17 +54,5 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
     @Override
     protected RuntimeDevRuntimeSpecification.Builder createBuilder() {
         return RuntimeDevRuntimeSpecification.Builder.from(getProject());
-    }
-    
-    @Override
-    protected void bakeDefinition(RuntimeDevRuntimeDefinition definition) {
-        final RuntimeDevRuntimeSpecification spec = definition.getSpecification();
-        final Minecraft minecraftExtension = spec.getProject().getExtensions().getByType(Minecraft.class);
-        final Mappings mappingsExtension = minecraftExtension.getMappings();
-        
-        definition.onBake(
-                mappingsExtension.getChannel().get(),
-                spec.getProject().getLayout().getBuildDirectory().get().dir("userdev").dir(spec.getIdentifier()).getAsFile()
-        );
     }
 }

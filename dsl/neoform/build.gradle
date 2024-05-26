@@ -6,7 +6,9 @@ dependencies {
     api project(':dsl-common')
     api project(':utils')
 
-    api "org.codehaus.groovy:groovy-all:${project.groovy_version}"
+    api("org.codehaus.groovy:groovy-all:${project.groovy_version}", {
+        exclude group: 'junit'
+    })
     api "com.google.code.gson:gson:${project.gson_version}"
     api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}"
 }

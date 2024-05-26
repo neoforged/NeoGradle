@@ -1,3 +1,6 @@
+import org.gradle.api.attributes.plugin.GradlePluginApiVersion
+import org.gradle.util.GradleVersion
+
 plugins {
     id 'eclipse'
     id 'maven-publish'
@@ -18,7 +21,6 @@ version = gradleutils.version.toString()
 
 //We hard coded the version of the gradle wrapper here.
 tasks.named('wrapper', Wrapper).configure { Wrapper wrapperTask ->
-    wrapperTask.gradleVersion = project.gradle_version
     wrapperTask.distributionType = Wrapper.DistributionType.ALL
 }
 
@@ -65,6 +67,17 @@ subprojects.forEach { Project subProject ->
         configuration.exclude group: 'org.ow2.asm'
     }
 
+    ['apiElements', 'runtimeElements'].each {
+        subProject.configurations.named(it).configure {
+            attributes {
+                attribute(
+                        GradlePluginApiVersion.GRADLE_PLUGIN_API_VERSION_ATTRIBUTE,
+                        objects.named(GradlePluginApiVersion, GradleVersion.current().getVersion())
+                )
+            }
+        }
+    }
+
     //Wire up our custom repositories.
     subProject.repositories.mavenLocal()
     subProject.repositories.maven { MavenArtifactRepository repository ->
@@ -76,9 +89,11 @@ subprojects.forEach { Project subProject ->
     //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
     subProject.dependencies.api subProject.dependencies.gradleApi()
     subProject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
-    subProject.dependencies.api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}"
-    subProject.dependencies.api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}:base"
-    subProject.dependencies.api "net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}:runtime"
+    subProject.dependencies.api("net.neoforged:groovydslimprover:${project.groovy_dsl_improver_version}") {
+        capabilities {
+            requireCapability 'net.neoforged:groovydslimprover-base'
+        }
+    }
 
     subProject.dependencies.testImplementation subProject.dependencies.gradleTestKit()
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
@@ -88,9 +103,9 @@ subprojects.forEach { Project subProject ->
     subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
-    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:trainingwheels-base:${project.trainingwheels_version}"
-    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:trainingwheels-gradle-base:${project.trainingwheels_version}"
-    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:trainingwheels-gradle-functional:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:gradle-base:${project.trainingwheels_version}"
+    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
 
     //Exclude duplicates.
     subProject.tasks.withType(Jar).configureEach { jarTask ->
@@ -147,7 +162,7 @@ subprojects.forEach { subProject ->
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
             spec.exclude group: 'org.codehaus.groovy'
         }
-        evalSubProject.dependencies.functionalTestImplementation "net.neoforged.trainingwheels:trainingwheels-gradle-functional:${project.trainingwheels_version}"
+        evalSubProject.dependencies.functionalTestImplementation "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
 
         //Configure the plugin metadata, so we can publish it.
         evalSubProject.gradlePlugin.plugins { NamedDomainObjectContainer<PluginDeclaration> plugins ->

@@ -15,10 +15,12 @@ import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils
 import net.neoforged.gradle.dsl.platform.util.CoordinateCollector
 import net.neoforged.gradle.dsl.platform.util.LibraryCollector
+import net.neoforged.gradle.util.ModuleDependencyUtils
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -26,6 +28,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.jetbrains.annotations.Nullable
 
@@ -33,6 +36,7 @@ import javax.inject.Inject
 import java.lang.reflect.Type
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
+import java.util.stream.Collectors
 
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeBool
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeList
@@ -153,7 +157,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         })
     }
 
-    @Input
+    @Nested
     @DSLProperty
     @Optional
     abstract ListProperty<Processor> getProcessors();
@@ -168,6 +172,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                 processor.getClasspath().set(processor.getJar().map(tool -> {
                     final Configuration detached = ConfigurationUtils.temporaryConfiguration(
                             project,
+                            "InstallerProfileCoordinateLookup" + ModuleDependencyUtils.toConfigurationName(tool),
                             project.getDependencies().create(tool)
                     )
 
@@ -188,16 +193,20 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                 dependencyCoordinates.add(tool)
 
                 final Dependency[] dependencies = dependencyCoordinates.stream().map { coord -> project.getDependencies().create(coord) }.toArray(Dependency[]::new)
-                final Configuration configuration = ConfigurationUtils.temporaryConfiguration(project, dependencies)
+                final Configuration configuration = ConfigurationUtils.temporaryConfiguration(
+                        project,
+                        "InstallerProfileLibraryLookup",
+                        dependencies)
 
-                final LibraryCollector collector = new LibraryCollector(project.getObjects())
+                final LibraryCollector collector = new LibraryCollector(project.getObjects(), project.getRepositories()
+                    .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList()))
                 configuration.getAsFileTree().visit collector
                 return collector.getLibraries()
             }
         })
     }
 
-    @Input
+    @Nested
     @DSLProperty
     @Optional
     abstract SetProperty<Library> getLibraries();

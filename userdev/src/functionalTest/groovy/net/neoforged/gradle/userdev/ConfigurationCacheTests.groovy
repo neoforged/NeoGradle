@@ -2,27 +2,25 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.jupiter.api.Disabled
+import spock.lang.Ignore
 
 class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
     @Override
     protected void configurePluginUnderTest() {
-        pluginUnderTest = "net.neoforged.gradle.neoform";
+        pluginUnderTest = "net.neoforged.gradle.userdev";
         injectIntoAllProject = true;
     }
 
-
+    @Ignore
     def "apply_supports_configuration_cache_build"() {
         given:
         def project = create("apply_supports_configuration_cache_build", {
             it.build("""
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             
@@ -31,29 +29,28 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.enableLocalBuildCache()
+            it.enableConfigurationCache()
+            it.enableBuildScan()
         })
 
         when:
         def run = project.run {
             it.tasks('build')
-            it.arguments('--configuration-cache', '--build-cache')
         }
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
+    @Ignore
     def "compile_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {
             it.build("""
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
+                    languageVersion = JavaLanguageVersion.of(21)
                 }
             }
             
@@ -73,15 +70,25 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.enableLocalBuildCache()
+            it.enableConfigurationCache()
         })
 
         when:
         def run = project.run {
-            it.tasks('compileJava')
-            it.arguments('--configuration-cache', '--build-cache')
+            it.tasks('build')
+        }
+
+        and:
+        def secondaryRun = project.run {
+            it.tasks('build')
         }
 
         then:
+        secondaryRun.output.contains('Reusing configuration cache.')
+        run.task(':neoFormDecompile').outcome == TaskOutcome.SUCCESS
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
+        secondaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
+        secondaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 }

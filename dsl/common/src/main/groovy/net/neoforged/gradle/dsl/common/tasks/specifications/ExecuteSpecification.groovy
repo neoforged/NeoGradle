@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.common.tasks.specifications
 
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -51,7 +52,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The path to the console log file.
      */
-    @OutputFile
+    @Internal
     @DSLProperty
     RegularFileProperty getConsoleLogFile();
 
@@ -60,7 +61,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The path to the program log file.
      */
-    @OutputFile
+    @Internal
     @DSLProperty
     RegularFileProperty getLogFile();
 
@@ -95,7 +96,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      * @return The interpolated runtime data.
      */
     @Internal
-    MapProperty<String, Provider<File>> getRuntimeData();
+    MapProperty<String, FileTree> getRuntimeData();
 
     /**
      * The interpolated runtime arguments that will be used to interpolate the arguments.

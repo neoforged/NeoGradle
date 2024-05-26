@@ -1,10 +1,9 @@
 package net.neoforged.gradle.common.runtime.extensions;
 
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import org.gradle.api.artifacts.Dependency;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public abstract class RuntimesExtension {
     private final List<CommonRuntimeExtension<?,?,?>> runtimeExtensions = new ArrayList<>();
@@ -13,29 +12,25 @@ public abstract class RuntimesExtension {
         runtimeExtensions.add(runtimeExtension);
     }
 
-    public void bakeDefinitions() {
-        for (CommonRuntimeExtension<?,?,?> runtimeExtension : runtimeExtensions) {
-            runtimeExtension.bakeDefinitions();
-        }
-    }
-
-    public void bakeDelegateDefinitions() {
-        for (CommonRuntimeExtension<?,?,?> runtimeExtension : runtimeExtensions) {
-            runtimeExtension.bakeDelegateDefinitions();
-        }
-    }
-
     public Collection<? extends CommonRuntimeDefinition<?>> getAllDefinitions() {
         List<CommonRuntimeDefinition<?>> definitions = new ArrayList<>();
         for (CommonRuntimeExtension<?,?,?> runtimeExtension : runtimeExtensions) {
-            definitions.addAll(runtimeExtension.runtimes.values());
+            definitions.addAll(runtimeExtension.definitions.values());
         }
         return definitions;
     }
 
+    public Map<String, Dependency> getAllDependencies() {
+        Map<String, Dependency> dependencies = new HashMap<>();
+        for (CommonRuntimeExtension<?,?,?> runtimeExtension : runtimeExtensions) {
+            dependencies.putAll(runtimeExtension.dependencies);
+        }
+        return dependencies;
+    }
+
     public boolean definitionExists(String identifier) {
         for (CommonRuntimeExtension<?,?,?> runtimeExtension : runtimeExtensions) {
-            if (runtimeExtension.runtimes.containsKey(identifier)) {
+            if (runtimeExtension.definitions.containsKey(identifier)) {
                 return true;
             }
         }

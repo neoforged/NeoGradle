@@ -10,6 +10,7 @@ import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.provider.Provider;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -206,7 +207,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         @Override
-        public VanillaRuntimeSpecification build() {
+        public @NotNull VanillaRuntimeSpecification build() {
             return new VanillaRuntimeSpecification(
                     project,
                     minecraftArtifact.get(),

@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.runtime.tasks.NoopRuntime;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -44,24 +45,26 @@ public class ParchmentStep implements IStep {
                                                                        Provider<RegularFile> listLibrariesOutput) {
         Project project = spec.getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
+        Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
+
         if (!parchment.getEnabled().get()) {
             return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchmentNoop"), NoopRuntime.class, task -> {
                 task.getInput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
             });
         }
 
-        // Provide the mappings via artifact
-        Provider<File> mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact());
-        Provider<File> toolExecutable = ToolUtilities.resolveTool(project, parchment.getToolArtifact());
-
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
+            // Provide the mappings via artifact
+            File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
+            File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
+
             task.getInputs().file(mappingFile);
             task.getInputs().file(inputProvidingTask.flatMap(WithOutput::getOutput));
             task.getInputs().file(listLibrariesOutput);
-            task.getExecutingJar().fileProvider(toolExecutable);
+            task.getExecutingJar().set(toolExecutable);
             task.getProgramArguments().add(listLibrariesOutput.map(f -> "--libraries-list=" + f.getAsFile().getAbsolutePath()));
             task.getProgramArguments().add("--enable-parchment");
-            task.getProgramArguments().add(mappingFile.map(f -> "--parchment-mappings=" + f.getAbsolutePath()));
+            task.getProgramArguments().add("--parchment-mappings=" + mappingFile.getAbsolutePath());
             task.getProgramArguments().add("--in-format=archive");
             task.getProgramArguments().add("--out-format=archive");
             task.getProgramArguments().add(inputProvidingTask.flatMap(WithOutput::getOutput).map(f -> f.getAsFile().getAbsolutePath()));

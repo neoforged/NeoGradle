@@ -1,21 +1,14 @@
 package net.neoforged.gradle.userdev.dependency;
 
-import com.google.common.collect.Sets;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.userdev.extension.UserDev;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.DependencyArtifact;
-import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.artifacts.*;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -44,23 +37,24 @@ public final class UserDevDependencyManager {
             
             final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency);
             
-            final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(project);
-            additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getNeoFormRuntimeDefinition().getMinecraftDependenciesConfiguration());
-            additionalDependenciesConfiguration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
+            final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(
+                    project,
+                    "NeoForgeUserDevAdditionalReplacementDependenciesFor" + runtimeDefinition.getSpecification().getIdentifier(),
+                    configuration -> {
+                        configuration.setDescription("Additional dependencies for the NeoForge UserDev replacement for " + runtimeDefinition.getSpecification().getIdentifier());
+                        configuration.extendsFrom(runtimeDefinition.getNeoFormRuntimeDefinition().getMinecraftDependenciesConfiguration());
+                        configuration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
+                    }
+            );
             
             return Optional.of(
-                    new DependencyReplacementResult(
+                    new UserDevReplacementResult(
                             project,
-                            Optional.of(ConfigurationUtils.findReplacementConfigurations(project, context.getConfiguration())),
-                            name -> CommonRuntimeUtils.buildTaskName(runtimeDefinition.getNeoFormRuntimeDefinition(), name),
                             runtimeDefinition.getNeoFormRuntimeDefinition().getSourceJarTask(),
                             runtimeDefinition.getNeoFormRuntimeDefinition().getRawJarTask(),
                             additionalDependenciesConfiguration,
-                            builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
-                            builder -> builder.setVersion(runtimeDefinition.getSpecification().getForgeVersion()),
-                            runtimeDefinition::setReplacedDependency,
-                            runtimeDefinition::onRepoWritten,
-                            Sets::newHashSet
+                            Collections.emptySet(),
+                            runtimeDefinition
                     ));
         }));
     }
@@ -98,16 +92,21 @@ public final class UserDevDependencyManager {
     
     private static UserDevRuntimeDefinition buildForgeUserDevRuntimeFrom(Project project, ExternalModuleDependency dependency) {
         final UserDevRuntimeExtension forgeRuntimeExtension = project.getExtensions().getByType(UserDevRuntimeExtension.class);
-        final UserDev userDevExtension = project.getExtensions().getByType(UserDev.class);
-        
-        return forgeRuntimeExtension.maybeCreate(builder -> {
-            final Provider<String> version = project.provider(dependency::getVersion).orElse(userDevExtension.getDefaultForgeVersion());
-            final Provider<String> group = project.provider(dependency::getGroup).orElse(userDevExtension.getDefaultForgeGroup());
-            final Provider<String> name = project.provider(dependency::getName).orElse(userDevExtension.getDefaultForgeName());
-            
-            builder.withForgeVersion(version);
-            builder.withForgeGroup(group);
-            builder.withForgeName(name);
+
+        return forgeRuntimeExtension.maybeCreateFor(dependency, builder -> {
+
+            final ExternalModuleDependency clone = dependency.copy();
+            clone.artifact(artifact -> {
+                artifact.setExtension("jar");
+                artifact.setClassifier("userdev");
+            });
+
+            final Configuration userdevLookup = ConfigurationUtils.temporaryUnhandledConfiguration(project.getConfigurations(), "ResolveRequestedNeoForgeVersion", clone);
+            final ResolvedArtifact resolvedArtifact = userdevLookup.getResolvedConfiguration().getFirstLevelModuleDependencies().iterator().next().getModuleArtifacts().iterator().next();
+
+            builder.withForgeVersion(resolvedArtifact.getModuleVersion().getId().getVersion());
+            builder.withForgeGroup(resolvedArtifact.getModuleVersion().getId().getGroup());
+            builder.withForgeName(resolvedArtifact.getModuleVersion().getId().getName());
             builder.withDistributionType(DistributionType.JOINED);
         });
     }

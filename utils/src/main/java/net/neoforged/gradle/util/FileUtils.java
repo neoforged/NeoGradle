@@ -310,4 +310,12 @@ public final class FileUtils {
         }
         return name.substring(0, dotIndex) + "-" + classifier + name.substring(dotIndex);
     }
+
+    public static boolean contains(final File file, final String shouldContain) {
+        try {
+            return new String(Files.readAllBytes(file.toPath())).contains(shouldContain);
+        } catch (IOException e) {
+            return false;
+        }
+    }
 }

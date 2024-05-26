@@ -12,7 +12,6 @@ import java.util.function.Predicate
 
 @CompileStatic
 enum GameArtifact {
-    LAUNCHER_MANIFEST((String version) -> CacheFileSelector.launcherMetadata(), (type) -> true),
     VERSION_MANIFEST((String version) -> CacheFileSelector.forVersionJson(version), (type) -> true),
     CLIENT_JAR((String version) -> CacheFileSelector.forVersionJar(version, "client"), (type) -> type != DistributionType.SERVER),
     SERVER_JAR((String version) -> CacheFileSelector.forVersionJar(version, "server"), (type) -> type != DistributionType.CLIENT),

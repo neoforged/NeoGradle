@@ -44,13 +44,13 @@ plugins {
 
 dependencies {
   // For depending on a Minecraft JAR-file with both client- and server-classes
-  implementation "net.minecraft:neoform_joined:<neoform-version>'
+  implementation "net.minecraft:neoform_joined:<neoform-version>"
   
   // For depending on the Minecraft client JAR-file
-  implementation "net.minecraft:neoform_client:<neoform-version>'
+  implementation "net.minecraft:neoform_client:<neoform-version>"
   
   // For depending on the Minecraft dedicated server JAR-file
-  implementation "net.minecraft:neoform_server:<neoform-version>'
+  implementation "net.minecraft:neoform_server:<neoform-version>"
 }
 ```
 
@@ -89,11 +89,6 @@ subsystems {
     // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.parchmentArtifact
     // parchmentArtifact = "org.parchmentmc.data:parchment-$minecraftVersion:$mappingsVersion:checked@zip"
     
-    // Overrides the full Maven coordinate of the tool used to apply the Parchment mappings
-    // See https://github.com/neoforged/JavaSourceTransformer
-    // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.toolArtifact
-    // toolArtifact = "net.neoforged.jst:jst-cli-bundle:1.0.30"
-    
     // Set this to false if you don't want the https://maven.parchmentmc.org/ repository to be added automatically when
     // applying Parchment mappings is enabled
     // The built-in default value can also be overriden using the Gradle property neogradle.subsystems.parchment.addRepository
@@ -126,11 +121,12 @@ This can be useful to run NeoGradle on lower-end machines, at the cost of slower
 The settings used by Neogradle for recompiling the decompiled Minecraft source code can be customized
 using [Gradle properties](https://docs.gradle.org/current/userguide/project_properties.html).
 
-| Property                                    | Description                                                                                                                          |
-|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| `neogradle.subsystems.recompiler.maxMemory` | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`). Defaults to `1g`. |
-| `neogradle.subsystems.recompiler.jvmArgs`   | Pass arbitrary JVM arguments to the forked Gradle process that runs the compiler. I.e. `-XX:+HeapDumpOnOutOfMemoryError`             |
-| `neogradle.subsystems.recompiler.args`      | Pass additional command line arguments to the Java compiler.                                                                         |
+| Property                                     | Description                                                                                                                          |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `neogradle.subsystems.recompiler.maxMemory`  | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`). Defaults to `1g`. |
+| `neogradle.subsystems.recompiler.jvmArgs`    | Pass arbitrary JVM arguments to the forked Gradle process that runs the compiler. I.e. `-XX:+HeapDumpOnOutOfMemoryError`             |
+| `neogradle.subsystems.recompiler.args`       | Pass additional command line arguments to the Java compiler.                                                                         |
+| `neogradle.subsystems.recompiler.shouldFork` | Indicates whether or not a process fork should be used for the recompiler. (Default is true).                                        |
 
 ## Run specific dependency management
 This implements run specific dependency management for the classpath of a run.
@@ -214,3 +210,152 @@ runs {
 }
 ``` 
 No other action is needed.
+
+## Using conventions
+### Disabling conventions
+By default, conventions are enabled.
+If you want to disable conventions, you can do so by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.enabled=false
+```
+We will consider the conventions to be enabled going forward, so if you want to disable them, you will have to do so explicitly.
+### Configurations
+NeoGradle will add several `Configurations` to your project.
+This convention can be disabled by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.configurations.enabled=false
+```
+
+Per SourceSet the following configurations are added, where XXX is the SourceSet name:
+- XXXLocalRuntime
+- XXXLocalRunRuntime
+> [!NOTE]
+> For this to work, your SourceSets need to be defined before your dependency block.
+
+Per Run the following configurations are added:
+- XXXRun
+> [!NOTE]
+> For this to work, your Runs need to be defined before your dependency block.
+
+Globally the following configurations are added:
+- runs
+
+#### LocalRuntime (Per SourceSet)
+This configuration is used to add dependencies to your local projects runtime only, without exposing them to the runtime of other projects.
+Requires source set conventions to be enabled
+
+#### LocalRunRuntime (Per SourceSet)
+This configuration is used to add dependencies to the local runtime of the runs you add the SourceSets too, without exposing them to the runtime of other runs.
+Requires source set conventions to be enabled
+
+#### Run (Per Run)
+This configuration is used to add dependencies to the runtime of a specific run only, without exposing them to the runtime of other runs.
+
+#### run (Global)
+This configuration is used to add dependencies to the runtime of all runs.
+
+### Sourceset Management
+To disable the sourceset management, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.sourcesets.enabled=false
+```
+
+#### Automatic inclusion of the current project in its runs
+By default, the current project is automatically included in its runs.
+If you want to disable this, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.sourcesets.automatic-inclusion=false
+```
+
+This is equivalent to setting the following in your build.gradle:
+```groovy
+runs {
+    configureEach { run ->
+        run.modSource sourceSets.main
+    }
+}
+```
+##### Automatic inclusion of a sourcesets local run runtime configuration in a runs configuration
+By default, the local run runtime configuration of a sourceset is automatically included in the runs configuration of the run.
+If you want to disable this, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.sourcesets.automatic-inclusion-local-run-runtime=false
+```
+This is equivalent to setting the following in your build.gradle:
+```groovy
+runs {
+    configureEach { run ->
+        run.dependencies {
+            runtime sourceSets.main.configurations.localRunRuntime
+        }
+    }
+}
+```
+If this functionality is disabled then the relevant configurations local run runtime configurations will not be created.
+
+### IDE Integrations
+To disable the IDE integrations, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.enabled=false
+```
+#### IDEA
+To disable the IDEA integration, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.enabled=false
+```
+##### Run with IDEA
+If you have configured your IDEA IDE to run with its own compiler, you can disable the autodetection of the IDEA compiler by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.compiler-detection=false
+```
+This will set the DSL property:
+```groovy
+idea {
+    runs {
+        runWithIdea = true / false
+    }
+}
+```
+##### IDEA Compiler output directory
+If you want to change the output directory of the IDEA compiler, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.compiler-output-dir=<path>
+```
+By default, this is set to 'out', and configured in the DSL as:
+```groovy
+idea {
+    runs {
+        outDirectory = '<path>'
+    }
+}
+```
+
+#### Post Sync Task Usage
+By default, the import in IDEA is run during the sync task.
+If you want to disable this, and use a post sync task, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.use-post-sync-task=true
+
+```
+
+### Runs
+To disable the runs conventions, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.runs.enabled=false
+```
+
+#### Automatic default run per type
+By default, a run is created for each type of run.
+If you want to disable this, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.runs.create-default-run-per-type=false
+```
+
+## Tool overrides
+To configure tools used by different subsystems of NG, the subsystems dsl and properties can be used to configure the following tools:
+### JST
+This tool is used by the parchment subsystem to apply its names and javadoc, as well as by the source access transformer system to apply its transformations.
+The following properties can be used to configure the JST tool:
+```properties
+neogradle.subsystems.tools.jst=<artifact coordinate for jst cli tool>
+```

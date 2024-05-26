@@ -4,11 +4,9 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
 import org.jetbrains.annotations.NotNull
-
-import java.util.function.Consumer
 
 /**
  * Defines an extension which handles the dependency replacements.
@@ -16,7 +14,11 @@ import java.util.function.Consumer
 @CompileStatic
 interface DependencyReplacement extends BaseDSLElement<DependencyReplacement> {
 
-
+    /**
+     * Invoked to handle a given configuration.
+     *
+     * @param configuration The configuration to handle.
+     */
     void handleConfiguration(Configuration configuration);
 
     /**
@@ -28,4 +30,33 @@ interface DependencyReplacement extends BaseDSLElement<DependencyReplacement> {
     @DSLProperty
     NamedDomainObjectContainer<DependencyReplacementHandler> getReplacementHandlers();
 
-    void afterDefinitionBake(Consumer<Project> callback); }
+    /**
+     * Gives access to the task that produces the raw jar for the given dependency in our dynamic repository.
+     *
+     * @param dependency The dependency to get the raw jar producing task for.
+     * @param configuration The configuration to get the raw jar producing task for.
+     * @return The raw jar dependency that will trigger the copying of the raw jar into the repository.
+     */
+    @NotNull
+    Dependency getRawJarDependency(Dependency dependency, Configuration configuration);
+
+    /**
+     * Gives access to the task that produces the sources jar for the given dependency in our dynamic repository.
+     *
+     * @param dependency The dependency to get the sources jar producing task for.
+     * @param configuration The configuration to get the sources jar producing task for.
+     * @return The sources jar dependency that will trigger the copying the sources jar into the repository.
+     */
+    @NotNull
+    Dependency getSourcesJarDependency(Dependency dependency, Configuration configuration);
+
+    /**
+     * Optionally converts the given dependency back to the original dependency it replaced.
+     *
+     * @param dependency The dependency to optionally convert back.
+     * @param configuration The configuration the given dependency can be found it resides in.
+     * @return The original dependency if it can be converted back, otherwise the given dependency.
+     */
+    @NotNull
+    Dependency optionallyConvertBackToOriginal(Dependency dependency, Configuration configuration)
+}

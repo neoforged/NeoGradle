@@ -128,6 +128,6 @@ public final class NeoFormRuntimeUtils {
     }
     
     public static void configureDefaultRuntimeSpecBuilder(Project project, NeoFormRuntimeSpecification.Builder builder) {
-        builder.withPreTaskAdapter("decompile", NeoFormAccessTransformerUtils.createAccessTransformerAdapter(project));
+        builder.withPostTaskAdapter("decompile", NeoFormAccessTransformerUtils.createAccessTransformerAdapter(project));
     }
 }

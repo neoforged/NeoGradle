@@ -6,13 +6,9 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CopyingFileTreeVisitor implements FileVisitor {
 
@@ -57,7 +53,7 @@ public class CopyingFileTreeVisitor implements FileVisitor {
         try {
             FileUtils.delete(directory);
         } catch (IOException e) {
-            throw new RuntimeException("Cloud not clean up target directory: " + directory, e);
+            throw new RuntimeException("Could not clean up target directory: " + directory, e);
         }
 
         try {
@@ -85,7 +81,11 @@ public class CopyingFileTreeVisitor implements FileVisitor {
         final Path target = directory.resolve(fileDetails.getRelativePath().getPathString());
         try {
             Files.createDirectories(target.getParent());
-            fileDetails.copyTo(Files.newOutputStream(target));
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create parent directories for: " + target, e);
+        }
+        try (OutputStream out = Files.newOutputStream(target)) {
+            fileDetails.copyTo(out);
         } catch (IOException e) {
             throw new RuntimeException("Could not create file: " + target, e);
         }

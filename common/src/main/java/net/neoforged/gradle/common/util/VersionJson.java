@@ -68,6 +68,7 @@ public class VersionJson implements Serializable {
     @Nullable
     private Map<String, Download> downloads;
     private Library[] libraries;
+    private JavaVersion javaVersion;
 
     private List<LibraryDownload> _natives = null;
     private List<Library> _libraries = null;
@@ -136,6 +137,10 @@ public class VersionJson implements Serializable {
         return downloads;
     }
 
+    public JavaVersion getJavaVersion() {
+        return javaVersion;
+    }
+
     public List<Library> getLibraries() {
         if (this._libraries == null) {
             this._libraries = new ArrayList<>();
@@ -155,6 +160,19 @@ public class VersionJson implements Serializable {
 
     public String getMainClass() {
         return mainClass;
+    }
+
+    public static class JavaVersion implements Serializable {
+        private String component;
+        private String majorVersion;
+
+        public String getComponent() {
+            return component;
+        }
+
+        public String getMajorVersion() {
+            return majorVersion;
+        }
     }
 
     public static class Arguments implements Serializable {

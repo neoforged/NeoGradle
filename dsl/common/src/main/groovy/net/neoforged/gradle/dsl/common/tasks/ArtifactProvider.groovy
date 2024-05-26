@@ -1,21 +1,26 @@
 package net.neoforged.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DSLProperty;
-import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.*;
+import net.minecraftforge.gdi.annotations.DSLProperty
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Files
+import java.nio.file.Path
 
 @CacheableTask
 @CompileStatic
 abstract class ArtifactProvider extends NeoGradleBase implements WithOutput {
 
+    ArtifactProvider() {
+        getContextId().convention(getOutputFileName())
+    }
+
     @TaskAction
     void doProvide() throws Exception {
         final Path output = ensureFileWorkspaceReady(getOutput()).toPath();
-        final Path source = getInput().get().getAsFile().toPath();
+        final Path source = getInputFiles().getSingleFile().toPath();
 
         if (!Files.exists(source)) {
             throw new IllegalStateException("Source file does not exist: " + source);
@@ -24,13 +29,13 @@ abstract class ArtifactProvider extends NeoGradleBase implements WithOutput {
         Files.copy(source, output);
     }
 
-    @InputFile
+    @InputFiles
     @DSLProperty
-    @PathSensitive(PathSensitivity.NONE)
-    abstract RegularFileProperty getInput();
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract ConfigurableFileCollection getInputFiles();
 
-    @OutputFile
+    @Input
     @DSLProperty
-    abstract RegularFileProperty getOutput();
-
+    @Optional
+    abstract Property<String> getContextId();
 }

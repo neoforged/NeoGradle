@@ -41,14 +41,6 @@ interface Parchment extends ConfigurableDSLElement<Parchment> {
     Property<String> getMappingsVersion();
 
     /**
-     * Artifact coordinates for the tool used to apply the mappings. Overriding this is an advanced use case.
-     */
-    @Input
-    @Optional
-    @DSLProperty
-    Property<String> getToolArtifact();
-
-    /**
      * If enabled (the default), the parchment repository will automatically be added to the project,
      * if {@link #getEnabled()} is true.
      */

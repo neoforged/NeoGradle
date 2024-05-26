@@ -23,7 +23,7 @@ public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
     public UnapplyOfficialMappingsToCompiledJar() {
         getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.SPECIALSOURCE));
         getProgramArguments().set(Lists.newArrayList("--in-jar", "{input}", "--out-jar", "{output}", "--srg-in", "{mappings}", "--live", "-r"));
-        getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion.getFull(), DistributionType.CLIENT)));
+        getMappings().fileProvider(getMinecraftVersion().map(minecraftVersion -> getProject().getExtensions().getByType(MinecraftArtifactCache.class).cacheVersionMappings(minecraftVersion, DistributionType.CLIENT)));
 
         getArguments().putRegularFile("input", getInput());
         getArguments().putRegularFile("mappings", getMappings());
@@ -35,7 +35,7 @@ public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
     }
 
     @Input
-    public abstract Property<CacheableMinecraftVersion> getMinecraftVersion();
+    public abstract Property<String> getMinecraftVersion();
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)

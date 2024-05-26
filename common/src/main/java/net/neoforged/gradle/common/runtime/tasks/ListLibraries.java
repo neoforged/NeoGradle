@@ -69,8 +69,9 @@ public abstract class ListLibraries extends DefaultRuntime {
             
             // Write the list
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8));
-            for (File file : libraries) {
-                writer.println("-e=" + file.getAbsolutePath());
+            Iterator<File> itr = libraries.stream().sorted(Comparator.naturalOrder()).iterator();
+            while (itr.hasNext()) {
+                writer.println("-e=" + itr.next().getAbsolutePath());
             }
             writer.flush();
             writer.close();

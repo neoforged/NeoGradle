@@ -30,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
     @NotNull
     protected VanillaRuntimeDefinition doCreate(final VanillaRuntimeSpecification spec) {
-        if (this.runtimes.containsKey(spec.getIdentifier()))
+        if (this.definitions.containsKey(spec.getIdentifier()))
             throw new IllegalArgumentException("Cannot register runtime with identifier '" + spec.getIdentifier() + "' because it already exists");
 
         final Project project = spec.getProject();
@@ -79,7 +78,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
         }
 
-        final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject());
+        final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), "VanillaMinecraftDependenciesFor" + spec.getIdentifier());
         if (spec.getDistribution().isClient() || !BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
             for (VersionJson.Library library : versionJson.getLibraries()) {
                 minecraftDependenciesConfiguration.getDependencies().add(
@@ -120,16 +119,21 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         final Optional<ServerLaunchInformation> launchInformation = spec.getDistribution().isClient() ? Optional.empty() : Optional.of(ServerLaunchInformation.from(gameArtifacts.get(GameArtifact.SERVER_JAR)));
 
-        return new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
+        final VanillaRuntimeDefinition definition = new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
             configureCommonRuntimeTaskParameters(vanillaRuntimeTask, CommonRuntimeUtils.buildStepName(spec, vanillaRuntimeTask.getName()), spec, vanillaDirectory);
         }), versionJson, createDownloadAssetsTasks(spec, runtimeWorkingDirectory, versionJson), createExtractNativesTasks(spec, runtimeWorkingDirectory, versionJson), launchInformation);
+
+        //TODO: Right now this is needed so that runs and other components can be order free in the buildscript,
+        //TODO: We should consider making this somehow lazy and remove the unneeded complexity because of it.
+        spec.getProject().afterEvaluate(afterEvalProject -> bakeDefinition(definition));
+
+        return definition;
     }
 
     protected VanillaRuntimeSpecification.Builder createBuilder() {
         return VanillaRuntimeSpecification.Builder.from(getProject());
     }
 
-    @Override
     protected void bakeDefinition(VanillaRuntimeDefinition definition) {
         final VanillaRuntimeSpecification spec = definition.getSpecification();
 
@@ -206,15 +210,13 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final TaskProvider<? extends WithOutput> rawTask = definition.getTasks().get(stepData.getRawJarStep().getTaskName(definition));
 
         definition.getSourceJarTask().configure(task -> {
-            task.getInput().set(sourcesTask.flatMap(WithOutput::getOutput));
+            task.getInputFiles().from(sourcesTask.flatMap(WithOutput::getOutput));
             task.dependsOn(sourcesTask);
         });
         definition.getRawJarTask().configure(task -> {
-            task.getInput().set(rawTask.flatMap(WithOutput::getOutput));
+            task.getInputFiles().from(rawTask.flatMap(WithOutput::getOutput));
             task.dependsOn(rawTask);
         });
-
-        definition.onBake(getProject().getExtensions().getByType(Mappings.class).getChannel().get(), runtimeWorkingDirectory);
     }
 
     private StepData buildSteps() {

@@ -21,8 +21,7 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks 'tasks'
-            it.log(Runtime.LogLevel.INFO)
-            it.arguments('-s')
+            it.stacktrace()
         }
 
         then:

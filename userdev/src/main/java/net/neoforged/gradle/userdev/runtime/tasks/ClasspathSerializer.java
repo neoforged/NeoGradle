@@ -7,6 +7,7 @@ import org.gradle.api.tasks.*;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 @CacheableTask
@@ -14,6 +15,9 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
 
     public ClasspathSerializer() {
         getOutputFileName().convention("classpath.txt");
+
+        setGroup("NeoGradle/Runs");
+        setDescription("Serializes the classpath of the run to a file.");
     }
 
     @TaskAction
@@ -21,9 +25,18 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
         final File out = ensureFileWorkspaceReady(getOutput());
         Files.write(
                 out.toPath(),
-                getInputFiles().getFiles().stream()
+                getInputFiles()
+                        .getAsFileTree()
+                        //Filter out valid classpath elements, this can put .pom files in the input files, so we need to remove those.
+                        .matching(filter -> {
+                            filter.include(fileTreeElement -> fileTreeElement.isDirectory() ||
+                                    fileTreeElement.getName().endsWith(".jar") ||
+                                    fileTreeElement.getName().endsWith(".zip"));
+                        })
+                        .getFiles().stream()
                         .map(File::getAbsolutePath)
-                        .collect(Collectors.toSet()),
+                        .sorted()
+                        .collect(Collectors.toCollection(LinkedHashSet::new)),
                 StandardCharsets.UTF_8
         );
     }

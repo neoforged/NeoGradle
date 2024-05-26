@@ -85,6 +85,7 @@ public class DelegatingDomainObjectContainer<T> implements NamedDomainObjectCont
         return delegate.withType(type);
     }
 
+
     @Override
     public NamedDomainObjectSet<T> named(Spec<String> nameFilter) {
         return delegate.named(nameFilter);

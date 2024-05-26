@@ -5,12 +5,14 @@ import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefiniti
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
@@ -92,7 +94,8 @@ public final class TaskDependencyUtils {
         return validateAndUnwrapDefinitions(project, "source sets", sourceSets.stream().map(SourceSet::getName).collect(Collectors.joining(", ", "[", "]")), findRuntimes(project, sourceSets));
     }
     
-    public static Optional<CommonRuntimeDefinition<?>> findRuntimeDefinition(Project project, SourceSet sourceSet) throws MultipleDefinitionsFoundException {
+    public static Optional<CommonRuntimeDefinition<?>> findRuntimeDefinition(SourceSet sourceSet) throws MultipleDefinitionsFoundException {
+        final Project project = SourceSetUtils.getProject(sourceSet);
         return unwrapDefinitions(project, findRuntimes(project, sourceSet));
     }
 
@@ -138,9 +141,12 @@ public final class TaskDependencyUtils {
         return context.getRuntimes();
     }
 
-    @SuppressWarnings("SuspiciousMethodCalls")
     private static List<CommonRuntimeDefinition<?>> unwrapDelegation(final Project project, final Collection<? extends CommonRuntimeDefinition<?>> input) {
         final List<CommonRuntimeDefinition<?>> output = new LinkedList<>();
+
+        if (project.getExtensions().findByType(RuntimesExtension.class) == null) {
+            return input.stream().distinct().collect(Collectors.toList());
+        }
 
         project.getExtensions().getByType(RuntimesExtension.class)
                 .getAllDefinitions()
@@ -166,11 +172,21 @@ public final class TaskDependencyUtils {
         private final Set<CommonRuntimeDefinition<?>> found = new HashSet<>();
         private final SourceSetContainer sourceSets;
         private final Collection<? extends Definition<?>> runtimes;
-        @SuppressWarnings("unchecked")
+        private final Map<String, Dependency> dependencies;
+        private final Project project;
 
         public RuntimeFindingTaskDependencyResolveContext(Project project) {
+            this.project = project;
             this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-            this.runtimes = project.getExtensions().getByType(RuntimesExtension.class).getAllDefinitions();
+
+            final RuntimesExtension runtimesExtension = project.getExtensions().findByType(RuntimesExtension.class);
+            if (runtimesExtension == null) {
+                this.runtimes = Collections.emptyList();
+                this.dependencies = Collections.emptyMap();
+            } else {
+                this.runtimes = runtimesExtension.getAllDefinitions();
+                this.dependencies = runtimesExtension.getAllDependencies();
+            }
         }
 
         @Override
@@ -195,10 +211,19 @@ public final class TaskDependencyUtils {
 
         private void processConfiguration(Configuration configuration) {
             DependencySet dependencies = configuration.getDependencies();
-            this.runtimes.stream().filter(runtime -> {
+
+            //Grab the original dependencies if we have a replacement extension
+            final DependencyReplacement replacement = project.getExtensions().findByType(DependencyReplacement.class);
+            final Set<Dependency> operatingSet = replacement == null ? dependencies : dependencies.stream()
+                    .map(dependency -> replacement.optionallyConvertBackToOriginal(dependency, configuration))
+                    .collect(Collectors.toSet());
+
+            this.runtimes.stream()
+                    .filter(runtime -> this.dependencies.containsKey(runtime.getSpecification().getIdentifier()))
+                    .filter(runtime -> {
                 try {
-                    final Artifact artifact = Artifact.from(runtime.getReplacedDependency());
-                    return dependencies.stream().anyMatch(artifact.asDependencyMatcher());
+                    final Artifact artifact = Artifact.from(this.dependencies.get(runtime.getSpecification().getIdentifier()));
+                    return operatingSet.stream().anyMatch(artifact.asDependencyMatcher());
                 } catch (IllegalStateException e) {
                     return false;
                 }
@@ -224,7 +249,7 @@ public final class TaskDependencyUtils {
             Property<CommonRuntimeDefinition<?>> runtimeDefinition = (Property<CommonRuntimeDefinition<?>>) sourceSet.getExtensions().findByName("runtimeDefinition");
             if (runtimeDefinition != null && runtimeDefinition.isPresent()) {
                 this.add(runtimeDefinition.get());
-            } else {
+            } else if (runtimeDefinition != null) {
                 Set<CommonRuntimeDefinition<?>> tmp = new HashSet<>(this.found);
                 this.found.clear();
                 this.add(sourceSet.getCompileClasspath());

@@ -8,17 +8,14 @@ import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementResult;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.DependencyArtifact;
-import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.artifacts.ModuleDependency;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Locale;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,7 +43,7 @@ public final class NeoFormDependencyManager {
         });
     }
 
-    private static Optional<DependencyReplacementResult> replaceDependency(Context context) {
+    private static Optional<ReplacementResult> replaceDependency(Context context) {
         ModuleDependency dependency = context.getDependency();
 
         NeoFormTarget target = getNeoFormTargetFromDependency(dependency);
@@ -61,24 +58,18 @@ public final class NeoFormDependencyManager {
         // Build the runtime used to produce the artifact
         Project project = context.getProject();
         NeoFormRuntimeExtension runtimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
-        NeoFormRuntimeDefinition runtime = runtimeExtension.maybeCreate(builder -> {
+        NeoFormRuntimeDefinition runtime = runtimeExtension.maybeCreateFor(dependency, builder -> {
             builder.withDistributionType(target.distribution).withNeoFormVersion(target.version);
             NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
         });
 
         return Optional.of(
-                new DependencyReplacementResult(
+                new ReplacementResult(
                         project,
-                        Optional.of(ConfigurationUtils.findReplacementConfigurations(project, context.getConfiguration())),
-                        name -> CommonRuntimeUtils.buildTaskName(runtime, name),
                         runtime.getSourceJarTask(),
                         runtime.getRawJarTask(),
                         runtime.getMinecraftDependenciesConfiguration(),
-                        builder -> builder.setVersion(runtime.getSpecification().getVersion()),
-                        builder -> builder.setVersion(runtime.getSpecification().getVersion()),
-                        runtime::setReplacedDependency,
-                        runtime::onRepoWritten,
-                        Sets::newHashSet
+                        Collections.emptySet()
                 ));
     }
 

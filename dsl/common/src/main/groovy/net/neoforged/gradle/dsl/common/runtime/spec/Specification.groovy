@@ -7,6 +7,7 @@ import net.neoforged.gradle.dsl.common.util.DistributionType
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Provider
 import org.jetbrains.annotations.NotNull
 
