@@ -141,9 +141,12 @@ public final class TaskDependencyUtils {
         return context.getRuntimes();
     }
 
-    @SuppressWarnings("SuspiciousMethodCalls")
     private static List<CommonRuntimeDefinition<?>> unwrapDelegation(final Project project, final Collection<? extends CommonRuntimeDefinition<?>> input) {
         final List<CommonRuntimeDefinition<?>> output = new LinkedList<>();
+
+        if (project.getExtensions().findByType(RuntimesExtension.class) == null) {
+            return input.stream().distinct().collect(Collectors.toList());
+        }
 
         project.getExtensions().getByType(RuntimesExtension.class)
                 .getAllDefinitions()
