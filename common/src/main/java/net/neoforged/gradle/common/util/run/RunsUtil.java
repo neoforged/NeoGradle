@@ -166,10 +166,11 @@ public class RunsUtil {
     }
 
     private static FileCollection filterOutput(SourceSet srcSet) {
-        FileCollection collection = srcSet.getRuntimeClasspath().minus(srcSet.getOutput().getClassesDirs());
+        FileCollection collection = srcSet.getRuntimeClasspath();
         if (srcSet.getOutput().getResourcesDir() != null) {
             collection = collection.filter(file -> !file.equals(srcSet.getOutput().getResourcesDir()));
         }
+        collection = collection.filter(file -> !srcSet.getOutput().getClassesDirs().contains(file));
         return collection;
     }
 
