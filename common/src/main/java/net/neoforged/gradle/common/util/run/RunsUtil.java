@@ -52,21 +52,7 @@ public class RunsUtil {
     public static Run create(final Project project, final String name) {
         final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
 
-        project.afterEvaluate(evaluatedProject -> {
-            if (!run.getIsJUnit().get()) {
-                //Create run exec tasks for all none unit test runs
-                project.getTasks().register(createTaskName(name), RunExec.class, runExec -> {
-                    runExec.getRun().set(run);
-                    addRunSourcesDependenciesToTask(runExec, run);
-
-                    run.getTaskDependencies().forEach(runExec::dependsOn);
-                });
-            } else {
-                createOrReuseTestTask(project, name, run);
-            }
-        });
-
-        //Configure mod sources when needed
+        //Configure mod sources env vars
         project.afterEvaluate(evaluatedProject -> {
             //Create a combined provider for the mod and unit test sources
             Provider<? extends Collection<SourceSet>> sourceSets = run.getModSources().map(modSources -> {
@@ -79,6 +65,20 @@ public class RunsUtil {
             });
             //Set the mod classes environment variable
             run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(sourceSets));
+        });
+
+        project.afterEvaluate(evaluatedProject -> {
+            if (!run.getIsJUnit().get()) {
+                //Create run exec tasks for all non-unit test runs
+                project.getTasks().register(createTaskName(name), RunExec.class, runExec -> {
+                    runExec.getRun().set(run);
+                    addRunSourcesDependenciesToTask(runExec, run);
+
+                    run.getTaskDependencies().forEach(runExec::dependsOn);
+                });
+            } else {
+                createOrReuseTestTask(project, name, run);
+            }
         });
 
         return run;

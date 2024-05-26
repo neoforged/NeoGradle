@@ -178,8 +178,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
                     //We always register main
                     run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
-                    if (run.getIsJUnit().get())
-                        run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
                 }
 
                 if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get())
@@ -328,6 +326,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
         runs.forEach(run -> {
             if (run instanceof RunImpl) {
                 run.configure();
+
+                // We add default junit sourcesets here because we need to know the type of the run first
+                final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
+                if (conventions.getIsEnabled().get() && conventions.getSourceSets().getIsEnabled().get() && conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+                    if (run.getIsJUnit().get()) {
+                        run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
+                    }
+                }
 
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
