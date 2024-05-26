@@ -288,7 +288,7 @@ public class IdeRunIntegrationManager {
             
             return ideBeforeRunTask;
         }
-      
+
         private List<TaskProvider<?>> createEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().get()) {
