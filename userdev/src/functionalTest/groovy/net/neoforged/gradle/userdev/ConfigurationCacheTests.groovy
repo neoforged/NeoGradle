@@ -42,11 +42,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/functionalTest")
-    }
-
     def "compile_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {

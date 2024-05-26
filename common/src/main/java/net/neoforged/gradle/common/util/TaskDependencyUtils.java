@@ -206,6 +206,22 @@ public final class TaskDependencyUtils {
                 this.processConfiguration((Configuration) dependency);
             } else if (dependency instanceof TaskDependencyContainer) {
                 ((TaskDependencyContainer) dependency).visitDependencies(this);
+            } else if (dependency instanceof Task) {
+                processTask((Task) dependency);
+            }
+        }
+
+        private void processTask(Task task) {
+            final Optional<? extends Definition<?>> rawJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getRawJarTask().get().equals(task)).findFirst();
+            final Optional<? extends Definition<?>> sourceJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getSourceJarTask().get().equals(task)).findFirst();
+            if (rawJarRuntime.isPresent()) {
+                this.add(rawJarRuntime.get());
+            } else if (sourceJarRuntime.isPresent()) {
+                this.add(sourceJarRuntime.get());
+            } else {
+                for (Task dependency : task.getTaskDependencies().getDependencies(task)) {
+                    add(dependency);
+                }
             }
         }
 
@@ -230,6 +246,12 @@ public final class TaskDependencyUtils {
             }).forEach(this::add);
             
             configuration.getExtendsFrom().forEach(this::add);
+
+            if (configuration.isCanBeResolved()) {
+                for (Task task : configuration.getBuildDependencies().getDependencies(null)) {
+                    add(task);
+                }
+            }
         }
 
         private void processSourceDirectorySet(SourceDirectorySet sourceDirectorySet) {

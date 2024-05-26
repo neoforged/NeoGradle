@@ -113,10 +113,16 @@ public abstract class Patch extends DefaultRuntime {
             if (directory == null && (dirDetails.getRelativePath().getPathString() + "/").startsWith(filter)) {
                 directory = dirDetails.getFile();
             }
+
+
+            //Force the extraction.
+            dirDetails.getFile();
         }
 
         @Override
         public void visitFile(@NotNull FileVisitDetails fileDetails) {
+            //Force the extraction.
+            fileDetails.getFile();
         }
     }
 }

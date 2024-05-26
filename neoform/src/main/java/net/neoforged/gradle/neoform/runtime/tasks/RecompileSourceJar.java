@@ -76,13 +76,6 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setFork(true);
         getOptions().setIncremental(true);
         getOptions().getIncrementalAfterFailure().set(true);
-
-        doFirst(task -> {
-            System.out.println("Recompiling source jar: " + getStepName().get());
-            getClasspath().getFiles().forEach(file -> {
-                System.out.println("Classpath: " + file);
-            });
-        });
     }
 
     @Override
@@ -128,15 +121,4 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @Inject
     @Override
     public abstract ProviderFactory getProviderFactory();
-
-    @TaskAction
-    @Override
-    protected void compile(InputChanges inputs) {
-        System.out.println("Recompiling source jar: " + getStepName().get());
-        getClasspath().getFiles().forEach(file -> {
-            System.out.println("Classpath: " + file);
-        });
-
-        super.compile(inputs);
-    }
 }

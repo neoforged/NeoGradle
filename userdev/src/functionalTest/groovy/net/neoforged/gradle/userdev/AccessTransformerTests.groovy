@@ -11,11 +11,6 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/functionalTest");
-    }
-
     def "the userdev runtime supports loading ats from a file"() {
         given:
         def project = create("userdev_supports_ats_from_file", {
@@ -50,7 +45,6 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         when:
         def initialRun = project.run {
             it.tasks('build')
-            it.debug()
         }
 
         then:
