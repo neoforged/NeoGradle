@@ -195,7 +195,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                 final Dependency[] dependencies = dependencyCoordinates.stream().map { coord -> project.getDependencies().create(coord) }.toArray(Dependency[]::new)
                 final Configuration configuration = ConfigurationUtils.temporaryConfiguration(
                         project,
-                        "InstallerProfileLibraryLookup",
+                        "InstallerProfileLibraryLookup" + ModuleDependencyUtils.toConfigurationName(tool),
                         dependencies)
 
                 final LibraryCollector collector = new LibraryCollector(project.getObjects(), project.getRepositories()
