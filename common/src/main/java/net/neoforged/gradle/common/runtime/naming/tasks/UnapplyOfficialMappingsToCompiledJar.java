@@ -1,10 +1,9 @@
 package net.neoforged.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
-import net.neoforged.gradle.common.runtime.tasks.Execute;
+import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
-import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.file.RegularFileProperty;
@@ -15,10 +14,8 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
-import java.io.File;
-
 @CacheableTask
-public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
+public abstract class UnapplyOfficialMappingsToCompiledJar extends DefaultExecute {
 
     public UnapplyOfficialMappingsToCompiledJar() {
         getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.SPECIALSOURCE));
@@ -27,11 +24,6 @@ public abstract class UnapplyOfficialMappingsToCompiledJar extends Execute {
 
         getArguments().putRegularFile("input", getInput());
         getArguments().putRegularFile("mappings", getMappings());
-    }
-
-    @Override
-    public void execute() throws Throwable {
-        super.execute();
     }
 
     @Input

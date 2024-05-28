@@ -4,10 +4,14 @@ import codechicken.diffpatch.cli.CliOperation;
 import codechicken.diffpatch.cli.PatchOperation;
 import codechicken.diffpatch.util.LoggingOutputStream;
 import codechicken.diffpatch.util.PatchMode;
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import org.gradle.api.file.*;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,8 +28,16 @@ public abstract class Patch extends DefaultRuntime {
         getIsVerbose().convention(false);
     }
 
+
+    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
+    public abstract Property<CentralCacheService> getCacheService();
+
     @TaskAction
-    public void run() throws Exception {
+    public void run() throws Throwable {
+        getCacheService().get().doCached(this, this::doRun, getOutput());
+    }
+
+    public File doRun() throws Exception {
         final File input = getInput().get().getAsFile();
         final File output = ensureFileWorkspaceReady(getOutput());
         final File rejects = getRejectsFile().get().getAsFile();
@@ -72,6 +84,8 @@ public abstract class Patch extends DefaultRuntime {
             getProject().getLogger().error("Rejects saved to: {}", rejects);
             throw new RuntimeException("Patch failure.");
         }
+
+        return output;
     }
 
     @InputFile

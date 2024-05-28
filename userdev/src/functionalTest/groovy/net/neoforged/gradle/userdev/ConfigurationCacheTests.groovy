@@ -1,9 +1,8 @@
 package net.neoforged.gradle.userdev
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.jupiter.api.Disabled
-import spock.lang.Ignore
 
 class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
@@ -13,9 +12,9 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    def "build_supports_configuration_cache_build"() {
+    def "assemble_supports_configuration_cache_build"() {
         given:
-        def project = create("build_supports_configuration_cache_build", {
+        def project = create("assemble_supports_configuration_cache_build", {
             it.build("""
             java {
                 toolchain {
@@ -28,6 +27,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
             it.enableBuildScan()
@@ -35,11 +35,12 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('assemble') //We can't use build here. We configure tests for the newer Forge versions.
+            //Config cache does not support the Test class, yet.
         }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':assemble').outcome == TaskOutcome.SUCCESS
     }
 
     def "compile_supports_configuration_cache_build"() {
@@ -68,23 +69,27 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
         })
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('assemble')//We can't use build here. We configure tests for the newer Forge versions.
+            //Config cache does not support the Test class, yet.
         }
 
         and:
         def secondaryRun = project.run {
-            it.tasks('build')
+            it.tasks('assemble')//We can't use build here. We configure tests for the newer Forge versions.
+            //Config cache does not support the Test class, yet.
         }
 
         and:
         def thirdRun = project.run {
-            it.tasks('build')
+            it.tasks('assemble')//We can't use build here. We configure tests for the newer Forge versions.
+            //Config cache does not support the Test class, yet.
         }
 
         then:

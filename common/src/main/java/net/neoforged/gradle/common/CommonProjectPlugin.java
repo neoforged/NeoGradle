@@ -11,6 +11,7 @@ import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
+import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
@@ -59,6 +60,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
     public static final String ASSETS_SERVICE = "ng_assets";
     public static final String LIBRARIES_SERVICE = "ng_libraries";
+    public static final String EXECUTE_SERVICE = "ng_execute";
     public static final String ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION = "accessTransformerElements";
     public static final String ACCESS_TRANSFORMER_API_CONFIGURATION = "accessTransformerApi";
     public static final String ACCESS_TRANSFORMER_CONFIGURATION = "accessTransformer";
@@ -72,8 +74,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(JavaPlugin.class);
 
         //Register the services
-        CentralCacheService.register(project, ASSETS_SERVICE);
-        CentralCacheService.register(project, LIBRARIES_SERVICE);
+        CentralCacheService.register(project, ASSETS_SERVICE, true);
+        CentralCacheService.register(project, LIBRARIES_SERVICE, true);
+        CentralCacheService.register(project, EXECUTE_SERVICE, false);
 
         // Apply both the idea and eclipse IDE plugins
         project.getPluginManager().apply(IdeaPlugin.class);
@@ -136,8 +139,11 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         IdeRunIntegrationManager.getInstance().setup(project);
 
+        final TaskProvider<?> cleanCache = project.getTasks().register("cleanCache", CleanCache.class);
+
         project.getTasks().named("clean", Delete.class, delete -> {
             delete.delete(configurationData.getLocation());
+            delete.dependsOn(cleanCache);
         });
 
         //Needs to be before after evaluate

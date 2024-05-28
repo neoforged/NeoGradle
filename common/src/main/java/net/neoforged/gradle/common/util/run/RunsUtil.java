@@ -106,7 +106,7 @@ public class RunsUtil {
             if (runsConventions.getShouldDefaultTestTaskBeReused().get()) {
                 //Get the default test task
                 final TaskProvider<Test> testTask = project.getTasks().named("test", Test.class);
-                configureTestTAsk(project, testTask.get(), run);
+                configureTestTask(project, testTask, run);
                 return;
             }
         }
@@ -116,53 +116,53 @@ public class RunsUtil {
 
     private static void createNewTestTask(Project project, String name, RunImpl run) {
         //Create a test task for unit tests
-        TaskProvider<Test> newTestTask = project.getTasks().register(createTaskName("test", name), Test.class, testTask -> {
-            configureTestTAsk(project, testTask, run);
-        });
-
+        TaskProvider<Test> newTestTask = project.getTasks().register(createTaskName("test", name), Test.class);
+        configureTestTask(project, newTestTask, run);
         project.getTasks().named("check", check -> check.dependsOn(newTestTask));
     }
 
-    private static void configureTestTAsk(Project project, Test testTask, RunImpl run) {
-        addRunSourcesDependenciesToTask(testTask, run);
-        run.getTaskDependencies().forEach(testTask::dependsOn);
+    private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, RunImpl run) {
+        testTaskProvider.configure(testTask -> {
+            addRunSourcesDependenciesToTask(testTask, run);
+            run.getTaskDependencies().forEach(testTask::dependsOn);
 
-        testTask.setWorkingDir(run.getWorkingDirectory().get());
-        testTask.getSystemProperties().putAll(run.getSystemProperties().get());
+            testTask.setWorkingDir(run.getWorkingDirectory().get());
+            testTask.getSystemProperties().putAll(run.getSystemProperties().get());
 
-        testTask.useJUnitPlatform();
+            testTask.useJUnitPlatform();
 
-        testTask.setGroup("verification");
+            testTask.setGroup("verification");
 
-        File argsFile = new File(testTask.getWorkingDir(), "test_args.txt");
-        testTask.doFirst("writeArgs", task -> {
-            if (!testTask.getWorkingDir().exists()) {
-                testTask.getWorkingDir().mkdirs();
+            File argsFile = new File(testTask.getWorkingDir(), "test_args.txt");
+            testTask.doFirst("writeArgs", task -> {
+                if (!testTask.getWorkingDir().exists()) {
+                    testTask.getWorkingDir().mkdirs();
+                }
+                try {
+                    Files.write(argsFile.toPath(), run.getProgramArguments().get(), StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            testTask.systemProperty("fml.junit.argsfile", argsFile.getAbsolutePath());
+
+            testTask.getEnvironment().putAll(run.getEnvironmentVariables().get());
+            testTask.setJvmArgs(run.getJvmArguments().get());
+
+            final ConfigurableFileCollection testCP = project.files();
+            testCP.from(run.getDependencies().get().getRuntimeConfiguration());
+            Stream.concat(run.getModSources().get().stream(), run.getUnitTestSources().get().stream())
+                    .forEach(src -> testCP.from(filterOutput(src)));
+
+            testTask.setClasspath(testCP);
+
+            final ConfigurableFileCollection testClassesDirs = project.files();
+            for (SourceSet sourceSet : run.getUnitTestSources().get()) {
+                testClassesDirs.from(sourceSet.getOutput().getClassesDirs());
             }
-            try {
-                Files.write(argsFile.toPath(), run.getProgramArguments().get(), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
+            testTask.setTestClassesDirs(testClassesDirs);
         });
-        testTask.systemProperty("fml.junit.argsfile", argsFile.getAbsolutePath());
-
-        testTask.getEnvironment().putAll(run.getEnvironmentVariables().get());
-        testTask.setJvmArgs(run.getJvmArguments().get());
-
-        final ConfigurableFileCollection testCP = project.files();
-        testCP.from(run.getDependencies().get().getRuntimeConfiguration());
-        Stream.concat(run.getModSources().get().stream(), run.getUnitTestSources().get().stream())
-                .forEach(src -> testCP.from(filterOutput(src)));
-
-        testTask.setClasspath(testCP);
-
-        final ConfigurableFileCollection testClassesDirs = project.files();
-        for (SourceSet sourceSet : run.getUnitTestSources().get()) {
-            testClassesDirs.from(sourceSet.getOutput().getClassesDirs());
-        }
-
-        testTask.setTestClassesDirs(testClassesDirs);
     }
 
     private static FileCollection filterOutput(SourceSet srcSet) {

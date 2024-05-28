@@ -1,5 +1,7 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.util.FileUtils;
@@ -9,7 +11,9 @@ import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Nested;
@@ -43,12 +47,19 @@ public abstract class InjectZipContent extends DefaultRuntime {
 
     private final CacheableMinecraftVersion minimalSupportedVersion = CacheableMinecraftVersion.from("1.14.4", getProject());
 
-    @TaskAction
-    public void run() throws Exception {
-        final Provider<RegularFile> inputZipFile = getInjectionSource();
-        final File outputFile = ensureFileWorkspaceReady(getOutput());
+    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
+    public abstract Property<CentralCacheService> getCacheService();
 
-        injectCode(inputZipFile.get().getAsFile(), outputFile);
+    @TaskAction
+    public void run() throws Throwable {
+        getCacheService().get().doCached(this, () -> {
+            final Provider<RegularFile> inputZipFile = getInjectionSource();
+            final File outputFile = ensureFileWorkspaceReady(getOutput());
+
+            injectCode(inputZipFile.get().getAsFile(), outputFile);
+
+            return outputFile;
+        }, getOutput());
     }
 
     @InputFile

@@ -1,6 +1,6 @@
 package net.neoforged.gradle.userdev
 
-
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -44,6 +44,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -102,6 +103,7 @@ No dependencies
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:

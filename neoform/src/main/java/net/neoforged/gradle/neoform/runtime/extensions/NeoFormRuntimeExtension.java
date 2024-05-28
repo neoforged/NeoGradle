@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.runtime.tasks.Execute;
+import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.common.util.VersionJson;
@@ -188,7 +188,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         }
         decompilerArgs.add(0, "-log=" + logLevel);
 
-        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
+        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), DefaultExecute.class, task -> {
             task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
             task.getJvmArguments().addAll(jvmArgs);
             task.getProgramArguments().addAll(decompilerArgs);
@@ -211,7 +211,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
     }
 
     private TaskProvider<? extends Runtime> createExecute(final NeoFormRuntimeSpecification spec, final NeoFormConfigConfigurationSpecV1.Step step, final NeoFormConfigConfigurationSpecV1.Function function) {
-        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), Execute.class, task -> {
+        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), DefaultExecute.class, task -> {
             task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
             task.getJvmArguments().addAll(function.getJvmArgs());
             task.getProgramArguments().addAll(function.getArgs());
@@ -469,10 +469,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
 
                     task.getJavaVersion().set(JavaLanguageVersion.of(definition.getVersionJson().getJavaVersion().getMajorVersion()));
-
-                    for (Task dependency : recompileDependencies.getBuildDependencies().getDependencies(task)) {
-                        task.dependsOn(dependency);
-                    }
                 });
 
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
@@ -508,7 +504,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             return recompileInput;
         }
 
-        TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
+        TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), DefaultExecute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
             File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());

@@ -1,5 +1,6 @@
 package net.neoforged.gradle.userdev
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
@@ -27,6 +28,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -64,6 +66,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -107,6 +110,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -145,6 +149,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -183,6 +188,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -220,6 +226,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -260,6 +267,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -318,6 +326,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -339,8 +348,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
         initialRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
-
-
 
     def "a mod with userdev can have multiple sourcesets with neoforge"() {
         given:
@@ -388,6 +395,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:

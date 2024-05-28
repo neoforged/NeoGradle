@@ -47,7 +47,7 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
         setDidWork(didWork);
     }
     
-    protected void doDownloadVersionDownloadToCache(final String artifact, final String potentialError, File versionManifest) {
+    protected File doDownloadVersionDownloadToCache(final String artifact, final String potentialError, File versionManifest) {
         JsonObject json = SerializationUtils.fromJson(versionManifest, JsonObject.class);
 
         final JsonObject artifactInfo = json.getAsJsonObject("downloads").getAsJsonObject(artifact);
@@ -62,11 +62,12 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
             if (output.exists()) {
                 final String fileHash = HashFunction.SHA1.hash(output);
                 if (fileHash.equals(hash)) {
-                    return;
+                    return output;
                 }
             }
 
             FileDownloadingUtils.downloadTo(getIsOffline().get(), info, output);
+            return output;
         } catch (IOException e) {
             throw new RuntimeException(potentialError, e);
         }
