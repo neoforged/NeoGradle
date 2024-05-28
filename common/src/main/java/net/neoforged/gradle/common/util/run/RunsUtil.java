@@ -134,12 +134,13 @@ public class RunsUtil {
             testTask.setGroup("verification");
 
             File argsFile = new File(testTask.getWorkingDir(), "test_args.txt");
+            final ListProperty<String> programArguments = run.getProgramArguments();
             testTask.doFirst("writeArgs", task -> {
                 if (!testTask.getWorkingDir().exists()) {
                     testTask.getWorkingDir().mkdirs();
                 }
                 try {
-                    Files.write(argsFile.toPath(), run.getProgramArguments().get(), StandardCharsets.UTF_8);
+                    Files.write(argsFile.toPath(), programArguments.get(), StandardCharsets.UTF_8);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -168,9 +169,12 @@ public class RunsUtil {
     private static FileCollection filterOutput(SourceSet srcSet) {
         FileCollection collection = srcSet.getRuntimeClasspath();
         if (srcSet.getOutput().getResourcesDir() != null) {
-            collection = collection.filter(file -> !file.equals(srcSet.getOutput().getResourcesDir()));
+            final File resourcesDir = srcSet.getOutput().getResourcesDir();
+            collection = collection.filter(file -> !file.equals(resourcesDir));
         }
-        collection = collection.filter(file -> !srcSet.getOutput().getClassesDirs().contains(file));
+
+        FileCollection classesDirs = srcSet.getOutput().getClassesDirs();
+        collection = collection.filter(file -> !classesDirs.contains(file));
         return collection;
     }
 

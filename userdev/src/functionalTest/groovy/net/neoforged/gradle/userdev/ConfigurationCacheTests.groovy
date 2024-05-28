@@ -12,6 +12,11 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("build", "userdev")
+    }
+
     def "assemble_supports_configuration_cache_build"() {
         given:
         def project = create("assemble_supports_configuration_cache_build", {
@@ -35,12 +40,11 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('assemble') //We can't use build here. We configure tests for the newer Forge versions.
-            //Config cache does not support the Test class, yet.
+            it.tasks('build') 
         }
 
         then:
-        run.task(':assemble').outcome == TaskOutcome.SUCCESS
+        run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
     def "compile_supports_configuration_cache_build"() {
@@ -76,20 +80,17 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('assemble')//We can't use build here. We configure tests for the newer Forge versions.
-            //Config cache does not support the Test class, yet.
+            it.tasks('build')
         }
 
         and:
         def secondaryRun = project.run {
-            it.tasks('assemble')//We can't use build here. We configure tests for the newer Forge versions.
-            //Config cache does not support the Test class, yet.
+            it.tasks('build')
         }
 
         and:
         def thirdRun = project.run {
-            it.tasks('assemble')//We can't use build here. We configure tests for the newer Forge versions.
-            //Config cache does not support the Test class, yet.
+            it.tasks('build')
         }
 
         then:
