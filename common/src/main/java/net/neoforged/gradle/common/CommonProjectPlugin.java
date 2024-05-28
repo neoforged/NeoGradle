@@ -180,17 +180,22 @@ public class CommonProjectPlugin implements Plugin<Project> {
         }
 
         ProjectUtils.afterEvaluate(project, () -> {
-            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
-                if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
-                    //We always register main
-                    run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
-                }
+            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> {
+                runs.configureEach(run -> {
+                    if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+                        //We always register main
+                        run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
+                    }
 
-                if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get())
-                    run.getModSources().get().forEach(sourceSet -> {
-                        run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
-                    });
-            }));
+                    if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get()) {
+                        run.getModSources().get().forEach(sourceSet -> {
+                            if (project.getConfigurations().findByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())) != null) {
+                                run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
+                            }
+                        });
+                    }
+                });
+            });
         });
 
     }
