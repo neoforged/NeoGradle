@@ -23,7 +23,9 @@ import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.DevLogin;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Configurations;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
@@ -36,10 +38,7 @@ import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.StartParameter;
 import org.gradle.TaskExecutionRequest;
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
+import org.gradle.api.*;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.attributes.AttributeContainer;
@@ -47,6 +46,7 @@ import org.gradle.api.attributes.Category;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Delete;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.DefaultTaskExecutionRequest;
@@ -346,6 +346,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     }
                 }
 
+                if (run.getModSources().get().isEmpty()) {
+                    throw new GradleException("Run: " + run.getName() + " has no source sets configured. Please configure at least one source set.");
+                }
+
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
 
@@ -374,6 +378,28 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     definitionSet.forEach((identifier, definition) -> {
                         definition.configureRun(runImpl);
                     });
+
+                    //Handle dev login.
+                    final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
+                    final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
+                    if (devLogin.getEnabled().get()) {
+                        //Dev login is only supported on the client side
+                        if (runImpl.getIsClient().get()) {
+                            final String mainClass = runImpl.getMainClass().get();
+
+                            //We add the dev login tool to the runtime only configuration, of the first source set, this should suffice
+                            final SourceSet defaultSourceSet = runImpl.getModSources().get().get(0);
+                            final Configuration defaultRuntimeOnlyConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeOnlyConfigurationName());
+                            defaultRuntimeOnlyConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
+
+                            //Update the program arguments to properly launch the dev login tool
+                            run.getProgramArguments().add("--launch_target");
+                            run.getProgramArguments().add(mainClass);
+
+                            //Set the main class to the dev login tool
+                            run.getMainClass().set("net.covers1624.devlogin.DevLogin");
+                        }
+                    }
                 }
             }
         });

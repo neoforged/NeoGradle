@@ -13,11 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
 
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_ARTIFACT_PREFIX;
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_GROUP;
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_MAVEN_URL;
-import static net.neoforged.gradle.dsl.common.util.Constants.JST_TOOL_ARTIFACT;
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_RECOMPILER_MAX_MEMORY;
+import static net.neoforged.gradle.dsl.common.util.Constants.*;
 
 public abstract class SubsystemsExtension extends WithPropertyLookup implements ConfigurableDSLElement<Subsystems>, Subsystems {
 
@@ -33,12 +29,41 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         configureRecompilerDefaults();
         configureParchmentDefaults();
         configureToolsDefaults();
+        configureDevLoginDefaults();
+    }
+
+    private void configureDevLoginDefaults() {
+        DevLogin devLogin = getDevLogin();
+        devLogin.getEnabled().convention(
+                getBooleanProperty("devLogin.enabled").orElse(true)
+        );
+        devLogin.getAddRepository().convention(
+                getBooleanProperty("devLogin.addRepository").orElse(true)
+        );
+
+        // Add a filtered dev login repository automatically if enabled
+        project.afterEvaluate(p -> {
+            if (!devLogin.getEnabled().get() || !devLogin.getAddRepository().get()) {
+                return;
+            }
+            MavenArtifactRepository repo = p.getRepositories().maven(m -> {
+                m.setName("DevLogin Tool");
+                m.setUrl(URI.create(DEFAULT_DEVLOGIN_MAVEN_URL));
+                m.mavenContent(mavenContent -> mavenContent.includeGroup(DEFAULT_DEVLOGIN_GROUP));
+            });
+            // Make sure it comes first due to its filtered group, that should speed up resolution
+            p.getRepositories().remove(repo);
+            p.getRepositories().addFirst(repo);
+        });
     }
 
     private void configureToolsDefaults() {
         Tools tools = getTools();
         tools.getJST().convention(
                 getStringProperty("tools.jst").orElse(JST_TOOL_ARTIFACT)
+        );
+        tools.getDevLogin().convention(
+                getStringProperty("tools.devlogin").orElse(DEVLOGIN_TOOL_ARTIFACT)
         );
     }
 
