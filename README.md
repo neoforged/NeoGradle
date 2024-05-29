@@ -368,6 +368,7 @@ More information on the relevant tool, its released version and documentation ca
 
 ## DevLogin
 The DevLogin tool is a tool that allows you to log in to a Minecraft account without having to use the Minecraft launcher, during development.
+By default, it will use the credentials stored by the vanilla launcher, however if you are not logged in there, it will offer you the ability to log in directly from the console.
 This tool is used by the runs subsystem to enable logged in plays on all client runs.
 The tool can be configured using the following properties:
 ```properties
@@ -390,6 +391,12 @@ By default, the dev login tool is disabled, and can only be enabled for client r
 
 > [!WARNING]
 > If you enable the dev login tool for a non-client run, you will get an error message.
+
+If you want to enable the dev login tool for all client runs, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.devLogin.conventionForRun=true
+```
+This will enable the dev login tool for all client runs, unless explicitly disabled.
 
 ### Configurations
 To add the dev login tool to your run we create a custom configuration to which we add the dev login tool.

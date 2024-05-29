@@ -36,4 +36,12 @@ interface DevLogin extends ConfigurableDSLElement<DevLogin> {
     @Optional
     @DSLProperty
     Property<String> getConfigurationSuffix()
+
+    /**
+     * @return The default usage flag state for runs. This is by default false (meaning the dev login configuration is not used by default), setting this to true will make all clients use dev login by default.
+     */
+    @Input
+    @Optional
+    @DSLProperty
+    Property<Boolean> getConventionForRun()
 }

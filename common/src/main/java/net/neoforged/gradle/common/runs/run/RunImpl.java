@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
@@ -61,7 +62,10 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         
         getWorkingDirectory().convention(project.getLayout().getProjectDirectory().dir("runs").dir(getName()));
 
-        getUseDevLogin().convention(false);
+        getUseDevLogin().convention(
+                project.getExtensions().getByType(Subsystems.class).getDevLogin().getConventionForRun()
+                        .zip(getIsClient(), (devLogin, isClient) -> devLogin && isClient)
+        );
     }
 
     @Override
