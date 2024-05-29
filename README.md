@@ -335,7 +335,6 @@ By default, the import in IDEA is run during the sync task.
 If you want to disable this, and use a post sync task, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.ide.idea.use-post-sync-task=true
-
 ```
 
 ### Runs
@@ -365,6 +364,7 @@ The following properties can be used to configure the DevLogin tool:
 ```properties
 neogradle.subsystems.tools.devLogin=<artifact coordinate for devlogin cli tool>
 ```
+More information on the relevant tool, its released version and documentation can be found here: [DevLogin by Covers1624](https://github.com/covers1624/DevLogin)
 
 ## DevLogin
 The DevLogin tool is a tool that allows you to log in to a Minecraft account without having to use the Minecraft launcher, during development.

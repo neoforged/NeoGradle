@@ -61,7 +61,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         
         getWorkingDirectory().convention(project.getLayout().getProjectDirectory().dir("runs").dir(getName()));
 
-        getShouldUseDevLogin().convention(false);
+        getUseDevLogin().convention(false);
     }
 
     @Override

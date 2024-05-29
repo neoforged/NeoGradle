@@ -347,7 +347,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 }
 
                 if (run.getModSources().get().isEmpty()) {
-                    throw new GradleException("Run: " + run.getName() + " has no source sets configured. Please configure at least one source set.");
+                    throw new InvalidUserDataException("Run: " + run.getName() + " has no source sets configured. Please configure at least one source set.");
                 }
 
                 if (run.getConfigureFromDependencies().get()) {
@@ -384,7 +384,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
                     if (devLogin.getEnabled().get()) {
                         //Dev login is only supported on the client side
-                        if (runImpl.getIsClient().get() && runImpl.getShouldUseDevLogin().get()) {
+                        if (runImpl.getIsClient().get() && runImpl.getUseDevLogin().get()) {
                             final String mainClass = runImpl.getMainClass().get();
 
                             //We add the dev login tool to the runtime only configuration, of the first source set, this should suffice
@@ -397,9 +397,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
                             run.getProgramArguments().add(mainClass);
 
                             //Set the main class to the dev login tool
-                            run.getMainClass().set("net.covers1624.devlogin.DevLogin");
-                        } else if (!runImpl.getIsClient().get() && runImpl.getShouldUseDevLogin().get()) {
-                            throw new GradleException("Dev login is only supported on runs which are marked as clients! The run: " + runImpl.getName() + " is not a client run.");
+                            run.getMainClass().set(devLogin.getMainClass());
+                        } else if (!runImpl.getIsClient().get() && runImpl.getUseDevLogin().get()) {
+                            throw new InvalidUserDataException("Dev login is only supported on runs which are marked as clients! The run: " + runImpl.getName() + " is not a client run.");
                         }
                     }
                 }

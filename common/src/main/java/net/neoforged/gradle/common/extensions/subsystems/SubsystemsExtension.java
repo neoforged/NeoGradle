@@ -40,6 +40,9 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         devLogin.getAddRepository().convention(
                 getBooleanProperty("devLogin.addRepository").orElse(true)
         );
+        devLogin.getMainClass().convention(
+                getStringProperty("devLogin.mainClass").orElse(DEVLOGIN_MAIN_CLASS)
+        );
 
         // Add a filtered dev login repository automatically if enabled
         project.afterEvaluate(p -> {

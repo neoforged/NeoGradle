@@ -1,6 +1,6 @@
 package net.neoforged.gradle.dsl.common.runs.run
 
-import groovy.cli.Option
+
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
@@ -165,7 +165,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Input
     @DSLProperty
     @Optional
-    abstract Property<Boolean> getShouldUseDevLogin();
+    abstract Property<Boolean> getUseDevLogin();
 
     /**
      * Defines the source sets that are used as a mod.
