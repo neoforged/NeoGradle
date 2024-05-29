@@ -359,7 +359,7 @@ The following properties can be used to configure the JST tool:
 neogradle.subsystems.tools.jst=<artifact coordinate for jst cli tool>
 ```
 ### DevLogin
-This tool is used by the runs subsystem to enable logged in plays on all client runs.
+This tool is used by the runs subsystem to enable Minecraft authentication in client runs.
 The following properties can be used to configure the DevLogin tool:
 ```properties
 neogradle.subsystems.tools.devLogin=<artifact coordinate for devlogin cli tool>
@@ -373,22 +373,15 @@ The tool can be configured using the following properties:
 ```properties
 neogradle.subsystems.devLogin.enabled=<true/false>
 ```
-By default, the subsystem is enabled, and it will ask you to log in when you run a client run.
-If you want to disable this, you can set the property to false, and then you will not be asked to log in, but use a random none signed in dev account.
-
-Additionally, you can configure whether to add the relevant repositories to your buildscript:
-```properties
-neogradle.subsystems.devLogin.addRepositories=<true/false>
-``` 
-By default, the repositories are added, but if you want to disable this, you can set the property to false.
-By doing so you are responsible for adding a maven repository that provides the dev login CLI artifact.
+By default, the subsystem is enabled, and it will prepare everything for you to log in to a Minecraft account, however you will still need to enable it on the runs you want.
+If you want to disable this you can set the property to false, and then you will not be asked to log in, but use a random non-signed in dev account.
 
 ### Per run configuration
 If you want to configure the dev login tool per run, you can do so by setting the following properties in your run configuration:
 ```groovy
 runs {
     someRun {
-        shouldUseDevLogin true
+        useDevLogin true
     }
 }
 ```
@@ -396,7 +389,17 @@ This will enable the dev login tool for this run.
 By default, the dev login tool is disabled, and can only be enabled for client runs.
 
 > [!WARNING]
-> If you enable the dev login tool for a none client run, you will get an error message.
+> If you enable the dev login tool for a non-client run, you will get an error message.
+
+### Configurations
+To add the dev login tool to your run we create a custom configuration to which we add the dev login tool.
+This configuration is created for the first source-set you register with the run as a mod source set.
+The suffix for the configuration can be configured to your personal preference, by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.devLogin.configurationSuffix=<suffix>
+```
+By default, the suffix is set to "DevLoginLocalOnly".
+We use this approach to create a runtime only configuration, that does not leak to other consumers of your project.
 
 ## Centralized Cache
 NeoGradle has a centralized cache that can be used to store the decompiled Minecraft sources, the recompiled Minecraft sources, and other task outputs of complex tasks.
@@ -410,8 +413,8 @@ You can clean the artifacts that are stored in the cache by running the followin
 ./gradlew cleanCache
 ```
 
-This command is also automatically ran, when you run the clean task.
-The command will check if the stored artifact count is higher than the configured threshold, and if so remove the oldest artifacts until the count is below the threshold.
+This command is also automatically run, when you run the clean task.
+The command will check if the stored artifact count is higher than the configured threshold, and if so, remove the oldest artifacts until the count is below the threshold.
 The count is configured by the following property in your gradle.properties:
 ```properties
 net.neoforged.gradle.caching.maxCacheSize=<number>

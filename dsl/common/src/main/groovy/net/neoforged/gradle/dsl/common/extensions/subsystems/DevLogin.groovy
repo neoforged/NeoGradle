@@ -28,4 +28,12 @@ interface DevLogin extends ConfigurableDSLElement<DevLogin> {
     @Optional
     @DSLProperty
     Property<String> getMainClass();
+
+    /**
+     * @return The suffix for the configuration name to use when adding the dev login configuration.
+     */
+    @Input
+    @Optional
+    @DSLProperty
+    Property<String> getConfigurationSuffix()
 }

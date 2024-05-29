@@ -40,6 +40,9 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         devLogin.getMainClass().convention(
                 getStringProperty("devLogin.mainClass").orElse(DEVLOGIN_MAIN_CLASS)
         );
+        devLogin.getConfigurationSuffix().convention(
+                getStringProperty("devLogin.configurationSuffix").orElse("DevLoginLocalOnly")
+        );
     }
 
     private void configureToolsDefaults() {

@@ -387,10 +387,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
                         if (runImpl.getIsClient().get() && runImpl.getUseDevLogin().get()) {
                             final String mainClass = runImpl.getMainClass().get();
 
-                            //We add the dev login tool to the runtime only configuration, of the first source set, this should suffice
+                            //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
                             final SourceSet defaultSourceSet = runImpl.getModSources().get().get(0);
-                            final Configuration defaultRuntimeOnlyConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeOnlyConfigurationName());
-                            defaultRuntimeOnlyConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
+                            final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
+                            final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
+                            final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
+
+                            sourceSetRuntimeClasspathConfiguration.extendsFrom(sourceSetRuntimeOnlyDevLoginConfiguration);
+                            sourceSetRuntimeOnlyDevLoginConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
 
                             //Update the program arguments to properly launch the dev login tool
                             run.getProgramArguments().add("--launch_target");
