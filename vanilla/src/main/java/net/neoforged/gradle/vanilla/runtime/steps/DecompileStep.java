@@ -3,7 +3,7 @@ package net.neoforged.gradle.vanilla.runtime.steps;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.DecompileUtils;
-import net.neoforged.gradle.common.runtime.tasks.Execute;
+import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -24,7 +24,7 @@ public class DecompileStep implements IStep {
     public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull File workingDirectory, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
         final VanillaRuntimeExtension vanillaRuntimeExtension = definition.getSpecification().getProject().getExtensions().getByType(VanillaRuntimeExtension.class);
 
-        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "decompile"), Execute.class, task -> {
+        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "decompile"), DefaultExecute.class, task -> {
             final String decompiler = vanillaRuntimeExtension.getVineFlowerVersion().map(version -> String.format(Constants.VINEFLOWER_ARTIFACT_INTERPOLATION, version)).get();
             
             task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), decompiler));

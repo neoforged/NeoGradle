@@ -1,9 +1,8 @@
 package net.neoforged.gradle.userdev
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.jupiter.api.Disabled
-import spock.lang.Ignore
 
 class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
@@ -13,10 +12,14 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    @Ignore
-    def "apply_supports_configuration_cache_build"() {
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("build", "userdev")
+    }
+
+    def "assemble_supports_configuration_cache_build"() {
         given:
-        def project = create("apply_supports_configuration_cache_build", {
+        def project = create("assemble_supports_configuration_cache_build", {
             it.build("""
             java {
                 toolchain {
@@ -29,6 +32,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
             it.enableBuildScan()
@@ -36,14 +40,13 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('build') 
         }
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
 
-    @Ignore
     def "compile_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {
@@ -70,6 +73,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
         })
@@ -84,11 +88,16 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             it.tasks('build')
         }
 
+        and:
+        def thirdRun = project.run {
+            it.tasks('build')
+        }
+
         then:
-        secondaryRun.output.contains('Reusing configuration cache.')
+        thirdRun.output.contains('Reusing configuration cache.')
         run.task(':neoFormDecompile').outcome == TaskOutcome.SUCCESS
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
-        secondaryRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
-        secondaryRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
+        thirdRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
+        thirdRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 }

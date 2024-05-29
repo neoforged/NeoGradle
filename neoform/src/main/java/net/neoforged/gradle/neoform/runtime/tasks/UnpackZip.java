@@ -2,6 +2,7 @@ package net.neoforged.gradle.neoform.runtime.tasks;
 
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
@@ -23,18 +24,15 @@ public abstract class UnpackZip extends DefaultRuntime {
     }
 
     @TaskAction
-    public void doTask() throws IOException {
+    public void doTask() {
         final File output = ensureFileWorkspaceReady(getUnpackingTarget().getAsFile().get());
-        final File input = getInputZip().getAsFile().get();
-
-        final FileTree source = getProject().zipTree(input);
         final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(output);
-        source.visit(visitor);
+        getInput().getAsFileTree().visit(visitor);
     }
 
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
-    public abstract RegularFileProperty getInputZip();
+    public abstract ConfigurableFileCollection getInput();
 
     @OutputDirectory
     public abstract DirectoryProperty getUnpackingTarget();

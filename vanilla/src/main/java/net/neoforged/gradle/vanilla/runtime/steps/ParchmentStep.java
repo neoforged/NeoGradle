@@ -1,7 +1,7 @@
 package net.neoforged.gradle.vanilla.runtime.steps;
 
 import com.google.common.collect.Maps;
-import net.neoforged.gradle.common.runtime.tasks.Execute;
+import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.NoopRuntime;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Parchment;
@@ -53,7 +53,7 @@ public class ParchmentStep implements IStep {
             });
         }
 
-        return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), Execute.class, task -> {
+        return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), DefaultExecute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
             File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());

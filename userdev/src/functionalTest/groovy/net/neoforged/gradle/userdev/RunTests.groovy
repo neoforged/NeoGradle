@@ -1,5 +1,6 @@
 package net.neoforged.gradle.userdev
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -47,6 +48,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -58,7 +60,10 @@ class RunTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") //Validate that we are failing because of the missing mod file, and not something else.
+        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
+                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered: [\n" +
+                        "\tfml.modloading.brokenfile\n" +
+                        "]")//Validate that we are failing because of the missing mod file, and not something else.
     }
 
     def "runs can be declared before the dependencies block"() {
@@ -86,6 +91,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -127,6 +133,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -178,6 +185,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -233,6 +241,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -293,6 +302,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:

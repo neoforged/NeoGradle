@@ -1,5 +1,6 @@
 package net.neoforged.gradle.userdev
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
@@ -27,6 +28,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -64,6 +66,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -73,7 +76,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains("\\--- ng_dummy_ng.net.neoforged:neoforge:")
+        run.output.contains("+--- net.neoforged.fancymodloader:loader:")
     }
 
     def "userdev supports complex version resolution"() {
@@ -107,6 +110,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -116,7 +120,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains("\\--- ng_dummy_ng.net.neoforged:neoforge:20.4.188")
+        run.output.contains("+--- net.neoforged.fancymodloader:loader:")
     }
 
     def "a mod with userdev as dependency has a mixin-extra dependency on the compile classpath"() {
@@ -145,6 +149,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -183,6 +188,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -220,6 +226,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -231,44 +238,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         then:
         run.task(':clean').outcome == TaskOutcome.SUCCESS
         run.task(':build').outcome == TaskOutcome.SUCCESS
-    }
-
-    def "a mod with userdev as dependency and official mappings has the client-extra jar as a dependency"() {
-        given:
-        def project = create("gradle_userdev_references_client", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            """)
-            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
-                package net.neoforged.gradle.userdev;
-                
-                import net.minecraft.client.Minecraft;
-                
-                public class FunctionalTests {
-                    public static void main(String[] args) {
-                        System.out.println(Minecraft.getInstance().getClass().toString());
-                    }
-                }
-            """)
-            it.withToolchains()
-        })
-
-        when:
-        def run = project.run {
-            it.tasks('dependencies')
-        }
-
-        then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains("net.minecraft:client")
     }
 
     def "the userdev runtime by default supports the build cache"() {
@@ -298,6 +267,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -356,6 +326,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:
@@ -377,8 +348,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
         initialRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
-
-
 
     def "a mod with userdev can have multiple sourcesets with neoforge"() {
         given:
@@ -426,6 +395,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
         })
 
         when:

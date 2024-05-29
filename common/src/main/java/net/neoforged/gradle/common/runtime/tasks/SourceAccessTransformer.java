@@ -3,7 +3,6 @@ package net.neoforged.gradle.common.runtime.tasks;
 import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
-import net.neoforged.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -13,13 +12,12 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 import java.io.File;
 import java.util.List;
 
 @CacheableTask
-public abstract class SourceAccessTransformer extends Execute {
+public abstract class SourceAccessTransformer extends DefaultExecute {
 
     public SourceAccessTransformer() {
         super();
