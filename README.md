@@ -388,11 +388,12 @@ If you want to configure the dev login tool per run, you can do so by setting th
 ```groovy
 runs {
     someRun {
-        shouldUseDevLogin false
+        shouldUseDevLogin true
     }
 }
 ```
-This will disable the dev login tool for this run. By default, the dev login tool is disable, and can only be enabled for client runs.
+This will enable the dev login tool for this run. 
+By default, the dev login tool is disabled, and can only be enabled for client runs.
 
 > [!WARNING]
 > If you enable the dev login tool for a none client run, you will get an error message.
