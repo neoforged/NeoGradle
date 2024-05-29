@@ -1,5 +1,6 @@
 package net.neoforged.gradle.dsl.common.runs.run
 
+import groovy.cli.Option
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
@@ -155,6 +156,16 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @DSLProperty
     @Optional
     abstract Property<Boolean> getIsGameTest();
+
+    /**
+     * Indicates if this run should use the dev login.
+     *
+     * @return {@code true} if this run uses dev login; otherwise, {@code false}.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    abstract Property<Boolean> getShouldUseDevLogin();
 
     /**
      * Defines the source sets that are used as a mod.

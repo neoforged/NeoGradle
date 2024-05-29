@@ -383,6 +383,20 @@ neogradle.subsystems.devLogin.addRepositories=<true/false>
 By default, the repositories are added, but if you want to disable this, you can set the property to false.
 By doing so you are responsible for adding a maven repository that provides the dev login CLI artifact.
 
+### Per run configuration
+If you want to configure the dev login tool per run, you can do so by setting the following properties in your run configuration:
+```groovy
+runs {
+    someRun {
+        shouldUseDevLogin false
+    }
+}
+```
+This will disable the dev login tool for this run. By default, the dev login tool is enabled for all client runs.
+
+> [!WARNING]
+> If you enable the dev login tool for a none client run, you will get an error message.
+
 ## Centralized Cache
 NeoGradle has a centralized cache that can be used to store the decompiled Minecraft sources, the recompiled Minecraft sources, and other task outputs of complex tasks.
 The cache is enabled by default, and can be disabled by setting the following property in your gradle.properties:
