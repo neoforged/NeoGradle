@@ -359,3 +359,57 @@ The following properties can be used to configure the JST tool:
 ```properties
 neogradle.subsystems.tools.jst=<artifact coordinate for jst cli tool>
 ```
+### DevLogin
+This tool is used by the runs subsystem to enable logged in plays on all client runs.
+The following properties can be used to configure the DevLogin tool:
+```properties
+neogradle.subsystems.tools.devLogin=<artifact coordinate for devlogin cli tool>
+```
+
+## DevLogin
+The DevLogin tool is a tool that allows you to log in to a Minecraft account without having to use the Minecraft launcher, during development.
+This tool is used by the runs subsystem to enable logged in plays on all client runs.
+The tool can be configured using the following properties:
+```properties
+neogradle.subsystems.devLogin.enabled=<true/false>
+```
+By default, the subsystem is enabled, and it will ask you to log in when you run a client run.
+If you want to disable this, you can set the property to false, and then you will not be asked to log in, but use a random none signed in dev account.
+
+Additionally, you can configure whether to add the relevant repositories to your buildscript:
+```properties
+neogradle.subsystems.devLogin.addRepositories=<true/false>
+``` 
+By default, the repositories are added, but if you want to disable this, you can set the property to false.
+By doing so you are responsible for adding a maven repository that provides the dev login CLI artifact.
+
+## Centralized Cache
+NeoGradle has a centralized cache that can be used to store the decompiled Minecraft sources, the recompiled Minecraft sources, and other task outputs of complex tasks.
+The cache is enabled by default, and can be disabled by setting the following property in your gradle.properties:
+```properties
+net.neoforged.gradle.caching.enabled=false
+```
+
+You can clean the artifacts that are stored in the cache by running the following command:
+```shell
+./gradlew cleanCache
+```
+
+This command is also automatically ran, when you run the clean task.
+The command will check if the stored artifact count is higher than the configured threshold, and if so remove the oldest artifacts until the count is below the threshold.
+The count is configured by the following property in your gradle.properties:
+```properties
+net.neoforged.gradle.caching.maxCacheSize=<number>
+```
+
+### Debugging
+There are two properties you can tweak to get more information about the cache:
+```properties
+net.neoforged.gradle.caching.logCacheHits=<true/false>
+```
+and
+```properties
+net.neoforged.gradle.caching.debug=<true/false>
+```
+The first property will log when a cache hit occurs, and the second property will log more information about the cache in general, including how hashes are calculated.
+If you are experiencing issues with the cache, you can enable these properties to get more information about what is happening.

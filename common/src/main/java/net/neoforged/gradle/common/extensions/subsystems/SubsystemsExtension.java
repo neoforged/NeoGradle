@@ -63,7 +63,7 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
                 getStringProperty("tools.jst").orElse(JST_TOOL_ARTIFACT)
         );
         tools.getDevLogin().convention(
-                getStringProperty("tools.devlogin").orElse(DEVLOGIN_TOOL_ARTIFACT)
+                getStringProperty("tools.devLogin").orElse(DEVLOGIN_TOOL_ARTIFACT)
         );
     }
 
