@@ -37,27 +37,9 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         devLogin.getEnabled().convention(
                 getBooleanProperty("devLogin.enabled").orElse(true)
         );
-        devLogin.getAddRepository().convention(
-                getBooleanProperty("devLogin.addRepository").orElse(true)
-        );
         devLogin.getMainClass().convention(
                 getStringProperty("devLogin.mainClass").orElse(DEVLOGIN_MAIN_CLASS)
         );
-
-        // Add a filtered dev login repository automatically if enabled
-        project.afterEvaluate(p -> {
-            if (!devLogin.getEnabled().get() || !devLogin.getAddRepository().get()) {
-                return;
-            }
-            MavenArtifactRepository repo = p.getRepositories().maven(m -> {
-                m.setName("DevLogin Tool");
-                m.setUrl(URI.create(DEFAULT_DEVLOGIN_MAVEN_URL));
-                m.mavenContent(mavenContent -> mavenContent.includeGroup(DEFAULT_DEVLOGIN_GROUP));
-            });
-            // Make sure it comes first due to its filtered group, that should speed up resolution
-            p.getRepositories().remove(repo);
-            p.getRepositories().addFirst(repo);
-        });
     }
 
     private void configureToolsDefaults() {

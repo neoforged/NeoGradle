@@ -22,14 +22,6 @@ interface DevLogin extends ConfigurableDSLElement<DevLogin> {
     Property<Boolean> getEnabled();
 
     /**
-     * @return Whether or not to add the dev login repository to the project.
-     */
-    @Input
-    @Optional
-    @DSLProperty
-    Property<Boolean> getAddRepository();
-
-    /**
      * @return The main class to use when launching the game through dev login.
      */
     @Input
