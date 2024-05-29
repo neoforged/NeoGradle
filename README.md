@@ -392,7 +392,7 @@ runs {
     }
 }
 ```
-This will disable the dev login tool for this run. By default, the dev login tool is enabled for all client runs.
+This will disable the dev login tool for this run. By default, the dev login tool is disable, and can only be enabled for client runs.
 
 > [!WARNING]
 > If you enable the dev login tool for a none client run, you will get an error message.
