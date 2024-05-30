@@ -368,7 +368,8 @@ More information on the relevant tool, its released version and documentation ca
 
 ## DevLogin
 The DevLogin tool is a tool that allows you to log in to a Minecraft account without having to use the Minecraft launcher, during development.
-By default, it will use the credentials stored by the vanilla launcher, however if you are not logged in there, it will offer you the ability to log in directly from the console.
+During first start it will show you a link to log in to your Minecraft account, and then you can use the tool to log in to your account.
+The credentials are cached on your local machine, and then reused for future logins, so that re-logging is only needed when the tokens expire.
 This tool is used by the runs subsystem to enable logged in plays on all client runs.
 The tool can be configured using the following properties:
 ```properties
