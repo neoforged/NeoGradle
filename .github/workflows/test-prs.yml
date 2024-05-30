@@ -62,7 +62,7 @@ jobs:
         run: ./gradlew --info -s -x assemble
 
   test:
-    name: "${{ matrix.test }} (${{ matrix.os }})"
+    name: "${{ matrix.test.displayName }} (${{ matrix.os }})"
     runs-on: "${{ matrix.os }}-latest"
     needs: setup
     strategy:
@@ -84,10 +84,15 @@ jobs:
           distribution: 'microsoft'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Test
-        run: ./gradlew --info -s ${{ matrix.test }}
+        if: ${{ matrix.test.filter != null }}
+        run: ./gradlew --info -s ${{ matrix.test.path }} --tests "${{ matrix.test.filter }}"
+
+      - name: Test
+        if: ${{ matrix.test.filter == null }}
+        run: ./gradlew --info -s ${{ matrix.test.path }}
 
       # Always upload test results
       - name: Merge Test Reports
