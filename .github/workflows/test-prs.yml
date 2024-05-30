@@ -111,7 +111,7 @@ jobs:
           # Check if the GITHUB_OUTPUT is set
           if ([string]::IsNullOrEmpty($env:GITHUB_OUTPUT)) {
             # We do not have github output, then use the set output command
-            Write-Output "::set-output name=artifact-name::$NAME"
+            Write-Output "::set-output name=artifact-name::$NAME-${{ matrix.os }}"
             exit
           }
           Add-Content -Path $env:GITHUB_OUTPUT -Value "artifact-name=$NAME-${{ matrix.os }}"
@@ -127,7 +127,7 @@ jobs:
           # Check if the GITHUB_OUTPUT is set
           if [ -z "$GITHUB_OUTPUT" ]; then
             # We do not have github output, then use the set output command
-            echo "::set-output name=artifact-name::$NAME"
+            echo "::set-output name=artifact-name::$NAME-${{ matrix.os }}"
             exit 0
           fi
           echo "artifact-name=$NAME-${{ matrix.os }}" >> "$GITHUB_OUTPUT"
