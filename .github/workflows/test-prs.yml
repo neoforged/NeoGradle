@@ -100,7 +100,24 @@ jobs:
         run: npx junit-report-merger junit.xml "**/TEST-*.xml"
 
       - name: Format test run name as artifact name
-        if: success() || failure()
+        if: (success() || failure()) &&  runner.os == 'Windows'
+        id: format-artifact-name
+        # Use the GITHUB_OUTPUT mechanic to set the output variable
+        run: |
+          # We need to remove all invalid characters from the test name:
+          # Invalid characters include:  Double quote ", Colon :, Less than <, Greater than >, Vertical bar |, Asterisk *, Question mark ?, Carriage return \r, Line feed \n, Backslash \, Forward slash /
+          $NAME = "${{ matrix.test.displayName }}" -replace '[":<>|*?\\/]', '-' -replace ' ', ''
+          
+          # Check if the GITHUB_OUTPUT is set
+          if ([string]::IsNullOrEmpty($env:GITHUB_OUTPUT)) {
+            # We do not have github output, then use the set output command
+            Write-Output "::set-output name=artifact-name::$NAME"
+            exit
+          }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "artifact-name=$NAME-${{ matrix.os }}"
+
+      - name: Format test run name as artifact name
+        if: (success() || failure()) &&  runner.os != 'Windows'
         id: format-artifact-name
         # Use the GITHUB_OUTPUT mechanic to set the output variable
         run: |
