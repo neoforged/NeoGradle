@@ -62,14 +62,14 @@ jobs:
         run: ./gradlew --info -s -x assemble
 
   test:
-    name: Test
-    runs-on: ${{ matrix.os }}
+    name: "${{ matrix.test }} (${{ matrix.os }})"
+    runs-on: "${{ matrix.os }}-latest"
     needs: setup
     strategy:
       fail-fast: false
       matrix:
         test: ${{ fromJSON(needs.setup.outputs.tests-to-run) }}
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu, windows, macos]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -103,14 +103,13 @@ jobs:
           # The other case is complexer, again we replace the : with a - and strip the leading - but now we also remove the '  --tests ' part
           # Remove the '"' from the string and replace the '.' with a '-' 
           NAME=$(echo "${{ matrix.test }}" | sed 's/:/-/g' | sed 's/^-//' | sed 's/  --tests /-/g' | sed 's/"//g' | sed 's/\./-/g')        
-          OS_NAME=$(echo "${{ runner.os }}" | sed 's/-latest//g')
           # Check if the GITHUB_OUTPUT is set
           if [ -z "$GITHUB_OUTPUT" ]; then
             # We do not have github output, then use the set output command
             echo "::set-output name=artifact-name::$NAME"
             exit 0
           fi
-          echo "artifact-name=$NAME-$OS_NAME" >> "$GITHUB_OUTPUT"
+          echo "artifact-name=$NAME-${{ matrix.os }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         if: success() || failure()
