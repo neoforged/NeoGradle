@@ -383,7 +383,9 @@ If you want to configure the dev login tool per run, you can do so by setting th
 ```groovy
 runs {
     someRun {
-        useDevLogin true
+        devLogin {
+            enabled true
+        }
     }
 }
 ```
@@ -398,6 +400,18 @@ If you want to enable the dev login tool for all client runs, you can set the fo
 neogradle.subsystems.devLogin.conventionForRun=true
 ```
 This will enable the dev login tool for all client runs, unless explicitly disabled.
+
+Additionally, it is possible to use a different user profile for the dev login tool, by setting the following property in your run configuration:
+```groovy
+runs {
+    someRun {
+        devLogin {
+            profile '<profile>'
+        }
+    }
+}
+```
+If it is not set then the default profile will be used. See the DevLogin documentation for more information on profiles: [DevLogin by Covers1624](https://github.com/covers1624/DevLogin/blob/main/README.md#multiple-accounts)
 
 ### Configurations
 To add the dev login tool to your run we create a custom configuration to which we add the dev login tool.

@@ -32,6 +32,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunDevLogin;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
@@ -130,9 +131,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 project.getObjects().domainObjectContainer(RunType.class, name -> project.getObjects().newInstance(RunType.class, name))
         );
 
+        final NamedDomainObjectContainer<Run> runs = project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name));
         project.getExtensions().add(
                 RunsConstants.Extensions.RUNS,
-                project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name))
+                runs
         );
 
         setupAccessTransformerConfigurations(project, accessTransformers);
@@ -148,6 +150,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         //Needs to be before after evaluate
         configureConventions(project);
+
+        final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
+        if (devLogin.getEnabled().get()) {
+            runs.configureEach(run -> {
+                final RunDevLogin runsDevLogin = run.getExtensions().create("devLogin", RunDevLogin.class);
+                runsDevLogin.getIsEnabled().convention(devLogin.getConventionForRun());
+            });
+        }
 
         project.afterEvaluate(this::applyAfterEvaluate);
     }
@@ -383,8 +393,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
                     final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
                     if (devLogin.getEnabled().get()) {
+                        final RunDevLogin runsDevLogin = runImpl.getExtensions().getByType(RunDevLogin.class);
+
                         //Dev login is only supported on the client side
-                        if (runImpl.getIsClient().get() && runImpl.getUseDevLogin().get()) {
+                        if (runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
                             final String mainClass = runImpl.getMainClass().get();
 
                             //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
@@ -400,9 +412,14 @@ public class CommonProjectPlugin implements Plugin<Project> {
                             run.getProgramArguments().add("--launch_target");
                             run.getProgramArguments().add(mainClass);
 
+                            if (runsDevLogin.getProfile().isPresent()) {
+                                run.getProgramArguments().add("--launch_profile");
+                                run.getProgramArguments().add(runsDevLogin.getProfile().get());
+                            }
+
                             //Set the main class to the dev login tool
                             run.getMainClass().set(devLogin.getMainClass());
-                        } else if (!runImpl.getIsClient().get() && runImpl.getUseDevLogin().get()) {
+                        } else if (!runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
                             throw new InvalidUserDataException("Dev login is only supported on runs which are marked as clients! The run: " + runImpl.getName() + " is not a client run.");
                         }
                     }

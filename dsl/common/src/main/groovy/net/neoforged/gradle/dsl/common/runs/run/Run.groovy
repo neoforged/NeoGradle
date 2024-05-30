@@ -158,16 +158,6 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Property<Boolean> getIsGameTest();
 
     /**
-     * Indicates if this run should use the dev login.
-     *
-     * @return {@code true} if this run uses dev login; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty
-    @Optional
-    abstract Property<Boolean> getUseDevLogin();
-
-    /**
      * Defines the source sets that are used as a mod.
      * <p>
      * For changing the mod identifier a source set belongs to see
@@ -241,7 +231,6 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @DSLProperty
     @Optional
     abstract Property<Boolean> getConfigureFromDependencies();
-
 
     /**
      * Configures the run using the settings of the associated run type.
