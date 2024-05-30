@@ -109,6 +109,7 @@ jobs:
           $NAME = "${{ matrix.test.displayName }}" -replace '[":<>|*?\\/]', '-' -replace ' ', ''
           
           # Check if the GITHUB_OUTPUT is set
+          Write-Output "Determined name to be $NAME-${{ matrix.os }}"
           if ([string]::IsNullOrEmpty($env:GITHUB_OUTPUT)) {
             # We do not have github output, then use the set output command
             Write-Output "::set-output name=artifact-name::$NAME-${{ matrix.os }}"
@@ -125,6 +126,7 @@ jobs:
           # Invalid characters include:  Double quote ", Colon :, Less than <, Greater than >, Vertical bar |, Asterisk *, Question mark ?, Carriage return \r, Line feed \n, Backslash \, Forward slash /
           NAME=$(echo "${{ matrix.test.displayName }}" | tr '":<>|*?\\/' '-' | tr -d ' ')          
           # Check if the GITHUB_OUTPUT is set
+          echo "Determined name to be $NAME-${{ matrix.os }}"
           if [ -z "$GITHUB_OUTPUT" ]; then
             # We do not have github output, then use the set output command
             echo "::set-output name=artifact-name::$NAME-${{ matrix.os }}"
