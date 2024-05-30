@@ -101,7 +101,7 @@ jobs:
 
       - name: Format test run name as artifact name
         if: (success() || failure()) &&  runner.os == 'Windows'
-        id: format-artifact-name
+        id: format-artifact-name-windows
         # Use the GITHUB_OUTPUT mechanic to set the output variable
         run: |
           # We need to remove all invalid characters from the test name:
@@ -118,7 +118,7 @@ jobs:
 
       - name: Format test run name as artifact name
         if: (success() || failure()) &&  runner.os != 'Windows'
-        id: format-artifact-name
+        id: format-artifact-name-unix
         # Use the GITHUB_OUTPUT mechanic to set the output variable
         run: |
           # We need to remove all invalid characters from the test name:
