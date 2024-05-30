@@ -104,10 +104,9 @@ jobs:
         id: format-artifact-name
         # Use the GITHUB_OUTPUT mechanic to set the output variable
         run: |
-          # We have two cases here, one with a gradle task path, there we replace the : with a - and strip the leading -
-          # The other case is complexer, again we replace the : with a - and strip the leading - but now we also remove the '  --tests ' part
-          # Remove the '"' from the string and replace the '.' with a '-' 
-          NAME=$(echo "${{ matrix.test.displayName }}" | sed 's/:/-/g' | sed 's/^-//' | sed 's/  --tests /-/g' | sed 's/"//g' | sed 's/\./-/g')        
+          # We need to remove all invalid characters from the test name:
+          # Invalid characters include:  Double quote ", Colon :, Less than <, Greater than >, Vertical bar |, Asterisk *, Question mark ?, Carriage return \r, Line feed \n, Backslash \, Forward slash /
+          NAME=$(echo "${{ matrix.test.displayName }}" | tr '":<>|*?\\/' '-' | tr -d ' ')          
           # Check if the GITHUB_OUTPUT is set
           if [ -z "$GITHUB_OUTPUT" ]; then
             # We do not have github output, then use the set output command
