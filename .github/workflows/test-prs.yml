@@ -63,12 +63,13 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: setup
     strategy:
       fail-fast: false
       matrix:
         test: ${{ fromJSON(needs.setup.outputs.tests-to-run) }}
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -94,21 +95,22 @@ jobs:
         run: npx junit-report-merger junit.xml "**/TEST-*.xml"
 
       - name: Format test run name as artifact name
+        if: success() || failure()
         id: format-artifact-name
         # Use the GITHUB_OUTPUT mechanic to set the output variable
         run: |
           # We have two cases here, one with a gradle task path, there we replace the : with a - and strip the leading -
           # The other case is complexer, again we replace the : with a - and strip the leading - but now we also remove the '  --tests ' part
           # Remove the '"' from the string and replace the '.' with a '-' 
-          NAME=$(echo "${{ matrix.test }}" | sed 's/:/-/g' | sed 's/^-//' | sed 's/  --tests /-/g' | sed 's/"//g' | sed 's/\./-/g')         
+          NAME=$(echo "${{ matrix.test }}" | sed 's/:/-/g' | sed 's/^-//' | sed 's/  --tests /-/g' | sed 's/"//g' | sed 's/\./-/g')        
+          OS_NAME=$(echo "${{ runner.os }}" | sed 's/-latest//g')
           # Check if the GITHUB_OUTPUT is set
           if [ -z "$GITHUB_OUTPUT" ]; then
             # We do not have github output, then use the set output command
             echo "::set-output name=artifact-name::$NAME"
             exit 0
           fi
-          echo "artifact-name=$NAME" >> "$GITHUB_OUTPUT"
-
+          echo "artifact-name=$NAME-$OS_NAME" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         if: success() || failure()
@@ -146,3 +148,11 @@ jobs:
         with:
           name: test-results
           path: junit.xml
+
+      - name: Failed build detection
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.setFailed('Test build failure!')
+
