@@ -121,6 +121,7 @@ jobs:
           retention-days: 1
 
   process-test-data:
+    name: Process Test Data
     runs-on: ubuntu-latest
     needs: test
     if: success() || failure()
