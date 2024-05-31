@@ -83,18 +83,6 @@ class TestRun {
     String displayName
     String path
     String filter
-
-    String getDisplayName() {
-        return displayName
-    }
-
-    String getPath() {
-        return path
-    }
-
-    String getFilter() {
-        return filter
-    }
 }
 
 subprojects.forEach { Project subProject ->
