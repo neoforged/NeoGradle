@@ -96,7 +96,7 @@ subprojects.forEach { Project subProject ->
                 if (testSourceSetCandidate != null) {
                     SourceSet testSourceSet = testSourceSetCandidate as SourceSet
 
-                    def testClasses = new ArrayList<String>()
+                    def testClasses = []
 
                     testSourceSet.java.srcDirs
                             .collect { File file ->
