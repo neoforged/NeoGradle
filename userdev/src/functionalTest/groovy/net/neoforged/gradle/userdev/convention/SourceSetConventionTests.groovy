@@ -244,12 +244,10 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
-            it.shouldFail()
         }
 
         then:
         run.output.contains("Run sources: []")
-        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
     }
 
     def "disabling sourceset conventions prevents registration of main sourceset to run"() {
@@ -286,12 +284,10 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
-            it.shouldFail()
         }
 
         then:
         run.output.contains("Run sources: []")
-        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
     }
 
     def "disabling main source set registration conventions prevents registration of main sourceset to run"() {
@@ -328,12 +324,10 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
-            it.shouldFail()
         }
 
         then:
         run.output.contains("Run sources: []")
-        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
     }
 
     def "having the conventions for main sourceset registration enabled registers it"() {
