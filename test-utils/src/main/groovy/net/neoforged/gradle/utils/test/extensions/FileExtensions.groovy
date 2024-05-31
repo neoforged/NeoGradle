@@ -5,7 +5,6 @@ import groovy.transform.CompileStatic
 /**
  * Extensions for the [File] class.
  */
-@CompileStatic
 class FileExtensions {
 
     /**

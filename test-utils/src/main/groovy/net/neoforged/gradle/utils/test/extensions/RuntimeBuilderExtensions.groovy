@@ -7,7 +7,6 @@ import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 /**
  * Extensions for the {@link Runtime.Builder} class.
  */
-@CompileStatic
 class RuntimeBuilderExtensions {
 
     /**
