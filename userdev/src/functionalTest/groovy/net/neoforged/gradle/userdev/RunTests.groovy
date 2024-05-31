@@ -204,7 +204,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "userdev supports custom run dependencies from configuration"() {
@@ -260,7 +260,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "userdev supports custom run dependencies from catalog"() {
@@ -321,6 +321,6 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 }
