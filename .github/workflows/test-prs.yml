@@ -9,6 +9,10 @@ on:
       - ready_for_review
       - reopened
 
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   setup:
     name: Setup
@@ -66,6 +70,7 @@ jobs:
     runs-on: "${{ matrix.os }}-latest"
     needs: setup
     strategy:
+      max-parallel: 15
       fail-fast: false
       matrix:
         test: ${{ fromJSON(needs.setup.outputs.tests-to-run) }}
