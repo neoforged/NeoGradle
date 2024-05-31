@@ -76,7 +76,6 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         when:
         def cleanRun = project.run {
             it.tasks('clean')
-            it.debug()
         }
 
         then:
@@ -148,7 +147,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, cacheDir.getAbsolutePath())
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, cacheDir.getAbsolutePath().replace("\\", "\\\\"))
             it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
         })
 

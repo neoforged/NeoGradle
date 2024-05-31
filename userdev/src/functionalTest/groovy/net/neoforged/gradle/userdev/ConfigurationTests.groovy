@@ -54,12 +54,10 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains(
-'''
-implementation - Implementation dependencies for the 'main' feature. (n)
-No dependencies
-'''
-        )
+        def implementationStartLine = run.output.split(System.lineSeparator()).toList().indexOf('implementation - Implementation dependencies for the \'main\' feature. (n)')
+        implementationStartLine != -1
+        def nextLine = run.output.split(System.lineSeparator()).toList().get(implementationStartLine + 1)
+        nextLine.contains("No dependencies")
     }
 
     def "a mod with userdev in the implementation configuration does not leak it via publishing"() {
