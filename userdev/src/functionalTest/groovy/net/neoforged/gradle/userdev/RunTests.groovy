@@ -48,7 +48,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -91,7 +91,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -133,7 +133,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -185,7 +185,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -241,7 +241,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -302,7 +302,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

@@ -163,6 +163,7 @@ subprojects.forEach { subProject ->
             spec.exclude group: 'org.codehaus.groovy'
         }
         evalSubProject.dependencies.functionalTestImplementation "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
+        evalSubProject.dependencies.functionalTestImplementation project(':test-utils')
 
         //Configure the plugin metadata, so we can publish it.
         evalSubProject.gradlePlugin.plugins { NamedDomainObjectContainer<PluginDeclaration> plugins ->

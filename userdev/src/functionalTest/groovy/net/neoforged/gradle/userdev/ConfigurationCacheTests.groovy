@@ -32,7 +32,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
             it.enableBuildScan()
@@ -73,7 +73,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
         })

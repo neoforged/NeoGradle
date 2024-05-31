@@ -60,7 +60,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
+            it.withGlobalCacheDirectory(tempDir)
             it.property(CentralCacheService.MAX_CACHE_SIZE_PROPERTY, "4")
         })
 
@@ -133,7 +133,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
     def "cache_supports_cleanup_and_take_over_of_failed_lock"() {
         given:
-        def cacheDir = new File(tempDir, ".caches-global")
+        File cacheDir;
         def project = create("cache_supports_cleanup_and_take_over_of_failed_lock", {
             it.build("""
             java {
@@ -147,9 +147,13 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, cacheDir.getAbsolutePath().replace("\\", "\\\\"))
+            cacheDir = it.withGlobalCacheDirectory(tempDir)
             it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
         })
+
+        if (cacheDir == null) {
+            throw new IllegalStateException("Cache directory was not set")
+        }
 
         when:
         project.run {
