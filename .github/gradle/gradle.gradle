@@ -23,26 +23,21 @@ static Map<String, String> removeCommonPrefix(List<String> list) {
     def max = list[0].length()
     def prefix = ""
 
-    comparisonLoop:
     for(int index = 0; index < max; index++) {
         def currentChar = list[0][index]
         for (String item : list) {
             if (item[index] != currentChar) {
-                break comparisonLoop
+                for (final def entry in list) {
+                    result.put(entry, entry.substring(prefix.length()))
+                }
+                return result
             }
         }
 
         prefix += currentChar
     }
 
-    if (prefix.length() == max) {
-        throw new IllegalArgumentException("The common prefix is the entire string")
-    }
-
-    for (final def entry in list) {
-        result.put(entry, entry.substring(prefix.length()))
-    }
-    return result
+    throw new IllegalArgumentException("Could not remove common prefix: ${list}")
 }
 
 static String createDisplayNameSuffix(String path, String filter) {
@@ -69,7 +64,7 @@ static String createDisplayNameSuffix(String path, String filter) {
 }
 
 static List<TestRun> createTestRuns(Task it, List<String> testClasses) {
-    def testRuns = []
+    def testRuns = new ArrayList<TestRun>()
     if (testClasses.size() == 0) {
         testRuns.add(new TestRun(displayName: "Test - ${createDisplayNameSuffix(it.path, null)}", path: it.path, filter: null))
         return testRuns
