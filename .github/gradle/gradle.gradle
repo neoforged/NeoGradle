@@ -8,13 +8,12 @@ if (!project.hasProperty('githubCiTesting') && System.env['GITHUB_OUTPUT'] == nu
 
 static Map<String, String> removeCommonPrefix(List<String> list) {
     if (list.size() == 0) {
-        return new HashMap<String, String>()
+        return [:]
     }
 
     def result = new HashMap<String, String>()
 
-    if (list.size() == 1) {
-        System.out.println("Only one item in the list: ${list}")
+    if (list.unique(false).size() == 1) {
         def sections = list[0].split("\\.")
         result.put(list[0], sections.last())
         return result
@@ -23,21 +22,27 @@ static Map<String, String> removeCommonPrefix(List<String> list) {
     Collections.sort(list, { String a, String b -> a.length() - b.length() })
     def max = list[0].length()
     def prefix = ""
+
+    comparisonLoop:
     for(int index = 0; index < max; index++) {
         def currentChar = list[0][index]
         for (String item : list) {
             if (item[index] != currentChar) {
-                for (final def entry in list) {
-                    result.put(entry, entry.substring(prefix.length()))
-                }
-                return result
+                break comparisonLoop
             }
         }
 
         prefix += currentChar
     }
 
-    throw new RuntimeException("Could not remove common prefix: ${list}")
+    if (prefix.length() == max) {
+        throw new IllegalArgumentException("The common prefix is the entire string")
+    }
+
+    for (final def entry in list) {
+        result.put(entry, entry.substring(prefix.length()))
+    }
+    return result
 }
 
 static String createDisplayNameSuffix(String path, String filter) {
@@ -64,7 +69,7 @@ static String createDisplayNameSuffix(String path, String filter) {
 }
 
 static List<TestRun> createTestRuns(Task it, List<String> testClasses) {
-    def testRuns = new ArrayList<TestRun>()
+    def testRuns = []
     if (testClasses.size() == 0) {
         testRuns.add(new TestRun(displayName: "Test - ${createDisplayNameSuffix(it.path, null)}", path: it.path, filter: null))
         return testRuns

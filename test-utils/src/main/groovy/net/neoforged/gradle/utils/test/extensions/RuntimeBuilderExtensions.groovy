@@ -18,7 +18,7 @@ class RuntimeBuilderExtensions {
      */
     static File withGlobalCacheDirectory(final Runtime.Builder self, final File testProjectDir) {
         final File cacheDir = new File(testProjectDir, ".ng-cache")
-        self.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, cacheDir.propertiesPath)
+        self.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, cacheDir.getPropertiesPath())
 
         return cacheDir
     }
