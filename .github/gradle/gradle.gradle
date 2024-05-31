@@ -64,7 +64,7 @@ static String createDisplayNameSuffix(String path, String filter) {
 }
 
 static List<TestRun> createTestRuns(Task it, List<String> testClasses) {
-    def testRuns = new ArrayList<TestRun>()
+    def testRuns = []
     if (testClasses.size() == 0) {
         testRuns.add(new TestRun(displayName: "Test - ${createDisplayNameSuffix(it.path, null)}", path: it.path, filter: null))
         return testRuns
@@ -87,7 +87,7 @@ class TestRun {
 
 subprojects.forEach { Project subProject ->
     subProject.tasks.register('determineTests') { Task it ->
-        def tests = new ArrayList<TestRun>()
+        def tests = []
 
         it.group = 'infrastructure'
         it.doLast {
