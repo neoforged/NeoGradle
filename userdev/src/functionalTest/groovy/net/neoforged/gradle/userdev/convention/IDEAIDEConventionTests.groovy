@@ -35,7 +35,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
         })
 
         when:
@@ -71,7 +71,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
         })
 
         when:
@@ -107,7 +107,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
         })
 
         when:
@@ -143,7 +143,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
         })
 
         when:
@@ -178,7 +178,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath().replace("\\", "\\\\"))
         })
 
         when:
