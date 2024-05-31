@@ -152,7 +152,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.graalvm.polyglot/polyglot")
+        classpathFile.text.contains("org.graalvm.polyglot${File.separator}polyglot")
         !classpathFile.text.contains(".pom")
     }
 

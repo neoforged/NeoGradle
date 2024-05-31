@@ -421,7 +421,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        !classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        !classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "enabling sourceset local run runtime registration conventions registers localRunRuntime"() {
@@ -468,7 +468,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "using the local runtime convention configuration does not put the dependency on the runtime config"() {
