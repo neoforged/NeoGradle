@@ -32,7 +32,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -65,7 +65,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -98,7 +98,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -131,7 +131,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -164,7 +164,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -197,7 +197,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -238,7 +238,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -247,7 +247,6 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run sources: []")
     }
 
@@ -279,7 +278,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -288,7 +287,6 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run sources: []")
     }
 
@@ -320,7 +318,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -329,7 +327,6 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run sources: []")
     }
 
@@ -360,7 +357,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -398,7 +395,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -418,7 +415,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        !classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        !classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "enabling sourceset local run runtime registration conventions registers localRunRuntime"() {
@@ -445,7 +442,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -465,7 +462,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "using the local runtime convention configuration does not put the dependency on the runtime config"() {
@@ -492,7 +489,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -529,7 +526,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

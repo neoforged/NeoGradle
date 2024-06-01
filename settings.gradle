@@ -11,6 +11,7 @@ plugins {
 rootProject.name = 'NeoGradle'
 
 include 'utils'
+include 'test-utils'
 include 'common'
 include 'vanilla'
 include 'neoform'

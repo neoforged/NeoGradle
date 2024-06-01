@@ -23,7 +23,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         def apiProject = create(rootProject, "api", {
@@ -50,7 +50,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
         })
 
@@ -87,7 +87,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
         })
 
@@ -116,7 +116,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
             it.withToolchains()
         })
 
@@ -144,7 +144,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
         })
 
@@ -181,7 +181,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
         })
 
@@ -207,7 +207,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         def apiProject = create(rootProject, "api", {
@@ -231,7 +231,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
             it.plugin("java-library")
         })
 
@@ -268,7 +268,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
         })
 

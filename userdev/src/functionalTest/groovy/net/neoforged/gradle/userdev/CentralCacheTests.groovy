@@ -47,6 +47,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
     def "clean_cache_listens_to_project_property_for_size"() {
         given:
+        File cacheDir;
         def project = create("build_supports_configuration_cache_build", {
             it.build("""
             java {
@@ -60,9 +61,13 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            cacheDir = it.withGlobalCacheDirectory(tempDir)
             it.property(CentralCacheService.MAX_CACHE_SIZE_PROPERTY, "4")
         })
+
+        if (cacheDir == null) {
+            throw new IllegalStateException("Cache directory was not set")
+        }
 
         when:
         def run = project.run {
@@ -71,18 +76,17 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
-        new File(tempDir, ".caches-global").listFiles().size() > 4
+        cacheDir.listFiles().size() > 4
 
         when:
         def cleanRun = project.run {
             it.tasks('clean')
-            it.debug()
         }
 
         then:
         cleanRun.task(':clean').outcome == TaskOutcome.SUCCESS
         cleanRun.task(':cleanCache').outcome == TaskOutcome.SUCCESS
-        new File(tempDir, ".caches-global").listFiles().size() == 4
+        cacheDir.listFiles().size() == 4
     }
 
     def "cache_supports_running_gradle_in_parallel"() {
@@ -134,7 +138,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
     def "cache_supports_cleanup_and_take_over_of_failed_lock"() {
         given:
-        def cacheDir = new File(tempDir, ".caches-global")
+        File cacheDir;
         def project = create("cache_supports_cleanup_and_take_over_of_failed_lock", {
             it.build("""
             java {
@@ -148,9 +152,13 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, cacheDir.getAbsolutePath())
+            cacheDir = it.withGlobalCacheDirectory(tempDir)
             it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
         })
+
+        if (cacheDir == null) {
+            throw new IllegalStateException("Cache directory was not set")
+        }
 
         when:
         project.run {

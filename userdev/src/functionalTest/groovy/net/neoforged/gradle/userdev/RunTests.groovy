@@ -48,7 +48,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -91,7 +91,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -133,7 +133,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -152,7 +152,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.graalvm.polyglot/polyglot")
+        classpathFile.text.contains("org.graalvm.polyglot${File.separator}polyglot")
         !classpathFile.text.contains(".pom")
     }
 
@@ -185,7 +185,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -204,7 +204,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "userdev supports custom run dependencies from configuration"() {
@@ -241,7 +241,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -260,7 +260,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "userdev supports custom run dependencies from catalog"() {
@@ -302,7 +302,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -321,6 +321,6 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 }

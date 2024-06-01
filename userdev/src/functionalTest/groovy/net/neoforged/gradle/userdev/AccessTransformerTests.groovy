@@ -41,7 +41,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -82,7 +82,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -125,7 +125,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -169,7 +169,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -213,7 +213,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.CACHE_DIRECTORY_PROPERTY, new File(tempDir, ".caches-global").getAbsolutePath())
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

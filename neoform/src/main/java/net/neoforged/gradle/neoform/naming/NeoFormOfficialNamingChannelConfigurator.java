@@ -215,7 +215,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
         @Nullable
         @Override
         public File obtain() {
-            return getParameters().getNeoFormArchive().filter(f -> f.getAbsoluteFile().getPath().endsWith(getParameters().getMappingsFilePath().get())).getSingleFile();
+            return getParameters().getNeoFormArchive().filter(f -> f.getAbsoluteFile().getPath().replace(File.separator, "/").endsWith(getParameters().getMappingsFilePath().get())).getSingleFile();
         }
     }
 }

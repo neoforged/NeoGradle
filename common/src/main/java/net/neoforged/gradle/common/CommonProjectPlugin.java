@@ -116,7 +116,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.MOJANG_MAVEN);
-            e.metadataSources(MavenArtifactRepository.MetadataSources::artifact);
+            e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
         });
 
         project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {

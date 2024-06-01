@@ -1,18 +1,94 @@
+import groovy.json.JsonBuilder
+import groovy.transform.CompileStatic
+
 if (!project.hasProperty('githubCiTesting') && System.env['GITHUB_OUTPUT'] == null) {
     // If the property is not set and we are not running in the CI environment then we will do nothing
     return
 }
 
-static def outputUnitTest(Project project, Task test) {
-    project.getLogger().lifecycle("<< TEST >>${test.path}")
+static Map<String, String> removeCommonPrefix(List<String> list) {
+    if (list.size() == 0) {
+        return [:]
+    }
+
+    def result = new HashMap<String, String>()
+
+    if (list.unique(false).size() == 1) {
+        def sections = list[0].split("\\.")
+        result.put(list[0], sections.last())
+        return result
+    }
+
+    Collections.sort(list, { String a, String b -> a.length() - b.length() })
+    def max = list[0].length()
+    def prefix = ""
+
+    for(int index = 0; index < max; index++) {
+        def currentChar = list[0][index]
+        for (String item : list) {
+            if (item[index] != currentChar) {
+                for (final def entry in list) {
+                    result.put(entry, entry.substring(prefix.length()))
+                }
+                return result
+            }
+        }
+
+        prefix += currentChar
+    }
+
+    throw new IllegalArgumentException("Could not remove common prefix: ${list}")
 }
 
-static def outputClassTest(Project project, Task test, String className) {
-    project.getLogger().lifecycle("<< TEST >>${test.path} --tests \"${className}\"")
+static String createDisplayNameSuffix(String path, String filter) {
+    //The path starts with a : and then the project name:
+    path = path.substring(path.indexOf(":") + 1)
+
+    //Now split the path into parts
+    def parts = path.split(":")
+    def capitalizedParts = parts.collect { it.capitalize() }
+
+    //Combine the parts with ->
+    path = capitalizedParts.join(" -> ")
+
+    if (filter === null) {
+        return path
+    }
+
+    //Next the filter has its common prefix stripped, is however still in domain name form
+    def filterParts = filter.split("\\.")
+    def capitalizedFilterParts = filterParts.collect { it.capitalize() }
+    filter = capitalizedFilterParts.join("/")
+
+    return "${path} (${filter})"
+}
+
+static List<TestRun> createTestRuns(Task it, List<String> testClasses) {
+    def testRuns = []
+    if (testClasses.size() == 0) {
+        testRuns.add(new TestRun(displayName: "Test - ${createDisplayNameSuffix(it.path, null)}", path: it.path, filter: null))
+        return testRuns
+    }
+
+    def testClassesWithoutCommonPrefix = removeCommonPrefix(testClasses)
+    testClassesWithoutCommonPrefix.forEach { className, displayName ->
+        testRuns.add(new TestRun(displayName: "Test - ${createDisplayNameSuffix(it.path, displayName)}", path: it.path, filter: className))
+    }
+
+    return testRuns
+}
+
+@CompileStatic
+class TestRun {
+    String displayName
+    String path
+    String filter
 }
 
 subprojects.forEach { Project subProject ->
     subProject.tasks.register('determineTests') { Task it ->
+        def tests = []
+
         it.group = 'infrastructure'
         it.doLast {
             subProject.tasks.withType(Test).forEach { Task test ->
@@ -20,22 +96,24 @@ subprojects.forEach { Project subProject ->
                 if (testSourceSetCandidate != null) {
                     SourceSet testSourceSet = testSourceSetCandidate as SourceSet
 
+                    def testClasses = []
+
                     testSourceSet.java.srcDirs
                             .collect { File file ->
                                 subProject.fileTree(file.parentFile)
                             }
                             .collect { FileTree fileTree ->
-                                return fileTree.matching {
-                                    include '**/*Test.java'
-                                    include '**/*Tests.java'
-                                    include '**/*Test.groovy'
-                                    include '**/*Tests.groovy'
+                                return fileTree.matching { PatternFilterable pattern ->
+                                    pattern.include '**/*Test.java'
+                                    pattern.include '**/*Tests.java'
+                                    pattern.include '**/*Test.groovy'
+                                    pattern.include '**/*Tests.groovy'
                                 }
                             }
                             .forEach {
                                 it.visit { FileVisitDetails details ->
                                     if (details.isDirectory())
-                                        return;
+                                        return
 
                                     String className = details.relativePath.pathString
                                             .replace("groovy/", "")
@@ -44,13 +122,18 @@ subprojects.forEach { Project subProject ->
                                             .replace(".java", "")
                                             .replace("/", ".")
 
-                                    outputClassTest(subProject, test, className)
+                                    testClasses.add(className)
                                 }
                             }
 
+                    tests.addAll(createTestRuns(test, testClasses))
                 } else {
-                    outputUnitTest(subProject, test)
+                    tests.addAll(createTestRuns(test, new ArrayList<String>()))
                 }
+            }
+
+            if (!tests.isEmpty()) {
+                project.getLogger().lifecycle("<< TEST >>${new JsonBuilder(tests)}")
             }
         }
     }
