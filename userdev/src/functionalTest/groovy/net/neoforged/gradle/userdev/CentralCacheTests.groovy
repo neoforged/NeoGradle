@@ -47,6 +47,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
     def "clean_cache_listens_to_project_property_for_size"() {
         given:
+        File cacheDir;
         def project = create("build_supports_configuration_cache_build", {
             it.build("""
             java {
@@ -60,9 +61,13 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
+            cacheDir = it.withGlobalCacheDirectory(tempDir)
             it.property(CentralCacheService.MAX_CACHE_SIZE_PROPERTY, "4")
         })
+
+        if (cacheDir == null) {
+            throw new IllegalStateException("Cache directory was not set")
+        }
 
         when:
         def run = project.run {
@@ -71,7 +76,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
-        new File(tempDir, ".caches-global").listFiles().size() > 4
+        cacheDir.listFiles().size() > 4
 
         when:
         def cleanRun = project.run {
@@ -81,7 +86,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         then:
         cleanRun.task(':clean').outcome == TaskOutcome.SUCCESS
         cleanRun.task(':cleanCache').outcome == TaskOutcome.SUCCESS
-        new File(tempDir, ".caches-global").listFiles().size() == 4
+        cacheDir.listFiles().size() == 4
     }
 
     def "cache_supports_running_gradle_in_parallel"() {
