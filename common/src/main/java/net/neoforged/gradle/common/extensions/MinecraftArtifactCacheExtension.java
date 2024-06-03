@@ -4,20 +4,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
-import net.neoforged.gradle.common.tasks.MinecraftLauncherFileCacheProvider;
+import net.neoforged.gradle.common.tasks.MinecraftArtifactFileCacheProvider;
 import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvider;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
-import net.neoforged.gradle.common.util.MinecraftArtifactType;
+import net.neoforged.gradle.dsl.common.util.MinecraftArtifactType;
 import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
-import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.dsl.common.util.MinecraftVersionAndUrl;
+import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.util.HashFunction;
 import net.neoforged.gradle.util.UrlConstants;
+import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.NamedDomainObjectCollection;
+import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
@@ -38,7 +38,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     private final Project project;
     private final Map<CacheFileSelector, File> cacheFiles;
 
-    private static final class TaskKey{
+    private static final class TaskKey {
         private final Project project;
         private final String gameVersion;
         private final DistributionType type;
@@ -48,7 +48,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
             this.gameVersion = gameVersion;
             this.type = type;
         }
-        
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -56,12 +56,13 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
             TaskKey taskKey = (TaskKey) o;
             return Objects.equals(project, taskKey.project) && Objects.equals(gameVersion, taskKey.gameVersion) && type == taskKey.type;
         }
-        
+
         @Override
         public int hashCode() {
             return Objects.hash(project, gameVersion, type);
         }
     }
+
     private final Map<TaskKey, Map<GameArtifact, TaskProvider<? extends WithOutput>>> tasks = new ConcurrentHashMap<>();
 
     @Inject
@@ -113,7 +114,7 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
             final Map<GameArtifact, TaskProvider<? extends WithOutput>> results = new EnumMap<>(GameArtifact.class);
 
             final TaskProvider<MinecraftVersionManifestFileCacheProvider> manifest = FileCacheUtils.createVersionManifestFileCacheProvidingTask(project, resolvedVersion);
-            
+
             GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, manifest));
             GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), DistributionType.CLIENT, MinecraftArtifactType.EXECUTABLE, manifest, results.values())));
             GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), DistributionType.SERVER, MinecraftArtifactType.EXECUTABLE, manifest, results.values())));
@@ -122,6 +123,24 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
             return results;
         });
+    }
+
+    @NotNull
+    @Override
+    public NamedDomainObjectProvider<? extends WithOutput> gameArtifactTask(@NotNull NamedDomainObjectCollection<WithOutput> tasks, @NotNull GameArtifact artifact, @NotNull final String minecraftVersion) {
+        final MinecraftVersionAndUrl resolvedVersion = resolveVersion(minecraftVersion);
+
+        if (artifact == GameArtifact.VERSION_MANIFEST) {
+            return tasks.named(NamingConstants.Task.CACHE_VERSION_MANIFEST + resolvedVersion.getVersion(), MinecraftVersionManifestFileCacheProvider.class);
+        }
+
+        final String taskName = "%s%s%s%s".formatted(
+                NamingConstants.Task.CACHE_VERSION_PREFIX,
+                StringUtils.capitalize(artifact.getType().orElseThrow().name().toLowerCase()),
+                StringUtils.capitalize(artifact.getDistributionType().orElseThrow().getName().toLowerCase()),
+                resolvedVersion.getVersion());
+
+        return tasks.named(taskName, MinecraftArtifactFileCacheProvider.class);
     }
 
     @Override

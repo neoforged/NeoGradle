@@ -2,8 +2,8 @@ package net.neoforged.gradle.dsl.common.util
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition
+import net.neoforged.gradle.dsl.common.runtime.spec.LegacySpecification
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
@@ -31,14 +31,14 @@ final class CommonRuntimeUtils {
         return String.format("%s%s", defaultName, StringUtils.capitalize(modifiedTask.getName()));
     }
 
-    static String buildTaskName(final Specification runtimeSpec, final String defaultName) {
+    static String buildTaskName(final LegacySpecification runtimeSpec, final String defaultName) {
         if (runtimeSpec.getVersionedName().isEmpty())
             return defaultName;
 
         return runtimeSpec.getVersionedName() + StringUtils.capitalize(defaultName);
     }
 
-    static <D extends Definition<? extends Specification>> String buildTaskName(final D runtimeSpec, final String defaultName) {
+    static <D extends LegacyDefinition<? extends LegacySpecification>> String buildTaskName(final D runtimeSpec, final String defaultName) {
         return buildTaskName(runtimeSpec.getSpecification(), defaultName);
     }
 
@@ -80,11 +80,11 @@ final class CommonRuntimeUtils {
         return String.format("%s%s", validPrefix, validDependencyName);
     }
 
-    static String buildStepName(Specification spec, String name) {
+    static String buildStepName(LegacySpecification spec, String name) {
         return StringUtils.uncapitalize(name.replace(spec.getVersionedName(), ""));
     }
 
-    static Optional<TaskProvider<? extends WithOutput>> getInputTaskForTaskFrom(final Specification spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks) {
+    static Optional<TaskProvider<? extends WithOutput>> getInputTaskForTaskFrom(final LegacySpecification spec, final String inputValue, Map<String, TaskProvider<? extends WithOutput>> tasks) {
         Matcher matcher = OUTPUT_REPLACE_PATTERN.matcher(inputValue);
         if (!matcher.find()) {
             return Optional.empty();
@@ -122,7 +122,7 @@ final class CommonRuntimeUtils {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    static <T extends Definition<? extends Specification>> void buildArguments(final RuntimeArguments arguments, final T definition, Map<String, String> values, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
+    static <T extends LegacyDefinition<? extends LegacySpecification>> void buildArguments(final RuntimeArguments arguments, final T definition, Map<String, String> values, final Map<String, TaskProvider<? extends WithOutput>> tasks, final Runtime taskForArguments, final Optional<TaskProvider<? extends WithOutput>> alternativeInputProvider) {
         buildArguments(arguments, value -> getInputTaskForTaskFrom(definition.getSpecification(), value, tasks), value -> definition.getSpecification().getProject().provider(() -> value), values, taskForArguments, alternativeInputProvider);
     }
 

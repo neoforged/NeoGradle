@@ -2,17 +2,13 @@ package net.neoforged.gradle.dsl.common.runtime.extensions
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.annotations.ClosureEquivalent
-import net.minecraftforge.gdi.annotations.DSLProperty
 import net.minecraftforge.gdi.annotations.ProjectGetter
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification
-import net.neoforged.gradle.dsl.common.util.DistributionType
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition
+import net.neoforged.gradle.dsl.common.runtime.spec.LegacySpecification
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 
@@ -30,7 +26,7 @@ import org.jetbrains.annotations.Nullable
  * @param <D> The type of the runtime definition.
  */
 @CompileStatic
-interface CommonRuntimes<S extends Specification, B extends Specification.Builder<S, B>, D extends Definition<S>> {
+interface CommonRuntimes<S extends LegacySpecification, B extends LegacySpecification.Builder<S, B>, D extends LegacyDefinition<S>> {
 
     /**
      * The project which holds the extension.

@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.neoform.runtime.specification
 
 import groovy.transform.CompileStatic
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification
+import net.neoforged.gradle.dsl.common.runtime.spec.LegacySpecification
 import org.gradle.api.file.FileCollection
 import org.jetbrains.annotations.NotNull;
 
@@ -9,11 +9,11 @@ import org.jetbrains.annotations.NotNull;
  * Defines an NeoForm specific runtime specification.
  */
 @CompileStatic
-interface NeoFormSpecification extends Specification {
+interface NeoFormSpecification extends LegacySpecification {
 
     /**
      * The version of NeoForm that shall be used. Does not include the minecraft version as a prefix, unlike
-     * {@link Specification#getVersion()}.
+     * {@link LegacySpecification#getVersion()}.
      * 
      * @return The NeoForm version.
      */
@@ -35,7 +35,7 @@ interface NeoFormSpecification extends Specification {
      * @param <S> The specification type, must be at least an {@link NeoFormSpecification}.
      * @param <B> The self-type of the builder.
      */
-    interface Builder<S extends NeoFormSpecification, B extends Builder<S, B>> extends Specification.Builder<S, B> {
+    interface Builder<S extends NeoFormSpecification, B extends Builder<S, B>> extends LegacySpecification.Builder<S, B> {
 
         /**
          * Configures the specification to use NeoForm in the given version.

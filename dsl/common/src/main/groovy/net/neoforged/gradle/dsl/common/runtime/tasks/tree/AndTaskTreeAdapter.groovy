@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.runtime.tasks.tree
 
 import groovy.transform.PackageScope
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.util.GameArtifact
@@ -25,7 +25,7 @@ class AndTaskTreeAdapter implements TaskTreeAdapter {
     }
 
     @Override
-    TaskProvider<? extends Runtime> adapt(Definition<?> definition, Provider<? extends WithOutput> previousTasksOutput, File runtimeWorkspace, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts, Map<String, String> mappingVersionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler) {
+    TaskProvider<? extends Runtime> adapt(LegacyDefinition<?> definition, Provider<? extends WithOutput> previousTasksOutput, File runtimeWorkspace, Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts, Map<String, String> mappingVersionData, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler) {
         final TaskProvider<? extends Runtime> currentAdapted = left.adapt(definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler);
 
         if (currentAdapted != null)

@@ -3,7 +3,7 @@ package net.neoforged.gradle.common.util;
 import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
 import net.neoforged.gradle.common.runtime.tasks.SourceAccessTransformer;
 import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -21,7 +21,7 @@ public final class CommonRuntimeTaskUtils {
         throw new IllegalStateException("Can not instantiate an instance of: CommonRuntimeTaskUtils. This is a utility class");
     }
 
-    public static TaskProvider<? extends SourceAccessTransformer> createSourceAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data, TaskProvider<? extends WithOutput> listLibs) {
+    public static TaskProvider<? extends SourceAccessTransformer> createSourceAccessTransformer(LegacyDefinition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data, TaskProvider<? extends WithOutput> listLibs) {
         final TaskProvider<AccessTransformerFileGenerator> generator;
         if (!data.isEmpty()) {
             generator = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {
@@ -44,7 +44,7 @@ public final class CommonRuntimeTaskUtils {
         });
     }
 
-    public static TaskProvider<? extends BinaryAccessTransformer> createBinaryAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data) {
+    public static TaskProvider<? extends BinaryAccessTransformer> createBinaryAccessTransformer(LegacyDefinition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data) {
         final TaskProvider<AccessTransformerFileGenerator> generator;
         if (!data.isEmpty()) {
             generator = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {

@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.tasks;
 
 import net.neoforged.gradle.common.CommonProjectPlugin;
 import net.neoforged.gradle.common.caching.CentralCacheService;
-import net.neoforged.gradle.common.util.MinecraftArtifactType;
+import net.neoforged.gradle.dsl.common.util.MinecraftArtifactType;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;

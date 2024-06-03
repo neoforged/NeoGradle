@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.userdev.runtime.specification;
 
 import groovy.transform.CompileStatic
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
+import net.neoforged.gradle.dsl.common.runtime.spec.LegacySpecification;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
  * Defines a runtime specification for a user dev runtime within the confines of a forge-based project.
  */
 @CompileStatic
-interface UserDevSpecification extends Specification {
+interface UserDevSpecification extends LegacySpecification {
 
     /**
      * Gets the version of forge to use.
@@ -26,7 +26,7 @@ interface UserDevSpecification extends Specification {
      * @param <B> The self-type of the builder
      */
     @CompileStatic
-    interface Builder<S extends UserDevSpecification, B extends Builder<S, B>> extends Specification.Builder<S, B> {
+    interface Builder<S extends UserDevSpecification, B extends Builder<S, B>> extends LegacySpecification.Builder<S, B> {
 
         /**
          * Configures the forge group to use.

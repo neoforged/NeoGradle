@@ -1,6 +1,4 @@
-package net.neoforged.gradle.common.util;
-
-import net.neoforged.gradle.dsl.common.util.DistributionType;
+package net.neoforged.gradle.dsl.common.util;
 
 public enum MinecraftArtifactType {
     

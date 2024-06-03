@@ -2,7 +2,6 @@ package net.neoforged.gradle.common.runtime.extensions;
 
 import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
-import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
@@ -10,7 +9,7 @@ import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runtime.extensions.CommonRuntimes;
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
+import net.neoforged.gradle.dsl.common.runtime.spec.LegacySpecification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -44,7 +43,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         this.project.getExtensions().getByType(RuntimesExtension.class).add(this);
     }
 
-    public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, String> symbolicDataSources, String step, Specification spec, File runtimeDirectory) {
+    public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, String> symbolicDataSources, String step, LegacySpecification spec, File runtimeDirectory) {
         runtimeTask.getSymbolicDataSources().set(symbolicDataSources);
         runtimeTask.getStepName().set(step);
         runtimeTask.getDistribution().set(spec.getDistribution());
@@ -70,7 +69,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         configureCommonRuntimeTaskParameters(runtime, runtime.getName(), specification, workingDirectory);
     }
 
-    public static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final Specification spec) {
+    public static Map<GameArtifact, TaskProvider<? extends WithOutput>> buildDefaultArtifactProviderTasks(final LegacySpecification spec) {
         final MinecraftArtifactCache artifactCache = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
         return artifactCache.cacheGameVersionTasks(spec.getProject(), spec.getMinecraftVersion(), spec.getDistribution());
     }

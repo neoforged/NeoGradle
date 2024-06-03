@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.neoform.runtime.definition
 
 import groovy.transform.CompileStatic;
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2
 import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
 import org.jetbrains.annotations.NotNull
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull
  * @param <S> The type of the runtime specification, which is used to configure the runtime.
  */
 @CompileStatic
-interface NeoFormDefinition<S extends NeoFormSpecification> extends Definition<S> {
+interface NeoFormDefinition<S extends NeoFormSpecification> extends LegacyDefinition<S> {
 
     /**
      * The deserialized NeoForm configuration.

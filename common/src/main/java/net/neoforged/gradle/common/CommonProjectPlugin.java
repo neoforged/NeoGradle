@@ -68,6 +68,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        project.getObjects().
+
         //Apply the evaluation extension to monitor immediate execution of indirect tasks when evaluation already happened.
         project.getExtensions().create(NamingConstants.Extension.EVALUATION, ProjectEvaluationExtension.class, project);
 

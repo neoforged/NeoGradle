@@ -5,7 +5,7 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
+import net.neoforged.gradle.dsl.common.runtime.spec.LegacySpecification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 /**
  * Defines a runtime specification.
  */
-public abstract class CommonRuntimeSpecification implements Specification {
+public abstract class CommonRuntimeSpecification implements LegacySpecification {
     @NotNull private final Project project;
     @NotNull private final String name;
     @NotNull private final String version;
@@ -154,7 +154,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
      * @param <S> The type of the specification.
      * @param <B> The self-type of the builder.
      */
-    public abstract static class Builder<S extends CommonRuntimeSpecification, B extends Builder<S, B>> implements Specification.Builder<S, B> {
+    public abstract static class Builder<S extends CommonRuntimeSpecification, B extends Builder<S, B>> implements LegacySpecification.Builder<S, B> {
 
         protected final Project project;
         protected Provider<DistributionType> distributionType;

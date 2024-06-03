@@ -4,8 +4,8 @@ package net.neoforged.gradle.dsl.common.runtime.naming
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.annotations.ProjectGetter
 import net.neoforged.gradle.dsl.common.extensions.Mappings
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition
+import net.neoforged.gradle.dsl.common.runtime.spec.LegacySpecification
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.util.GameArtifact
@@ -30,7 +30,7 @@ class TaskBuildingContext {
     private final @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks;
     private final @NotNull Provider<Map<String, String>> versionData;
     private final @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks;
-    private final @Nullable Definition<? extends Specification> runtimeDefinition;
+    private final @Nullable LegacyDefinition<? extends LegacySpecification> runtimeDefinition;
 
     TaskBuildingContext(
             @NotNull Project project,
@@ -40,7 +40,7 @@ class TaskBuildingContext {
             @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
             @NotNull Map<String, String> versionData,
             @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks,
-            @Nullable Definition<? extends Specification> runtimeDefinition) {
+            @Nullable LegacyDefinition<? extends LegacySpecification> runtimeDefinition) {
         this(
                 project,
                 environmentName,
@@ -61,7 +61,7 @@ class TaskBuildingContext {
             @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
             @NotNull Provider<Map<String, String>> versionData,
             @NotNull Set<TaskProvider<? extends Runtime>> additionalRuntimeTasks,
-            @Nullable Definition<? extends Specification> runtimeDefinition) {
+            @Nullable LegacyDefinition<? extends LegacySpecification> runtimeDefinition) {
         this.project = project
         this.environmentName = environmentName
         this.taskNameBuilder = taskNameBuilder
@@ -209,7 +209,7 @@ class TaskBuildingContext {
      *
      * @return An optional which holds the runtime definition that is being configured.
      */
-    @NotNull Optional<? extends Definition<? extends Specification>> getRuntimeDefinition() {
+    @NotNull Optional<? extends LegacyDefinition<? extends LegacySpecification>> getRuntimeDefinition() {
         return Optional.ofNullable(runtimeDefinition)
     }
 

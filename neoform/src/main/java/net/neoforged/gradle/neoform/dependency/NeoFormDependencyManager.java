@@ -2,6 +2,9 @@ package net.neoforged.gradle.neoform.dependency;
 
 import com.google.common.collect.Sets;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context;
+import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
+import net.neoforged.gradle.dsl.common.runtime.extensions.RuntimesContainer;
+import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -10,6 +13,7 @@ import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
+import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ModuleDependency;
@@ -57,6 +61,18 @@ public final class NeoFormDependencyManager {
 
         // Build the runtime used to produce the artifact
         Project project = context.getProject();
+        RuntimesContainer container = project.getExtensions().getByType(RuntimesContainer.class);
+
+        final Definition runtimeDefinition = container.register(
+            new Specification(
+                    project,
+                    "neoFormFor" + ModuleDependencyUtils.format(dependency),
+                    project.provider(() -> target.version),
+
+                    project.provider(() -> target.distribution),
+            )
+        );
+
         NeoFormRuntimeExtension runtimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
         NeoFormRuntimeDefinition runtime = runtimeExtension.maybeCreateFor(dependency, builder -> {
             builder.withDistributionType(target.distribution).withNeoFormVersion(target.version);

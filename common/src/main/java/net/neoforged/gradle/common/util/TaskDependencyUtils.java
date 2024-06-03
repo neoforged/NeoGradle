@@ -6,7 +6,7 @@ import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
@@ -171,7 +171,7 @@ public final class TaskDependencyUtils {
         private final Set<Object> seen = new HashSet<>();
         private final Set<CommonRuntimeDefinition<?>> found = new HashSet<>();
         private final SourceSetContainer sourceSets;
-        private final Collection<? extends Definition<?>> runtimes;
+        private final Collection<? extends LegacyDefinition<?>> runtimes;
         private final Map<String, Dependency> dependencies;
         private final Project project;
 
@@ -212,8 +212,8 @@ public final class TaskDependencyUtils {
         }
 
         private void processTask(Task task) {
-            final Optional<? extends Definition<?>> rawJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getRawJarTask().get().equals(task)).findFirst();
-            final Optional<? extends Definition<?>> sourceJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getSourceJarTask().get().equals(task)).findFirst();
+            final Optional<? extends LegacyDefinition<?>> rawJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getRawJarTask().get().equals(task)).findFirst();
+            final Optional<? extends LegacyDefinition<?>> sourceJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getSourceJarTask().get().equals(task)).findFirst();
             if (rawJarRuntime.isPresent()) {
                 this.add(rawJarRuntime.get());
             } else if (sourceJarRuntime.isPresent()) {

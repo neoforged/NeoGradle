@@ -8,6 +8,9 @@ import net.neoforged.gradle.dsl.common.util.CacheFileSelector
 import net.neoforged.gradle.dsl.common.util.DistributionType
 import net.neoforged.gradle.dsl.common.util.GameArtifact
 import net.neoforged.gradle.dsl.common.util.MinecraftVersionAndUrl
+import org.apache.tools.ant.taskdefs.condition.Not
+import org.gradle.api.NamedDomainObjectCollection
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
@@ -55,6 +58,17 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      */
     @NotNull
     Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(@NotNull final Project project, @NotNull final String gameVersion, @NotNull final DistributionType side);
+
+    /**
+     * Extracts a game artifact task from the given tasks collection.
+     *
+     * @param tasks The tasks collection to extract from.
+     * @param artifact The game artifact to extract.
+     * @param minecraftVersion The minecraft version to extract for.
+     * @return The extracted task.
+     */
+    @NotNull
+    NamedDomainObjectProvider<? extends WithOutput> gameArtifactTask(@NotNull NamedDomainObjectCollection<WithOutput> tasks, @NotNull final GameArtifact artifact, @NotNull final String minecraftVersion);
 
     /**
      * Eagerly caches the launcher metadata.

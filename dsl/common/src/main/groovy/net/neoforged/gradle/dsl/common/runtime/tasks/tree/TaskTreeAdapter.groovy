@@ -2,7 +2,7 @@ package net.neoforged.gradle.dsl.common.runtime.tasks.tree
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.annotations.DefaultMethods
-import net.neoforged.gradle.dsl.common.runtime.definition.Definition
+import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.util.GameArtifact
@@ -29,7 +29,7 @@ interface TaskTreeAdapter {
      * @return The task to run.
      */
     @Nullable
-    TaskProvider<? extends Runtime> adapt(final Definition<?> definition, final Provider<? extends WithOutput> previousTasksOutput, final File runtimeWorkspace, final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts, final Map<String, String> mappingVersionData, final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler);
+    TaskProvider<? extends Runtime> adapt(final LegacyDefinition<?> definition, final Provider<? extends WithOutput> previousTasksOutput, final File runtimeWorkspace, final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts, final Map<String, String> mappingVersionData, final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler);
 
     /**
      * Runs the given task adapter after the current one.
