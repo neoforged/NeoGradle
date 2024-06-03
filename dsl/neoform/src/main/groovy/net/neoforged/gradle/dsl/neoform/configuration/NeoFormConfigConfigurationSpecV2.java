@@ -26,6 +26,7 @@ import org.gradle.api.tasks.Input;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
@@ -51,7 +52,7 @@ public class NeoFormConfigConfigurationSpecV2 extends NeoFormConfigConfiguration
         return get(new ByteArrayInputStream(data));
     }
 
-    public static NeoFormConfigConfigurationSpecV2 getFromArchive(File path) throws IOException {
+    public static NeoFormConfigConfigurationSpecV2 getFromArchive(File path) {
         try (ZipFile zip = new ZipFile(path)) {
             ZipEntry entry = zip.getEntry("config.json");
             if (entry == null)
@@ -65,6 +66,8 @@ public class NeoFormConfigConfigurationSpecV2 extends NeoFormConfigConfiguration
                 return new NeoFormConfigConfigurationSpecV2(NeoFormConfigConfigurationSpecV1.get(data));
 
             throw new IllegalStateException("Invalid NeoForm Config: " + path.getAbsolutePath() + " Unknown spec: " + spec);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to extract NeoForm config from archive: " + path.getAbsolutePath(), e);
         }
     }
 

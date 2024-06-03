@@ -5,8 +5,11 @@ import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.extensions.RuntimesContainer;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
+import net.neoforged.gradle.dsl.common.runtime.spec.TaskTreeBuilder;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
+import net.neoforged.gradle.neoform.runtime.NeoFormRuntime;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -17,8 +20,10 @@ import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,14 +68,23 @@ public final class NeoFormDependencyManager {
         Project project = context.getProject();
         RuntimesContainer container = project.getExtensions().getByType(RuntimesContainer.class);
 
-        final Definition runtimeDefinition = container.register(
-            new Specification(
-                    project,
-                    "neoFormFor" + ModuleDependencyUtils.format(dependency),
-                    project.provider(() -> target.version),
+        final Provider<File> neoFormArchiveFile = NeoFormRuntime.getNeoFormArchive(project, target.version);
+        final Provider<NeoFormConfigConfigurationSpecV2> config = NeoFormRuntime.parseConfiguration(neoFormArchiveFile);
 
-                    project.provider(() -> target.distribution),
-            )
+        final Definition runtimeDefinition = container.register(
+                new Specification(
+                        project,
+                        "neoForm",
+                        project.provider(() -> target.version),
+                        NeoFormRuntime.getMinecraftVersion(config),
+                        project.provider(() -> target.distribution)
+                ),
+                new TaskTreeBuilder() {
+                    @Override
+                    public BuildResult build(Specification specification) {
+                        return null;
+                    }
+                }
         );
 
         NeoFormRuntimeExtension runtimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
