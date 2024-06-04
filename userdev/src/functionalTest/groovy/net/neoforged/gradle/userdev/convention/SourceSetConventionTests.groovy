@@ -244,6 +244,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
+            it.shouldFail()
         }
 
         then:
@@ -284,6 +285,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
+            it.shouldFail()
         }
 
         then:
@@ -324,6 +326,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
+            it.shouldFail()
         }
 
         then:

@@ -1,5 +1,6 @@
 package net.neoforged.gradle.dsl.common.runs.run
 
+
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
@@ -230,7 +231,6 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @DSLProperty
     @Optional
     abstract Property<Boolean> getConfigureFromDependencies();
-
 
     /**
      * Configures the run using the settings of the associated run type.

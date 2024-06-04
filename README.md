@@ -335,7 +335,6 @@ By default, the import in IDEA is run during the sync task.
 If you want to disable this, and use a post sync task, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.ide.idea.use-post-sync-task=true
-
 ```
 
 ### Runs
@@ -359,3 +358,98 @@ The following properties can be used to configure the JST tool:
 ```properties
 neogradle.subsystems.tools.jst=<artifact coordinate for jst cli tool>
 ```
+### DevLogin
+This tool is used by the runs subsystem to enable Minecraft authentication in client runs.
+The following properties can be used to configure the DevLogin tool:
+```properties
+neogradle.subsystems.tools.devLogin=<artifact coordinate for devlogin cli tool>
+```
+More information on the relevant tool, its released version and documentation can be found here: [DevLogin by Covers1624](https://github.com/covers1624/DevLogin)
+
+## DevLogin
+The DevLogin tool is a tool that allows you to log in to a Minecraft account without having to use the Minecraft launcher, during development.
+During first start it will show you a link to log in to your Minecraft account, and then you can use the tool to log in to your account.
+The credentials are cached on your local machine, and then reused for future logins, so that re-logging is only needed when the tokens expire.
+This tool is used by the runs subsystem to enable logged in plays on all client runs.
+The tool can be configured using the following properties:
+```properties
+neogradle.subsystems.devLogin.enabled=<true/false>
+```
+By default, the subsystem is enabled, and it will prepare everything for you to log in to a Minecraft account, however you will still need to enable it on the runs you want.
+If you want to disable this you can set the property to false, and then you will not be asked to log in, but use a random non-signed in dev account.
+
+### Per run configuration
+If you want to configure the dev login tool per run, you can do so by setting the following properties in your run configuration:
+```groovy
+runs {
+    someRun {
+        devLogin {
+            enabled true
+        }
+    }
+}
+```
+This will enable the dev login tool for this run. 
+By default, the dev login tool is disabled, and can only be enabled for client runs.
+
+> [!WARNING]
+> If you enable the dev login tool for a non-client run, you will get an error message.
+
+If you want to enable the dev login tool for all client runs, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.devLogin.conventionForRun=true
+```
+This will enable the dev login tool for all client runs, unless explicitly disabled.
+
+Additionally, it is possible to use a different user profile for the dev login tool, by setting the following property in your run configuration:
+```groovy
+runs {
+    someRun {
+        devLogin {
+            profile '<profile>'
+        }
+    }
+}
+```
+If it is not set then the default profile will be used. See the DevLogin documentation for more information on profiles: [DevLogin by Covers1624](https://github.com/covers1624/DevLogin/blob/main/README.md#multiple-accounts)
+
+### Configurations
+To add the dev login tool to your run we create a custom configuration to which we add the dev login tool.
+This configuration is created for the first source-set you register with the run as a mod source set.
+The suffix for the configuration can be configured to your personal preference, by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.devLogin.configurationSuffix=<suffix>
+```
+By default, the suffix is set to "DevLoginLocalOnly".
+We use this approach to create a runtime only configuration, that does not leak to other consumers of your project.
+
+## Centralized Cache
+NeoGradle has a centralized cache that can be used to store the decompiled Minecraft sources, the recompiled Minecraft sources, and other task outputs of complex tasks.
+The cache is enabled by default, and can be disabled by setting the following property in your gradle.properties:
+```properties
+net.neoforged.gradle.caching.enabled=false
+```
+
+You can clean the artifacts that are stored in the cache by running the following command:
+```shell
+./gradlew cleanCache
+```
+
+This command is also automatically run, when you run the clean task.
+The command will check if the stored artifact count is higher than the configured threshold, and if so, remove the oldest artifacts until the count is below the threshold.
+The count is configured by the following property in your gradle.properties:
+```properties
+net.neoforged.gradle.caching.maxCacheSize=<number>
+```
+
+### Debugging
+There are two properties you can tweak to get more information about the cache:
+```properties
+net.neoforged.gradle.caching.logCacheHits=<true/false>
+```
+and
+```properties
+net.neoforged.gradle.caching.debug=<true/false>
+```
+The first property will log when a cache hit occurs, and the second property will log more information about the cache in general, including how hashes are calculated.
+If you are experiencing issues with the cache, you can enable these properties to get more information about what is happening.
