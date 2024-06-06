@@ -8,6 +8,7 @@ import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.common.runs.tasks.RunsReport;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
@@ -149,6 +150,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //Needs to be before after evaluate
         configureConventions(project);
 
+        //Set up reporting tasks
+        project.getTasks().register("runs", RunsReport.class);
+
         project.afterEvaluate(this::applyAfterEvaluate);
     }
 
@@ -188,7 +192,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     }
 
                     if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get()) {
-                        run.getModSources().get().forEach(sourceSet -> {
+                        run.getModSources().all().get().values().forEach(sourceSet -> {
                             if (project.getConfigurations().findByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())) != null) {
                                 run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
                             }
@@ -353,7 +357,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     //TODO: Determine handling of multiple different runtimes, in multiple projects....
                     final Map<String, CommonRuntimeDefinition<?>> definitionSet = new HashMap<>();
 
-                    runImpl.getModSources().get().forEach(sourceSet -> {
+                    runImpl.getModSources().all().get().values().forEach(sourceSet -> {
                         try {
                             final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
                             if (definition.isPresent()) {
