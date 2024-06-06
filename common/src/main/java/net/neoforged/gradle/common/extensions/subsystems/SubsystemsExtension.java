@@ -13,11 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
 
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_ARTIFACT_PREFIX;
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_GROUP;
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_PARCHMENT_MAVEN_URL;
-import static net.neoforged.gradle.dsl.common.util.Constants.JST_TOOL_ARTIFACT;
-import static net.neoforged.gradle.dsl.common.util.Constants.DEFAULT_RECOMPILER_MAX_MEMORY;
+import static net.neoforged.gradle.dsl.common.util.Constants.*;
 
 public abstract class SubsystemsExtension extends WithPropertyLookup implements ConfigurableDSLElement<Subsystems>, Subsystems {
 
@@ -33,12 +29,32 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         configureRecompilerDefaults();
         configureParchmentDefaults();
         configureToolsDefaults();
+        configureDevLoginDefaults();
+    }
+
+    private void configureDevLoginDefaults() {
+        DevLogin devLogin = getDevLogin();
+        devLogin.getEnabled().convention(
+                getBooleanProperty("devLogin.enabled").orElse(true)
+        );
+        devLogin.getMainClass().convention(
+                getStringProperty("devLogin.mainClass").orElse(DEVLOGIN_MAIN_CLASS)
+        );
+        devLogin.getConfigurationSuffix().convention(
+                getStringProperty("devLogin.configurationSuffix").orElse("DevLoginLocalOnly")
+        );
+        devLogin.getConventionForRun().convention(
+                getBooleanProperty("devLogin.conventionForRun").orElse(false)
+        );
     }
 
     private void configureToolsDefaults() {
         Tools tools = getTools();
         tools.getJST().convention(
                 getStringProperty("tools.jst").orElse(JST_TOOL_ARTIFACT)
+        );
+        tools.getDevLogin().convention(
+                getStringProperty("tools.devLogin").orElse(DEVLOGIN_TOOL_ARTIFACT)
         );
     }
 

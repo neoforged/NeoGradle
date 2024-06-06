@@ -23,4 +23,12 @@ interface Tools extends ConfigurableDSLElement<Parchment> {
     @DSLProperty
     Property<String> getJST();
 
+    /**
+     * Artifact coordinates for the NeoGradle decompiler.
+     * Used by the runs subsystem to allow login to the dev environment.
+     */
+    @Input
+    @Optional
+    @DSLProperty
+    Property<String> getDevLogin();
 }
