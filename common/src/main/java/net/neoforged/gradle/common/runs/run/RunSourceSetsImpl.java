@@ -10,14 +10,14 @@ import org.gradle.api.tasks.SourceSet;
 
 import javax.inject.Inject;
 
-public abstract class RunSourceSetImpl implements RunSourceSets {
+public abstract class RunSourceSetsImpl implements RunSourceSets {
 
     private final Project project;
     private final Provider<Multimap<String, SourceSet>> provider;
     private final Multimap<String, SourceSet> sourceSets;
 
     @Inject
-    public RunSourceSetImpl(Project project) {
+    public RunSourceSetsImpl(Project project) {
         this.project = project;
         this.sourceSets = HashMultimap.create();
         this.provider = project.provider(() -> sourceSets);

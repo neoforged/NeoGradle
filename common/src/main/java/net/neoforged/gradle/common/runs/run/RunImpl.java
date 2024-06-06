@@ -43,8 +43,8 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     public RunImpl(final Project project, final String name) {
         this.project = project;
         this.name = name;
-        this.modSources = project.getObjects().newInstance(RunSourceSetImpl.class, project);
-        this.unitTestSources = project.getObjects().newInstance(RunSourceSetImpl.class, project);
+        this.modSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
+        this.unitTestSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
 
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
