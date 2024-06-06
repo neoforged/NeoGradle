@@ -273,7 +273,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     task.getClean().set(cleanProvider.flatMap(WithOutput::getOutput));
                     task.getPatched().set(compiledJarProvider.flatMap(Jar::getArchiveFile));
                     task.getDistributionType().set(distribution);
-                    task.getPatches().from(project.fileTree(patches));
+                    task.getPatches().from(patches);
                     task.getMappings().set(obfToMojMappingProviders.get(distribution).flatMap(WithOutput::getOutput));
                     
                     task.mustRunAfter(unpackZip);
