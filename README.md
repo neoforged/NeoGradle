@@ -204,11 +204,15 @@ To include the sibling project in your run, you need to add it as a modSource to
 ```groovy
 runs {
     someRun {
-        modSource sourceSets.main
-        modSource project(':siblingProject').sourceSets.main
+        modSources {
+            add project.sourceSets.main // Adds the owning projects main sourceset to a group based on that sourcesets mod identifier (could be anything here, depending on the sourcesets extension values, or the project name)
+            add project(':api').sourceSets.main // Assuming the API project is not using NeoGradle, this would add the api project to a group using the `api` key, because the default mod identifier for non-neogradle projects is the projects name, here api
+            local project(':api').sourceSets.main // Assuming the API project is not using NeoGradle, this would add the api project to a group using the owning projects name, instead of the api projects name as a fallback (could be anything here, depending on the sourcesets extension values, or the project name)
+            add('something', project(':api').sourceSets.main) // This hardcodes the group identifier to 'something', performing no lookup of the mod identifier on the sourceset, or using the owning project, or the sourcesets project.
+        }
     }
 }
-``` 
+```
 No other action is needed.
 
 ## Using conventions

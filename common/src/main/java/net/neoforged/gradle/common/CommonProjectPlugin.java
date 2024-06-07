@@ -8,6 +8,7 @@ import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.common.runs.tasks.RunsReport;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
@@ -151,6 +152,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //Needs to be before after evaluate
         configureConventions(project);
 
+        //Set up reporting tasks
+        project.getTasks().register("runs", RunsReport.class);
+
         final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
         if (devLogin.getEnabled().get()) {
             runs.configureEach(run -> {
@@ -198,7 +202,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     }
 
                     if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get()) {
-                        run.getModSources().get().forEach(sourceSet -> {
+                        run.getModSources().all().get().values().forEach(sourceSet -> {
                             if (project.getConfigurations().findByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())) != null) {
                                 run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
                             }
@@ -356,7 +360,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     }
                 }
 
-                if (run.getModSources().get().isEmpty()) {
+                if (run.getModSources().all().get().isEmpty()) {
                     throw new InvalidUserDataException("Run: " + run.getName() + " has no source sets configured. Please configure at least one source set.");
                 }
 
@@ -367,7 +371,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     //TODO: Determine handling of multiple different runtimes, in multiple projects....
                     final Map<String, CommonRuntimeDefinition<?>> definitionSet = new HashMap<>();
 
-                    runImpl.getModSources().get().forEach(sourceSet -> {
+                    runImpl.getModSources().all().get().values().forEach(sourceSet -> {
                         try {
                             final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
                             if (definition.isPresent()) {
@@ -400,7 +404,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                             final String mainClass = runImpl.getMainClass().get();
 
                             //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
-                            final SourceSet defaultSourceSet = runImpl.getModSources().get().get(0);
+                            final SourceSet defaultSourceSet = runImpl.getModSources().all().get().entries().iterator().next().getValue();
                             final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
                             final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
                             final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
