@@ -6,6 +6,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -38,11 +39,15 @@ public class SourceSetUtils {
         throw new IllegalStateException("Could not find project for source set " + sourceSet.getName());
     }
     
-    public static String getModIdentifier(final SourceSet sourceSet) {
+    public static String getModIdentifier(final SourceSet sourceSet, final @Nullable Project project) {
         final RunnableSourceSet runnableSourceSet = sourceSet.getExtensions().findByType(RunnableSourceSet.class);
         if (runnableSourceSet != null)
             return runnableSourceSet.getModIdentifier().get();
-        
-        return getProject(sourceSet).getName();
+
+        if (project == null) {
+            return getProject(sourceSet).getName();
+        } else {
+            return project.getName();
+        }
     }
 }
