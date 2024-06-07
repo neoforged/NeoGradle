@@ -68,6 +68,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.jvm.tasks.Jar;
@@ -284,6 +285,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 binaryPatchGenerators.put(distribution, generateBinaryPatchesTask);
             }
 
+            final Configuration runtimeClasspath = project.getConfigurations().getByName(
+                    project.getExtensions().getByType(SourceSetContainer.class).findByName(SourceSet.MAIN_SOURCE_SET_NAME)
+                            .getRuntimeClasspathConfigurationName()
+            );
+
             launcherProfile.configure((Action<LauncherProfile>) profile -> {
                 profile.getId().set(String.format("%s-%s", project.getName(), project.getVersion()));
                 profile.getTime().set(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
@@ -458,10 +464,17 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
                 profile.getShouldHideExtract().set(true);
             });
-            
+
+            final Configuration installerJsonInstallerLibrariesConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "InstallerJsonInstallerLibraries"
+            );
+            installerJsonInstallerLibrariesConfiguration.extendsFrom(installerLibrariesConfiguration);
+            installerJsonInstallerLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
+
             final TaskProvider<CreateLegacyInstallerJson> createLegacyInstallerJson = project.getTasks().register("createLegacyInstallerJson", CreateLegacyInstallerJson.class, task -> {
                 task.getProfile().set(installerProfile);
-                task.getLibraries().from(installerLibrariesConfiguration);
+                task.getLibraries().from(installerJsonInstallerLibrariesConfiguration);
                 task.getRepositoryURLs().set(repoCollection);
                 
                 task.dependsOn(signUniversalJar);
@@ -621,17 +634,40 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             }));
             userdevProfile.getSourcesJarArtifactCoordinate().set(createCoordinate(project, "sources"));
             userdevProfile.getUniversalJarArtifactCoordinate().set(createCoordinate(project, "universal"));
-            
+
+            final Configuration userdevJsonLibrariesConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "userdevLibraries"
+            );
+            userdevJsonLibrariesConfiguration.extendsFrom(
+                    userdevCompileOnlyConfiguration,
+                    installerLibrariesConfiguration,
+                    gameLayerLibraryConfiguration,
+                    pluginLayerLibraryConfiguration,
+                    moduleOnlyConfiguration
+            );
+            userdevJsonLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
+
+            final Configuration userdevJsonModuleOnlyConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "userdevModuleOnly"
+            );
+            userdevJsonModuleOnlyConfiguration.extendsFrom(moduleOnlyConfiguration);
+            userdevJsonLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
+
+            final Configuration userdevJsonUserdevTestImplementationConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "userdevJsonUserdevTestImplementation"
+            );
+            userdevJsonUserdevTestImplementationConfiguration.extendsFrom(userdevTestImplementationConfiguration);
+            userdevJsonUserdevTestImplementationConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
+
             final TaskProvider<CreateUserdevJson> createUserdevJson = project.getTasks().register("createUserdevJson", CreateUserdevJson.class, task -> {
                 task.getProfile().set(userdevProfile);
-                task.getLibraries().from(userdevCompileOnlyConfiguration);
-                task.getLibraries().from(installerLibrariesConfiguration);
-                task.getLibraries().from(gameLayerLibraryConfiguration);
-                task.getLibraries().from(pluginLayerLibraryConfiguration);
-                task.getLibraries().from(moduleOnlyConfiguration);
-                task.getModules().from(moduleOnlyConfiguration);
+                task.getLibraries().from(userdevJsonLibrariesConfiguration);
+                task.getModules().from(userdevJsonModuleOnlyConfiguration);
 
-                task.getTestLibraries().from(userdevTestImplementationConfiguration);
+                task.getTestLibraries().from(userdevJsonUserdevTestImplementationConfiguration);
 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
