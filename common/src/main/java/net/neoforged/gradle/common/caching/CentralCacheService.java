@@ -282,11 +282,13 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
             });
 
             for (File file : inputs.getFiles()) {
-                debugLog(task, "Hashing task input file: " + file.getAbsolutePath());
-                hasher.putString(file.getName());
-                final HashCode code = hashFunction.hashFile(file);
-                debugLog(task, "Hashing task input file hash: " + code);
-                hasher.putHash(code);
+                for (Path path : Files.walk(file.toPath()).filter(Files::isRegularFile).toList()) {
+                    debugLog(task, "Hashing task input file: " + path.toAbsolutePath());
+                    hasher.putString(path.getFileName().toString());
+                    final HashCode code = hashFunction.hashFile(path.toFile());
+                    debugLog(task, "Hashing task input file hash: " + code);
+                    hasher.putHash(code);
+                }
             }
         }
 
