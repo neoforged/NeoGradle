@@ -360,7 +360,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     }
                 }
 
-                if (run.getModSources().get().isEmpty()) {
+                if (run.getModSources().all().get().isEmpty()) {
                     throw new InvalidUserDataException("Run: " + run.getName() + " has no source sets configured. Please configure at least one source set.");
                 }
 
@@ -404,7 +404,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                             final String mainClass = runImpl.getMainClass().get();
 
                             //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
-                            final SourceSet defaultSourceSet = runImpl.getModSources().get().get(0);
+                            final SourceSet defaultSourceSet = runImpl.getModSources().all().get().entries().iterator().next().getValue();
                             final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
                             final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
                             final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());

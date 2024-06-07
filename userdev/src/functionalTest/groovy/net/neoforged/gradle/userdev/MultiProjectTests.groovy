@@ -413,6 +413,114 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         modSourcesSection.get(4) == "    - main"
     }
 
+
+    def "multiple projects where one is not neogradle with neoforge dependencies should pull the mod-classes entry from the project name, using the legacy dsl"() {
+        given:
+        def rootProject = create("multi_neoforge_root_none_ng", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.disableConventions()
+        })
+
+        create(rootProject, "api", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
+                package net.neoforged.gradle.apitest;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println("Hello World");
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin("java-library")
+        })
+
+        create(rootProject,"main", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:20.6.104-beta'
+                implementation project(':api')
+            }
+            
+            runs {
+                client {
+                    modSource project.sourceSets.main
+                    modSource project(':api').sourceSets.main
+                }
+            }
+            """)
+            it.withManifest([
+                    "FMLModType": "GAMELIBRARY",
+                    "Automatic-Module-Name": "main"
+            ])
+            it.file("src/main/resources/sometime.properties", """
+                some=thing
+            """)
+            it.file("src/main/java/net/neoforged/gradle/main/ApiTests.java", """
+                package net.neoforged.gradle.main;
+                
+                import net.minecraft.client.Minecraft;
+                import net.neoforged.gradle.apitest.FunctionalTests;
+                
+                public class ApiTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                        FunctionalTests.main(args);
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin(this.pluginUnderTest)
+            it.withManifest()
+        })
+
+        when:
+        def run = rootProject.run {
+            it.tasks(':main:runs')
+            it.stacktrace()
+        }
+
+        then:
+        run.task(':main:runs').outcome == TaskOutcome.SUCCESS
+
+        def modSourcesSection = run.output.split(System.lineSeparator()).toList().subList(
+                run.output.split(System.lineSeparator()).toList().indexOf("Mod Sources:"),
+                run.output.split(System.lineSeparator()).toList().indexOf("Unit Test Sources:")
+        )
+        modSourcesSection.size() == 5
+        modSourcesSection.get(0) == "Mod Sources:"
+        modSourcesSection.get(1) == "  - main:"
+        modSourcesSection.get(2) == "    - main"
+        modSourcesSection.get(3) == "  - api:"
+        modSourcesSection.get(4) == "    - main"
+    }
+
     def "multiple projects where one is not neogradle with neoforge dependencies should combine the mod-classes entry from the project name, using the local-dsl"() {
         given:
         def rootProject = create("multi_neoforge_root_none_ng", {
