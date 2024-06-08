@@ -48,9 +48,9 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         repositoryUrls.add(0, NEOFORGED_MAVEN)
         repositoryUrls.add(0, MOJANG_MAVEN)
 
-        logger.lifecycle("Collecting libraries from:")
+        logger.info("Collecting libraries from:")
         for (var repo in repositoryUrls) {
-            logger.lifecycle(" - $repo")
+            logger.info(" - $repo")
         }
     }
 
@@ -127,7 +127,7 @@ class LibraryCollector extends ModuleIdentificationVisitor {
                                 }
                                 throw new RuntimeException(message)
                             }
-                            logger.lifecycle("  Found $name -> $artifactUri")
+                            logger.info("  Found $name -> $artifactUri")
                             artifact.getUrl().set(artifactUri.toString());
                             library
                         }
@@ -163,7 +163,7 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         var result = libraries.collect {
             it.get()
         }
-        logger.lifecycle("Collected ${result.size()} libraries")
+        logger.info("Collected ${result.size()} libraries")
         return new HashSet<>(result)
     }
 }
