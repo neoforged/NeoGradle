@@ -13,28 +13,38 @@ import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.ClosureEquivalent
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils
-import net.neoforged.gradle.dsl.platform.util.CoordinateCollector
+import net.neoforged.gradle.dsl.platform.util.LibrariesTransformer
 import net.neoforged.gradle.dsl.platform.util.LibraryCollector
 import net.neoforged.gradle.util.ModuleDependencyUtils
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.artifacts.result.DependencyResult
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedComponentResult
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.lang.reflect.Type
-import java.util.function.BiConsumer
+import java.util.concurrent.Callable
 import java.util.function.BiFunction
 import java.util.stream.Collectors
 
@@ -163,47 +173,23 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     abstract ListProperty<Processor> getProcessors();
 
     @ClosureEquivalent
-    void processor(Project project, Action<Processor> configurator) {
-        final Processor processor = getObjectFactory().newInstance(Processor.class).configure(new Action<Processor>() {
-            @Override
-            void execute(Processor processor) {
-                configurator.execute(processor)
+    void processor(Project project, Action<ProcessorBuilder> configurator) {
+        final ProcessorBuilder builder = getObjectFactory().newInstance(ProcessorBuilder.class, project)
+        configurator.execute(builder)
 
-                processor.getClasspath().set(processor.getJar().map(tool -> {
-                    final Configuration detached = ConfigurationUtils.temporaryConfiguration(
-                            project,
-                            "InstallerProfileCoordinateLookup" + ModuleDependencyUtils.toConfigurationName(tool),
-                            project.getDependencies().create(tool)
-                    )
+        getProcessors().add(builder.asProcessor(project))
 
-                    final CoordinateCollector filler = new CoordinateCollector(project.getObjects())
-                    detached.getAsFileTree().visit filler
-                    return filler.getCoordinates()
-                }))
-            }
-        });
+        final List<URI> registries = new ArrayList<>();
 
-        getProcessors().add(processor)
-
-        getLibraries().addAll project.providers.zip(
-                processor.getClasspath(), processor.getJar(), new BiFunction<Set<String>, String, Iterable<Library>>() {
-            @Override
-            Iterable<Library> apply(Set<String> classPath, String tool) {
-                final Set<String> dependencyCoordinates = new HashSet<>(classPath)
-                dependencyCoordinates.add(tool)
-
-                final Dependency[] dependencies = dependencyCoordinates.stream().map { coord -> project.getDependencies().create(coord) }.toArray(Dependency[]::new)
-                final Configuration configuration = ConfigurationUtils.temporaryConfiguration(
-                        project,
-                        "InstallerProfileLibraryLookup" + ModuleDependencyUtils.toConfigurationName(tool),
-                        dependencies)
-
-                final LibraryCollector collector = new LibraryCollector(project.getObjects(), project.getRepositories()
-                    .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList()))
-                configuration.getAsFileTree().visit collector
-                return collector.getLibraries()
-            }
-        })
+        getLibraries().addAll(
+                LibrariesTransformer.transform(
+                        builder.getToolClasspathArtifactIds(),
+                        builder.getToolClasspathArtifactVariants(),
+                        builder.getToolClasspathArtifactFiles(),
+                        project.getLayout(),
+                        project.getObjects()
+                )
+        )
     }
 
     @Nested
@@ -282,7 +268,51 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     }
 
     @CompileStatic
-    abstract static class Processor implements ConfigurableDSLElement<Processor> {
+    abstract static class ProcessorBuilder implements ConfigurableDSLElement<ProcessorBuilder> {
+
+        private final Project project;
+
+        @Inject
+        ProcessorBuilder(Project project) {
+            this.project = project
+        }
+
+        void withToolFrom(final Configuration configuration) {
+            getToolComponent().set(configuration.getIncoming().getResolutionResult().getRootComponent())
+            
+            getToolClasspathArtifacts().set(configuration.getIncoming().getArtifacts().getArtifacts())
+            
+            getToolClasspathArtifactIds().set(getToolClasspathArtifacts().map(new LibrariesTransformer.IdExtractor()))
+            getToolClasspathArtifactVariants().set(getToolClasspathArtifacts().map(new LibrariesTransformer.VariantExtractor()))
+            getToolClasspathArtifactFiles().set(getToolClasspathArtifacts().map(new LibrariesTransformer.FileExtractor(project.getLayout())))
+        }
+
+        @Input
+        @DSLProperty
+        @Optional
+        abstract Property<ResolvedComponentResult> getToolComponent();
+
+        @Internal
+        @DSLProperty
+        @Optional
+        abstract SetProperty<ResolvedArtifactResult> getToolClasspathArtifacts();
+
+        @Input
+        @DSLProperty
+        @Optional
+        abstract ListProperty<ComponentArtifactIdentifier> getToolClasspathArtifactIds();
+
+        @Input
+        @DSLProperty
+        @Optional
+        abstract ListProperty<ResolvedVariantResult> getToolClasspathArtifactVariants();
+
+        @InputFiles
+        @DSLProperty
+        @Optional
+        @Classpath
+        abstract ListProperty<RegularFile> getToolClasspathArtifactFiles();
+
         @Input
         @DSLProperty
         @Optional
@@ -295,6 +325,55 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         void client() {
             getSides().add("client")
         }
+
+        @Input
+        @DSLProperty
+        @Optional
+        abstract ListProperty<String> getArguments();
+
+        @Input
+        @DSLProperty
+        @Optional
+        abstract MapProperty<String, String> getOutputs();
+
+        private Processor asProcessor(final Project project) {
+            final Processor processor = project.getObjects().newInstance(Processor.class)
+
+            processor.getSides().addAll(getSides())
+            processor.getJar().set(getToolComponent().map { it -> it.id.displayName })
+            processor.getClasspath().addAll(getToolComponent().map { it -> collectIds(it) })
+            processor.getArguments().addAll(getArguments())
+            processor.getOutputs().putAll(getOutputs())
+
+            return processor
+        }
+
+        private Iterable<? extends String> collectIds(ResolvedComponentResult libraries) {
+            final Set<String> seen = new HashSet<>();
+            collectIds(libraries, seen);
+            return seen;
+        }
+
+        private void collectIds(ResolvedComponentResult result, Set<String> seen) {
+            if (seen.add(result.id.displayName)) {
+                for (DependencyResult dependency : result.getDependencies()) {
+                    if (dependency instanceof ResolvedDependencyResult) {
+                        final ResolvedDependencyResult resolvedDependency = (ResolvedDependencyResult) dependency;
+                        collectIds(resolvedDependency.getSelected(), seen);
+                    } else {
+                        throw new IllegalStateException("Unresolved dependency type: " + dependency.getRequested().getDisplayName());
+                    }
+                }
+            }
+        }
+    }
+
+    @CompileStatic
+    abstract static class Processor implements ConfigurableDSLElement<Processor> {
+        @Input
+        @DSLProperty
+        @Optional
+        abstract ListProperty<String> getSides();
 
         @Input
         @DSLProperty

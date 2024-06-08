@@ -377,6 +377,27 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.dependsOn(universalJar);
             });
 
+            final Configuration installerProfileInstallerToolConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "installerProfileInstallerTools"
+            );
+            installerProfileInstallerToolConfiguration.getDependencies().add(project.getDependencies().create(Constants.INSTALLERTOOLS));
+            final Configuration installerProfileJarSplitterConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "installerProfileJarSplitter"
+            );
+            installerProfileJarSplitterConfiguration.getDependencies().add(project.getDependencies().create(Constants.JARSPLITTER));
+            final Configuration installerProfileFartConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "installerProfileFart"
+            );
+            installerProfileFartConfiguration.getDependencies().add(project.getDependencies().create(Constants.FART));
+            final Configuration installerProfileBinaryPatcherConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "installerProfileBinaryPatcher"
+            );
+            installerProfileBinaryPatcherConfiguration.getDependencies().add(project.getDependencies().create(Constants.BINARYPATCHER));
+
             installerProfile.configure((Consumer<InstallerProfile>) profile -> {
                 profile.getProfile().convention(project.getName());
                 profile.getVersion().set(launcherProfile.getId());
@@ -394,7 +415,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 profile.data("MCP_VERSION", String.format("'%s'", neoFormVersion), String.format("'%s'", neoFormVersion));
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                    processor.withToolFrom(installerProfileInstallerToolConfiguration);
                     processor.getArguments().addAll("--task", "EXTRACT_FILES", "--archive", "{INSTALLER}",
                             
                             "--from", "data/run.sh", "--to", "{ROOT}/run.sh", "--exec", "{ROOT}/run.sh",
@@ -409,42 +430,42 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                    processor.withToolFrom(installerProfileInstallerToolConfiguration);
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{ROOT}/libraries/", "--libraries");
                 });
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                    processor.withToolFrom(installerProfileInstallerToolConfiguration);
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{MC_UNPACKED}", "--jar-only");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                    processor.withToolFrom(installerProfileInstallerToolConfiguration);
                     processor.getArguments().addAll("--task", "MCP_DATA", "--input", String.format("[%s]", neoformDependency), "--output", "{MAPPINGS}", "--key", "mappings");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                    processor.withToolFrom(installerProfileInstallerToolConfiguration);
                     processor.getArguments().addAll("--task", "DOWNLOAD_MOJMAPS", "--version", runtimeDefinition.getSpecification().getMinecraftVersion(), "--side", "{SIDE}", "--output", "{MOJMAPS}");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                    processor.withToolFrom(installerProfileInstallerToolConfiguration);
                     processor.getArguments().addAll("--task", "MERGE_MAPPING", "--left", "{MAPPINGS}", "--right", "{MOJMAPS}", "--output", "{MERGED_MAPPINGS}", "--classes", "--fields", "--methods", "--reverse-right");
                 });
                 profile.processor(project, processor -> {
                     processor.client();
-                    processor.getJar().set(Constants.JARSPLITTER);
+                    processor.withToolFrom(installerProfileJarSplitterConfiguration);
                     processor.getArguments().addAll("--input", "{MINECRAFT_JAR}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
                 profile.processor(project, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.JARSPLITTER);
+                    processor.withToolFrom(installerProfileJarSplitterConfiguration);
                     processor.getArguments().addAll("--input", "{MC_UNPACKED}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.FART);
+                    processor.withToolFrom(installerProfileFartConfiguration);
                     processor.getArguments().addAll("--input", "{MC_SLIM}", "--output", "{MC_SRG}", "--names", "{MERGED_MAPPINGS}", "--ann-fix", "--ids-fix", "--src-fix", "--record-fix");
                 });
                 profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.BINARYPATCHER);
+                    processor.withToolFrom(installerProfileBinaryPatcherConfiguration);
                     processor.getArguments().addAll("--clean", "{MC_SRG}", "--output", "{PATCHED}", "--apply", "{BINPATCH}");
                 });
                 
@@ -474,7 +495,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
             final TaskProvider<CreateLegacyInstallerJson> createLegacyInstallerJson = project.getTasks().register("createLegacyInstallerJson", CreateLegacyInstallerJson.class, task -> {
                 task.getProfile().set(installerProfile);
-                task.getLibraries().from(installerJsonInstallerLibrariesConfiguration);
+                task.getLibraries().set(installerJsonInstallerLibrariesConfiguration.getIncoming().getArtifacts().getResolvedArtifacts());
                 task.getRepositoryURLs().set(repoCollection);
                 
                 task.dependsOn(signUniversalJar);
@@ -664,10 +685,10 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
             final TaskProvider<CreateUserdevJson> createUserdevJson = project.getTasks().register("createUserdevJson", CreateUserdevJson.class, task -> {
                 task.getProfile().set(userdevProfile);
-                task.getLibraries().from(userdevJsonLibrariesConfiguration);
-                task.getModules().from(userdevJsonModuleOnlyConfiguration);
+                task.getLibraries().set(userdevJsonLibrariesConfiguration.getIncoming().getResolutionResult().getRootComponent());
+                task.getModules().set(userdevJsonModuleOnlyConfiguration.getIncoming().getResolutionResult().getRootComponent());
 
-                task.getTestLibraries().from(userdevJsonUserdevTestImplementationConfiguration);
+                task.getTestLibraries().set(userdevJsonUserdevTestImplementationConfiguration.getIncoming().getResolutionResult().getRootComponent());
 
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
@@ -938,7 +959,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     }
 
     private static String createCoordinate(final Project project, final String classifier) {
-        return Artifact.from(project, classifier, "jar").toString();
+        final Artifact artifact = Artifact.from(project, classifier, "jar");
+        return artifact.getDescriptor();
     }
 
     @NotNull
