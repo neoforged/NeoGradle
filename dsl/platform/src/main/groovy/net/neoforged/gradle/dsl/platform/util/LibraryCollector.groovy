@@ -23,6 +23,16 @@ import java.util.function.Function
 @CompileStatic
 class LibraryCollector extends ModuleIdentificationVisitor {
 
+    /**
+     * Hosts from which we allow the installer to download.
+     * We whitelist here to avoid redirecting player download traffic to anyone not affiliated with Mojang or us.
+     */
+    private static final String HOST_WHITELIST = List.of(
+            "minecraft.net",
+            "neoforged.net",
+            "mojang.com"
+    );
+
     private static final URI MOJANG_MAVEN = URI.create("https://libraries.minecraft.net")
     private static final URI NEOFORGED_MAVEN = URI.create("https://maven.neoforged.net/releases")
 
@@ -41,7 +51,15 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         this.repositoryUrls = new ArrayList<>(repoUrl)
 
         // Only remote repositories make sense (no maven local)
-        repositoryUrls.removeIf { it.scheme.toLowerCase() != "https" && it.scheme.toLowerCase() != "http" }
+        repositoryUrls.removeIf {
+            var lowercaseScheme = it.scheme.toLowerCase(Locale.ROOT)
+            lowercaseScheme != "https" && lowercaseScheme != "http"
+        }
+        // Allow only URLs from whitelisted hosts
+        repositoryUrls.removeIf { uri ->
+            var lowercaseHost = uri.host.toLowerCase(Locale.ROOT)
+            !HOST_WHITELIST.any { lowercaseHost == it || lowercaseHost.endsWith("." + it) }
+        }
         // Always try Mojang Maven first, then our installer Maven
         repositoryUrls.removeIf { it.host == MOJANG_MAVEN.host }
         repositoryUrls.removeIf { it.host == NEOFORGED_MAVEN.host && it.path.startsWith(NEOFORGED_MAVEN.path) }
