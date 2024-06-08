@@ -70,7 +70,7 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         }
     }
 
-    private static String guessMavenClassifier(File file, ModuleComponentIdentifier id) {
+    static String guessMavenClassifier(File file, ModuleComponentIdentifier id) {
         var artifact = id.module
         var version = id.version
         var expectedBasename = artifact + "-" + version;

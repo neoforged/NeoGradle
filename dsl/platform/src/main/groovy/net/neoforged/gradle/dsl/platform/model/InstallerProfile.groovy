@@ -14,11 +14,13 @@ import net.minecraftforge.gdi.annotations.ClosureEquivalent
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.platform.util.LibraryCollector
 import net.neoforged.gradle.util.ModuleDependencyUtils
+import org.apache.commons.io.FilenameUtils
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.model.ObjectFactory
@@ -165,29 +167,31 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     @Optional
     abstract ListProperty<Processor> getProcessors();
 
-    private Provider<Set<Library>> createToolLibraryProvider(Project project, String tool) {
-        var configName = "neoGradleInstallerTool" + ModuleDependencyUtils.toConfigurationName(tool)
-        NamedDomainObjectProvider<Configuration> toolConfiguration;
+    private NamedDomainObjectProvider<Configuration> getOrCreateConfigurationForTool(Project project, String tool) {
+        var configName = "neoForgeInstallerTool" + ModuleDependencyUtils.toConfigurationName(tool)
         try {
-            toolConfiguration = project.configurations.named(configName)
+            return project.configurations.named(configName)
         } catch (UnknownDomainObjectException ignored) {
-            toolConfiguration = project.configurations.register(configName, (Configuration spec) -> {
+            return project.configurations.register(configName, (Configuration spec) -> {
                 spec.canBeConsumed = false
                 spec.canBeResolved = true
                 spec.dependencies.add(project.getDependencies().create(tool))
             })
         }
+    }
 
+    private static Provider<Set<Library>> gatherLibrariesFromConfiguration(Project project, Provider<Configuration> configurationProvider) {
         var repositoryUrls = project.getRepositories()
                 .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList())
         var logger = project.logger
 
+        var objectFactory = project.objects
+
         // We use a property because it is *not* re-evaluated when queried, while a normal provider is
         var property = project.objects.setProperty(Library.class)
-        property.set(toolConfiguration.flatMap { config ->
-            logger.info("Finding download URLs for tool $tool and dependencies")
+        property.set(configurationProvider.flatMap { config ->
+            logger.info("Finding download URLs for configuration ${config.name}")
             config.incoming.artifacts.resolvedArtifacts.map { artifacts ->
-                logger.info("Collecting libraries for $tool")
                 var libraryCollector = new LibraryCollector(objectFactory, repositoryUrls, logger)
 
                 for (ResolvedArtifactResult resolvedArtifact in artifacts) {
@@ -202,13 +206,46 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
         return property
     }
 
+    private static Provider<Set<String>> gatherLibraryIdsFromConfiguration(Project project, Provider<Configuration> configurationProvider) {
+        // We use a property because it is *not* re-evaluated when queried, while a normal provider is
+        var property = project.objects.setProperty(String.class)
+        def logger = project.logger
+        property.set(configurationProvider.flatMap { config ->
+            config.incoming.artifacts.resolvedArtifacts.map { artifacts ->
+                artifacts.collect {
+                    def componentId = it.id.componentIdentifier
+                    if (componentId instanceof ModuleComponentIdentifier) {
+                        var group = componentId.getGroup()
+                        var module = componentId.getModule()
+                        var version = componentId.getVersion()
+                        var classifier = LibraryCollector.guessMavenClassifier(it.file, componentId)
+                        var extension = FilenameUtils.getExtension(it.file.name)
+                        if (classifier != "") {
+                            version += ":" + classifier
+                        }
+                        return "$group:$module:$version@$extension".toString()
+                    } else {
+                        logger.warn("Cannot handle component: " + componentId)
+                        return null
+                    }
+                }
+            }
+        })
+        property.finalizeValueOnRead()
+        property.disallowChanges()
+        return property
+    }
+
     @ClosureEquivalent
     void processor(Project project, String tool, Action<Processor> configurator) {
         var processor = getObjectFactory().newInstance(Processor.class).configure(configurator);
+        processor.jar.set(tool)
         getProcessors().add(processor)
 
+        var toolConfiguration = getOrCreateConfigurationForTool(project, tool)
+        processor.classpath.set(gatherLibraryIdsFromConfiguration(project, toolConfiguration))
         if (toolLibrariesAdded.add(tool)) {
-            getLibraries().addAll createToolLibraryProvider(project, tool)
+            getLibraries().addAll gatherLibrariesFromConfiguration(project, toolConfiguration)
         }
     }
 
