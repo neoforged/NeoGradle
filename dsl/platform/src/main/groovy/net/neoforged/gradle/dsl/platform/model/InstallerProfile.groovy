@@ -182,8 +182,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
                 .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList())
         var logger = project.logger
 
-        // We use a property because it is *not* re-evaluated when queried once, while a provider
-        // is non-caching
+        // We use a property because it is *not* re-evaluated when queried, while a normal provider is
         var property = project.objects.setProperty(Library.class)
         property.set(toolConfiguration.flatMap { config ->
             logger.info("Finding download URLs for tool $tool and dependencies")
