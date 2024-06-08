@@ -392,9 +392,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 profile.data("MC_SRG", String.format("[net.minecraft:client:%s:srg]", neoFormVersion), String.format("[net.minecraft:server:%s:srg]", neoFormVersion));
                 profile.data("PATCHED", String.format("[%s:%s:%s:client]", "net.neoforged", "neoforge", project.getVersion()), String.format("[%s:%s:%s:server]", "net.neoforged", "neoforge", project.getVersion()));
                 profile.data("MCP_VERSION", String.format("'%s'", neoFormVersion), String.format("'%s'", neoFormVersion));
-                profile.processor(project, processor -> {
+                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "EXTRACT_FILES", "--archive", "{INSTALLER}",
                             
                             "--from", "data/run.sh", "--to", "{ROOT}/run.sh", "--exec", "{ROOT}/run.sh",
@@ -407,44 +406,35 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                             
                             "--from", "data/unix_args.txt", "--to", String.format("{ROOT}/libraries/%s/%s/%s/unix_args.txt", project.getGroup().toString().replaceAll("\\.", "/"), project.getName(), project.getVersion()));
                 });
-                profile.processor(project, processor -> {
+                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{ROOT}/libraries/", "--libraries");
                 });
-                profile.processor(project, processor -> {
+                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{MC_UNPACKED}", "--jar-only");
                 });
-                profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
                     processor.getArguments().addAll("--task", "MCP_DATA", "--input", String.format("[%s]", neoformDependency), "--output", "{MAPPINGS}", "--key", "mappings");
                 });
-                profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
                     processor.getArguments().addAll("--task", "DOWNLOAD_MOJMAPS", "--version", runtimeDefinition.getSpecification().getMinecraftVersion(), "--side", "{SIDE}", "--output", "{MOJMAPS}");
                 });
-                profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.INSTALLERTOOLS);
+                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
                     processor.getArguments().addAll("--task", "MERGE_MAPPING", "--left", "{MAPPINGS}", "--right", "{MOJMAPS}", "--output", "{MERGED_MAPPINGS}", "--classes", "--fields", "--methods", "--reverse-right");
                 });
-                profile.processor(project, processor -> {
+                profile.processor(project, Constants.JARSPLITTER, processor -> {
                     processor.client();
-                    processor.getJar().set(Constants.JARSPLITTER);
                     processor.getArguments().addAll("--input", "{MINECRAFT_JAR}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
-                profile.processor(project, processor -> {
+                profile.processor(project, Constants.JARSPLITTER, processor -> {
                     processor.server();
-                    processor.getJar().set(Constants.JARSPLITTER);
                     processor.getArguments().addAll("--input", "{MC_UNPACKED}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
-                profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.FART);
+                profile.processor(project, Constants.FART, processor -> {
                     processor.getArguments().addAll("--input", "{MC_SLIM}", "--output", "{MC_SRG}", "--names", "{MERGED_MAPPINGS}", "--ann-fix", "--ids-fix", "--src-fix", "--record-fix");
                 });
-                profile.processor(project, processor -> {
-                    processor.getJar().set(Constants.BINARYPATCHER);
+                profile.processor(project, Constants.BINARYPATCHER, processor -> {
                     processor.getArguments().addAll("--clean", "{MC_SRG}", "--output", "{PATCHED}", "--apply", "{BINPATCH}");
                 });
                 

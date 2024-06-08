@@ -31,14 +31,12 @@ public abstract class CreateLegacyInstallerJson extends DefaultRuntime implement
         
         final InstallerProfile profile = getProfile().get();
         final InstallerProfile copy = gson.fromJson(gson.toJson(profile), InstallerProfile.class);
-        
-        copy.getLibraries().addAll(
-                getProviderFactory().provider(() -> {
-                    final LibraryCollector profileFiller = new LibraryCollector(getObjectFactory(), getRepositoryURLs().get());
-                    getLibraries().getAsFileTree().visit(profileFiller);
-                    return profileFiller.getLibraries();
-                })
-        );
+
+        getLogger().info("Collecting gameplay libraries for installer");
+        var profileFiller = new LibraryCollector(getObjectFactory(), getRepositoryURLs().get(), getLogger());
+        getLibraries().getAsFileTree().visit(profileFiller);
+        copy.getLibraries().addAll(profileFiller.getLibraries());
+
         try {
             Files.write(output.toPath(), gson.toJson(copy).getBytes());
         } catch (IOException e) {

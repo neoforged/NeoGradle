@@ -12,15 +12,15 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.ClosureEquivalent
 import net.minecraftforge.gdi.annotations.DSLProperty
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils
-import net.neoforged.gradle.dsl.platform.util.CoordinateCollector
 import net.neoforged.gradle.dsl.platform.util.LibraryCollector
 import net.neoforged.gradle.util.ModuleDependencyUtils
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
+import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -34,8 +34,6 @@ import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.lang.reflect.Type
-import java.util.function.BiConsumer
-import java.util.function.BiFunction
 import java.util.stream.Collectors
 
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeBool
@@ -139,6 +137,11 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     @Optional
     abstract MapProperty<String, DataFile> getData();
 
+    /**
+     * Track which tools were already added to avoid re-resolving the download URLs for the same tool over and over.
+     */
+    private final Set<String> toolLibrariesAdded = new HashSet<>();
+
     void data(String key, @Nullable String client, @Nullable String server) {
         getData().put(key, getObjectFactory().newInstance(DataFile.class).configure { DataFile it ->
             if (client != null)
@@ -162,48 +165,52 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     @Optional
     abstract ListProperty<Processor> getProcessors();
 
-    @ClosureEquivalent
-    void processor(Project project, Action<Processor> configurator) {
-        final Processor processor = getObjectFactory().newInstance(Processor.class).configure(new Action<Processor>() {
-            @Override
-            void execute(Processor processor) {
-                configurator.execute(processor)
+    private Provider<Set<Library>> createToolLibraryProvider(Project project, String tool) {
+        var configName = "neoGradleInstallerTool" + ModuleDependencyUtils.toConfigurationName(tool)
+        NamedDomainObjectProvider<Configuration> toolConfiguration;
+        try {
+            toolConfiguration = project.configurations.named(configName)
+        } catch (UnknownDomainObjectException ignored) {
+            toolConfiguration = project.configurations.register(configName, (Configuration spec) -> {
+                spec.canBeConsumed = false
+                spec.canBeResolved = true
+                spec.dependencies.add(project.getDependencies().create(tool))
+            })
+        }
 
-                processor.getClasspath().set(processor.getJar().map(tool -> {
-                    final Configuration detached = ConfigurationUtils.temporaryConfiguration(
-                            project,
-                            "InstallerProfileCoordinateLookup" + ModuleDependencyUtils.toConfigurationName(tool),
-                            project.getDependencies().create(tool)
-                    )
+        var repositoryUrls = project.getRepositories()
+                .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList())
+        var logger = project.logger
 
-                    final CoordinateCollector filler = new CoordinateCollector(project.getObjects())
-                    detached.getAsFileTree().visit filler
-                    return filler.getCoordinates()
-                }))
-            }
-        });
+        // We use a property because it is *not* re-evaluated when queried once, while a provider
+        // is non-caching
+        var property = project.objects.setProperty(Library.class)
+        property.set(toolConfiguration.flatMap { config ->
+            logger.info("Finding download URLs for tool $tool and dependencies")
+            config.incoming.artifacts.resolvedArtifacts.map { artifacts ->
+                logger.info("Collecting libraries for $tool")
+                var libraryCollector = new LibraryCollector(objectFactory, repositoryUrls, logger)
 
-        getProcessors().add(processor)
+                for (ResolvedArtifactResult resolvedArtifact in artifacts) {
+                    libraryCollector.visit(resolvedArtifact)
+                }
 
-        getLibraries().addAll project.providers.zip(
-                processor.getClasspath(), processor.getJar(), new BiFunction<Set<String>, String, Iterable<Library>>() {
-            @Override
-            Iterable<Library> apply(Set<String> classPath, String tool) {
-                final Set<String> dependencyCoordinates = new HashSet<>(classPath)
-                dependencyCoordinates.add(tool)
-
-                final Dependency[] dependencies = dependencyCoordinates.stream().map { coord -> project.getDependencies().create(coord) }.toArray(Dependency[]::new)
-                final Configuration configuration = ConfigurationUtils.temporaryConfiguration(
-                        project,
-                        "InstallerProfileLibraryLookup" + ModuleDependencyUtils.toConfigurationName(tool),
-                        dependencies)
-
-                final LibraryCollector collector = new LibraryCollector(project.getObjects(), project.getRepositories()
-                    .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList()))
-                configuration.getAsFileTree().visit collector
-                return collector.getLibraries()
+                libraryCollector.getLibraries()
             }
         })
+        property.finalizeValueOnRead()
+        property.disallowChanges()
+        return property
+    }
+
+    @ClosureEquivalent
+    void processor(Project project, String tool, Action<Processor> configurator) {
+        var processor = getObjectFactory().newInstance(Processor.class).configure(configurator);
+        getProcessors().add(processor)
+
+        if (toolLibrariesAdded.add(tool)) {
+            getLibraries().addAll createToolLibraryProvider(project, tool)
+        }
     }
 
     @Nested

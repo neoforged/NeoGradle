@@ -5,23 +5,85 @@ import net.neoforged.gradle.dsl.platform.model.Artifact
 import net.neoforged.gradle.dsl.platform.model.Library
 import net.neoforged.gradle.dsl.platform.model.LibraryDownload
 import net.neoforged.gradle.util.HashFunction
+import org.apache.commons.io.FilenameUtils
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.jetbrains.annotations.Nullable
 
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.nio.file.Files
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Future
+import java.util.function.Function
 
 @CompileStatic
 class LibraryCollector extends ModuleIdentificationVisitor {
 
+    private static final URI MOJANG_MAVEN = URI.create("https://libraries.minecraft.net")
+    private static final URI NEOFORGED_MAVEN = URI.create("https://maven.neoforged.net/releases")
+
     private final ObjectFactory objectFactory;
     private final List<URI> repositoryUrls
 
-    private final List<Library> libraries = new ArrayList<>();
+    private final List<Future<Library>> libraries = new ArrayList<>();
 
-    LibraryCollector(ObjectFactory objectFactory, List<URI> repoUrl) {
+    private final HttpClient httpClient = HttpClient.newBuilder().build();
+    private final Logger logger
+
+    LibraryCollector(ObjectFactory objectFactory, List<URI> repoUrl, Logger logger) {
         super(objectFactory);
+        this.logger = logger
         this.objectFactory = objectFactory;
-        this.repositoryUrls = repoUrl
+        this.repositoryUrls = new ArrayList<>(repoUrl)
+
+        // Only remote repositories make sense (no maven local)
+        repositoryUrls.removeIf { it.scheme.toLowerCase() != "https" && it.scheme.toLowerCase() != "http" }
+        // Always try Mojang Maven first, then our installer Maven
+        repositoryUrls.removeIf { it.host == MOJANG_MAVEN.host }
+        repositoryUrls.removeIf { it.host == NEOFORGED_MAVEN.host && it.path.startsWith(NEOFORGED_MAVEN.path) }
+        repositoryUrls.add(0, NEOFORGED_MAVEN)
+        repositoryUrls.add(0, MOJANG_MAVEN)
+
+        logger.lifecycle("Collecting libraries from:")
+        for (var repo in repositoryUrls) {
+            logger.lifecycle(" - $repo")
+        }
+    }
+
+    void visit(ResolvedArtifactResult artifactResult) {
+        def componentId = artifactResult.id.componentIdentifier
+        if (componentId instanceof ModuleComponentIdentifier) {
+            visitModule(
+                    artifactResult.file,
+                    componentId.getGroup(),
+                    componentId.getModule(),
+                    componentId.getVersion(),
+                    guessMavenClassifier(artifactResult.file, componentId),
+                    FilenameUtils.getExtension(artifactResult.file.name)
+            )
+        } else {
+            logger.warn("Cannot handle component: " + componentId)
+        }
+    }
+
+    private static String guessMavenClassifier(File file, ModuleComponentIdentifier id) {
+        var artifact = id.module
+        var version = id.version
+        var expectedBasename = artifact + "-" + version;
+        var filename = file.name
+        var startOfExt = filename.lastIndexOf('.');
+        if (startOfExt != -1) {
+            filename = filename.substring(0, startOfExt);
+        }
+
+        if (filename.startsWith(expectedBasename + "-")) {
+            return filename.substring((expectedBasename + "-").length());
+        }
+        return ""
     }
 
     @Override
@@ -33,56 +95,75 @@ class LibraryCollector extends ModuleIdentificationVisitor {
         library.getDownload().set(download);
         download.getArtifact().set(artifact);
 
-        final String path = group.replace(".", "/") + "/" + module + "/" + version + "/" + module + "-" + version + (classifier.isEmpty() ? "" : "-" + classifier) + "." + extension;
-        String url = getMavenServerFor(path) + "/" + path;
-        int pos = 0
-        while (attemptConnection(url) !== 200 && pos < repositoryUrls.size()) {
-            url = repositoryUrls.get(pos++).resolve(path).toString()
-        }
-
         final String name = group + ":" + module + ":" + version + (classifier.isEmpty() ? "" : ":" + classifier) + "@" + extension;
+        final String path = group.replace(".", "/") + "/" + module + "/" + version + "/" + module + "-" + version + (classifier.isEmpty() ? "" : "-" + classifier) + "." + extension;
 
         library.getName().set(name);
         try {
             artifact.getPath().set(path);
-            artifact.getUrl().set(url);
             artifact.getSha1().set(HashFunction.SHA1.hash(file));
             artifact.getSize().set(Files.size(file.toPath()));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
 
-        libraries.add(library);
+        // Try each configured repository in-order to find the file
+        CompletableFuture<Library> libraryFuture = null;
+        for (var repositoryUrl in repositoryUrls) {
+            def artifactUri = joinUris(repositoryUrl, path)
+            var request = HttpRequest.newBuilder(artifactUri)
+                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .build()
+
+            Function<String, CompletableFuture<Library>> makeRequest = (String previousError) -> {
+                httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+                        .thenApply { response ->
+                            if (response.statusCode() != 200) {
+                                logger.info("  Got ${response.statusCode()} for ${artifactUri}")
+                                String message = "Could not find ${artifactUri}: ${response.statusCode()}"
+                                // Prepend error message from previous repo if they all fail
+                                if (previousError != null) {
+                                    message = previousError + "\n" + message
+                                }
+                                throw new RuntimeException(message)
+                            }
+                            logger.lifecycle("  Found $name -> $artifactUri")
+                            artifact.getUrl().set(artifactUri.toString());
+                            library
+                        }
+            };
+
+            if (libraryFuture == null) {
+                libraryFuture = makeRequest(null)
+            } else {
+                libraryFuture = libraryFuture.exceptionallyCompose { error ->
+                    makeRequest(error.getMessage())
+                }
+            }
+        }
+
+        libraries.add(libraryFuture);
     }
 
-    private static int attemptConnection(String url) {
-        try {
-            final conn = (HttpURLConnection) url.toURL().openConnection()
-            conn.setRequestMethod('HEAD')
-            conn.connect()
-            int rc = conn.responseCode
-            conn.disconnect()
-            return rc
-        } catch (Exception ignored) {
-            return 404
+    private static URI joinUris(URI repositoryUrl, String path) {
+        var baseUrl = repositoryUrl.toString()
+        if (baseUrl.endsWith("/") && path.startsWith("/")) {
+            while (path.startsWith("/")) {
+                path = path.substring(1)
+            }
+            return URI.create(baseUrl + path)
+        } else if (!baseUrl.endsWith("/") && !path.startsWith("/")) {
+            return URI.create(baseUrl + "/" + path)
+        } else {
+            return URI.create(baseUrl + path)
         }
     }
 
-    private static String getMavenServerFor(String path) {
-        try {
-            final URL mojangMavenUrl = new URL("https://libraries.minecraft.net/" + path);
-            final HttpURLConnection connection = (HttpURLConnection) mojangMavenUrl.openConnection();
-            connection.setRequestMethod("HEAD");
-            connection.connect();
-            return connection.getResponseCode() == 200 ? "https://libraries.minecraft.net" : "https://maven.neoforged.net/releases";
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            return "https://maven.neoforged.net/releases";
+    Set<Library> getLibraries() {
+        var result = libraries.collect {
+            it.get()
         }
-    }
-
-    List<Library> getLibraries() {
-        return libraries;
+        logger.lifecycle("Collected ${result.size()} libraries")
+        return new HashSet<>(result)
     }
 }
