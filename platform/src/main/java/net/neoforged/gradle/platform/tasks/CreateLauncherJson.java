@@ -35,7 +35,8 @@ public abstract class CreateLauncherJson extends DefaultRuntime implements WithO
         
         clone.getLibraries().addAll(
                 getProviderFactory().provider(() -> {
-                    final LibraryCollector profileFiller = new LibraryCollector(getObjectFactory(), getRepositoryURLs().get());
+                    getLogger().info("Collecting libraries for Launcher Profile");
+                    final LibraryCollector profileFiller = new LibraryCollector(getObjectFactory(), getRepositoryURLs().get(), getLogger());
                     getLibraries().getAsFileTree().visit(profileFiller);
                     return profileFiller.getLibraries();
                 })
