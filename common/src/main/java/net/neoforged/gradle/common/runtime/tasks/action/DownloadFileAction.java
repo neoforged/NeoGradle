@@ -109,22 +109,22 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
     private record Monitor(GradleInternalUtils.ProgressLoggerWrapper progress) implements CopyProgressListener {
 
         @Override
-            public void start(CopyProgressEvent evt) {
-                progress.started();
-                progress.incrementDownloadProgress(evt.getReadBytes());
-            }
-
-            @Override
-            public void progress(CopyProgressEvent evt) {
-                progress.incrementDownloadProgress(evt.getReadBytes());
-            }
-
-            @Override
-            public void end(CopyProgressEvent evt) {
-                progress.incrementDownloadProgress(evt.getReadBytes());
-                progress.completed();
-            }
+        public void start(CopyProgressEvent evt) {
+            progress.started();
+            progress.incrementDownloadProgress(evt.getReadBytes());
         }
+
+        @Override
+        public void progress(CopyProgressEvent evt) {
+            progress.incrementDownloadProgress(evt.getReadBytes());
+        }
+
+        @Override
+        public void end(CopyProgressEvent evt) {
+            progress.incrementDownloadProgress(evt.getReadBytes());
+            progress.completed();
+        }
+    }
 
     private static final class Timeout implements TimeoutConstraint {
 
@@ -143,9 +143,13 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
 
     public interface Params extends WorkParameters {
         Property<String> getUrl();
+
         Property<String> getSha1();
+
         Property<Boolean> getShouldValidateHash();
+
         RegularFileProperty getOutputFile();
+
         Property<Boolean> getIsOffline();
     }
 }

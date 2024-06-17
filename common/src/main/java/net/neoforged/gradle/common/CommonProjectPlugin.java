@@ -390,8 +390,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
                         }
                     });
 
-
-
                     definitionSet.forEach((identifier, definition) -> {
                         definition.configureRun(runImpl);
                     });
