@@ -392,10 +392,6 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 implementation 'net.neoforged:neoforge:+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
-            
-            runs {
-                client { }
-            }
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -404,6 +400,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
+            it.debug()
         }
 
         then:
