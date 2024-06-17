@@ -325,9 +325,6 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
         private HealthFileUsingFileBasedLock(File healthyFile) {
             this.healthyFile = healthyFile;
-
-            if (this.healthyFile.exists() && !this.healthyFile.delete())
-                throw new IllegalStateException("Failed to delete healthy marker file: " + this.healthyFile.getAbsolutePath());
         }
 
         @Override
