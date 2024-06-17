@@ -106,30 +106,25 @@ public abstract class DownloadFileAction implements WorkAction<DownloadFileActio
         }
     }
 
-    private static final class Monitor implements CopyProgressListener {
-        private final GradleInternalUtils.ProgressLoggerWrapper progress;
-
-        private Monitor(GradleInternalUtils.ProgressLoggerWrapper progress) {
-            this.progress = progress;
-        }
+    private record Monitor(GradleInternalUtils.ProgressLoggerWrapper progress) implements CopyProgressListener {
 
         @Override
-        public void start(CopyProgressEvent evt) {
-            progress.started();
-            progress.incrementDownloadProgress(evt.getReadBytes());
-        }
+            public void start(CopyProgressEvent evt) {
+                progress.started();
+                progress.incrementDownloadProgress(evt.getReadBytes());
+            }
 
-        @Override
-        public void progress(CopyProgressEvent evt) {
-            progress.incrementDownloadProgress(evt.getReadBytes());
-        }
+            @Override
+            public void progress(CopyProgressEvent evt) {
+                progress.incrementDownloadProgress(evt.getReadBytes());
+            }
 
-        @Override
-        public void end(CopyProgressEvent evt) {
-            progress.incrementDownloadProgress(evt.getReadBytes());
-            progress.completed();
+            @Override
+            public void end(CopyProgressEvent evt) {
+                progress.incrementDownloadProgress(evt.getReadBytes());
+                progress.completed();
+            }
         }
-    }
 
     private static final class Timeout implements TimeoutConstraint {
 

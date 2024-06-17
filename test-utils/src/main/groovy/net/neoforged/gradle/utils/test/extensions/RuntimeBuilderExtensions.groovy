@@ -43,4 +43,14 @@ class RuntimeBuilderExtensions {
     static Runtime.Builder disableConventions(final Runtime.Builder self) {
         self.property("neogradle.subsystems.conventions.enabled", "false")
     }
+
+    /**
+     * Enables parallel running for the runtime.
+     *
+     * @param self the runtime builder
+     * @return the runtime builder
+     */
+    static Runtime.Builder enableGradleParallelRunning(final Runtime.Builder self) {
+        self.property("org.gradle.parallel", "true")
+    }
 }

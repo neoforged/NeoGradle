@@ -56,7 +56,7 @@ subprojects.forEach { Project subProject ->
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version
     subProject.group = 'net.neoforged.gradle'
-    subProject.base.archivesName = "ng-${subProject.name.toLowerCase()}"
+    subProject.base.archivesName = "ng-${subProject.name.toLowerCase(Locale.ROOT)}"
 
     //Setup the java toolchain
     subProject.java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_version)
@@ -167,11 +167,11 @@ subprojects.forEach { subProject ->
 
         //Configure the plugin metadata, so we can publish it.
         evalSubProject.gradlePlugin.plugins { NamedDomainObjectContainer<PluginDeclaration> plugins ->
-            plugins.register(evalSubProject.name.toLowerCase()) {
+            plugins.register(evalSubProject.name.toLowerCase(Locale.ROOT)) {
 
                 //Determine the class name and package of the plugin.
                 def pluginFile = evalSubProject.fileTree('src/main/java')
-                        .filter { it.name.toLowerCase() == "${evalSubProject.getName()}plugin.java".toLowerCase() }
+                        .filter { it.name.toLowerCase(Locale.ROOT) == "${evalSubProject.getName()}plugin.java".toLowerCase(Locale.ROOT) }
                         .first()
 
                 //We need to handle the case of a fresh new project, no files exist yet, so the pluginFile object will be null.
@@ -180,7 +180,7 @@ subprojects.forEach { subProject ->
                     pluginClassName = evalSubProject.file('src/main/java/').toPath().relativize(pluginFile.toPath()).toString().replace('/', '.').replace('\\', '.').replace(".java", "")
                 }
 
-                def pluginId = 'net.neoforged.gradle.' + evalSubProject.name.toLowerCase()
+                def pluginId = 'net.neoforged.gradle.' + evalSubProject.name.toLowerCase(Locale.ROOT)
                 try {
                     var propertyValue = evalSubProject.property('pluginId')
                     if (propertyValue != null) {

@@ -73,17 +73,8 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         return String.format("NeoGradle/Runtime/%s", name);
     }
 
-
     protected Provider<File> getFileInOutputDirectory(final String fileName) {
         return getOutputDirectory().map(directory -> directory.file(fileName).getAsFile());
-    }
-
-    protected Provider<File> getFileInOutputDirectory(final Provider<String> fileName) {
-        return getOutputDirectory().flatMap(directory -> fileName.map(f -> directory.file(f).getAsFile()));
-    }
-
-    protected Provider<RegularFile> getRegularFileInOutputDirectory(final Provider<String> fileName) {
-        return getOutputDirectory().flatMap(directory -> fileName.map(directory::file));
     }
 
     @Internal

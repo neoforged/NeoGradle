@@ -90,7 +90,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
     }
 
     def "cache_supports_running_gradle_in_parallel"() {
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
             //When we run on windows we do not get the right output, since we use native file locking.
             return
         }
@@ -206,5 +206,76 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
         run.output.contains("Cache is disabled, skipping cache")
+    }
+
+    def "updating an AT after cache run should work."() {
+        given:
+        def project = create("userdev_supports_ats_from_file", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/resources/META-INF/accesstransformer.cfg", """public-f net.minecraft.client.Minecraft fixerUpper # fixerUpper""")
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().fixerUpper.getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
+            it.property(CentralCacheService.DEBUG_CACHE_PROPERTY, "true")
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('build')
+        }
+
+        then:
+        initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+
+        when:
+        File atFile = initialRun.file("src/main/resources/META-INF/accesstransformer.cfg")
+        atFile.delete()
+        atFile << """public-f net.minecraft.client.Minecraft REGIONAL_COMPLIANCIES # REGIONAL_COMPLIANCIES"""
+
+        File codeFile = initialRun.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java")
+        codeFile.delete()
+        codeFile << """
+            package net.neoforged.gradle.userdev;
+            
+            import net.minecraft.client.Minecraft;
+            
+            public class FunctionalTests {
+                public static void main(String[] args) {
+                    System.out.println(Minecraft.getInstance().REGIONAL_COMPLIANCIES.getClass().toString());
+                }
+            }
+        """
+
+        def secondRun = project.run {
+            it.tasks('build')
+        }
+
+        then:
+        secondRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
+        secondRun.task(":build").outcome == TaskOutcome.SUCCESS
     }
 }

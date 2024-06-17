@@ -100,10 +100,11 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':main:writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
+
+        def resourcesMainBuildDir = run.file("main/build/resources/main")
         run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered: [\n" +
-                        "\tfml.modloading.brokenfile\n" +
-                        "]")//Validate that we are failing because of the missing mod file, and not something else.
+                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:\n" +
+                        "\t- File ${resourcesMainBuildDir.absolutePath} is not a valid mod file")//Validate that we are failing because of the missing mod file, and not something else.
     }
 
     def "multiple projects with neoforge dependencies should run using the central cache"() {
@@ -641,7 +642,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
-            it.disableConventions()
         })
 
         create(rootProject, "api", {
@@ -735,5 +735,103 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         modSourcesSection.get(1) == "  - something:"
         modSourcesSection.get(2) == "    - main"
         modSourcesSection.get(3) == "    - main"
+    }
+
+
+    def "multiple projects with neoforge dependencies should run when parallel is enabled"() {
+        given:
+        def rootProject = create("multi_neoforge_root_cached", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withGlobalCacheDirectory(tempDir)
+            it.withToolchains()
+            it.enableGradleParallelRunning()
+        })
+
+        def apiProject = create(rootProject, "api", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
+                package net.neoforged.gradle.apitest;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin(this.pluginUnderTest)
+        })
+
+        def mainProject = create(rootProject,"main", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+                implementation project(':api')
+            }
+            
+            runs {
+                client {
+                    modSource project(':api').sourceSets.main
+                }
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/main/ApiTests.java", """
+                package net.neoforged.gradle.main;
+                
+                import net.minecraft.client.Minecraft;
+                import net.neoforged.gradle.apitest.FunctionalTests;
+                
+                public class ApiTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                        FunctionalTests.main(args);
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin(this.pluginUnderTest)
+        })
+
+        when:
+        def run = rootProject.run {
+            it.tasks(':main:build')
+            it.stacktrace()
+        }
+
+        then:
+        run.task(':main:build').outcome == TaskOutcome.SUCCESS
+        run.task(':api:neoFormDecompile').outcome == TaskOutcome.SUCCESS || run.task(':api:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
+        run.task(':main:neoFormDecompile').outcome == TaskOutcome.SUCCESS || run.task(':main:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
+
+        if (run.task(':api:neoFormDecompile').outcome == TaskOutcome.SUCCESS)
+            run.task(':main:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
+        else if (run.task(':main:neoFormDecompile').outcome == TaskOutcome.SUCCESS)
+            run.task(':api:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
     }
 }

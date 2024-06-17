@@ -57,6 +57,7 @@ import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CommonProjectPlugin implements Plugin<Project> {
 
@@ -159,7 +160,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         if (devLogin.getEnabled().get()) {
             runs.configureEach(run -> {
                 final RunDevLogin runsDevLogin = run.getExtensions().create("devLogin", RunDevLogin.class);
-                runsDevLogin.getIsEnabled().convention(devLogin.getConventionForRun());
+                runsDevLogin.getIsEnabled().convention(devLogin.getConventionForRun().zip(run.getIsClient(), (conventionForRun, isClient) -> conventionForRun && isClient));
             });
         }
 
@@ -388,6 +389,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
                             throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
                         }
                     });
+
+
 
                     definitionSet.forEach((identifier, definition) -> {
                         definition.configureRun(runImpl);

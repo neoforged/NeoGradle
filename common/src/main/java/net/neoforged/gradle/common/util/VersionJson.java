@@ -400,7 +400,7 @@ public class VersionJson implements Serializable {
         }
 
         public static OS getCurrent() {
-            String prop = System.getProperty("os.name").toLowerCase(Locale.ENGLISH);
+            String prop = System.getProperty("os.name").toLowerCase(Locale.ROOT);
             for (OS os : OS.values()) {
                 for (String key : os.keys) {
                     if (prop.contains(key)) {

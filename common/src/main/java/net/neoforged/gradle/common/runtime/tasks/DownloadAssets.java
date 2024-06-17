@@ -4,11 +4,16 @@ import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.CommonProjectPlugin;
 import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.util.FileCacheUtils;
+import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.common.util.VersionJson;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.Project;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -16,26 +21,40 @@ import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.File;
 import java.util.Map;
 
-@SuppressWarnings({"UnstableApiUsage", "ResultOfMethodCallIgnored"})
+@SuppressWarnings({"UnstableApiUsage"})
 @CacheableTask
-public abstract class DownloadAssets extends DefaultRuntime {
+public abstract class DownloadAssets extends DefaultTask implements WithWorkspace {
+
+    private final Provider<Directory> assetsCache;
 
     public DownloadAssets() {
-        getAssetsDirectory().convention(FileCacheUtils.getAssetsCacheDirectory(getProject()).flatMap(assetsDir -> assetsDir.dir(getVersionJson().map(VersionJson::getId))).map(TransformerUtils.ensureExists()));
-        getOutputDirectory().convention(getAssetsDirectory());
+        this.assetsCache = getAssetsDirectory(getProject(), getVersionJson());
         getAssetIndex().convention("asset-index");
         getAssetIndexFileName().convention(getAssetIndex().map(index -> index + ".json"));
-        getAssetIndexFile().convention(getRegularFileInOutputDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
+        getAssetIndexFile().convention(getRegularFileInAssetsDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
         getVersionJson().convention(getVersionJsonFile().map(TransformerUtils.guard(file -> VersionJson.get(file.getAsFile()))));
         getAssetRepository().convention("https://resources.download.minecraft.net/");
         getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
     }
-    
+
+    public static @NotNull Provider<Directory> getAssetsDirectory(final Project project, final Provider<VersionJson> versionJsonProvider) {
+        return FileCacheUtils.getAssetsCacheDirectory(project).flatMap(assetsDir -> assetsDir.dir(versionJsonProvider.map(VersionJson::getId))).map(TransformerUtils.ensureExists());
+    }
+
+    protected Provider<File> getFileInAssetsDirectory(final String fileName) {
+        return assetsCache.map(directory -> directory.file(fileName).getAsFile());
+    }
+
+    protected Provider<RegularFile> getRegularFileInAssetsDirectory(final Provider<String> fileName) {
+        return assetsCache.flatMap(directory -> fileName.map(directory::file));
+    }
+
     @ServiceReference(CommonProjectPlugin.ASSETS_SERVICE)
     public abstract Property<CentralCacheService> getAssetsCache();
 
@@ -67,7 +86,7 @@ public abstract class DownloadAssets extends DefaultRuntime {
         final WorkQueue executor = getWorkerExecutor().noIsolation();
 
         assetIndex.getObjects().values().stream().distinct().forEach((asset) -> {
-            final Provider<File> assetFile = getFileInOutputDirectory(String.format("objects%s%s", File.separator, asset.getPath()));
+            final Provider<File> assetFile = getFileInAssetsDirectory(String.format("objects%s%s", File.separator, asset.getPath()));
             final Provider<String> assetUrl = getAssetRepository()
                     .map(repo -> repo.endsWith("/") ? repo : repo + "/")
                     .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
@@ -109,10 +128,6 @@ public abstract class DownloadAssets extends DefaultRuntime {
 
     @Input
     public abstract Property<Boolean> getIsOffline();
-    
-    @InputDirectory
-    @PathSensitive(PathSensitivity.NONE)
-    public abstract DirectoryProperty getAssetsDirectory();
     
     private static class AssetIndex {
         private Map<String, Asset> objects = Maps.newHashMap();
