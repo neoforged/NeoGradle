@@ -166,6 +166,8 @@ subprojects.forEach { subProject ->
         evalSubProject.dependencies.functionalTestImplementation project(':test-utils')
 
         //Configure the plugin metadata, so we can publish it.
+        evalSubProject.gradlePlugin.website = "https://github.com/NeoForged/NeoGradle"
+        evalSubProject.gradlePlugin.vcsUrl = "https://github.com/NeoForged/NeoGradle.git"
         evalSubProject.gradlePlugin.plugins { NamedDomainObjectContainer<PluginDeclaration> plugins ->
             plugins.register(evalSubProject.name.toLowerCase(Locale.ROOT)) {
 
@@ -192,6 +194,10 @@ subprojects.forEach { subProject ->
                 id = pluginId
                 //And the implementation class.
                 implementationClass = pluginClassName
+
+                displayName = "NeoForged Gradle ${evalSubProject.name.capitalize()} Plugin"
+                description = "A plugin for NeoForged Gradle, providing ${evalSubProject.name.capitalize()} functionality. Allowing you to setup Minecraft Modding workspaces with ease."
+                tags = ['minecraft', 'modding', 'gradle', 'neoforged', 'neoforge', evalSubProject.name.toLowerCase(Locale.ROOT)]
             }
         }
 

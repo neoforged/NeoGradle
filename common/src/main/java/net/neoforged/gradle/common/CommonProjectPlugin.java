@@ -57,7 +57,6 @@ import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CommonProjectPlugin implements Plugin<Project> {
 
