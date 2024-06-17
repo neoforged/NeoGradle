@@ -79,7 +79,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
         final String fgVersion = this.getClass().getPackage().getImplementationVersion();
 
         interpolationData.put(InterpolationConstants.VERSION_NAME, getSpecification().getMinecraftVersion());
-        interpolationData.put(InterpolationConstants.ASSETS_ROOT, getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put(InterpolationConstants.ASSETS_ROOT, DownloadAssets.getAssetsDirectory(run.getProject(), run.getProject().provider(this::getVersionJson)).get().getAsFile().getAbsolutePath());
         interpolationData.put(InterpolationConstants.ASSETS_INDEX_NAME, getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         interpolationData.put(InterpolationConstants.AUTH_ACCESS_TOKEN, "0");
         interpolationData.put(InterpolationConstants.USER_TYPE, "legacy");

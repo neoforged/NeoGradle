@@ -14,6 +14,8 @@ import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import org.gradle.api.Project;
+import org.gradle.api.Transformer;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -58,17 +60,24 @@ public class ParchmentStep implements IStep {
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
             File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
-            task.getInputs().file(mappingFile);
-            task.getInputs().file(inputProvidingTask.flatMap(WithOutput::getOutput));
-            task.getInputs().file(listLibrariesOutput);
+            task.getArguments().putFile("mappings", project.provider(() -> mappingFile));
+            task.getArguments().putRegularFile("libraries", listLibrariesOutput);
+            task.getArguments().putRegularFile("input", inputProvidingTask.flatMap(WithOutput::getOutput));
+
             task.getExecutingJar().set(toolExecutable);
-            task.getProgramArguments().add(listLibrariesOutput.map(f -> "--libraries-list=" + f.getAsFile().getAbsolutePath()));
+            task.getProgramArguments().add("--libraries-list");
+            task.getProgramArguments().add("{libraries}");
             task.getProgramArguments().add("--enable-parchment");
-            task.getProgramArguments().add("--parchment-mappings=" + mappingFile.getAbsolutePath());
+            task.getProgramArguments().add("--parchment-mappings");
+            task.getProgramArguments().add("{mappings}");
             task.getProgramArguments().add("--in-format=archive");
             task.getProgramArguments().add("--out-format=archive");
-            task.getProgramArguments().add(inputProvidingTask.flatMap(WithOutput::getOutput).map(f -> f.getAsFile().getAbsolutePath()));
+            task.getProgramArguments().add("{input}");
             task.getProgramArguments().add("{output}");
+
+            task.dependsOn(inputProvidingTask);
+            task.dependsOn(listLibrariesOutput);
+
             configureCommonRuntimeTaskParameters(task, Maps.newHashMap(), "applyParchment", spec, vanillaDirectory);
         });
     }

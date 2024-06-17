@@ -509,15 +509,24 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
             File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
-            task.getInputs().file(mappingFile);
+            task.getArguments().putFile("mappings", project.provider(() -> mappingFile));
+            task.getArguments().putRegularFile("libraries", listLibrariesOutput);
+            task.getArguments().putRegularFile("input", recompileInput.flatMap(WithOutput::getOutput));
+
             task.getExecutingJar().set(toolExecutable);
-            task.getProgramArguments().add(listLibrariesOutput.map(f -> "--libraries-list=" + f.getAsFile().getAbsolutePath()));
+            task.getProgramArguments().add("--libraries-list");
+            task.getProgramArguments().add("{libraries}");
             task.getProgramArguments().add("--enable-parchment");
-            task.getProgramArguments().add("--parchment-mappings=" + mappingFile.getAbsolutePath());
+            task.getProgramArguments().add("--parchment-mappings");
+            task.getProgramArguments().add("{mappings}");
             task.getProgramArguments().add("--in-format=archive");
             task.getProgramArguments().add("--out-format=archive");
-            task.getProgramArguments().add(recompileInput.flatMap(WithOutput::getOutput).map(f -> f.getAsFile().getAbsolutePath()));
+            task.getProgramArguments().add("{input}");
             task.getProgramArguments().add("{output}");
+
+            task.dependsOn(listLibrariesOutput);
+            task.dependsOn(recompileInput);
+
             configureCommonRuntimeTaskParameters(task, symbolicDataSources, "applyParchment", spec, neoFormDirectory);
         });
 

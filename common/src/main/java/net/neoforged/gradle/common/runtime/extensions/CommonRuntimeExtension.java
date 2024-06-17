@@ -188,8 +188,6 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Map<String, String> symbolicDataSources, final File runtimeDirectory, final VersionJson versionJson) {
         return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "downloadAssets"), DownloadAssets.class, task -> {
             task.getVersionJson().set(versionJson);
-
-            configureCommonRuntimeTaskParameters(task, symbolicDataSources, "downloadAssets", specification, runtimeDirectory);
         });
     }
 

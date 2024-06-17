@@ -177,7 +177,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
         interpolationData.put("runtime_name", specification.getVersionedName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
-        interpolationData.put("assets_root", getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("assets_root", DownloadAssets.getAssetsDirectory(specification.getProject(), specification.getProject().provider(this::getVersionJson)).get().getAsFile().getAbsolutePath());
         interpolationData.put("asset_index", getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         interpolationData.put("natives", getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
 

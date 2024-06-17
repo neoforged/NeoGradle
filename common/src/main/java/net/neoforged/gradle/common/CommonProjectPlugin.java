@@ -159,7 +159,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         if (devLogin.getEnabled().get()) {
             runs.configureEach(run -> {
                 final RunDevLogin runsDevLogin = run.getExtensions().create("devLogin", RunDevLogin.class);
-                runsDevLogin.getIsEnabled().convention(devLogin.getConventionForRun());
+                runsDevLogin.getIsEnabled().convention(devLogin.getConventionForRun().zip(run.getIsClient(), (conventionForRun, isClient) -> conventionForRun && isClient));
             });
         }
 
