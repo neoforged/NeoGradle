@@ -400,7 +400,6 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
-            it.debug()
         }
 
         then:
