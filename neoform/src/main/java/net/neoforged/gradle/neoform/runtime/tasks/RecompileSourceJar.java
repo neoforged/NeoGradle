@@ -1,5 +1,7 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.runtime.tasks.RuntimeArgumentsImpl;
 import net.neoforged.gradle.common.runtime.tasks.RuntimeMultiArgumentsImpl;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
@@ -11,9 +13,11 @@ import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
+import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.work.InputChanges;
@@ -121,4 +125,19 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @Inject
     @Override
     public abstract ProviderFactory getProviderFactory();
+
+    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
+    public abstract Property<CentralCacheService> getCacheService();
+
+    @Override
+    protected void compile(InputChanges inputs) {
+        try {
+            getCacheService().get().doCachedDirectory(this, () -> {
+                super.compile(inputs);
+                return getDestinationDirectory().get().getAsFile();
+            }, getDestinationDirectory());
+        } catch (Throwable e) {
+            throw new RuntimeException("Failed to recompile using caching.", e);
+        }
+    }
 }

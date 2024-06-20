@@ -97,7 +97,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
         ProjectUtils.afterEvaluate(spec.getProject(), () -> runs.stream()
                 .filter(run -> run.getIsJUnit().get())
-                .flatMap(run -> run.getUnitTestSources().get().stream())
+                .flatMap(run -> run.getUnitTestSources().all().get().values().stream())
                 .distinct()
                 .forEach(src -> {
                     DependencyCollector coll = spec.getProject().getObjects().dependencyCollector();

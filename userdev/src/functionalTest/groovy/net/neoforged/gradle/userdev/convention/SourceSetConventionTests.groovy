@@ -244,10 +244,11 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
+            it.shouldFail()
         }
 
         then:
-        run.output.contains("Run sources: []")
+        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
     }
 
     def "disabling sourceset conventions prevents registration of main sourceset to run"() {
@@ -284,10 +285,11 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
+            it.shouldFail()
         }
 
         then:
-        run.output.contains("Run sources: []")
+        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
     }
 
     def "disabling main source set registration conventions prevents registration of main sourceset to run"() {
@@ -324,10 +326,11 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
+            it.shouldFail()
         }
 
         then:
-        run.output.contains("Run sources: []")
+        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
     }
 
     def "having the conventions for main sourceset registration enabled registers it"() {
@@ -353,7 +356,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run sources: \${project.runs.client.modSources.get()}")
+                logger.lifecycle("Run sources: \${project.runs.client.modSources.all().get()}")
             }
             """)
             it.withToolchains()
@@ -367,7 +370,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Run sources: [source set 'main']")
+        run.output.contains("Run sources: {registration_enabled=[source set 'main']}")
     }
 
     def "disabling sourceset local run runtime registration conventions prevents registration of localRunRuntime"() {
@@ -388,10 +391,6 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
-            }
-            
-            runs {
-                client { }
             }
             """)
             it.withToolchains()

@@ -90,9 +90,18 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
 
     @NotNull
     @Override
-    public Dependency optionallyConvertBackToOriginal(Dependency dependency, Configuration configuration) {
+    public Dependency optionallyConvertBackToOriginal(@NotNull final Dependency dependency, Configuration configuration) {
         final Dependency originalDependency = originalDependencyLookup.get(dependency, configuration);
-        return originalDependency == null ? dependency : originalDependency;
+        if (originalDependency == null && !configuration.getExtendsFrom().isEmpty()) {
+            //Check if we have a parent configuration that might have the original dependency.
+            for (Configuration parentConfiguration : configuration.getExtendsFrom()) {
+                return optionallyConvertBackToOriginal(dependency, parentConfiguration);
+            }
+        } else if (originalDependency != null) {
+            return originalDependency;
+        }
+
+        return dependency;
     }
 
     /**

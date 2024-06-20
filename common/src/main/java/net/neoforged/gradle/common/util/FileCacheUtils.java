@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 public final class FileCacheUtils {
     
@@ -49,9 +50,9 @@ public final class FileCacheUtils {
     public static TaskProvider<MinecraftArtifactFileCacheProvider> createArtifactFileCacheProvidingTask(final Project project, final String minecraftVersion, final DistributionType distributionType, final MinecraftArtifactType type, final TaskProvider<MinecraftVersionManifestFileCacheProvider> versionManifestProvider, final Collection<TaskProvider<? extends WithOutput>> otherProviders) {
         final String taskName = NamingConstants.Task.CACHE_VERSION_PREFIX +
                                         StringUtils.capitalize(
-                                                type.name().toLowerCase()
+                                                type.name().toLowerCase(Locale.ROOT)
                                         ) + StringUtils.capitalize(
-                                                distributionType.getName().toLowerCase()
+                                                distributionType.getName().toLowerCase(Locale.ROOT)
                                         ) + minecraftVersion;
         
         if (project.getTasks().getNames().contains(taskName)) {

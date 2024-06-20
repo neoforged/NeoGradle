@@ -185,7 +185,7 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
 
         String ret = getNames().getOrDefault(srg, srg);
         if (cap)
-            ret = ret.substring(0, 1).toUpperCase(Locale.ENGLISH) + ret.substring(1);
+            ret = ret.substring(0, 1).toUpperCase(Locale.ROOT) + ret.substring(1);
         return ret;
     }
 

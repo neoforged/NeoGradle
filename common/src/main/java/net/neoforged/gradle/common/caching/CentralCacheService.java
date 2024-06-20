@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.util.hash.HashFunction;
 import net.neoforged.gradle.common.util.hash.Hasher;
 import net.neoforged.gradle.common.util.hash.Hashing;
 import net.neoforged.gradle.util.FileUtils;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
 import org.apache.commons.lang3.SystemUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -13,6 +14,7 @@ import org.gradle.api.Task;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.services.BuildService;
@@ -25,13 +27,12 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormat;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -120,6 +121,27 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
         debugLog(task, "Cached task: " + task.getPath() + " finished");
     }
 
+    public void doCachedDirectory(Task task, DoCreate onCreate, DirectoryProperty output) throws Throwable {
+        if (!getParameters().getIsEnabled().get()) {
+            debugLog(task, "Cache is disabled, skipping cache");
+            onCreate.create();
+            return;
+        }
+
+        final TaskHasher hasher = new TaskHasher(task);
+        final String hashDirectoryName = hasher.create().toString();
+        final Directory cacheDirectory = getParameters().getCacheDirectory().get().dir(hashDirectoryName);
+        final Directory targetDirectory = output.get();
+
+        debugLog(task, "Cache directory: " + cacheDirectory.getAsFile().getAbsolutePath());
+        debugLog(task, "Target directory: " + targetDirectory.getAsFile().getAbsolutePath());
+
+        final File lockFile = new File(cacheDirectory.getAsFile(), "lock");
+        debugLog(task, "Lock file: " + lockFile.getAbsolutePath());
+        executeCacheLookupOrCreation(task, onCreate, lockFile, cacheDirectory, targetDirectory);
+        debugLog(task, "Cached task: " + task.getPath() + " finished");
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void executeCacheLookupOrCreation(Task task, DoCreate onCreate, File lockFile, Directory cacheDirectory, RegularFile targetFile) throws Throwable {
         if (!lockFile.exists()) {
@@ -139,7 +161,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                 fileBasedLock.updateAccessTime();
                 debugLog(task, "Lock acquired on file: " + lockFile.getAbsolutePath());
 
-                executeCacheLookupOrCreationLocked(task, onCreate, cacheDirectory, targetFile.getAsFile(), fileBasedLock.hasPreviousFailure());
+                executeCacheLookupOrCreationLocked(task, onCreate, cacheDirectory, targetFile.getAsFile(), fileBasedLock.hasPreviousFailure(), false);
 
                 // Release the lock when done
                 debugLog(task, "Releasing lock on file: " + lockFile.getAbsolutePath());
@@ -151,15 +173,47 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
         }
     }
 
-    private void executeCacheLookupOrCreationLocked(Task task, DoCreate onCreate, Directory cacheDirectory, File targetFile, boolean failedPreviously) throws Throwable {
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void executeCacheLookupOrCreation(Task task, DoCreate onCreate, File lockFile, Directory cacheDirectory, Directory targetDirectory) throws Throwable {
+        if (!lockFile.exists()) {
+            debugLog(task, "Lock file does not exist: " + lockFile.getAbsolutePath());
+            try {
+                lockFile.getParentFile().mkdirs();
+                lockFile.createNewFile();
+            } catch (IOException e) {
+                throw new GradleException("Failed to create lock file: " + lockFile.getAbsolutePath(), e);
+            }
+        }
+
+        // Acquiring an exclusive lock on the file
+        debugLog(task, "Acquiring lock on file: " + lockFile.getAbsolutePath());
+        try(FileBasedLock fileBasedLock = lockManager.createLock(task, lockFile)) {
+            try {
+                fileBasedLock.updateAccessTime();
+                debugLog(task, "Lock acquired on file: " + lockFile.getAbsolutePath());
+
+                executeCacheLookupOrCreationLocked(task, onCreate, cacheDirectory, targetDirectory.getAsFile(), fileBasedLock.hasPreviousFailure(), true);
+
+                // Release the lock when done
+                debugLog(task, "Releasing lock on file: " + lockFile.getAbsolutePath());
+            } catch (Exception ex) {
+                debugLog(task, "Exception occurred while executing cached task: " + targetDirectory.getAsFile().getAbsolutePath(), ex);
+                fileBasedLock.markAsFailed();
+                throw new GradleException("Cached execution failed for: " + task.getName(), ex);
+            }
+        }
+    }
+
+    private void executeCacheLookupOrCreationLocked(Task task, DoCreate onCreate, Directory cacheDirectory, File targetFile, boolean failedPreviously, boolean isDirectory) throws Throwable {
         final File cacheFile = new File(cacheDirectory.getAsFile(), targetFile.getName());
         final File noCacheFile = new File(cacheDirectory.getAsFile(), "nocache");
 
         if (failedPreviously) {
             //Previous execution failed
             debugLog(task, "Last cache run failed: " + cacheFile.getAbsolutePath());
-            Files.deleteIfExists(cacheFile.toPath());
-            Files.deleteIfExists(noCacheFile.toPath());
+            FileUtils.delete(cacheFile.toPath());
+            FileUtils.delete(noCacheFile.toPath());
         }
 
         if (noCacheFile.exists()) {
@@ -167,9 +221,16 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
             debugLog(task, "Last cache run indicated no output: " + noCacheFile.getAbsolutePath());
             logCacheHit(task, noCacheFile);
             task.setDidWork(false);
-            Files.deleteIfExists(targetFile.toPath());
+            FileUtils.delete(targetFile.toPath());
+            if (isDirectory) {
+                //Create the directory, we always ensure the empty directory will get created!
+                if (!targetFile.mkdirs()) {
+                    throw new RuntimeException("Failed to create directory: " + targetFile.getAbsolutePath());
+                }
+            }
             return;
         }
+
         if (cacheFile.exists()) {
             debugLog(task, "Cached file exists: " + cacheFile.getAbsolutePath());
             if (targetFile.exists() && Hashing.hashFile(cacheFile).equals(Hashing.hashFile(targetFile))) {
@@ -181,8 +242,22 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
             debugLog(task, "Cached file does not equal target file");
             logCacheHit(task, cacheFile);
-            Files.deleteIfExists(targetFile.toPath());
-            Files.copy(cacheFile.toPath(), targetFile.toPath());
+            FileUtils.delete(targetFile.toPath());
+            if (!isDirectory) {
+                Files.copy(cacheFile.toPath(), targetFile.toPath());
+            } else {
+                //Copy the directory
+                Files.walkFileTree(cacheFile.toPath(), new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        final Path relativePath = cacheFile.toPath().relativize(file);
+                        final Path targetPath = targetFile.toPath().resolve(relativePath);
+                        Files.createDirectories(targetPath.getParent());
+                        Files.copy(file, targetPath);
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
             task.setDidWork(false);
         } else {
             debugLog(task, "Cached file does not exist: " + cacheFile.getAbsolutePath());
@@ -190,9 +265,12 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
             debugLog(task, "Creating output: " + targetFile.getAbsolutePath());
             File createdFile = onCreate.create();
+            if (isDirectory && !createdFile.isDirectory())
+                throw new IllegalStateException("Expected a directory, but got a file: " + createdFile.getAbsolutePath());
+
             debugLog(task, "Created output: " + createdFile.getAbsolutePath());
 
-            if (!createdFile.exists()) {
+            if (!createdFile.exists() || (isDirectory && Objects.requireNonNull(createdFile.listFiles()).length == 0)) {
                 //No output was created
                 debugLog(task, "No output was created: " + createdFile.getAbsolutePath());
                 Files.createFile(noCacheFile.toPath());
@@ -201,7 +279,21 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                 //Output was created
                 debugLog(task, "Output was created: " + createdFile.getAbsolutePath());
                 Files.deleteIfExists(noCacheFile.toPath());
-                Files.copy(createdFile.toPath(), cacheFile.toPath());
+                if (!isDirectory) {
+                    Files.copy(createdFile.toPath(), cacheFile.toPath());
+                } else {
+                    //Copy the directory
+                    Files.walkFileTree(createdFile.toPath(), new SimpleFileVisitor<>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            final Path relativePath = createdFile.toPath().relativize(file);
+                            final Path targetPath = cacheFile.toPath().resolve(relativePath);
+                            Files.createDirectories(targetPath.getParent());
+                            Files.copy(file, targetPath);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                }
             }
             task.setDidWork(true);
         }
@@ -227,13 +319,13 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
     private void debugLog(Task task, String message) {
         if (getParameters().getDebugCache().get()) {
-            task.getLogger().lifecycle( " > [" + new Date(System.currentTimeMillis()) + "] (" + ProcessHandle.current().pid() + "): " + message);
+            task.getLogger().lifecycle( " > [" + System.currentTimeMillis() + "] (" + ProcessHandle.current().pid() + "): " + message);
         }
     }
 
     private void debugLog(Task task, String message, Exception e) {
         if (getParameters().getDebugCache().get()) {
-            task.getLogger().lifecycle( " > [" + new Date(System.currentTimeMillis()) + "] (" + ProcessHandle.current().pid() + "): " + message, e);
+            task.getLogger().lifecycle( " > [" + System.currentTimeMillis() + "] (" + ProcessHandle.current().pid() + "): " + message, e);
         }
     }
 
@@ -282,11 +374,15 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
             });
 
             for (File file : inputs.getFiles()) {
-                debugLog(task, "Hashing task input file: " + file.getAbsolutePath());
-                hasher.putString(file.getName());
-                final HashCode code = hashFunction.hashFile(file);
-                debugLog(task, "Hashing task input file hash: " + code);
-                hasher.putHash(code);
+                try(Stream<Path> pathStream = Files.walk(file.toPath())) {
+                    for (Path path : pathStream.filter(Files::isRegularFile).toList()) {
+                        debugLog(task, "Hashing task input file: " + path.toAbsolutePath());
+                        hasher.putString(path.getFileName().toString());
+                        final HashCode code = hashFunction.hashFile(path.toFile());
+                        debugLog(task, "Hashing task input file hash: " + code);
+                        hasher.putHash(code);
+                    }
+                }
             }
         }
 
@@ -323,9 +419,6 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
         private HealthFileUsingFileBasedLock(File healthyFile) {
             this.healthyFile = healthyFile;
-
-            if (this.healthyFile.exists() && !this.healthyFile.delete())
-                throw new IllegalStateException("Failed to delete healthy marker file: " + this.healthyFile.getAbsolutePath());
         }
 
         @Override
@@ -397,6 +490,8 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
             return SystemUtils.IS_OS_WINDOWS;
         }
 
+        private static final Map<String, OwnerAwareReentrantLock> FILE_LOCKS = new ConcurrentHashMap<>();
+
         private final Task task;
         private final File lockFile;
         private final RandomAccessFile lockFileAccess;
@@ -416,6 +511,10 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                 this.fileChannel = this.lockFileAccess.getChannel();
                 this.fileLock = this.fileChannel.lock();
 
+                final OwnerAwareReentrantLock lock = FILE_LOCKS.computeIfAbsent(lockFile.getAbsolutePath(), s1 -> new OwnerAwareReentrantLock());
+                debugLog(task, "Created local thread lock for thread: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
+                lock.lock();
+
                 debugLog(task, "Acquired lock on file: " + lockFile.getAbsolutePath());
             } catch (IOException e) {
                 throw new RuntimeException("Failed to acquire lock on file: " + lockFile.getAbsolutePath(), e);
@@ -427,6 +526,9 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
             fileLock.release();
             fileChannel.close();
             lockFileAccess.close();
+
+            final OwnerAwareReentrantLock lock = FILE_LOCKS.get(lockFile.getAbsolutePath());
+            lock.unlock();
 
             debugLog(task, "Released lock on file: " + lockFile.getAbsolutePath());
         }
@@ -465,6 +567,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
     private final class PIDBasedFileLock implements AutoCloseable {
 
+        private static final Map<String, OwnerAwareReentrantLock> FILE_LOCKS = new ConcurrentHashMap<>();
         private final Task task;
         private final File lockFile;
 
@@ -475,6 +578,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
         }
 
         private void lockFile() {
+            debugLog(task, "Attempting to acquire lock on file: " + lockFile.getAbsolutePath());
             while (!attemptFileLock()) {
                 //We attempt a lock every 500ms
                 try {
@@ -483,9 +587,10 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                     throw new RuntimeException("Failed to acquire lock on file: " + lockFile.getAbsolutePath(), e);
                 }
             }
+            debugLog(task, "Lock acquired on file: " + lockFile.getAbsolutePath());
         }
 
-        private boolean attemptFileLock() {
+        private synchronized boolean attemptFileLock() {
             try {
                 if (!lockFile.exists()) {
                     //No lock file exists, create one
@@ -499,6 +604,9 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                     int pid = Integer.parseInt(s);
                     if (ProcessHandle.current().pid() == pid) {
                         debugLog(task, "Lock file is owned by current process: " + lockFile.getAbsolutePath() + " pid: " + pid);
+                        final OwnerAwareReentrantLock lock = FILE_LOCKS.computeIfAbsent(lockFile.getAbsolutePath(), s1 -> new OwnerAwareReentrantLock());
+                        debugLog(task, "Lock file is held by thread: " + lock.getOwner().getId() + " - " + lock.getOwner().getName() + " current thread: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
+                        lock.lock();
                         return true;
                     }
 
@@ -519,6 +627,9 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                 //No pid found in lock file, we can take over the lock
                 debugLog(task, "Lock file is empty: " + lockFile.getAbsolutePath());
                 Files.write(lockFile.toPath(), String.valueOf(ProcessHandle.current().pid()).getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+                final OwnerAwareReentrantLock lock = FILE_LOCKS.computeIfAbsent(lockFile.getAbsolutePath(), s1 -> new OwnerAwareReentrantLock());
+                debugLog(task, "Created local thread lock for thread: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
+                lock.lock();
                 return true;
             } catch (Exception e) {
                 debugLog(task, "Failed to acquire lock on file: " + lockFile.getAbsolutePath() + " -  Failure message: " + e.getLocalizedMessage(), e);
@@ -530,6 +641,16 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
         public void close() throws Exception {
             debugLog(task, "Releasing lock on file: " + lockFile.getAbsolutePath());
             Files.write(lockFile.toPath(), Lists.newArrayList(), StandardOpenOption.TRUNCATE_EXISTING);
+            if (FILE_LOCKS.containsKey(lockFile.getAbsolutePath())) {
+                FILE_LOCKS.get(lockFile.getAbsolutePath()).unlock();
+            }
+        }
+    }
+
+    private static final class OwnerAwareReentrantLock extends ReentrantLock {
+        @Override
+        public Thread getOwner() {
+            return super.getOwner();
         }
     }
 }

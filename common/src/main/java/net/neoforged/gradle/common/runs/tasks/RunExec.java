@@ -39,7 +39,7 @@ public abstract class RunExec extends JavaExec {
         environment(run.getEnvironmentVariables().get());
         systemProperties(run.getSystemProperties().get());
 
-        run.getModSources().get().stream()
+        run.getModSources().all().get().values().stream()
                 .map(SourceSet::getRuntimeClasspath)
                 .forEach(this::classpath);
 

@@ -13,6 +13,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 public class Hashing {
     private static final HashFunction MD5 = MessageDigestHashFunction.of("MD5");
@@ -355,9 +356,24 @@ public class Hashing {
         }
 
         public HashCode hashFile(File file) throws IOException {
-            HashingOutputStream hashingOutputStream = this.primitiveStreamHasher();
-            Files.copy(file, hashingOutputStream);
-            return hashingOutputStream.hash();
+            if (file.exists()) {
+                if (file.isDirectory()) {
+                    final Hasher hasher = this.newHasher();
+
+                    for (File listFile : Objects.requireNonNull(file.listFiles())) {
+                        final HashCode innerHash = this.hashFile(listFile);
+                        hasher.putHash(innerHash);
+                    }
+
+                    return hasher.hash();
+                } else {
+                    HashingOutputStream hashingOutputStream = this.primitiveStreamHasher();
+                    Files.copy(file, hashingOutputStream);
+                    return hashingOutputStream.hash();
+                }
+            } else {
+                return HashCode.fromString("");
+            }
         }
 
         private HashingOutputStream primitiveStreamHasher() {
