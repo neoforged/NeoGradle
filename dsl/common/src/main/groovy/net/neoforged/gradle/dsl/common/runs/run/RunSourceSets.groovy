@@ -5,8 +5,11 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.SourceSet
 
 /**
@@ -86,6 +89,20 @@ interface RunSourceSets extends ConfigurableDSLElement<RunSourceSets> {
      * @param sourceSets The source sets to add
      */
     void add(String groupId, SourceSet... sourceSets);
+
+    /**
+     * Defines the primary sourceset of the run,
+     * If defined as to be part of the run, it will be used as the primary source set, who's minecraft dependency will be used
+     * instead of the default combined runtime classpath of the mod sources.
+     *
+     * This can fix issues with the newer FML 3.0.0+ where there can only be one minecraft dependency.
+     *
+     * @return The primary source set
+     */
+    @DSLProperty
+    @Input
+    @Optional
+    Property<SourceSet> getPrimary();
 
     /**
      * The source sets attached to this run
