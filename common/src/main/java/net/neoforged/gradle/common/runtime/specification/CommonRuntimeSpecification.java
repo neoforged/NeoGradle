@@ -141,7 +141,7 @@ public abstract class CommonRuntimeSpecification implements LegacySpecification 
     public String toString() {
         return "CommonSpecification{" +
                 "project=" + project +
-                ", name='" + name + '\'' +
+                ", identifier='" + name + '\'' +
                 ", distribution=" + distribution +
                 ", preTaskTypeAdapters=" + preTaskTypeAdapters +
                 ", postTypeAdapters=" + postTypeAdapters +
@@ -205,7 +205,7 @@ public abstract class CommonRuntimeSpecification implements LegacySpecification 
         @Override
         @NotNull
         public final B withDistributionType(final DistributionType distributionType) {
-            if (distributionType == null) // Additional null check for convenient loading of sides from dependencies.
+            if (distributionType == null) // Additional null check for convenient loading of sides from compileDependencies.
                 return getThis();
 
             return withDistributionType(project.provider(() -> distributionType));

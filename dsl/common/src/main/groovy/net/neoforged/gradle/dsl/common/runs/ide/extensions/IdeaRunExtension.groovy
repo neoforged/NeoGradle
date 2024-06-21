@@ -14,7 +14,7 @@ interface IdeaRunExtension extends BaseDSLElement<IdeaRunExtension> {
 
     /**
      * The primary source set to which the reference is made for the run.
-     * IDEA pull dependencies and compile information from this.
+     * IDEA pull compileDependencies and compile information from this.
      *
      * @return The primary source set.
      * @implNote The default value of this is always the main source set of the project that owns the run.

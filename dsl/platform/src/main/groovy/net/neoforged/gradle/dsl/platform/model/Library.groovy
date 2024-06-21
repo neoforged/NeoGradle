@@ -90,7 +90,7 @@ abstract class Library extends WithRules<Library> {
         Library deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
             def result = super.deserialize(jsonElement, type, jsonDeserializationContext) as Library
 
-            PropertyUtils.deserializeString(result.getName(), jsonElement.getAsJsonObject(), "name")
+            PropertyUtils.deserializeString(result.getName(), jsonElement.getAsJsonObject(), "identifier")
             PropertyUtils.deserialize(result.getDownload(), jsonElement.getAsJsonObject(), "downloads", LibraryDownload.class, jsonDeserializationContext)
 
             return result;
@@ -100,7 +100,7 @@ abstract class Library extends WithRules<Library> {
         JsonObject serialize(Library library, Type type, JsonSerializationContext jsonSerializationContext) {
             def result = super.serialize(library, type, jsonSerializationContext) as JsonObject
 
-            PropertyUtils.serializeString(library.getName(), result, "name")
+            PropertyUtils.serializeString(library.getName(), result, "identifier")
             PropertyUtils.serializeObject(library.getDownload(), result, "downloads", jsonSerializationContext)
 
             return result;

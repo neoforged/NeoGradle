@@ -15,7 +15,7 @@ import javax.annotation.Nullable
 @CompileStatic
 interface DependencyManagementObject {
     /**
-     * Create a spec that matches dependencies using the provided notation on group, name, and version
+     * Create a spec that matches compileDependencies using the provided notation on group, identifier, and version
      *
      * @param notation The dependency notation to parse.
      * @return The spec that matches the dependency notation.
@@ -23,7 +23,7 @@ interface DependencyManagementObject {
     Spec<? super ArtifactIdentifier> dependency(CharSequence dependencyNotation);
 
     /**
-     * Create a spec that matches dependencies on the provided group, name, and version
+     * Create a spec that matches compileDependencies on the provided group, identifier, and version
      *
      * @param notation The dependency notation to parse.
      * @return The spec that matches the dependency notation.
@@ -31,7 +31,7 @@ interface DependencyManagementObject {
     Spec<? super ArtifactIdentifier> dependency(@Nullable String group, String name, @Nullable String version);
 
     /**
-     * Create a spec that matches dependencies using the provided project's group, name, and version
+     * Create a spec that matches compileDependencies using the provided project's group, identifier, and version
      *
      * @param notation The dependency notation to parse.
      * @return The spec that matches the dependency notation.
@@ -39,7 +39,7 @@ interface DependencyManagementObject {
     Spec<? super ArtifactIdentifier> dependency(Project project);
 
     /**
-     * Create a spec that matches the provided dependency on group, name, and version
+     * Create a spec that matches the provided dependency on group, identifier, and version
      *
      * @param dependency The dependency to match.
      * @return The spec that matches the dependency.
@@ -55,7 +55,7 @@ interface DependencyManagementObject {
     Spec<? super ArtifactIdentifier> dependency(Closure<Boolean> spec);
 
     /**
-     * Simple artifact identifier class which only references group, name and version.
+     * Simple artifact identifier class which only references group, identifier and version.
      */
     @CompileStatic
     @EqualsAndHashCode(includeFields = true)
@@ -68,7 +68,7 @@ interface DependencyManagementObject {
          * Creates a new instance of the given artifact details.
          *
          * @param group   The group of the artifact to identify.
-         * @param name    The name of the artifact to identify.
+         * @param name    The identifier of the artifact to identify.
          * @param version The version of the artifact to identify.
          */
         ArtifactIdentifier(String group, String name, String version) {
@@ -87,9 +87,9 @@ interface DependencyManagementObject {
         }
 
         /**
-         * Gets the name of the artifact.
+         * Gets the identifier of the artifact.
          *
-         * @return The name of the artifact.
+         * @return The identifier of the artifact.
          */
         String getName() {
             return name

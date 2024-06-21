@@ -10,6 +10,7 @@ import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.tasks.RunsReport;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import net.neoforged.gradle.common.runtime.extensions.DefaultRuntimesContainer;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.tasks.CleanCache;
@@ -35,6 +36,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDE
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLogin;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
+import net.neoforged.gradle.dsl.common.runtime.extensions.RuntimesContainer;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
@@ -70,8 +72,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getObjects().
-
         //Apply the evaluation extension to monitor immediate execution of indirect tasks when evaluation already happened.
         project.getExtensions().create(NamingConstants.Extension.EVALUATION, ProjectEvaluationExtension.class, project);
 
@@ -92,6 +92,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         final ExtensionManager extensionManager = project.getExtensions().getByType(ExtensionManager.class);
         extensionManager.registerExtension("subsystems", Subsystems.class, (p) -> p.getObjects().newInstance(SubsystemsExtension.class, p));
+        extensionManager.registerExtension("runtimes", RuntimesContainer.class, (p) -> p.getObjects().newInstance(DefaultRuntimesContainer.class, p));
 
         project.getExtensions().create(IdeManagementExtension.class, "ideManager", IdeManagementExtension.class, project);
         project.getExtensions().create("allRuntimes", RuntimesExtension.class);

@@ -45,7 +45,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
 
     public static void configureCommonRuntimeTaskParameters(Runtime runtimeTask, Map<String, String> symbolicDataSources, String step, LegacySpecification spec, File runtimeDirectory) {
         runtimeTask.getSymbolicDataSources().set(symbolicDataSources);
-        runtimeTask.getStepName().set(step);
+        runtimeTask.getStep().set(step);
         runtimeTask.getDistribution().set(spec.getDistribution());
         runtimeTask.getMinecraftVersion().set(CacheableMinecraftVersion.from(spec.getMinecraftVersion(), spec.getProject()).getFull());
         runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
@@ -140,7 +140,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
     @NotNull
     public final D getByName(final String name) {
         return this.definitions.computeIfAbsent(name, (n) -> {
-            throw new RuntimeException(String.format("Failed to find runtime with name: %s", n));
+            throw new RuntimeException(String.format("Failed to find runtime with identifier: %s", n));
         });
     }
 

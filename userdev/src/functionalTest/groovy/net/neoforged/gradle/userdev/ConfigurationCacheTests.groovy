@@ -27,7 +27,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -57,7 +57,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)

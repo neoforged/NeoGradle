@@ -55,9 +55,9 @@ interface NeoFormSpecification extends LegacySpecification {
         B withNeoFormDependency(@NotNull final Object dependencyNotation);
 
         /**
-         * Configures the specification to use the given file collection as additional recompile dependencies.
+         * Configures the specification to use the given file collection as additional recompile compileDependencies.
          *
-         * @param files The file collection with the additional recompile dependencies.
+         * @param files The file collection with the additional recompile compileDependencies.
          * @return The builder.
          */
         @NotNull

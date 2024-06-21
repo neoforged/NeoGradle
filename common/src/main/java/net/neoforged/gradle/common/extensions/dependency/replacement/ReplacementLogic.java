@@ -59,7 +59,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
     @Override
     public void handleConfiguration(Configuration configuration) {
         //TODO: Figure out if there is any way to do this lazily.
-        //TODO: Configure each runs in an immutable context, so we can't add a listener to the dependencies.
+        //TODO: Configure each runs in an immutable context, so we can't add a listener to the compileDependencies.
         configuration.getDependencies().whenObjectAdded(dependency -> {
             //We need to check if our configuration is unhandled, we can only do this here and not in the register because of way we register unhandled configurations after their creation:
             //TODO: Find a better way to handle this.
@@ -68,7 +68,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
                 return;
             }
 
-            //We only support module based dependencies.
+            //We only support module based compileDependencies.
             if (dependency instanceof ModuleDependency) {
                 final ModuleDependency moduleDependency = (ModuleDependency) dependency;
                 //Try replacing the dependency.
@@ -232,7 +232,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
             }
         }
 
-        //For each configuration that we target we now need to add the new dependencies to.
+        //For each configuration that we target we now need to add the new compileDependencies to.
         for (Configuration targetConfiguration : targetConfigurations) {
             //Create a dependency from the tasks that copies the raw jar to the repository.
             //The sources jar is not needed here.
@@ -254,7 +254,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
      *
      * @param dependency The dependency that is being replaced.
      * @param result The replacement result from one of the handlers.
-     * @param sourceArtifactSelectorName The name of the task that selects the source artifact.
+     * @param sourceArtifactSelectorName The identifier of the task that selects the source artifact.
      * @param newRepoEntry The new repository entry that the dependency is being replaced with.
      * @return The task that selects the source artifact from the dependency and puts it in the Ivy repository.
      */
@@ -268,7 +268,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         //Create a new task, using the repository to create the output.
         final Repository repository = project.getExtensions().getByType(Repository.class);
         return project.getTasks().register(sourceArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
-            artifactFromOutput.setGroup("neogradle/dependencies");
+            artifactFromOutput.setGroup("neogradle/compileDependencies");
             artifactFromOutput.setDescription(String.format("Selects the source artifact from the %s dependency and puts it in the Ivy repository", dependency));
 
             artifactFromOutput.getInput().set(result.getSourcesJar().flatMap(WithOutput::getOutput));
@@ -282,7 +282,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
      *
      * @param dependency The dependency that is being replaced.
      * @param result The replacement result from one of the handlers.
-     * @param rawArtifactSelectorName The name of the task that selects the raw artifact.
+     * @param rawArtifactSelectorName The identifier of the task that selects the raw artifact.
      * @param newRepoEntry The new repository entry that the dependency is being replaced with.
      * @return The task that selects the raw artifact from the dependency and puts it in the Ivy repository.
      */
@@ -296,7 +296,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         // Create a new task, using the repository to create the output.
         final Repository repository = project.getExtensions().getByType(Repository.class);
         return project.getTasks().register(rawArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
-            artifactFromOutput.setGroup("neogradle/dependencies");
+            artifactFromOutput.setGroup("neogradle/compileDependencies");
             artifactFromOutput.setDescription(String.format("Selects the raw artifact from the %s dependency and puts it in the Ivy repository", dependency));
 
             artifactFromOutput.getInput().set(result.getRawJar().flatMap(WithOutput::getOutput));

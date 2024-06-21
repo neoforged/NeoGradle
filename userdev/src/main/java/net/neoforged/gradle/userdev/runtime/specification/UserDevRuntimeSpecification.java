@@ -129,7 +129,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
 
         @Override
         public Builder withForgeVersion(final String forgeVersion) {
-            if (forgeVersion == null) // Additional null check for convenient loading of versions from dependencies.
+            if (forgeVersion == null) // Additional null check for convenient loading of versions from compileDependencies.
                 return this;
 
             return withForgeVersion(project.provider(() -> forgeVersion));
@@ -143,7 +143,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
 
         @Override
         public Builder withForgeName(final String mcpName) {
-            if (mcpName == null) // Additional null check for convenient loading of names from dependencies.
+            if (mcpName == null) // Additional null check for convenient loading of names from compileDependencies.
                 return this;
 
             return withForgeName(project.provider(() -> mcpName));
@@ -157,7 +157,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
 
         @Override
         public Builder withForgeGroup(final String mcpGroup) {
-            if (mcpGroup == null) // Additional null check for convenient loading of groups from dependencies.
+            if (mcpGroup == null) // Additional null check for convenient loading of groups from compileDependencies.
                 return this;
 
             return withForgeGroup(project.provider(() -> mcpGroup));

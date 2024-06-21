@@ -8,12 +8,12 @@ import org.gradle.api.artifacts.dsl.DependencyCollector
 import org.gradle.api.tasks.Internal
 
 /**
- * A custom dependency handler which manages runtime dependencies for a run configuration.
+ * A custom dependency handler which manages runtime compileDependencies for a run configuration.
  */
 @CompileStatic
 interface DependencyHandler extends BaseDSLElement<DependencyHandler>, Dependencies {
     /**
-     * The dependency configuration that contains all the declared runtime dependencies.
+     * The dependency configuration that contains all the declared runtime compileDependencies.
      */
     @Internal
     Configuration getRuntimeConfiguration();

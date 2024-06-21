@@ -15,7 +15,7 @@ public class VanillaProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().create("vanillaRuntimes", VanillaRuntimeExtension.class, project);
 
-        //Setup handling of the dependencies
+        //Setup handling of the compileDependencies
         VanillaDependencyManager.getInstance().apply(project);
 
         //Add Known repos, -> The default tools come from this repo.

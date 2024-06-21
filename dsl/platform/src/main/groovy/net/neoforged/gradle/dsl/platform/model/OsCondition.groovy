@@ -53,7 +53,7 @@ abstract class OsCondition implements ConfigurableDSLElement<OsCondition> {
             final JsonObject payload = jsonElement.getAsJsonObject();
             final OsCondition instance = factory.newInstance(OsCondition.class);
 
-            PropertyUtils.deserializeString(instance.getName(), payload, "name")
+            PropertyUtils.deserializeString(instance.getName(), payload, "identifier")
             PropertyUtils.deserializeString(instance.getArch(), payload, "arch")
             PropertyUtils.deserializeString(instance.getVersion(), payload, "version")
 
@@ -64,7 +64,7 @@ abstract class OsCondition implements ConfigurableDSLElement<OsCondition> {
         JsonElement serialize(OsCondition osCondition, Type type, JsonSerializationContext jsonSerializationContext) {
             final JsonObject result = new JsonObject();
 
-            PropertyUtils.serializeString(osCondition.getName(), result, "name")
+            PropertyUtils.serializeString(osCondition.getName(), result, "identifier")
             PropertyUtils.serializeString(osCondition.getArch(), result, "arch")
             PropertyUtils.serializeString(osCondition.getVersion(), result, "version")
 

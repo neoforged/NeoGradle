@@ -1,5 +1,6 @@
 package net.neoforged.gradle.dsl.common.runtime.spec;
 
+import net.neoforged.gradle.dsl.common.runtime.definition.Outputs;
 import net.neoforged.gradle.dsl.common.runtime.definition.TaskHandler;
 import org.gradle.api.artifacts.Configuration;
 
@@ -10,18 +11,22 @@ import org.gradle.api.artifacts.Configuration;
 public interface TaskTreeBuilder {
 
     /**
-     * Builds a task tree from the given specification.
-     *
-     * @param specification The specification to build the task tree from.
-     * @return The task tree.
+     * @return The built task tree.
      */
-    BuildResult build(Specification specification);
+    BuildResult build();
 
     /**
      * A record representing the result of building a task tree.
      *
-     * @param dependencies The dependencies of the task tree.
+     * @param compileDependencies The compile dependencies of the task tree.
+     * @param runtimeDependencies The runtime dependencies of the task tree.
      * @param handler The task handler for the task tree.
+     * @param outputs The outputs of the task tree.
      */
-    record BuildResult(Configuration dependencies, TaskHandler handler) {}
+    record BuildResult(
+            Configuration compileDependencies,
+            Configuration runtimeDependencies,
+            TaskHandler handler,
+            Outputs outputs
+    ) {}
 }

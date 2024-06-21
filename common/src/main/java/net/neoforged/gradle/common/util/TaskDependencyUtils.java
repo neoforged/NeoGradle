@@ -235,7 +235,7 @@ public final class TaskDependencyUtils {
         private void processConfiguration(Configuration configuration) {
             DependencySet dependencies = configuration.getAllDependencies();
 
-            //Grab the original dependencies if we have a replacement extension
+            //Grab the original compileDependencies if we have a replacement extension
             final DependencyReplacement replacement = project.getExtensions().findByType(DependencyReplacement.class);
             final Set<Dependency> operatingSet = replacement == null ? dependencies : dependencies.stream()
                     .map(dependency -> replacement.optionallyConvertBackToOriginal(dependency, configuration))

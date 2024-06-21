@@ -116,7 +116,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
         }
 
         public Builder withPatchesDirectory(final Directory patchesDirectory) {
-            if (patchesDirectory == null) // Additional null check for convenient loading of versions from dependencies.
+            if (patchesDirectory == null) // Additional null check for convenient loading of versions from compileDependencies.
                 return getThis();
             
             return withPatchesDirectory(project.provider(() -> patchesDirectory));
@@ -128,7 +128,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
         }
         
         public Builder withRejectsDirectory(final Directory rejectsDirectory) {
-            if (rejectsDirectory == null) // Additional null check for convenient loading of versions from dependencies.
+            if (rejectsDirectory == null) // Additional null check for convenient loading of versions from compileDependencies.
                 return getThis();
             
             return withRejectsDirectory(project.provider(() -> rejectsDirectory));
@@ -140,7 +140,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
         }
         
         public Builder isUpdating(final Boolean isUpdating) {
-            if (isUpdating == null) // Additional null check for convenient loading of versions from dependencies.
+            if (isUpdating == null) // Additional null check for convenient loading of versions from compileDependencies.
                 return getThis();
             
             return isUpdating(project.provider(() -> isUpdating));

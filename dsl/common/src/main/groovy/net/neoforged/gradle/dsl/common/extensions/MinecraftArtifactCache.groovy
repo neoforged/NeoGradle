@@ -64,11 +64,10 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      *
      * @param tasks The tasks collection to extract from.
      * @param artifact The game artifact to extract.
-     * @param minecraftVersion The minecraft version to extract for.
      * @return The extracted task.
      */
     @NotNull
-    NamedDomainObjectProvider<? extends WithOutput> gameArtifactTask(@NotNull NamedDomainObjectCollection<WithOutput> tasks, @NotNull final GameArtifact artifact, @NotNull final String minecraftVersion);
+    NamedDomainObjectProvider<? extends WithOutput> gameArtifactTask(@NotNull NamedDomainObjectCollection<WithOutput> tasks, @NotNull final GameArtifact artifact);
 
     /**
      * Eagerly caches the launcher metadata.

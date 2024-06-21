@@ -17,7 +17,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             it.property('neogradle.subsystems.conventions.enabled', 'false')
             //Force NeoGradle to think build with IDEA is enabled.
             it.file(".idea/gradle.xml", """
-            <option name=\"delegatedBuild\" value=\"false\" />
+            <option identifier=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
             java {
@@ -40,7 +40,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -53,7 +53,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             it.property('neogradle.subsystems.conventions.ide.enabled', 'false')
             //Force NeoGradle to think build with IDEA is enabled.
             it.file(".idea/gradle.xml", """
-            <option name=\"delegatedBuild\" value=\"false\" />
+            <option identifier=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
             java {
@@ -76,7 +76,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -89,7 +89,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             it.property('neogradle.subsystems.conventions.ide.idea.enabled', 'false')
             //Force NeoGradle to think build with IDEA is enabled.
             it.file(".idea/gradle.xml", """
-            <option name=\"delegatedBuild\" value=\"false\" />
+            <option identifier=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
             java {
@@ -112,7 +112,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -125,7 +125,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             it.property('neogradle.subsystems.conventions.ide.idea.compiler-detection', 'false')
             //Force NeoGradle to think build with IDEA is enabled.
             it.file(".idea/gradle.xml", """
-            <option name=\"delegatedBuild\" value=\"false\" />
+            <option identifier=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
             java {
@@ -148,7 +148,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -160,7 +160,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_compiler_idea_ide_disables_auto_detection", {
             //Force NeoGradle to think build with IDEA is enabled.
             it.file(".idea/gradle.xml", """
-            <option name=\"delegatedBuild\" value=\"false\" />
+            <option identifier=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
             java {
@@ -183,7 +183,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -213,7 +213,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:

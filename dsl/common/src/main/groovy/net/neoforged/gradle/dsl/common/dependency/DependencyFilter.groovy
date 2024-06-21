@@ -7,19 +7,19 @@ import org.gradle.api.specs.Spec
 interface DependencyFilter extends DependencyManagementObject {
 
     /**
-     * Exclude dependencies that match the provided spec.
-     * If at least one exclude spec is provided, only the dependencies which fail the check will be excluded.
+     * Exclude compileDependencies that match the provided spec.
+     * If at least one exclude spec is provided, only the compileDependencies which fail the check will be excluded.
      *
-     * @param spec The spec to exclude dependencies that match.
+     * @param spec The spec to exclude compileDependencies that match.
      * @return The filter (this object).
      */
     DependencyFilter exclude(Spec<? super ArtifactIdentifier> spec);
 
     /**
-     * Include dependencies that match the provided spec.
-     * If at least one include spec is supplied then only dependencies that match the include-spec will be included.
+     * Include compileDependencies that match the provided spec.
+     * If at least one include spec is supplied then only compileDependencies that match the include-spec will be included.
      *
-     * @param spec The spec to include dependencies that match.
+     * @param spec The spec to include compileDependencies that match.
      * @return The filter (this object)
      */
     DependencyFilter include(Spec<? super ArtifactIdentifier> spec);

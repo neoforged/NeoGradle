@@ -6,7 +6,6 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
@@ -31,11 +30,8 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         //All of these taskOutputs belong to the MCP group
         setGroup("NeoGradle/runtimes");
 
-        //Sets up the base configuration for directories and outputs.
-        getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
-
         //And configure output default locations.
-        getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
+        getOutputDirectory().convention();
         getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension)).orElse("output.jar"));
         getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.jar").map(d::file)));
 
@@ -89,7 +85,7 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         arguments.computeIfAbsent("outputExtension", key -> newProvider(getOutputFileName().get().substring(getOutputFileName().get().lastIndexOf('.') + 1)));
         arguments.computeIfAbsent("outputFileName", key -> newProvider(getOutputFileName().get()));
         arguments.computeIfAbsent("stepsDir", key -> newProvider(getStepsDirectory().get().getAsFile().getAbsolutePath()));
-        arguments.computeIfAbsent("stepName", key -> getStepName());
+        arguments.computeIfAbsent("stepName", key -> getStep());
         arguments.computeIfAbsent("side", key -> getDistribution().map(DistributionType::getName));
         arguments.computeIfAbsent("minecraftVersion", key -> getMinecraftVersion().map(Object::toString));
         arguments.computeIfAbsent("javaVersion", key -> getJavaLauncher().map(launcher -> launcher.getMetadata().getLanguageVersion().toString()));

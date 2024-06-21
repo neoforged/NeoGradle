@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.util
 
 /**
- * Defines a full minecraft version name and url.
+ * Defines a full minecraft version identifier and url.
  */
 class MinecraftVersionAndUrl {
 
@@ -15,9 +15,9 @@ class MinecraftVersionAndUrl {
     }
 
     /**
-     * The full version name of the minecraft version.
+     * The full version identifier of the minecraft version.
      *
-     * @return The full version name of the minecraft version.
+     * @return The full version identifier of the minecraft version.
      */
     String getVersion() {
         return version

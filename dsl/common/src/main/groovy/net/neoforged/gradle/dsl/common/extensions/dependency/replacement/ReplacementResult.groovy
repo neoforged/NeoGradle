@@ -75,7 +75,7 @@ class ReplacementResult {
     }
 
     /**
-     * @returns The configuration in which additional dependencies are added.
+     * @returns The configuration in which additional compileDependencies are added.
      */
     @NotNull
     Configuration getDependencies() {

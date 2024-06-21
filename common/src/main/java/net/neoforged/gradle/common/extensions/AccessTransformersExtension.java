@@ -24,7 +24,7 @@ public abstract class AccessTransformersExtension extends BaseFilesWithEntriesEx
         this.projectDependencies = project.getDependencies();
         this.projectArtifacts = project.getArtifacts();
 
-        // We have to add these after project evaluation because of dependency replacement making configurations non-lazy; adding them earlier would prevent further addition of dependencies
+        // We have to add these after project evaluation because of dependency replacement making configurations non-lazy; adding them earlier would prevent further addition of compileDependencies
         project.afterEvaluate(p -> {
             p.getConfigurations().maybeCreate(CommonProjectPlugin.ACCESS_TRANSFORMER_CONFIGURATION).fromDependencyCollector(getConsume());
             p.getConfigurations().maybeCreate(CommonProjectPlugin.ACCESS_TRANSFORMER_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());

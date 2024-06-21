@@ -16,7 +16,7 @@ import java.util.function.Consumer
  * Defines an entry for a dummy repository.
  *
  * @param <TSelf> The self-reference type of the entry.
- * @param <TDependency> The type for the dependencies of the entry.
+ * @param <TDependency> The type for the compileDependencies of the entry.
  */
 @CompileStatic
 interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDependency>, TDependency extends RepositoryReference> extends Serializable, RepositoryReference {
@@ -76,9 +76,9 @@ interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDepe
     String getGroup()
 
     /**
-     * Defines the name of the entry.
+     * Defines the identifier of the entry.
      *
-     * @return The name of the entry.
+     * @return The identifier of the entry.
      */
     @NotNull
     String getName()
@@ -110,9 +110,9 @@ interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDepe
     String getExtension()
 
     /**
-     * Defines the dependencies of the entry.
+     * Defines the compileDependencies of the entry.
      *
-     * @return The dependencies of the entry.
+     * @return The compileDependencies of the entry.
      */
     @NotNull
     Collection<? extends RepositoryReference> getDependencies()
@@ -121,7 +121,7 @@ interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDepe
      * Defines a builder for the repository entry.
      *
      * @param <TSelf> The self-reference type of the builder.
-     * @param <TDependency> The type for the dependencies of the entry.
+     * @param <TDependency> The type for the compileDependencies of the entry.
      * @param <TDependencyBuilder> The type for the dependency builders.
      */
     @CompileStatic
@@ -136,9 +136,9 @@ interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDepe
         String getGroup();
 
         /**
-         * The currently configured name in the builder.
+         * The currently configured identifier in the builder.
          *
-         * @return The currently configured name in the builder.
+         * @return The currently configured identifier in the builder.
          */
         @NotNull
         String getName();
@@ -168,9 +168,9 @@ interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDepe
         String getExtension();
 
         /**
-         * The currently configured dependencies in the builder.
+         * The currently configured compileDependencies in the builder.
          *
-         * @return The currently configured dependencies in the builder.
+         * @return The currently configured compileDependencies in the builder.
          */
         @NotNull
         ImmutableSet<? extends RepositoryReference> getDependencies();
@@ -185,9 +185,9 @@ interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDepe
         TSelf setGroup(@NotNull String group);
 
         /**
-         * Sets the name of the entry.
+         * Sets the identifier of the entry.
          *
-         * @param name The new name for the entry.
+         * @param name The new identifier for the entry.
          * @return The builder invoked on.
          */
         @NotNull
@@ -239,36 +239,36 @@ interface RepositoryEntryLegacy<TSelf extends RepositoryEntryLegacy<TSelf, TDepe
         TSelf from(@NotNull ResolvedDependency resolvedDependency);
 
         /**
-         * Adds a dependencies to the entry.
+         * Adds a compileDependencies to the entry.
          *
-         * @param dependency The dependencies to add.
+         * @param dependency The compileDependencies to add.
          * @return The builder invoked on.
          */
         @NotNull
         TSelf setDependencies(@NotNull Collection<? extends RepositoryReference> dependencies);
 
         /**
-         * Adds a dependencies to the entry.
+         * Adds a compileDependencies to the entry.
          *
-         * @param dependency The dependencies to add.
+         * @param dependency The compileDependencies to add.
          * @return The builder invoked on.
          */
         @NotNull
         TSelf setDependencies(@NotNull RepositoryReference... dependencies);
 
         /**
-         * Adds a dependencies to the entry.
+         * Adds a compileDependencies to the entry.
          *
-         * @param dependency The dependencies to add.
+         * @param dependency The compileDependencies to add.
          * @return The builder invoked on.
          */
         @NotNull
         TSelf withDependency(@NotNull Consumer<TDependencyBuilder> consumer);
 
         /**
-         * Adds a dependencies to the entry, in such a way that it is considered a processed dependency and that dependency replacement logic needs to be considered.
+         * Adds a compileDependencies to the entry, in such a way that it is considered a processed dependency and that dependency replacement logic needs to be considered.
          *
-         * @param dependency The dependencies to add.
+         * @param dependency The compileDependencies to add.
          * @return The builder invoked on.
          */
         @NotNull

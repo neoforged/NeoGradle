@@ -9,11 +9,17 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface NamedRecord extends Named {
 
+    /**
+     * @return The name of the record.
+     */
     @Override
-    public default @NotNull String getName() {
+    default @NotNull String getName() {
         return name();
     }
 
+    /**
+     * @return A record friendly version of {@link Named#getName()}
+     */
     @NotNull
     String name();
 }

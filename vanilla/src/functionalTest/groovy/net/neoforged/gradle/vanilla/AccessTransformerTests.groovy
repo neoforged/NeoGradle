@@ -23,7 +23,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:client:+'
             }
             """)
@@ -65,7 +65,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
             
             minecraft.accessTransformers.entry 'public-f net.minecraft.client.Minecraft fixerUpper # fixerUpper'
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:client:+'
             }
             """)
@@ -105,7 +105,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             minecraft.accessTransformers.entry 'public-f net.minecraft.client.Minecraft LOGGER # LOGGER'
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:client:+'
             }
             """)
@@ -147,7 +147,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer2.cfg')
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:client:+'
             }
             """)
@@ -190,7 +190,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             minecraft.accessTransformers.file rootProject.file('src/main/resources/accesstransformer.cfg')
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:client:+'
             }
             """)

@@ -55,7 +55,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)

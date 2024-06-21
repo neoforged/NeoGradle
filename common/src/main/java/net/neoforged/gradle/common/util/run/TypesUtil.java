@@ -17,7 +17,7 @@ public class TypesUtil {
         }
         
         if (runTypes.getNames().contains(nameToRegister)) {
-            throw new InvalidUserDataException("There is already a type with the name " + nameToRegister);
+            throw new InvalidUserDataException("There is already a type with the identifier " + nameToRegister);
         }
         
         return runTypes.register(nameToRegister, configurationAction);

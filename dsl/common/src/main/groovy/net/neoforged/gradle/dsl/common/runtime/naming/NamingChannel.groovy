@@ -14,9 +14,9 @@ import org.jetbrains.annotations.NotNull;
 interface NamingChannel extends BaseDSLElement<NamingChannel> {
 
     /**
-     * The name of the naming channel.
+     * The identifier of the naming channel.
      *
-     * @return The name.
+     * @return The identifier.
      */
     @NotNull
     String getName();

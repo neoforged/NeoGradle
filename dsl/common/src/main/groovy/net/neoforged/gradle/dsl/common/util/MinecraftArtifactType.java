@@ -1,7 +1,8 @@
 package net.neoforged.gradle.dsl.common.util;
 
 public enum MinecraftArtifactType {
-    
+
+    VERSION_JSON("version.json"),
     EXECUTABLE("%s"),
     MAPPINGS("%s_mappings");
     

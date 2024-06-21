@@ -55,7 +55,7 @@ public abstract class GenerateDebuggingMappings extends DefaultRuntime {
             }
         }
 
-        String[] header = new String[]{"searge", "name", "side", "desc"};
+        String[] header = new String[]{"searge", "identifier", "side", "desc"};
         List<String[]> fields = new ArrayList<>();
         List<String[]> methods = new ArrayList<>();
         fields.add(header);

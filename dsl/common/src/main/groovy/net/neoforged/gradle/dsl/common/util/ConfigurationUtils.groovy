@@ -30,7 +30,7 @@ class ConfigurationUtils {
      *
      * @param project The project to create the configuration for
      * @param context The context of the configuration
-     * @param dependencies The dependencies to add to the configuration
+     * @param dependencies The compileDependencies to add to the configuration
      * @return The detached configuration
      */
     static Configuration temporaryConfiguration(final Project project, final String context, final Dependency... dependencies) {
@@ -91,7 +91,7 @@ class ConfigurationUtils {
      *
      * @param configurations The configuration handler.
      * @param context The context of the configuration
-     * @param dependencies The dependencies to add to the configuration
+     * @param dependencies The compileDependencies to add to the configuration
      * @return The detached configuration
      */
     static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final String context, final Dependency... dependencies) {
@@ -109,11 +109,35 @@ class ConfigurationUtils {
     }
 
     /**
-     * Creates a configuration that can be resolved, but not consumed, and does not report its dependencies as transitive.
+     * Creates a configuration that can be resolved, but not consumed, but on which no dependency replacement is applied.
      *
      * @param configurations The configuration handler.
      * @param context The context of the configuration
-     * @param dependencies The dependencies to add to the configuration
+     * @param dependencies The compileDependencies to add to the configuration
+     * @return The detached configuration
+     */
+    static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final String context, final Action<Configuration> configurationAction, final Dependency... dependencies) {
+        final Configuration configuration = configurations.maybeCreate("neoGradleInternalUnhandled${context.capitalize()}")
+        UNHANDLED_CONFIGURATIONS.add(configuration)
+
+        if (configuration.getDependencies().isEmpty()) {
+            configurationAction.execute(configuration)
+
+            configuration.getDependencies().addAll(dependencies)
+
+            configuration.setCanBeConsumed(false)
+            configuration.setCanBeResolved(true)
+        }
+
+        return configuration
+    }
+
+    /**
+     * Creates a configuration that can be resolved, but not consumed, and does not report its compileDependencies as transitive.
+     *
+     * @param configurations The configuration handler.
+     * @param context The context of the configuration
+     * @param dependencies The compileDependencies to add to the configuration
      * @return The detached configuration
      */
     static Configuration temporaryUnhandledNotTransitiveConfiguration(final ConfigurationContainer configurations, final String context, final Dependency... dependencies) {
@@ -233,11 +257,11 @@ class ConfigurationUtils {
     }
 
     /**
-     * Gets the name of the source set with the given post fix
+     * Gets the identifier of the source set with the given post fix
      *
-     * @param sourceSet The source set to get the name of
-     * @param postFix The post fix to append to the source set name
-     * @return The name of the source set with the post fix
+     * @param sourceSet The source set to get the identifier of
+     * @param postFix The post fix to append to the source set identifier
+     * @return The identifier of the source set with the post fix
      */
     static String getSourceSetName(SourceSet sourceSet, String postFix) {
         final String capitalized = postFix.capitalize()
@@ -247,11 +271,11 @@ class ConfigurationUtils {
     }
 
     /**
-     * Gets the name of the source set with the given post fix
+     * Gets the identifier of the source set with the given post fix
      *
-     * @param sourceSet The source set to get the name of
-     * @param postFix The post fix to append to the source set name
-     * @return The name of the source set with the post fix
+     * @param sourceSet The source set to get the identifier of
+     * @param postFix The post fix to append to the source set identifier
+     * @return The identifier of the source set with the post fix
      */
     static String getRunName(Run sourceSet, String postFix) {
         final String capitalized = postFix.capitalize()

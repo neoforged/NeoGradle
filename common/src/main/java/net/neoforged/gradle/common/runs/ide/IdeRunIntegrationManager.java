@@ -110,7 +110,7 @@ public class IdeRunIntegrationManager {
 
                             final File DotIdeaDirectory = new File(project.getProjectDir(), ".idea");
                             final File GradleXml = new File(DotIdeaDirectory, "gradle.xml");
-                            return FileUtils.contains(GradleXml, "<option name=\"delegatedBuild\" value=\"false\" />");
+                            return FileUtils.contains(GradleXml, "<option identifier=\"delegatedBuild\" value=\"false\" />");
                         })
         );
 

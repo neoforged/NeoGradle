@@ -149,7 +149,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         public Builder withMinecraftArtifact(final String minecraftArtifact) {
-            if (minecraftArtifact == null) // Additional null check for convenient loading of sides from dependencies.
+            if (minecraftArtifact == null) // Additional null check for convenient loading of sides from compileDependencies.
                 return getThis();
 
             return withMinecraftArtifact(project.provider(() -> minecraftArtifact));
@@ -161,7 +161,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         public Builder withMinecraftVersion(final String minecraftVersion) {
-            if (minecraftVersion == null) // Additional null check for convenient loading of sides from dependencies.
+            if (minecraftVersion == null) // Additional null check for convenient loading of sides from compileDependencies.
                 return getThis();
 
             return withMinecraftVersion(project.provider(() -> minecraftVersion));
@@ -174,7 +174,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         public Builder withFartVersion(final String fartVersion) {
-            if (fartVersion == null) // Additional null check for convenient loading of sides from dependencies.
+            if (fartVersion == null) // Additional null check for convenient loading of sides from compileDependencies.
                 return getThis();
 
             return withFartVersion(project.provider(() -> fartVersion));
@@ -187,7 +187,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         public Builder withForgeFlowerVersion(final String forgeFlowerVersion) {
-            if (forgeFlowerVersion == null) // Additional null check for convenient loading of sides from dependencies.
+            if (forgeFlowerVersion == null) // Additional null check for convenient loading of sides from compileDependencies.
                 return getThis();
 
             return withForgeFlowerVersion(project.provider(() -> forgeFlowerVersion));
@@ -200,7 +200,7 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
         }
 
         public Builder withAccessTransformerApplierVersion(final String accessTransformerApplierVersion) {
-            if (accessTransformerApplierVersion == null) // Additional null check for convenient loading of sides from dependencies.
+            if (accessTransformerApplierVersion == null) // Additional null check for convenient loading of sides from compileDependencies.
                 return getThis();
 
             return withAccessTransformerApplierVersion(project.provider(() -> accessTransformerApplierVersion));

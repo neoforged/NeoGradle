@@ -39,7 +39,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation "net.neoforged:neoforge:+"
             }
             
@@ -87,7 +87,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -119,13 +119,13 @@ class RunTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
             runs {
                 client {
-                    dependencies {
+                    compileDependencies {
                         runtime 'org.graalvm.polyglot:python:23.1.2'
                     }
                     
@@ -171,13 +171,13 @@ class RunTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
             runs {
                 client {
-                    dependencies {
+                    compileDependencies {
                         runtime 'org.jgrapht:jgrapht-core:+'
                     }
                     
@@ -226,14 +226,14 @@ class RunTests extends BuilderBasedTestSpecification {
                 runRuntime
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 runRuntime 'org.jgrapht:jgrapht-core:+'
             }
             
             runs {
                 client {
-                    dependencies {
+                    compileDependencies {
                         runtime project.configurations.runRuntime
                     }
                     
@@ -270,7 +270,7 @@ class RunTests extends BuilderBasedTestSpecification {
             it.file("gradle/libs.versions.toml",
                     """
                     [libraries]
-                    jgrapht = { group = "org.jgrapht", name = "jgrapht-core", version = "+" }
+                    jgrapht = { group = "org.jgrapht", identifier = "jgrapht-core", version = "+" }
                     """.trim())
 
             it.build("""
@@ -288,13 +288,13 @@ class RunTests extends BuilderBasedTestSpecification {
                 runRuntime
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
             runs {
                 client {
-                    dependencies {
+                    compileDependencies {
                         runtime libs.jgrapht
                     }
                     

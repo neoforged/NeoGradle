@@ -6,7 +6,7 @@ import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormSdk;
 import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import net.neoforged.gradle.util.FileUtils;
@@ -22,7 +22,6 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ValueSource;
 import org.gradle.api.provider.ValueSourceParameters;
-import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,13 +36,13 @@ import java.util.zip.ZipFile;
  */
 public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification implements NeoFormSpecification {
     private final Provider<File> neoFormArchive;
-    private final NeoFormConfigConfigurationSpecV2 config;
+    private final NeoFormSdk config;
     private final FileCollection additionalRecompileDependencies;
 
     private NeoFormRuntimeSpecification(Project project,
                                         String version,
                                         Provider<File> neoFormArchive,
-                                        NeoFormConfigConfigurationSpecV2 config,
+                                        NeoFormSdk config,
                                         DistributionType side,
                                         Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
                                         Multimap<String, TaskTreeAdapter> postTypeAdapters,
@@ -55,12 +54,12 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
         this.additionalRecompileDependencies = additionalRecompileDependencies;
     }
 
-    public NeoFormConfigConfigurationSpecV2 getConfig() {
+    public NeoFormSdk getConfig() {
         return config;
     }
 
     public String getMinecraftVersion() {
-        return config.getVersion();
+        return config.minecraftVersion();
     }
 
     public String getNeoFormVersion() {
@@ -147,9 +146,9 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
             String effectiveVersion = artifact.getModuleVersion().getId().getVersion();
 
             // Read the NF config from the archive
-            NeoFormConfigConfigurationSpecV2 config;
+            NeoFormSdk config;
             try {
-                config = FileUtils.processFileFromZip(archive, "config.json", NeoFormConfigConfigurationSpecV2::get);
+                config = FileUtils.processFileFromZip(archive, "config.json", NeoFormSdk::get);
             } catch (IOException e) {
                 throw new GradleException("Failed to read NeoForm config file from version " + effectiveVersion);
             }

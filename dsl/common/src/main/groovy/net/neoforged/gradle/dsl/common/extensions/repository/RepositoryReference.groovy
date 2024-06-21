@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable
 
 /**
  * Defines a reference to an entry in a repository.
- * Generally used as a list of dependencies in a dummy repository entry.
+ * Generally used as a list of compileDependencies in a dummy repository entry.
  *
  * @param <TSelf> The self-reference type of the entry.
  */
@@ -28,9 +28,9 @@ interface RepositoryReference {
     String getGroup()
 
     /**
-     * Gives access to the name of the dependency.
+     * Gives access to the identifier of the dependency.
      *
-     * @return The name.
+     * @return The identifier.
      */
     @NotNull
     String getName()
@@ -80,7 +80,7 @@ interface RepositoryReference {
      * Defines a builder which can be used to create a repository reference.
      *
      * @param <TSelf> The self-reference type of the builder.
-     * @param <TDependency> The type for the dependencies of the entry.
+     * @param <TDependency> The type for the compileDependencies of the entry.
      */
     @CompileStatic
     interface Builder<TSelf extends Builder<TSelf, TDependency>, TDependency extends RepositoryReference> extends BaseDSLElement<TSelf> {
@@ -94,9 +94,9 @@ interface RepositoryReference {
         String getGroup();
 
         /**
-         * The currently configured name in the builder.
+         * The currently configured identifier in the builder.
          *
-         * @return The currently configured name in the builder.
+         * @return The currently configured identifier in the builder.
          */
         @NotNull
         String getName();
@@ -135,9 +135,9 @@ interface RepositoryReference {
         TSelf setGroup(@NotNull String group);
 
         /**
-         * Sets the name of the reference.
+         * Sets the identifier of the reference.
          *
-         * @param name The new name for the reference.
+         * @param name The new identifier for the reference.
          * @return The builder invoked on.
          */
         @NotNull

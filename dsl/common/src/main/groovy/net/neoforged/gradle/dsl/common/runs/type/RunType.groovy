@@ -60,9 +60,9 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     abstract Property<Boolean> getIsSingleInstance();
 
     /**
-     * Gives access to the name of the main class on the run type.
+     * Gives access to the identifier of the main class on the run type.
      *
-     * @return The property which holds the main class name.
+     * @return The property which holds the main class identifier.
      */
     @DSLProperty
     @Input
@@ -215,11 +215,11 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
             }
 
             final JsonObject object = jsonElement.getAsJsonObject()
-            if (!object.has("name")) {
-                throw new JsonParseException("Expected a 'name' property, but got " + object)
+            if (!object.has("identifier")) {
+                throw new JsonParseException("Expected a 'identifier' property, but got " + object)
             }
 
-            final String name = object.get("name").getAsString()
+            final String name = object.get("identifier").getAsString()
 
             return deserializeNamed(objectFactory, name, object, jsonDeserializationContext)
         }
@@ -245,7 +245,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         @Override
         JsonElement serialize(RunType runType, Type type, JsonSerializationContext jsonSerializationContext) {
             JsonObject object = serializedNamed(runType, jsonSerializationContext)
-            object.addProperty("name", runType.getName())
+            object.addProperty("identifier", runType.getName())
             return object
         }
 

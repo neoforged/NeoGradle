@@ -43,10 +43,10 @@ interface Entry extends BaseDSLElement<Entry> {
         Builder from(Dependency dependency)
 
         /**
-         * Configures the entry that is about to be created from the given dependency and dependencies.
+         * Configures the entry that is about to be created from the given dependency and compileDependencies.
          *
          * @param dependency The dependency to set.
-         * @param dependencies The dependencies to set.
+         * @param dependencies The compileDependencies to set.
          * @return The builder.
          */
         Builder from(Dependency dependency, Configuration dependencies);

@@ -190,7 +190,7 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
             final Configuration dependencies,
             final boolean hasSource
     ) throws IOException, XMLStreamException {
-        //Construct all paths, ensuring that the metadata file name matches the pattern we configured above in the repo metadata.
+        //Construct all paths, ensuring that the metadata file identifier matches the pattern we configured above in the repo metadata.
         final Path jarFile = buildArtifactPath(entry);
         final Path baseDir = jarFile.getParent();
         final Path metaFile = baseDir.resolve(String.format("ivy-%s-ng%d.xml", entry.getVersion(), METADATA_VERSION));

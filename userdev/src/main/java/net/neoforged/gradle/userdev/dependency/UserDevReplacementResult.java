@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Set;
 
 /**
- * Special replacement result for userdev dependencies.
+ * Special replacement result for userdev compileDependencies.
  * Is needed because userdev needs to know where the neoforge jar is, so it can put it on the classpath
  */
 public class UserDevReplacementResult extends ReplacementResult implements ReplacementAware {

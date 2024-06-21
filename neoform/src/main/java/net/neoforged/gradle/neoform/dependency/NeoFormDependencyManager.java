@@ -1,35 +1,26 @@
 package net.neoforged.gradle.neoform.dependency;
 
-import com.google.common.collect.Sets;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.extensions.RuntimesContainer;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
-import net.neoforged.gradle.dsl.common.runtime.spec.TaskTreeBuilder;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
-import net.neoforged.gradle.neoform.runtime.NeoFormRuntime;
-import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
-import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormSdk;
+import net.neoforged.gradle.neoform.runtime.NeoFormPublishingUtils;
+import net.neoforged.gradle.neoform.runtime.NeoFormRuntimeBuilder;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
-import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
-import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.DependencyArtifact;
 import org.gradle.api.artifacts.ModuleDependency;
-import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * This class installs a dependency replacement handler that replaces the following dependencies with the output
+ * This class installs a dependency replacement handler that replaces the following compileDependencies with the output
  * of a NeoForm runtime.
  * <p>
  * <ul>
@@ -55,7 +46,7 @@ public final class NeoFormDependencyManager {
     private static Optional<ReplacementResult> replaceDependency(Context context) {
         ModuleDependency dependency = context.getDependency();
 
-        NeoFormTarget target = getNeoFormTargetFromDependency(dependency);
+        NeoFormTarget target = createTarget(dependency);
         if (target == null) {
             return Optional.empty();
         }
@@ -68,43 +59,34 @@ public final class NeoFormDependencyManager {
         Project project = context.getProject();
         RuntimesContainer container = project.getExtensions().getByType(RuntimesContainer.class);
 
-        final Provider<File> neoFormArchiveFile = NeoFormRuntime.getNeoFormArchive(project, target.version);
-        final Provider<NeoFormConfigConfigurationSpecV2> config = NeoFormRuntime.parseConfiguration(neoFormArchiveFile);
+        final NeoFormSdk sdk = NeoFormPublishingUtils.downloadAndParseSdkFile(project, target.version);
+
+        final NeoFormRuntimeBuilder builder = new NeoFormRuntimeBuilder();
 
         final Definition runtimeDefinition = container.register(
                 new Specification(
                         project,
                         "neoForm",
-                        project.provider(() -> target.version),
-                        NeoFormRuntime.getMinecraftVersion(config),
-                        project.provider(() -> target.distribution)
+                        target.version(),
+                        sdk.minecraftVersion(),
+                        target.distribution()
                 ),
-                new TaskTreeBuilder() {
-                    @Override
-                    public BuildResult build(Specification specification) {
-                        return null;
-                    }
-                }
+                builder::build
         );
-
-        NeoFormRuntimeExtension runtimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
-        NeoFormRuntimeDefinition runtime = runtimeExtension.maybeCreateFor(dependency, builder -> {
-            builder.withDistributionType(target.distribution).withNeoFormVersion(target.version);
-            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
-        });
 
         return Optional.of(
                 new ReplacementResult(
                         project,
-                        runtime.getSourceJarTask(),
-                        runtime.getRawJarTask(),
-                        runtime.getMinecraftDependenciesConfiguration(),
+                        runtimeDefinition.outputs().sources(),
+                        runtimeDefinition.outputs().binaries(),
+                        //TODO: Pass both configurations back
+                        runtimeDefinition.dependencies().runtimeElements(),
                         Collections.emptySet()
                 ));
     }
 
     @Nullable
-    private static NeoFormTarget getNeoFormTargetFromDependency(ModuleDependency dependency) {
+    private static NeoFormTarget createTarget(ModuleDependency dependency) {
 
         if (!"net.minecraft".equals(dependency.getGroup())) {
             return null;
@@ -112,17 +94,12 @@ public final class NeoFormDependencyManager {
 
         DistributionType distributionType;
         switch (dependency.getName()) {
-            case "neoform_client":
-                distributionType = DistributionType.CLIENT;
-                break;
-            case "neoform_server":
-                distributionType = DistributionType.SERVER;
-                break;
-            case "neoform_joined":
-                distributionType = DistributionType.JOINED;
-                break;
-            default:
+            case "neoform_client" -> distributionType = DistributionType.CLIENT;
+            case "neoform_server" -> distributionType = DistributionType.SERVER;
+            case "neoform_joined" -> distributionType = DistributionType.JOINED;
+            default -> {
                 return null; // This dependency is not handled by this replacer
+            }
         }
 
         if (!hasMatchingArtifact(dependency)) {
@@ -149,14 +126,6 @@ public final class NeoFormDependencyManager {
         return Objects.equals(artifact.getClassifier(), "sources") && Objects.equals(artifact.getExtension(), "jar");
     }
 
-    private static final class NeoFormTarget {
-        private final String version;
-        private final DistributionType distribution;
-
-        public NeoFormTarget(String version, DistributionType distribution) {
-            this.version = version;
-            this.distribution = distribution;
-        }
-    }
+    private record NeoFormTarget(String version, DistributionType distribution) {}
     
 }

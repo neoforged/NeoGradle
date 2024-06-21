@@ -30,7 +30,7 @@ interface DevLogin extends ConfigurableDSLElement<DevLogin> {
     Property<String> getMainClass();
 
     /**
-     * @return The suffix for the configuration name to use when adding the dev login configuration.
+     * @return The suffix for the configuration identifier to use when adding the dev login configuration.
      */
     @Input
     @Optional

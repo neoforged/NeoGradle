@@ -46,18 +46,18 @@ interface UserDevSpecification extends LegacySpecification {
         B withForgeGroup(String forgeGroup);
 
         /**
-         * Configures the forge name to use.
+         * Configures the forge identifier to use.
          * Pulls the value lazily from the given provider.
          *
-         * @param forgeName The forge name to use.
+         * @param forgeName The forge identifier to use.
          * @return The builder.
          */
         B withForgeName(Provider<String> forgeName);
 
         /**
-         * Configures the forge name to use.
+         * Configures the forge identifier to use.
          *
-         * @param forgeName The forge name to use.
+         * @param forgeName The forge identifier to use.
          * @return The builder.
          */
         B withForgeName(String forgeName);

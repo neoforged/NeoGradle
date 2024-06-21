@@ -41,15 +41,16 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
+public class LegacyNeoFormSdk extends VersionedConfiguration {
     protected static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(NeoFormConfigConfigurationSpecV1.Step.class, new NeoFormConfigConfigurationSpecV1.Step.Deserializer())
+            .registerTypeAdapter(LegacyNeoFormSdk.Step.class, new LegacyNeoFormSdk.Step.Deserializer())
+            .registerTypeAdapter(LegacyNeoFormSdk.StepType.class, new LegacyNeoFormSdk.StepType.Deserializer())
             .setPrettyPrinting().create();
 
-    public static NeoFormConfigConfigurationSpecV1 get(InputStream stream) {
-        return GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), NeoFormConfigConfigurationSpecV1.class);
+    public static LegacyNeoFormSdk get(InputStream stream) {
+        return GSON.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), LegacyNeoFormSdk.class);
     }
-    public static NeoFormConfigConfigurationSpecV1 get(byte[] data) {
+    public static LegacyNeoFormSdk get(byte[] data) {
         return get(new ByteArrayInputStream(data));
     }
 
@@ -64,7 +65,7 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
     protected Map<String, List<String>> libraries;
 
     @Input
-    public String getVersion() {
+    public String minecraftVersion() {
         return version;
     }
 
@@ -127,21 +128,85 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
         return libraries;
     }
 
+    public enum StepType {
+        DOWNLOAD_MANIFEST,
+        DOWNLOAD_JSON,
+        DOWNLOAD_CLIENT,
+        DOWNLOAD_SERVER,
+        STRIP,
+        LIST_LIBRARIES,
+        INJECT,
+        PATCH,
+        DOWNLOAD_CLIENT_MAPPINGS,
+        DOWNLOAD_SERVER_MAPPINGS,
+        FUNCTION;
+
+        public String toString() {
+            final String name = name();
+            final String[] sections = name.split("_");
+            if (sections.length == 1)
+                return name.toLowerCase();
+                        
+            final StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < sections.length; i++) {
+                String section = sections[i];
+                if (i == 0) {
+                    sb.append(section.toLowerCase());
+                } else {
+                    sb.append(section.charAt(0));
+                    sb.append(section.substring(1).toLowerCase());
+                }
+            }
+            return sb.toString();
+        }
+        
+        public static final class Deserializer implements JsonDeserializer<StepType> {
+
+            @Override
+            public StepType deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                if (!json.isJsonPrimitive())
+                    throw new JsonParseException("Could not parse step type: Expected a string");
+
+                String value = json.getAsString();
+                if (value.equals("function"))
+                    throw new JsonParseException("Could not parse step type: Expected a valid type, not a function reference!");
+
+                for (StepType type : StepType.values()) {
+                    if (type.toString().equalsIgnoreCase(value))
+                        return type;
+                }
+
+                //If we do not know the type, it will always be a function
+                return FUNCTION;
+            }
+        }
+    }
+    
     public static class Step {
-        private final String type;
+        private final StepType type;
+        @Nullable
+        private final String function;
         private final String name;
         @Nullable
         private final Map<String, String> values;
 
-        private Step(String type, String name, @Nullable Map<String, String> values) {
+        private Step(StepType type, @Nullable String function, String name, @Nullable Map<String, String> values) {
             this.type = type;
+            this.function = function;
             this.name = name;
             this.values = values;
         }
 
         @Input
-        public String getType() {
+        public StepType getType() {
             return type;
+        }
+
+        @Input
+        @Optional
+        @Nullable
+        public String getFunction() {
+            return function;
         }
 
         @Input
@@ -165,12 +230,32 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
                 JsonObject obj = json.getAsJsonObject();
                 if (!obj.has("type"))
                     throw new JsonParseException("Could not parse step: Missing 'type'");
-                String type = obj.get("type").getAsString();
-                String name = obj.has("name") ? obj.get("name").getAsString() : type;
+                //Deserialize the type string field to an enum entry.
+                StepType type = context.deserialize(obj.get("type"), StepType.class);
+
+                //See if we have a function in the first place.
+                String function = obj.has("function") ? obj.get("function").getAsString() : null;
+
+                //Functions are special their type is a direct reference to the function.
+                //We however make that explicit, so unwrap the function key again, so we keep track of what function to pass in.
+                if (type == StepType.FUNCTION)
+                    function = obj.get("type").getAsString();
+
+                //If an identifier is given use that
+                //If not check, if we have a function key, if that is present use it
+                //Else use the display key for the step type (which is its toString value)
+                String name = obj.has("identifier") ?
+                        obj.get("identifier").getAsString() :
+                        function == null ?
+                                type.toString() :
+                                function;
+
+                //Get the values.
                 Map<String, String> values = obj.entrySet().stream()
-                        .filter(e -> !"type".equals(e.getKey()) && !"name".equals(e.getKey()))
+                        .filter(e -> !"type".equals(e.getKey()) && !"identifier".equals(e.getKey()))
                         .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getAsString()));
-                return new Step(type, name, values);
+
+                return new Step(type, function, name, values);
             }
         }
     }

@@ -2,12 +2,15 @@ package net.neoforged.gradle.util;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.gradle.api.Transformer;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileSystemLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -155,6 +158,27 @@ public final class TransformerUtils {
                 
             }
             return t;
+        });
+    }
+
+    /**
+     * Creates a transformer which will return the first element in the collection.
+     *
+     * @return a guarded transformer which will return the first element in the collection.
+     *
+     * @param <E> The type of the elements in the collection.
+     * @param <C> The type of the collection.
+     */
+    public static <E, C extends Collection<E>> Transformer<E, C> first() {
+        return TransformerUtils.guard(new ThrowingTransformer<>() {
+            @Nullable
+            @Override
+            public E transform(C es) throws Throwable {
+                if (es.isEmpty())
+                    throw new IllegalStateException("Collection is empty");
+
+                return es.iterator().next();
+            }
         });
     }
 

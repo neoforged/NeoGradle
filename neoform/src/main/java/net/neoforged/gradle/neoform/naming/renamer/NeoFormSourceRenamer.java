@@ -47,7 +47,7 @@ public class NeoFormSourceRenamer extends RegexBasedSourceRenamer {
                     boolean hasDesc = reader.getHeader().contains("desc");
                     reader.forEach(row -> {
                         String searge = row.getField(obf);
-                        names.put(searge, row.getField("name"));
+                        names.put(searge, row.getField("identifier"));
                         if (hasDesc) {
                             String desc = row.getField("desc");
                             if (!desc.isEmpty())

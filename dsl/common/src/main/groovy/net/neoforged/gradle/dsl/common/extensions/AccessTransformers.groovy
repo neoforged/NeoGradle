@@ -14,12 +14,12 @@ import org.gradle.api.artifacts.dsl.DependencyCollector
 @CompileStatic
 interface AccessTransformers extends BaseDSLElementWithFilesAndEntries<AccessTransformers>, Dependencies {
     /**
-     * {@return access transformers to add as dependencies}
+     * {@return access transformers to add as compileDependencies}
      */
     DependencyCollector getConsume()
 
     /**
-     * {@return access transformers to add as dependencies and also expose to consumers}
+     * {@return access transformers to add as compileDependencies and also expose to consumers}
      */
     DependencyCollector getConsumeApi()
 

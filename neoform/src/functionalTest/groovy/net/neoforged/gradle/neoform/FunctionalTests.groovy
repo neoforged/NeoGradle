@@ -25,7 +25,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)
@@ -52,7 +52,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)
@@ -86,7 +86,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)
@@ -124,7 +124,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
             }
             """)

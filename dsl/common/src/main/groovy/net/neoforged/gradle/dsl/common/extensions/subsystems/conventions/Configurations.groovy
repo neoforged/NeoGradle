@@ -26,20 +26,20 @@ interface Configurations extends BaseDSLElement<Configurations> {
     Property<String> getLocalRuntimeConfigurationPostFix();
 
     /**
-     * The post-fix to apply to the per-source-set runtime configuration added to a runs dependencies
+     * The post-fix to apply to the per-source-set runtime configuration added to a runs compileDependencies
      * Note: this can be configured via the buildscript, however any sourcesets created earlier then the setting statement will not have the post-fix correctly applied, it is as such recommended to use the gradle.properties file.
      */
     @DSLProperty
     Property<String> getRunRuntimeConfigurationPostFix();
 
     /**
-     * The post-fix to apply to the per-run configuration added to a runs dependencies
+     * The post-fix to apply to the per-run configuration added to a runs compileDependencies
      */
     @DSLProperty
     Property<String> getPerRunRuntimeConfigurationPostFix();
 
     /**
-     * The name of the runtime configuration that will be used for the local runtime configuration.
+     * The identifier of the runtime configuration that will be used for the local runtime configuration.
      * Note: this can not be configured via the buildscript and needs to be set in the gradle.properties file.
      */
     @DSLProperty

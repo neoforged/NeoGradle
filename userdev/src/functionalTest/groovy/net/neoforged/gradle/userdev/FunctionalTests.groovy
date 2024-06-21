@@ -23,7 +23,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -50,7 +50,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:[20,)'
             }
             """)
@@ -71,11 +71,11 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('dependencies', "--configuration", "compileClasspath")
+            it.tasks('compileDependencies', "--configuration", "compileClasspath")
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("+--- net.neoforged.fancymodloader:loader:")
     }
 
@@ -89,7 +89,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation ('net.neoforged:neoforge') {
                     version {
                         strictly '[20.4.167, 20.5)'
@@ -115,11 +115,11 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('dependencies', "--configuration", "compileClasspath")
+            it.tasks('compileDependencies', "--configuration", "compileClasspath")
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("+--- net.neoforged.fancymodloader:loader:")
     }
 
@@ -133,7 +133,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -154,11 +154,11 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('dependencies', "--configuration", "compileClasspath")
+            it.tasks('compileDependencies', "--configuration", "compileClasspath")
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("+--- io.github.llamalad7:mixinextras-neoforge")
     }
 
@@ -172,7 +172,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -210,7 +210,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -250,7 +250,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -309,7 +309,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -367,7 +367,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 contentImplementation 'net.neoforged:neoforge:+'
             }

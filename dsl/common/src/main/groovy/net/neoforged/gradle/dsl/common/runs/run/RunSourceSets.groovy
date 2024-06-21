@@ -41,7 +41,7 @@ interface RunSourceSets extends ConfigurableDSLElement<RunSourceSets> {
 
     /**
      * Adds a source set to this run
-     * The group id used is derived from the local project name if it is not set.
+     * The group id used is derived from the local project identifier if it is not set.
      *
      * @param sourceSet The source set to add
      */
@@ -49,7 +49,7 @@ interface RunSourceSets extends ConfigurableDSLElement<RunSourceSets> {
 
     /**
      * Adds multiple source sets to this run
-     * The group id used is derived from the local project name if it is not set.
+     * The group id used is derived from the local project identifier if it is not set.
      *
      * @param sourceSets The source sets to add
      */
@@ -57,7 +57,7 @@ interface RunSourceSets extends ConfigurableDSLElement<RunSourceSets> {
 
     /**
      * Adds multiple source sets to this run
-     * The group id used is derived from the local project name if it is not set.
+     * The group id used is derived from the local project identifier if it is not set.
      *
      * @param sourceSets The source sets to add
      */

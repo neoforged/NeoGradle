@@ -130,7 +130,7 @@ public class DefaultJarJarFeature implements JarJarFeature {
             // Unfortunately, while we can hopefully rely on disambiguation rules to get us some of these, others run
             // into issues. The target JVM version is the most worrying - we don't want to pull in a variant for a newer
             // jvm version. We could copy DefaultJvmFeature, and search for the target version of the compile task,
-            // but this is difficult - we only have a feature name, not the linked source set. For this reason, we use
+            // but this is difficult - we only have a feature identifier, not the linked source set. For this reason, we use
             // the toolchain version, which is the most likely to be correct.
             attributes.attributeProvider(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, javaPlugin.getToolchain().getLanguageVersion().map(JavaLanguageVersion::asInt));
             attributes.attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME));
@@ -141,7 +141,7 @@ public class DefaultJarJarFeature implements JarJarFeature {
 
         TaskProvider<JarJar> jarJarTask = project.getTasks().register(withPrefix(JAR_JAR_TASK_NAME), net.neoforged.gradle.common.tasks.JarJar.class, jarJar -> {
             jarJar.setGroup(JAR_JAR_GROUP);
-            jarJar.setDescription("Create a combined JAR of project and selected dependencies");
+            jarJar.setDescription("Create a combined JAR of project and selected compileDependencies");
             jarJar.getArchiveClassifier().convention(prefix.isEmpty() ? "all" : prefix + "-all");
 
             if (!this.getDefaultSourcesDisabled()) {

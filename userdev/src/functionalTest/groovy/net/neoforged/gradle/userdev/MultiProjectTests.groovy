@@ -34,7 +34,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -62,7 +62,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 implementation project(':api')
             }
@@ -129,7 +129,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -157,7 +157,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 implementation project(':api')
             }
@@ -220,7 +220,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
             }
             """)
             it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
@@ -245,7 +245,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
                 implementation project(':api')
             }
@@ -328,7 +328,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
             }
             """)
             it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
@@ -353,7 +353,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
                 implementation project(':api')
             }
@@ -438,7 +438,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
             }
             """)
             it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
@@ -463,7 +463,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
                 implementation project(':api')
             }
@@ -545,7 +545,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
             }
             """)
             it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
@@ -570,7 +570,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
                 implementation project(':api')
             }
@@ -652,7 +652,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
             }
             """)
             it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
@@ -677,7 +677,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
                 implementation project(':api')
             }
@@ -761,7 +761,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -789,7 +789,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 implementation project(':api')
             }

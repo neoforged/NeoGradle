@@ -66,7 +66,7 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
             input.add("");
 
         List<String> lines = new ArrayList<>();
-        Deque<Pair<String, Integer>> innerClasses = new LinkedList<>(); //pair of inner class name & indentation
+        Deque<Pair<String, Integer>> innerClasses = new LinkedList<>(); //pair of inner class identifier & indentation
         String _package = ""; //default package
         Set<String> blacklist = null;
 
@@ -83,7 +83,7 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
         for (String line : input) {
             Matcher m = PACKAGE_DECL.matcher(line);
             if (m.find())
-                _package = m.group("name") + ".";
+                _package = m.group("identifier") + ".";
 
             if (javadocs) {
                 if (!injectJavadoc(lines, line, _package, innerClasses))
@@ -100,19 +100,19 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
      *
      * @param lines        The current file content (to be modified by this method)
      * @param line         The line that was just read (will not be in the list)
-     * @param _package     the name of the package this file is declared to be in, in com.example format;
+     * @param _package     the identifier of the package this file is declared to be in, in com.example format;
      * @param innerClasses current position in inner class
      */
     private boolean injectJavadoc(List<String> lines, String line, String _package, Deque<Pair<String, Integer>> innerClasses) {
         // constructors
         Matcher matcher = CONSTRUCTOR_JAVADOC_PATTERN.matcher(line);
-        boolean isConstructor = matcher.find() && !innerClasses.isEmpty() && innerClasses.peek().getLeft().contains(matcher.group("name"));
+        boolean isConstructor = matcher.find() && !innerClasses.isEmpty() && innerClasses.peek().getLeft().contains(matcher.group("identifier"));
         // methods
         if (!isConstructor)
             matcher = METHOD_JAVADOC_PATTERN.matcher(line);
 
         if (isConstructor || matcher.find()) {
-            String name = isConstructor ? "<init>" : matcher.group("name");
+            String name = isConstructor ? "<init>" : matcher.group("identifier");
             String javadoc = getDocs().get(name);
             if (javadoc == null && !innerClasses.isEmpty() && !name.startsWith("func_") && !name.startsWith("m_")) {
                 String currentClass = innerClasses.peek().getLeft();
@@ -128,7 +128,7 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
         // fields
         matcher = FIELD_JAVADOC_PATTERN.matcher(line);
         if (matcher.find()) {
-            String name = matcher.group("name");
+            String name = matcher.group("identifier");
             String javadoc = getDocs().get(name);
             if (javadoc == null && !innerClasses.isEmpty() && !name.startsWith("field_") && !name.startsWith("f_")) {
                 String currentClass = innerClasses.peek().getLeft();
@@ -145,7 +145,7 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
         if (matcher.find()) {
             //we maintain a stack of the current (inner) class in com.example.ClassName$Inner format (along with indentation)
             //if the stack is not empty we are entering a new inner class
-            String currentClass = (innerClasses.isEmpty() ? _package : innerClasses.peek().getLeft() + "$") + matcher.group("name");
+            String currentClass = (innerClasses.isEmpty() ? _package : innerClasses.peek().getLeft() + "$") + matcher.group("identifier");
             innerClasses.push(Pair.of(currentClass, matcher.group("indent").length()));
             String javadoc = getDocs().get(currentClass);
             if (javadoc != null) {
@@ -173,7 +173,7 @@ public abstract class RegexBasedSourceRenamer implements ISourceRenamer {
     }
 
     /*
-     * There are certain times, such as Mixin Accessors that we wish to have the name of this method with the first character upper case.
+     * There are certain times, such as Mixin Accessors that we wish to have the identifier of this method with the first character upper case.
      */
     private String getMapped(String srg, @Nullable Set<String> blacklist) {
         if (blacklist != null && blacklist.contains(srg))

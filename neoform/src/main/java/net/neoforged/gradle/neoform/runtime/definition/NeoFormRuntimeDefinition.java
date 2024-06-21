@@ -9,14 +9,13 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormSdk;
 import net.neoforged.gradle.dsl.neoform.runtime.definition.NeoFormDefinition;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,7 +25,7 @@ import java.util.function.Consumer;
  * Represents a configured and registered runtime for Mcp.
  */
 public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRuntimeSpecification> implements NeoFormDefinition<NeoFormRuntimeSpecification> {
-    private final NeoFormConfigConfigurationSpecV2 neoform;
+    private final NeoFormSdk neoform;
 
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
@@ -40,7 +39,7 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
                                     @NotNull Configuration minecraftDependenciesConfiguration,
                                     @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
                                     @NotNull VersionJson versionJson,
-                                    @NotNull NeoFormConfigConfigurationSpecV2 neoform,
+                                    @NotNull NeoFormSdk neoform,
                                     @NotNull TaskProvider<DownloadAssets> assetsTaskProvider,
                                     @NotNull TaskProvider<ExtractNatives> nativesTaskProvider) {
         super(specification, taskOutputs, sourceJarTask, rawJarTask, gameArtifactProvidingTasks, minecraftDependenciesConfiguration, associatedTaskConsumer, versionJson);
@@ -51,7 +50,7 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
 
     @Override
     @NotNull
-    public NeoFormConfigConfigurationSpecV2 getNeoFormConfig() {
+    public NeoFormSdk getNeoFormConfig() {
         return neoform;
     }
 
@@ -87,7 +86,7 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
     public Map<String, String> buildRunInterpolationData(RunImpl run) {
         final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData(run));
 
-        interpolationData.put("mcp_version", neoform.getVersion());
+        interpolationData.put("mcp_version", neoform.minecraftVersion());
         // NeoForge still references this in the environment variable MCP_MAPPINGS, which is unused since 1.20.2
         // Remove this interpolation placeholder once NeoForge removes the environment variable from its config.json
         interpolationData.put("mcp_mappings", "UNUSED_DEPRECATED");

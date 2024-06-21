@@ -22,7 +22,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -49,15 +49,15 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('dependencies')
+            it.tasks('compileDependencies')
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        def implementationStartLine = run.output.split(System.lineSeparator()).toList().indexOf('implementation - Implementation dependencies for the \'main\' feature. (n)')
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
+        def implementationStartLine = run.output.split(System.lineSeparator()).toList().indexOf('implementation - Implementation compileDependencies for the \'main\' feature. (n)')
         implementationStartLine != -1
         def nextLine = run.output.split(System.lineSeparator()).toList().get(implementationStartLine + 1)
-        nextLine.contains("No dependencies")
+        nextLine.contains("No compileDependencies")
     }
 
     def "a mod with userdev in the implementation configuration does not leak it via publishing"() {
@@ -71,7 +71,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -111,7 +111,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':generateMetadataFileForMavenPublication').outcome == TaskOutcome.SUCCESS
-        !run.file('build/publications/maven/module.json').text.contains("dependencies")
-        !run.file('build/publications/maven/pom-default.xml').text.contains("dependencies")
+        !run.file('build/publications/maven/module.json').text.contains("compileDependencies")
+        !run.file('build/publications/maven/pom-default.xml').text.contains("compileDependencies")
     }
 }

@@ -13,11 +13,11 @@ import org.jetbrains.annotations.NotNull
 @CompileStatic
 interface LegacyDefinition<S extends LegacySpecification> {
     /**
-     * Returns the runtimes task with the given name.
-     * The given name is prefixed with the name of the runtime, if needed.
-     * Invoking this method with the name of a task that is not part of the runtime will result in an {@link IllegalArgumentException exception}.
+     * Returns the runtimes task with the given identifier.
+     * The given identifier is prefixed with the identifier of the runtime, if needed.
+     * Invoking this method with the identifier of a task that is not part of the runtime will result in an {@link IllegalArgumentException exception}.
      *
-     * @param name The name of the task to get.
+     * @param name The identifier of the task to get.
      * @return The named task.
      */
     @NotNull TaskProvider<? extends WithOutput> getTask(String name);
@@ -59,7 +59,7 @@ interface LegacyDefinition<S extends LegacySpecification> {
     @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> getGameArtifactProvidingTasks();
 
     /**
-     * Gives access to a detached configuration which contains the dependencies of the minecraft dependency.
+     * Gives access to a detached configuration which contains the compileDependencies of the minecraft dependency.
      *
      * @return The minecraft dependency configuration.
      */

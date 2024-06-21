@@ -46,7 +46,7 @@ public class NeoFormProjectPlugin implements Plugin<Project> {
 
         NeoFormOfficialNamingChannelConfigurator.getInstance().configure(project);
 
-        // Setup handling of the dependencies
+        // Setup handling of the compileDependencies
         NeoFormDependencyManager.apply(project);
 
         // Add Known repos

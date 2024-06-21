@@ -26,33 +26,34 @@ import org.gradle.api.tasks.Input;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
 
-public class NeoFormConfigConfigurationSpecV2 extends NeoFormConfigConfigurationSpecV1 {
+public class NeoFormSdk extends LegacyNeoFormSdk {
 
-    public static NeoFormConfigConfigurationSpecV2 get(File file) {
+    public static NeoFormSdk get(File file) {
         try (final InputStream stream = new FileInputStream(file)) {
             return get(stream);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
-    public static NeoFormConfigConfigurationSpecV2 get(InputStream stream) {
+
+    public static NeoFormSdk get(InputStream stream) {
         try (final InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-            return GSON.fromJson(reader, NeoFormConfigConfigurationSpecV2.class);
+            return GSON.fromJson(reader, NeoFormSdk.class);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
         
     }
-    public static NeoFormConfigConfigurationSpecV2 get(byte[] data) {
+
+    public static NeoFormSdk get(byte[] data) {
         return get(new ByteArrayInputStream(data));
     }
 
-    public static NeoFormConfigConfigurationSpecV2 getFromArchive(File path) {
+    public static NeoFormSdk getFromArchive(File path) {
         try (ZipFile zip = new ZipFile(path)) {
             ZipEntry entry = zip.getEntry("config.json");
             if (entry == null)
@@ -61,9 +62,9 @@ public class NeoFormConfigConfigurationSpecV2 extends NeoFormConfigConfiguration
             byte[] data = IOUtils.toByteArray(zip.getInputStream(entry));
             int spec = getSpec(data);
             if (spec == 2 || spec == 3)
-                return NeoFormConfigConfigurationSpecV2.get(data);
+                return NeoFormSdk.get(data);
             if (spec == 1)
-                return new NeoFormConfigConfigurationSpecV2(NeoFormConfigConfigurationSpecV1.get(data));
+                return new NeoFormSdk(LegacyNeoFormSdk.get(data));
 
             throw new IllegalStateException("Invalid NeoForm Config: " + path.getAbsolutePath() + " Unknown spec: " + spec);
         } catch (IOException e) {
@@ -91,7 +92,7 @@ public class NeoFormConfigConfigurationSpecV2 extends NeoFormConfigConfiguration
         return this.encoding == null ? "UTF-8" : this.encoding;
     }
 
-    public NeoFormConfigConfigurationSpecV2(NeoFormConfigConfigurationSpecV1 old) {
+    public NeoFormSdk(LegacyNeoFormSdk old) {
         this.version = old.version;
         this.data = old.data;
         this.steps = old.steps;

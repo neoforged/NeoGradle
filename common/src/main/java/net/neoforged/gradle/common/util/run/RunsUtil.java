@@ -186,7 +186,7 @@ public class RunsUtil {
         for (SourceSet sourceSet : run.getModSources().all().get().values()) {
             final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
-            //The following tasks are not guaranteed to be in the source sets build dependencies
+            //The following tasks are not guaranteed to be in the source sets build compileDependencies
             //We however need at least the classes as well as the resources of the source set to be run
             task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
             task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));

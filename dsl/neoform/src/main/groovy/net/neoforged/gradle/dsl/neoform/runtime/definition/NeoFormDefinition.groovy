@@ -2,7 +2,7 @@ package net.neoforged.gradle.dsl.neoform.runtime.definition
 
 import groovy.transform.CompileStatic;
 import net.neoforged.gradle.dsl.common.runtime.definition.LegacyDefinition
-import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormSdk
 import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
 import org.jetbrains.annotations.NotNull
 
@@ -19,5 +19,5 @@ interface NeoFormDefinition<S extends NeoFormSpecification> extends LegacyDefini
      *
      * @return The deserialized NeoForm configuration.
      */
-    @NotNull NeoFormConfigConfigurationSpecV2 getNeoFormConfig();
+    @NotNull NeoFormSdk getNeoFormConfig();
 }

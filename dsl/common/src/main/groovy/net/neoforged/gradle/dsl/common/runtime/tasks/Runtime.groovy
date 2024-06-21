@@ -5,11 +5,7 @@ import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.tasks.WithJavaVersion
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace
-import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion
-import net.neoforged.gradle.dsl.common.util.DistributionType
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileTree
+import net.neoforged.gradle.dsl.common.tasks.specifications.RuntimeSpecification
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -21,67 +17,11 @@ import org.gradle.api.tasks.Nested
  * By default, it has an output.
  */
 @CompileStatic
-trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
-
-    /**
-     * The runtime name, it is the overarching identifier of the runtime that this task is
-     * part of.
-     * @return The runtime name
-     */
-    @Internal
-    abstract Property<String> getRuntimeName();
-
-    /**
-     * The runtime directory, it is the location of the runtime working directory.
-     * @return The mcp working directory.
-     */
-    @Internal
-    abstract DirectoryProperty getRuntimeDirectory();
-
-    /**
-     * The unpacked mcp directory in the global cache.
-     * @return The unpacked mcp directory.
-     */
-    @Internal
-    abstract ConfigurableFileCollection getNeoFormArchive();
-
-    /**
-     * The steps directory, it is the location of the steps working directory.
-     *
-     * @return The steps directory.
-     */
-    @Internal
-    abstract DirectoryProperty getStepsDirectory();
-
-    /**
-     * The name of the step.
-     * @return The name of the step.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<String> getStepName();
-
-    /**
-     * The requested distribution.
-     *
-     * @return The requested distribution.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<DistributionType> getDistribution();
-
-    /**
-     * The requested minecraft version.
-     *
-     * @return The requested minecraft version.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<String> getMinecraftVersion();
+trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion, RuntimeSpecification {
 
     /**
      * Symbolic data source references defined by the NeoForm package, already adjusted for the
-     * current {@link #getDistribution()}.
+     * current distribution.
      */
     @Internal
     abstract MapProperty<String, String> getSymbolicDataSources();
@@ -103,21 +43,4 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
     @Nested
     @DSLProperty
     abstract RuntimeMultiArguments getMultiArguments();
-
-    /**
-     * The name of the output file name for this step.
-     *
-     * @return The name of the output file.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<String> getOutputFileName();
-
-    /**
-     * The output directory for this step, also doubles as working directory for this step.
-     *
-     * @return The output and working directory for this step.
-     */
-    @Internal
-    abstract DirectoryProperty getOutputDirectory();
 }

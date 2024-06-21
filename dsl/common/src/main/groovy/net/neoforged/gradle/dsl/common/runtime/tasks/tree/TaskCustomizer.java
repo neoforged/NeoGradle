@@ -33,7 +33,7 @@ public final class TaskCustomizer<T extends Task> {
 
     public void apply(Runtime task) {
         if (!taskClass.isInstance(task)) {
-            throw new IllegalArgumentException("Customization for step " + task.getStepName()
+            throw new IllegalArgumentException("Customization for step " + task.getStep()
                     + " requires task type " + taskClass + " but actual task is " + task.getClass());
         }
         taskCustomizer.accept(taskClass.cast(task));

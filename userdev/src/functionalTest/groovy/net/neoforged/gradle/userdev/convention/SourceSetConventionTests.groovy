@@ -27,7 +27,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 localRuntime 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -37,12 +37,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method localRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method localRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "disabling conventions globally prevents creation of sourceset configuration localRunRuntime"() {
@@ -60,7 +60,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -70,12 +70,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method localRunRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method localRunRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "disabling configuration conventions prevents creation of sourceset configuration localRuntime"() {
@@ -93,7 +93,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 localRuntime 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -103,12 +103,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method localRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method localRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "disabling configuration conventions prevents creation of sourceset configuration localRunRuntime"() {
@@ -126,7 +126,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -136,12 +136,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method localRunRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method localRunRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "disabling sourceset conventions prevents creation of sourceset configuration localRuntime"() {
@@ -159,7 +159,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 localRuntime 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -169,12 +169,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method localRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method localRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "disabling sourceset conventions prevents creation of sourceset configuration localRunRuntime"() {
@@ -192,7 +192,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -202,12 +202,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method localRunRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method localRunRuntime() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "disabling global conventions prevents registration of main sourceset to run"() {
@@ -225,7 +225,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -243,7 +243,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
@@ -266,7 +266,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -284,7 +284,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
@@ -307,7 +307,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -325,7 +325,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
@@ -347,7 +347,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -365,11 +365,11 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run sources: {registration_enabled=[source set 'main']}")
     }
 
@@ -388,7 +388,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
@@ -431,7 +431,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
@@ -478,13 +478,13 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 localRuntime 'org.jgrapht:jgrapht-core:+'
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.compileDependencies.get().runtimeConfiguration.files.any { it.identifier.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()
@@ -493,11 +493,11 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run contains cp entry: false")
     }
 
@@ -515,13 +515,13 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.compileDependencies.get().runtimeConfiguration.files.any { it.identifier.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()
@@ -530,11 +530,11 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run contains cp entry: true")
     }
 }

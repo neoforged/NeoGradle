@@ -38,7 +38,7 @@ import java.util.function.Predicate
 @CompileStatic
 class Artifact implements Comparable<Artifact>, Serializable {
 
-    // group:name:version[:classifier][@extension]
+    // group:identifier:version[:classifier][@extension]
     private final String group;
     private final String name;
     private final String version;

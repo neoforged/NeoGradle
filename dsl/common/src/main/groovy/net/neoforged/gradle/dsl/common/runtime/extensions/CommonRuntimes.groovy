@@ -47,7 +47,7 @@ interface CommonRuntimes<S extends LegacySpecification, B extends LegacySpecific
 
     /**
      * Potentially creates a new runtime based on the specification created by the given builder.
-     * If a runtime with the same name already exists, the existing runtime is returned.
+     * If a runtime with the same identifier already exists, the existing runtime is returned.
      * If the specification of the existing runtime, and the one configured via the builder do not line up, an exception is thrown.
      *
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
@@ -58,7 +58,7 @@ interface CommonRuntimes<S extends LegacySpecification, B extends LegacySpecific
 
     /**
      * Potentially creates a new runtime based on the specification created by the given builder.
-     * If a runtime with the same name already exists, the existing runtime is returned.
+     * If a runtime with the same identifier already exists, the existing runtime is returned.
      * If the specification of the existing runtime, and the one configured via the builder do not line up, an exception is thrown.
      *
      * @param dependency The dependency to create the runtime for.
@@ -70,7 +70,7 @@ interface CommonRuntimes<S extends LegacySpecification, B extends LegacySpecific
 
     /**
      * Creates a new runtime based on the specification created by the given builder.
-     * If a runtime with the same name already exists, an exception is thrown.
+     * If a runtime with the same identifier already exists, an exception is thrown.
      *
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
      * @return The runtime definition, unbaked.
@@ -80,7 +80,7 @@ interface CommonRuntimes<S extends LegacySpecification, B extends LegacySpecific
 
     /**
      * Creates a new runtime based on the specification created by the given builder.
-     * If a runtime with the same name already exists, an exception is thrown.
+     * If a runtime with the same identifier already exists, an exception is thrown.
      *
      * @param dependency The dependency to create the runtime for.
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
@@ -90,18 +90,18 @@ interface CommonRuntimes<S extends LegacySpecification, B extends LegacySpecific
     D create(Dependency dependency, Action<B> configurator);
 
     /**
-     * Looks up a runtime definition by name.
+     * Looks up a runtime definition by identifier.
      * Throws an exception of not found.
      *
-     * @param name The name of the runtime definition.
+     * @param name The identifier of the runtime definition.
      * @return The runtime definition.
      */
     D getByName(String name);
 
     /**
-     * Looks up a runtime definition by name.
+     * Looks up a runtime definition by identifier.
      *
-     * @param name The name of the runtime definition.
+     * @param name The identifier of the runtime definition.
      * @return The runtime definition, or null if not found.
      */
     @Nullable

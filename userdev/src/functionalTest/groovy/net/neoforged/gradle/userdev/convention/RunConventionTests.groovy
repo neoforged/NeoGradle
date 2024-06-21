@@ -30,7 +30,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -45,7 +45,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -69,7 +69,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -84,7 +84,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -108,7 +108,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -123,7 +123,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -146,7 +146,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             
@@ -163,7 +163,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
@@ -189,7 +189,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 clientRun 'org.jgrapht:jgrapht-core:+'
             }
@@ -200,12 +200,12 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method clientRun() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method clientRun() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "disabling conventions globally prevents creation of runs configuration runs"() {
@@ -223,7 +223,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 runs 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -233,12 +233,12 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
             it.shouldFail()
         }
 
         then:
-        run.output.contains("Could not find method runs() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
+        run.output.contains("Could not find method runs() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.compileDependencies.DefaultDependencyHandler.")
     }
 
     def "using the run convention configuration puts the dependency on the runtime config"() {
@@ -255,13 +255,13 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 clientRun 'org.jgrapht:jgrapht-core:+'
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.compileDependencies.get().runtimeConfiguration.files.any { it.identifier.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()
@@ -270,11 +270,11 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run contains cp entry: true")
     }
 
@@ -292,13 +292,13 @@ class RunConventionTests extends BuilderBasedTestSpecification {
                 mavenCentral()
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
                 runs 'org.jgrapht:jgrapht-core:+'
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.compileDependencies.get().runtimeConfiguration.files.any { it.identifier.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()
@@ -307,11 +307,11 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':dependencies')
+            it.tasks(':compileDependencies')
         }
 
         then:
-        run.task(':dependencies').outcome == TaskOutcome.SUCCESS
+        run.task(':compileDependencies').outcome == TaskOutcome.SUCCESS
         run.output.contains("Run contains cp entry: true")
     }
 }

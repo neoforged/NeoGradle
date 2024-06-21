@@ -34,7 +34,7 @@ interface TaskTreeAdapter {
     /**
      * Runs the given task adapter after the current one.
      * Implicitly chaining the build output of this adapters task as the input for the given adapters task.
-     * Automatically configures the task tree dependencies.
+     * Automatically configures the task tree compileDependencies.
      *
      * @param after The task tree adapter to run afterwards.
      * @return The combined task tree adapter.

@@ -25,7 +25,7 @@ interface RunDevLogin extends ConfigurableDSLElement<RunDevLogin> {
     Property<Boolean> getIsEnabled()
 
     /**
-     * This is the profile name that is used when launching the game through dev login.
+     * This is the profile identifier that is used when launching the game through dev login.
      * It is used as the key for looking up credentials in the credentials file, or for creating a new profile.
      */
     @Input

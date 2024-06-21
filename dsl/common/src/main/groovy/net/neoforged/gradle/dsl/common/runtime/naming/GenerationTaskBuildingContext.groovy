@@ -64,9 +64,9 @@ class GenerationTaskBuildingContext {
     }
 
     /**
-     * The name of the environment that is being configured.
+     * The identifier of the environment that is being configured.
      *
-     * @return The name of the environment.
+     * @return The identifier of the environment.
      */
     @NotNull
     String getEnvironmentName() {
@@ -74,9 +74,9 @@ class GenerationTaskBuildingContext {
     }
 
     /**
-     * A function that can be used to build a task name for a given task type.
+     * A function that can be used to build a task identifier for a given task type.
      *
-     * @return A function that can be used to build a task name for a given task type.
+     * @return A function that can be used to build a task identifier for a given task type.
      */
     @NotNull
     Function<String, String> getTaskNameBuilder() {

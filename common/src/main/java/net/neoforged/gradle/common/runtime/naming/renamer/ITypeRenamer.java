@@ -16,7 +16,7 @@ public interface ITypeRenamer extends Serializable {
      * Renames a field.
      *
      * @param owner The owner of the field.
-     * @param name The name of the field.
+     * @param name The identifier of the field.
      * @return The renamed field.
      */
     String renameField(String owner, String name);
@@ -25,7 +25,7 @@ public interface ITypeRenamer extends Serializable {
      * Renames a method.
      *
      * @param owner The owner of the method.
-     * @param name The name of the method.
+     * @param name The identifier of the method.
      * @param desc The descriptor of the method.
      * @return The renamed method.
      */

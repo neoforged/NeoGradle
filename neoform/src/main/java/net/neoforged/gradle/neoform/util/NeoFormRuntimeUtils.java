@@ -3,7 +3,7 @@ package net.neoforged.gradle.neoform.util;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
-import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
+import net.neoforged.gradle.dsl.neoform.configuration.LegacyNeoFormSdk;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -24,7 +24,7 @@ public final class NeoFormRuntimeUtils {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends WithOutput>> adaptedInput, Task task) {
+    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, LegacyNeoFormSdk.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends WithOutput>> adaptedInput, Task task) {
         if (adaptedInput.isPresent()) {
             task.dependsOn(adaptedInput);
             return adaptedInput.get().flatMap(t -> t.getOutput().getAsFile());
@@ -38,7 +38,7 @@ public final class NeoFormRuntimeUtils {
         return getInputForTaskFrom(spec, inputValue, tasks, task);
     }
 
-    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, Task task) {
+    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, LegacyNeoFormSdk.Step step, Task task) {
         final String inputValue = step.getValue("input");
         if (inputValue == null) {
             throw new IllegalStateException("Can not transformer or get an input of a task without an input");

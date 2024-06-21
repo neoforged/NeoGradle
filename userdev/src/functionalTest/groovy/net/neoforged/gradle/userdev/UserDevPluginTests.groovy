@@ -7,7 +7,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
 
     def "applying userdev plugin succeeds"() {
         given:
-        settingsFile << "rootProject.name = 'test-project'"
+        settingsFile << "rootProject.identifier = 'test-project'"
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.userdev'
@@ -23,7 +23,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
 
     def "applying userdev plugin applies neoform plugin"() {
         given:
-        settingsFile << "rootProject.name = 'test-project'"
+        settingsFile << "rootProject.identifier = 'test-project'"
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.userdev'
@@ -42,7 +42,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
 
     def "applying userdev plugin applies userDev runtime extension"() {
         given:
-        settingsFile << "rootProject.name = 'test-project'"
+        settingsFile << "rootProject.identifier = 'test-project'"
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.userdev'

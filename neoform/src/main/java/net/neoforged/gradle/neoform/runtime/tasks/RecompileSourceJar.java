@@ -17,7 +17,6 @@ import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
-import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.work.InputChanges;
@@ -47,7 +46,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
         //And configure output default locations.
-        getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
+        getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStep().map(d::dir)));
         getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension)));
 
         getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());

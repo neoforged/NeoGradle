@@ -255,9 +255,9 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Property<Boolean> getConfigureAutomatically();
 
     /**
-     * Indicates if this run should automatically be configured by the type of the same name.
+     * Indicates if this run should automatically be configured by the type of the same identifier.
      *
-     * @return The property which indicates if this run should automatically be configured by the type of the same name.
+     * @return The property which indicates if this run should automatically be configured by the type of the same identifier.
      */
     @Input
     @DSLProperty
@@ -277,15 +277,15 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     /**
      * Configures the run using the settings of the associated run type.
      * <p/>
-     * Picks a run type using the name of this run, if no specific run type has been set.
+     * Picks a run type using the identifier of this run, if no specific run type has been set.
      */
     abstract void configure();
 
     /**
-     * Configures the run using the type with the specified name.
+     * Configures the run using the type with the specified identifier.
      * Throwing an exception if no type could be found.
      *
-     * @param type The name of the type to use to configure the run.
+     * @param type The identifier of the type to use to configure the run.
      */
     abstract void configure(@NotNull final String type);
 

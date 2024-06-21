@@ -27,7 +27,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -56,7 +56,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -90,7 +90,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
     }
 
     def "cache_supports_running_gradle_in_parallel"() {
-        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
+        if (System.getProperty("os.identifier").toLowerCase(Locale.ROOT).contains("windows")) {
             //When we run on windows we do not get the right output, since we use native file locking.
             return
         }
@@ -104,7 +104,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -147,7 +147,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -189,7 +189,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
                 }
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
@@ -220,7 +220,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)

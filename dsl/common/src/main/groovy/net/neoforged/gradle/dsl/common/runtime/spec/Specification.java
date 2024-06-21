@@ -1,35 +1,37 @@
 package net.neoforged.gradle.dsl.common.runtime.spec;
 
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.util.NamedRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
-import org.gradle.api.provider.Provider;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Locale;
 
 /**
  * Defines a specification of a runtime in a project.
  *
  * @param project The project this specification is for.
- * @param name The lazy provider for the name of the runtime.
- * @param version The lazy provider for the version of the runtime.
- * @param minecraftVersion The lazy provider for the Minecraft version of the runtime.
- * @param distribution The lazy provider for the distribution type of the runtime.
+ * @param identifier The identifier of the runtime.
+ * @param version The version of the runtime.
+ * @param minecraftVersion The minecraft version of the runtime.
+ * @param distribution The distribution type of the runtime.
  */
 public record Specification(
         Project project,
-        String name,
-        Provider<String> version,
-        Provider<String> minecraftVersion,
-        Provider<DistributionType> distribution
-) {
+        String identifier,
+        String version,
+        String minecraftVersion,
+        DistributionType distribution
+) implements NamedRecord {
 
-    public Provider<String> identifier() {
-        // Capitalize the first letter of the distribution type name
-        final Provider<String> distributionTypeName = distribution()
-                .map(DistributionType::getName)
-                .map(String::toLowerCase)
-                .map(StringUtils::capitalize);
+    public @NotNull String name() {
+        // Capitalize the first letter of the distribution type identifier
+        final String type = StringUtils.capitalize(distribution()
+                .getName()
+                .toLowerCase(Locale.ROOT));
 
-        // Combine the name, distribution type name, and version
-        return distributionTypeName.zip(version(), (type, version) -> "%s%s%s".formatted(name(), type, version));
+        // Combine the identifier, distribution type identifier, and version
+        return "%s%s%s".formatted(identifier(), type, version());
     }
 }

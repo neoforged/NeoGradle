@@ -92,7 +92,7 @@ public final class IvyModuleWriter implements AutoCloseable {
         // License
         // TODO: deal with custom projects?
         this.writer.writeEmptyElement("license");
-        this.writer.writeAttribute("name", "Minecraft EULA");
+        this.writer.writeAttribute("identifier", "Minecraft EULA");
         this.writer.writeAttribute("url", "https://www.minecraft.net/en-us/eula");
 
         // End
@@ -100,7 +100,7 @@ public final class IvyModuleWriter implements AutoCloseable {
     }
 
     private void writeDependencies(final Configuration dependencies) throws XMLStreamException {
-        this.writer.writeStartElement("dependencies");
+        this.writer.writeStartElement("compileDependencies");
 
         for (final ResolvedArtifact extra : dependencies.getResolvedConfiguration().getResolvedArtifacts()) {
             this.writeDependency(extra);
@@ -120,13 +120,13 @@ public final class IvyModuleWriter implements AutoCloseable {
         }
 
         this.writer.writeAttribute("org", dep.getModuleVersion().getId().getGroup());
-        this.writer.writeAttribute("name", dep.getModuleVersion().getId().getName());
+        this.writer.writeAttribute("identifier", dep.getModuleVersion().getId().getName());
         this.writer.writeAttribute("rev", dep.getModuleVersion().getId().getVersion());
         this.writer.writeAttribute("transitive", "false");
 
         if (hasClassifier) {
             this.writer.writeEmptyElement("artifact");
-            this.writer.writeAttribute("name", dep.getModuleVersion().getId().getName());
+            this.writer.writeAttribute("identifier", dep.getModuleVersion().getId().getName());
             this.writer.writeAttribute("classifier", classifier);
             this.writer.writeAttribute("ext", "jar");
             this.writer.writeEndElement();

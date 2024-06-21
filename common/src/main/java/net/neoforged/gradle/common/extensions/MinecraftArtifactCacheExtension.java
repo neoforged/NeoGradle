@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.tasks.MinecraftArtifactFileCacheProvider;
+import net.neoforged.gradle.common.tasks.MinecraftGameArtifactProvidingTask;
 import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvider;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
@@ -31,6 +32,7 @@ import java.net.URL;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSLElement<MinecraftArtifactCache>, MinecraftArtifactCache {
@@ -127,20 +129,18 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
 
     @NotNull
     @Override
-    public NamedDomainObjectProvider<? extends WithOutput> gameArtifactTask(@NotNull NamedDomainObjectCollection<WithOutput> tasks, @NotNull GameArtifact artifact, @NotNull final String minecraftVersion) {
-        final MinecraftVersionAndUrl resolvedVersion = resolveVersion(minecraftVersion);
+    public NamedDomainObjectProvider<? extends WithOutput> gameArtifactTask(@NotNull NamedDomainObjectCollection<WithOutput> tasks, @NotNull GameArtifact artifact) {
+        final NamedDomainObjectCollection<? extends MinecraftGameArtifactProvidingTask> matchingTasks = tasks.withType(MinecraftGameArtifactProvidingTask.class)
+                .matching(task -> task.gameArtifact().equals(artifact));
 
-        if (artifact == GameArtifact.VERSION_MANIFEST) {
-            return tasks.named(NamingConstants.Task.CACHE_VERSION_MANIFEST + resolvedVersion.getVersion(), MinecraftVersionManifestFileCacheProvider.class);
+        final SortedSet<String> matchingTaskNames = matchingTasks.getNames();
+        if (matchingTaskNames.size() == 1) {
+            return matchingTasks.named(matchingTaskNames.first());
+        } else if (matchingTaskNames.size() > 1) {
+            throw new IllegalStateException("Found multiple tasks for game artifact: " + artifact);
+        } else {
+            throw new IllegalStateException("Could not find task for game artifact: " + artifact);
         }
-
-        final String taskName = "%s%s%s%s".formatted(
-                NamingConstants.Task.CACHE_VERSION_PREFIX,
-                StringUtils.capitalize(artifact.getType().orElseThrow().name().toLowerCase()),
-                StringUtils.capitalize(artifact.getDistributionType().orElseThrow().getName().toLowerCase()),
-                resolvedVersion.getVersion());
-
-        return tasks.named(taskName, MinecraftArtifactFileCacheProvider.class);
     }
 
     @Override

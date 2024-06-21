@@ -14,7 +14,7 @@ interface Minecraft extends BaseDSLElement<Minecraft> {
     /**
      * The mod identifier of the current project.
      * <p>
-     * Defaults to a sanitized version of the project's {@linkplain org.gradle.api.Project#getName name}.
+     * Defaults to a sanitized version of the project's {@linkplain org.gradle.api.Project#getName identifier}.
      *
      * @return The mod identifier of the current project.
      */

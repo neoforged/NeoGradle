@@ -34,7 +34,7 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
             it.build("""
             tasks.register('plugins') {
                 doLast {
-                    project.getPlugins().forEach { plugin -> project.logger.lifecycle plugin.class.name }
+                    project.getPlugins().forEach { plugin -> project.logger.lifecycle plugin.class.identifier }
                 }
             }
             """)

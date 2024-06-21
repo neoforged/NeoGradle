@@ -73,7 +73,7 @@ public abstract class ExtensionManager {
             }
         }
 
-        throw new IllegalArgumentException("Property '" + String.format(EXTENSION_CHECK_PROPERTY_NAME, name) + "' is not a valid extension creator. It must be either a string of a class name implementing IExtensionCreator, or an instance of IExtensionCreator.");
+        throw new IllegalArgumentException("Property '" + String.format(EXTENSION_CHECK_PROPERTY_NAME, name) + "' is not a valid extension creator. It must be either a string of a class identifier implementing IExtensionCreator, or an instance of IExtensionCreator.");
     }
 
     public static void registerOverride(final Project project, final String name, final IExtensionCreator<?> creator) {

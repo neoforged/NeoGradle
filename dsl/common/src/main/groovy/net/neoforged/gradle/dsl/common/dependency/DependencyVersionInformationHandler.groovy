@@ -9,31 +9,31 @@ import org.gradle.api.specs.Spec
 interface DependencyVersionInformationHandler extends DependencyManagementObject {
 
     /**
-     * Sets the supported version range for dependencies which match the spec.
+     * Sets the supported version range for compileDependencies which match the spec.
      *
-     * @param spec The spec to match dependencies.
+     * @param spec The spec to match compileDependencies.
      * @param range The string representation to match the version range.
      */
     void ranged(final Spec<? super ArtifactIdentifier> spec, final String range);
 
     /**
-     * Sets the supported version range for dependencies which match the spec.
+     * Sets the supported version range for compileDependencies which match the spec.
      *
-     * @param spec The spec to match dependencies.
+     * @param spec The spec to match compileDependencies.
      * @param range The version range to match.
      */
     void ranged(final Spec<? super ArtifactIdentifier> spec, final VersionRange range);
 
     /**
-     * Sets the supported version range for dependencies which match the spec, but limits it to exactly the given version.
+     * Sets the supported version range for compileDependencies which match the spec, but limits it to exactly the given version.
      *
-     * @param spec The spec to match dependencies.
+     * @param spec The spec to match compileDependencies.
      * @param version The version to match.
      */
     void ranged(final Spec<? super ArtifactIdentifier> spec, final ArtifactVersion version);
 
     /**
-     * Sets the fixed version of the dependencies matching the spec.
+     * Sets the fixed version of the compileDependencies matching the spec.
      *
      * @param spec The spec to match.
      * @param version The string representation of the version.
@@ -41,7 +41,7 @@ interface DependencyVersionInformationHandler extends DependencyManagementObject
     void pin(final Spec<? super ArtifactIdentifier> spec, final String version);
 
     /**
-     * Sets the fixed version of the dependencies matching the spec.
+     * Sets the fixed version of the compileDependencies matching the spec.
      *
      * @param spec The spec to match.
      * @param version The version to set.

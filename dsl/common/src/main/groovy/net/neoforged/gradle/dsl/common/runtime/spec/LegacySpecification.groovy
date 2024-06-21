@@ -22,32 +22,32 @@ interface LegacySpecification {
     @NotNull Project getProject();
 
     /**
-     * The name of the specification.
+     * The identifier of the specification.
      * Is not unique within the project.
      *
-     * @return The name.
+     * @return The identifier.
      */
     @NotNull String getName();
 
     /**
-     * The name of the specification.
+     * The identifier of the specification.
      * Is unique within the project.
      *
-     * Generally combines the name with a unique version.
+     * Generally combines the identifier with a unique version.
      *
      * @return The identifier.
      */
     @NotNull String getIdentifier();
 
     /**
-     * The versioned name of the specification.
-     * This is unique in the project, it is derived from the name or the identifier.
+     * The versioned identifier of the specification.
+     * This is unique in the project, it is derived from the identifier or the identifier.
      *
-     * If this specification is the only one registered then it will return the normal name, else the identifier.
+     * If this specification is the only one registered then it will return the normal identifier, else the identifier.
      * The idea of this method is to improve the readability of the task tree and logs, in the default case that only
      * a single runtime of that type is registered to any given project.
      *
-     * @return The versioned name.
+     * @return The versioned identifier.
      */
     @NotNull String getVersionedName();
 
@@ -66,16 +66,16 @@ interface LegacySpecification {
     @NotNull DistributionType getDistribution();
 
     /**
-     * The task tree adapters which are invoked before the step (who's name is used as a key) task is being build.
-     * These task tree adapters allow for the modification of the input of the steps task with the given name.
+     * The task tree adapters which are invoked before the step (who's identifier is used as a key) task is being build.
+     * These task tree adapters allow for the modification of the input of the steps task with the given identifier.
      *
      * @return The pre task tree adapters.
      */
     @NotNull Multimap<String, TaskTreeAdapter> getPreTaskTypeAdapters();
 
     /**
-     * The task tree adapters which are invoked after the step (who's name is used as a key) task has being build.
-     * These task tree adapters allow for the modification of the output of the steps task with the given name.
+     * The task tree adapters which are invoked after the step (who's identifier is used as a key) task has being build.
+     * These task tree adapters allow for the modification of the output of the steps task with the given identifier.
      *
      * @return THe post task tree adapters.
      */
@@ -121,7 +121,7 @@ interface LegacySpecification {
         /**
          * Adds a pre task tree adapter to the specification which is about to be build.
          *
-         * @param taskTypeName The name of the task type or specification step before which the task tree adapter should be invoked.
+         * @param taskTypeName The identifier of the task type or specification step before which the task tree adapter should be invoked.
          * @param adapter      The task tree adapter.
          * @return The builder instance.
          */
@@ -130,7 +130,7 @@ interface LegacySpecification {
         /**
          * Adds a post task tree adapter to the specification which is about to be build.
          *
-         * @param taskTypeName The name of the task type or specification step after which the task tree adapter should be invoked.
+         * @param taskTypeName The identifier of the task type or specification step after which the task tree adapter should be invoked.
          * @param adapter      The task tree adapter.
          * @return The builder instance.
          */
@@ -139,7 +139,7 @@ interface LegacySpecification {
         /**
          * Adds a task customizer to the specification which is about to be build.
          *
-         * @param taskTypeName The name of the task type or specification step to which the customization should be applied.
+         * @param taskTypeName The identifier of the task type or specification step to which the customization should be applied.
          * @param taskType     The expected Gradle task type of the task.
          * @param customizer   The function to apply to the task via {@link Task#configure}.
          * @return The builder instance.

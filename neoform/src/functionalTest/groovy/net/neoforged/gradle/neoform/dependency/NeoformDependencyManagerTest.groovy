@@ -6,13 +6,13 @@ class NeoformDependencyManagerTest extends SimpleTestSpecification {
 
     def "adding a dependency to something other then neoform minecraft works"() {
         given:
-        settingsFile << "rootProject.name = 'neoform-plugin-apply-succeeds'"
+        settingsFile << "rootProject.identifier = 'neoform-plugin-apply-succeeds'"
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.neoform'
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'com.google.guava:guava:30.1.1-jre'
             }
         """
@@ -26,13 +26,13 @@ class NeoformDependencyManagerTest extends SimpleTestSpecification {
 
     def "adding a dependency on neoform minecraft with exact version works"() {
         given:
-        settingsFile << "rootProject.name = 'neoform-plugin-apply-succeeds'"
+        settingsFile << "rootProject.identifier = 'neoform-plugin-apply-succeeds'"
         buildFile << """
             plugins {
                 id 'net.neoforged.gradle.neoform'
             }
             
-            dependencies {
+            compileDependencies {
                 implementation 'net.minecraft:neoform_client:+'
             }
         """

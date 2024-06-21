@@ -11,7 +11,7 @@ import org.gradle.api.file.RegularFileProperty
 
 /**
  * Defines a dummy repository extension which allows for the specification of dummy repository entries
- * which can then be used to dynamically generate dependencies for the project.
+ * which can then be used to dynamically generate compileDependencies for the project.
  */
 @CompileStatic
 interface Repository extends BaseDSLElement<Repository> {
