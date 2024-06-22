@@ -1,6 +1,6 @@
 package net.neoforged.gradle.platform.runtime.runtime.extension;
 
-import codechicken.diffpatch.util.PatchMode;
+import io.codechicken.diffpatch.util.PatchMode;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;

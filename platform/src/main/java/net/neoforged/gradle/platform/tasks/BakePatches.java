@@ -1,9 +1,8 @@
 package net.neoforged.gradle.platform.tasks;
 
-import codechicken.diffpatch.cli.PatchOperation;
-import codechicken.diffpatch.util.InputPath;
-import codechicken.diffpatch.util.OutputPath;
-import codechicken.diffpatch.util.archiver.ArchiveFormat;
+import io.codechicken.diffpatch.cli.PatchOperation;
+import io.codechicken.diffpatch.util.Input.MultiInput;
+import io.codechicken.diffpatch.util.Output.MultiOutput;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
@@ -25,12 +24,9 @@ public abstract class BakePatches extends DefaultRuntime implements WithOutput, 
         final File input = getInput().get().getAsFile();
         final File output = ensureFileWorkspaceReady(getOutput());
 
-        final ArchiveFormat inputFormat = ArchiveFormat.findFormat(input.toPath());
-        final ArchiveFormat outputFormat = ArchiveFormat.findFormat(output.toPath());
-
         PatchOperation.bakePatches(
-                new InputPath.FilePath(input.toPath(), inputFormat),
-                new OutputPath.FilePath(output.toPath(), outputFormat),
+                MultiInput.detectedArchive(input.toPath()),
+                MultiOutput.detectedArchive(output.toPath()),
                 getLineEndings().get()
         );
     }
