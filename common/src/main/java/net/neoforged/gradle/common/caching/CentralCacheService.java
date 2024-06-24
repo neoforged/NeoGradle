@@ -156,7 +156,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
         // Acquiring an exclusive lock on the file
         debugLog(task, "Acquiring lock on file: " + lockFile.getAbsolutePath());
-        try(FileBasedLock fileBasedLock = lockManager.createLock(task, lockFile)) {
+        try (FileBasedLock fileBasedLock = lockManager.createLock(task, lockFile)) {
             try {
                 fileBasedLock.updateAccessTime();
                 debugLog(task, "Lock acquired on file: " + lockFile.getAbsolutePath());
@@ -188,7 +188,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
         // Acquiring an exclusive lock on the file
         debugLog(task, "Acquiring lock on file: " + lockFile.getAbsolutePath());
-        try(FileBasedLock fileBasedLock = lockManager.createLock(task, lockFile)) {
+        try (FileBasedLock fileBasedLock = lockManager.createLock(task, lockFile)) {
             try {
                 fileBasedLock.updateAccessTime();
                 debugLog(task, "Lock acquired on file: " + lockFile.getAbsolutePath());
@@ -319,13 +319,13 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
     private void debugLog(Task task, String message) {
         if (getParameters().getDebugCache().get()) {
-            task.getLogger().lifecycle( " > [" + System.currentTimeMillis() + "] (" + ProcessHandle.current().pid() + "): " + message);
+            task.getLogger().lifecycle(" > [" + System.currentTimeMillis() + "] (" + ProcessHandle.current().pid() + "): " + message);
         }
     }
 
     private void debugLog(Task task, String message, Exception e) {
         if (getParameters().getDebugCache().get()) {
-            task.getLogger().lifecycle( " > [" + System.currentTimeMillis() + "] (" + ProcessHandle.current().pid() + "): " + message, e);
+            task.getLogger().lifecycle(" > [" + System.currentTimeMillis() + "] (" + ProcessHandle.current().pid() + "): " + message, e);
         }
     }
 
@@ -374,7 +374,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
             });
 
             for (File file : inputs.getFiles()) {
-                try(Stream<Path> pathStream = Files.walk(file.toPath())) {
+                try (Stream<Path> pathStream = Files.walk(file.toPath())) {
                     for (Path path : pathStream.filter(Files::isRegularFile).toList()) {
                         debugLog(task, "Hashing task input file: " + path.toAbsolutePath());
                         hasher.putString(path.getFileName().toString());
@@ -403,11 +403,7 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
 
     private final class LockManager {
         public FileBasedLock createLock(Task task, File lockFile) {
-            if (WindowsFileBasedLock.isSupported()) {
-                return new WindowsFileBasedLock(task, lockFile);
-            } else {
-                return new IOControlledFileBasedLock(task, lockFile);
-            }
+            return new IOControlledFileBasedLock(task, lockFile);
         }
     }
 
@@ -441,96 +437,6 @@ public abstract class CentralCacheService implements BuildService<CentralCacheSe
                 //Something is wrong, we should not continue.
                 throw new IllegalStateException("Failed to delete healthy marker file: " + this.healthyFile.getAbsolutePath());
             }
-        }
-    }
-
-    private final class WindowsFileBasedLock extends HealthFileUsingFileBasedLock {
-
-        private static boolean isSupported() {
-            return SystemUtils.IS_OS_WINDOWS;
-        }
-
-        private final Task task;
-        private final File lockFile;
-        private final NioBasedFileLock nioBasedFileLock;
-
-        private WindowsFileBasedLock(Task task, File lockFile) {
-            super(new File(lockFile.getParentFile(), HEALTHY_FILE_NAME));
-
-            if (!isSupported() || !NioBasedFileLock.isSupported()) {
-                throw new UnsupportedOperationException("Windows file locks are not supported on this platform, or NIO based locking is not supported!");
-            }
-
-            this.task = task;
-            this.lockFile = lockFile;
-            this.nioBasedFileLock = new NioBasedFileLock(task, lockFile);
-        }
-
-        @Override
-        public void updateAccessTime() {
-            if (!lockFile.setLastModified(System.currentTimeMillis())) {
-                throw new RuntimeException("Failed to update access time for lock file: " + lockFile.getAbsolutePath());
-            }
-
-            debugLog(task, "Updated access time for lock file: " + lockFile.getAbsolutePath());
-        }
-
-        @Override
-        public void close() throws Exception {
-            //Close the super first, this ensures that the healthy file is created only if the lock was successful
-            super.close();
-            this.nioBasedFileLock.close();
-            debugLog(task, "Lock file closed: " + lockFile.getAbsolutePath());
-        }
-    }
-
-    private final class NioBasedFileLock implements AutoCloseable {
-
-        public static boolean isSupported() {
-            return SystemUtils.IS_OS_WINDOWS;
-        }
-
-        private static final Map<String, OwnerAwareReentrantLock> FILE_LOCKS = new ConcurrentHashMap<>();
-
-        private final Task task;
-        private final File lockFile;
-        private final RandomAccessFile lockFileAccess;
-        private final FileChannel fileChannel;
-        private final FileLock fileLock;
-
-        public NioBasedFileLock(Task task, File lockFile) {
-            if (!isSupported()) {
-                throw new UnsupportedOperationException("NIO file locks are not supported on this platform");
-            }
-
-            this.task = task;
-            this.lockFile = lockFile;
-
-            try {
-                this.lockFileAccess = new RandomAccessFile(lockFile, "rw");
-                this.fileChannel = this.lockFileAccess.getChannel();
-                this.fileLock = this.fileChannel.lock();
-
-                final OwnerAwareReentrantLock lock = FILE_LOCKS.computeIfAbsent(lockFile.getAbsolutePath(), s1 -> new OwnerAwareReentrantLock());
-                debugLog(task, "Created local thread lock for thread: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
-                lock.lock();
-
-                debugLog(task, "Acquired lock on file: " + lockFile.getAbsolutePath());
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to acquire lock on file: " + lockFile.getAbsolutePath(), e);
-            }
-        }
-
-        @Override
-        public void close() throws Exception {
-            fileLock.release();
-            fileChannel.close();
-            lockFileAccess.close();
-
-            final OwnerAwareReentrantLock lock = FILE_LOCKS.get(lockFile.getAbsolutePath());
-            lock.unlock();
-
-            debugLog(task, "Released lock on file: " + lockFile.getAbsolutePath());
         }
     }
 
