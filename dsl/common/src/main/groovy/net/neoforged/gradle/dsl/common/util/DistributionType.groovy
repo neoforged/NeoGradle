@@ -81,6 +81,6 @@ enum DistributionType {
      * @param suffix The suffix for the task name.
      */
     String createTaskName(final String prefix, final String suffix) {
-        return "${StringUtils.uncapitalize(prefix)}${StringUtils.capitalize(this.name().toLowerCase())}${StringUtils.capitalize(suffix)}".toString();
+        return "${StringUtils.uncapitalize(prefix)}${StringUtils.capitalize(this.name().toLowerCase(Locale.ROOT))}${StringUtils.capitalize(suffix)}".toString();
     }
 }

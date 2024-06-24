@@ -29,12 +29,10 @@ public final class UserDevDependencyManager {
                 return Optional.empty();
             }
             
-            if (!(context.getDependency() instanceof ExternalModuleDependency)) {
+            if (!(context.getDependency() instanceof ExternalModuleDependency externalModuleDependency)) {
                 return Optional.empty();
             }
-            
-            final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) context.getDependency();
-            
+
             final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency);
             
             final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(

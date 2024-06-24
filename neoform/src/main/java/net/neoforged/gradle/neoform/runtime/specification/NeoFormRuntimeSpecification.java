@@ -10,36 +10,45 @@ import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfiguration
 import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import net.neoforged.gradle.util.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ValueSource;
+import org.gradle.api.provider.ValueSourceParameters;
+import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 /**
  * Defines a specification for an MCP runtime.
  */
 public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification implements NeoFormSpecification {
-    private final FileTree neoFormArchive;
+    private final Provider<File> neoFormArchive;
     private final NeoFormConfigConfigurationSpecV2 config;
     private final FileCollection additionalRecompileDependencies;
 
     private NeoFormRuntimeSpecification(Project project,
-                                          String version,
-                                          FileTree neoFormArchive,
-                                          NeoFormConfigConfigurationSpecV2 config,
-                                          DistributionType side,
-                                          Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
-                                          Multimap<String, TaskTreeAdapter> postTypeAdapters,
-                                          Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
-                                          FileCollection additionalRecompileDependencies) {
+                                        String version,
+                                        Provider<File> neoFormArchive,
+                                        NeoFormConfigConfigurationSpecV2 config,
+                                        DistributionType side,
+                                        Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
+                                        Multimap<String, TaskTreeAdapter> postTypeAdapters,
+                                        Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
+                                        FileCollection additionalRecompileDependencies) {
         super(project, "neoForm", version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, NeoFormRuntimeExtension.class);
         this.neoFormArchive = neoFormArchive;
         this.config = config;
@@ -63,7 +72,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
         }
     }
 
-    public FileTree getNeoFormArchive() {
+    public Provider<File> getNeoFormArchive() {
         return neoFormArchive;
     }
 
@@ -148,7 +157,12 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
             return new NeoFormRuntimeSpecification(
                     project,
                     effectiveVersion,
-                    project.zipTree(archive),
+                    project.getProviders().of(NeoFormUnpack.class, spec -> {
+                        spec.parameters(p -> {
+                            p.getArchive().set(archive);
+                            p.getDestination().set(project.getLayout().getBuildDirectory().dir("neoform/" + effectiveVersion));
+                        });
+                    }),
                     config,
                     distributionType.get(),
                     preTaskAdapters,
@@ -156,6 +170,50 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
                     taskCustomizers,
                     additionalDependencies
             );
+        }
+    }
+
+    public static interface NeoFormUnpackParameters extends ValueSourceParameters {
+
+        RegularFileProperty getArchive();
+
+        DirectoryProperty getDestination();
+    }
+
+    public static abstract class NeoFormUnpack implements ValueSource<File, NeoFormUnpackParameters> {
+
+        @Nullable
+        @Override
+        public File obtain() {
+            RegularFileProperty archive = getParameters().getArchive();
+            DirectoryProperty destination = getParameters().getDestination();
+
+            File dest = destination.getAsFile().get();
+            if (!dest.exists() && !dest.mkdirs()) {
+                throw new GradleException("Failed to create directory " + dest);
+            }
+
+            try (java.util.zip.ZipFile zipFile = new ZipFile(archive.getAsFile().get())) {
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    File entryDestination = new File(dest,  entry.getName());
+                    if (entry.isDirectory()) {
+                        entryDestination.mkdirs();
+                    } else {
+                        entryDestination.getParentFile().mkdirs();
+                        try (InputStream in = zipFile.getInputStream(entry);
+                             OutputStream out = new FileOutputStream(entryDestination)) {
+                            IOUtils.copy(in, out);
+                        }
+                    }
+                }
+            } catch (ZipException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return dest;
         }
     }
 }

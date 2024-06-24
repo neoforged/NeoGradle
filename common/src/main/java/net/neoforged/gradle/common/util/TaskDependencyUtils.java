@@ -10,6 +10,7 @@ import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
+import org.gradle.api.ProjectConfigurationException;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -206,11 +207,33 @@ public final class TaskDependencyUtils {
                 this.processConfiguration((Configuration) dependency);
             } else if (dependency instanceof TaskDependencyContainer) {
                 ((TaskDependencyContainer) dependency).visitDependencies(this);
+            } else if (dependency instanceof Task) {
+                processTask((Task) dependency);
+            }
+        }
+
+        private void processTask(Task task) {
+            //Tasks that are outside our project are not relevant, they can cause issues in parallel projects anyway
+            //And their runtimes should not configure our runs anyway!
+            if (task.getProject() != this.project) {
+                return;
+            }
+
+            final Optional<? extends Definition<?>> rawJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getRawJarTask().get().equals(task)).findFirst();
+            final Optional<? extends Definition<?>> sourceJarRuntime = this.runtimes.stream().filter(runtime -> runtime.getSourceJarTask().get().equals(task)).findFirst();
+            if (rawJarRuntime.isPresent()) {
+                this.add(rawJarRuntime.get());
+            } else if (sourceJarRuntime.isPresent()) {
+                this.add(sourceJarRuntime.get());
+            } else {
+                for (Task dependency : task.getTaskDependencies().getDependencies(task)) {
+                    add(dependency);
+                }
             }
         }
 
         private void processConfiguration(Configuration configuration) {
-            DependencySet dependencies = configuration.getDependencies();
+            DependencySet dependencies = configuration.getAllDependencies();
 
             //Grab the original dependencies if we have a replacement extension
             final DependencyReplacement replacement = project.getExtensions().findByType(DependencyReplacement.class);
@@ -228,8 +251,6 @@ public final class TaskDependencyUtils {
                     return false;
                 }
             }).forEach(this::add);
-            
-            configuration.getExtendsFrom().forEach(this::add);
         }
 
         private void processSourceDirectorySet(SourceDirectorySet sourceDirectorySet) {
@@ -246,6 +267,13 @@ public final class TaskDependencyUtils {
         }
 
         private void processSourceSet(SourceSet sourceSet) {
+            //We only care about source sets in our project
+            //We don't want to configure runtimes for other projects
+            //This can cause issues with parallel projects
+            if (SourceSetUtils.getProject(sourceSet) != this.project) {
+                return;
+            }
+
             Property<CommonRuntimeDefinition<?>> runtimeDefinition = (Property<CommonRuntimeDefinition<?>>) sourceSet.getExtensions().findByName("runtimeDefinition");
             if (runtimeDefinition != null && runtimeDefinition.isPresent()) {
                 this.add(runtimeDefinition.get());

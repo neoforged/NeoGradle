@@ -4,6 +4,7 @@ import net.minecraftforge.srgutils.IMappingFile;
 import net.minecraftforge.srgutils.IRenamer;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
+import net.neoforged.gradle.common.runtime.naming.renamer.ISourceRenamer;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyMappingsToSourceJar;
 import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
 import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
@@ -15,15 +16,21 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.util.IMappingFileUtils;
-import net.neoforged.gradle.util.TransformerUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ValueSource;
+import org.gradle.api.provider.ValueSourceParameters;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 public final class NeoFormOfficialNamingChannelConfigurator {
     private static final NeoFormOfficialNamingChannelConfigurator INSTANCE = new NeoFormOfficialNamingChannelConfigurator();
@@ -72,13 +79,11 @@ public final class NeoFormOfficialNamingChannelConfigurator {
             throw new IllegalStateException("The runtime definition is not present.");
         }
 
-        final NeoFormRuntimeDefinition mcpRuntimeDefinition = runtimeDefinition.get();
-        final String mappingsFilePath = mcpRuntimeDefinition.getNeoFormConfig().getData("mappings");
-        final File mappingsFile =
-                mcpRuntimeDefinition.getSpecification()
-                        .getNeoFormArchive()
-                        .matching(filterable -> filterable.include(mappingsFilePath))
-                        .getSingleFile();
+        final NeoFormRuntimeDefinition neoformRuntimeDefinition = runtimeDefinition.get();
+        final Provider<File> neoformMappings = context.getProject().getProviders().of(MappingsFileValueSource.class, spec -> {
+            spec.getParameters().getNeoFormArchive().from(context.getProject().fileTree(neoformRuntimeDefinition.getSpecification().getNeoFormArchive()));
+            spec.getParameters().getMappingsFilePath().set(neoformRuntimeDefinition.getNeoFormConfig().getData("mappings"));
+        });
 
         applySourceMappingsTask.configure(task -> {
             if (task instanceof ApplyMappingsToSourceJar) {
@@ -89,16 +94,16 @@ public final class NeoFormOfficialNamingChannelConfigurator {
                                 .flatMap(clientMappings ->
                                         context.getServerMappings()
                                                 .flatMap(WithOutput::getOutput)
-                                                .map(TransformerUtils.guard(serverMappings -> {
-                                                    final IMappingFile clientMappingFile = IMappingFile.load(clientMappings.getAsFile()).reverse();
-                                                    final IMappingFile serverMappingFile = IMappingFile.load(serverMappings.getAsFile()).reverse();
-                                                    final IMappingFile mcpConfigMappings = IMappingFile.load(mappingsFile);
+                                                .zip(neoformMappings, (BiFunction<RegularFile, File, ISourceRenamer>) (serverMappings, neoformMappingsFile) -> {
+                                                    final IMappingFile clientMappingFile = IMappingFileUtils.load(clientMappings.getAsFile()).reverse();
+                                                    final IMappingFile serverMappingFile = IMappingFileUtils.load(serverMappings.getAsFile()).reverse();
+                                                    final IMappingFile mcpConfigMappings = IMappingFileUtils.load(neoformMappingsFile);
                                                     final IMappingFile reversedMcpConfigMappings = mcpConfigMappings.reverse();
                                                     return IMappingFileSourceRenamer.from(
                                                             reversedMcpConfigMappings.chain(clientMappingFile).reverse(),
                                                             reversedMcpConfigMappings.chain(serverMappingFile).reverse()
                                                     );
-                                                }))
+                                                })
                                 )
                 );
             }
@@ -146,20 +151,20 @@ public final class NeoFormOfficialNamingChannelConfigurator {
         }
         
         final NeoFormRuntimeDefinition neoformRuntimeDefinition = runtimeDefinition.get();
-        final String mappingsFilePath = neoformRuntimeDefinition.getNeoFormConfig().getData("mappings");
-        final File mappingsFile = neoformRuntimeDefinition.getSpecification().getNeoFormArchive().matching(filterable -> filterable.include(mappingsFilePath)).getSingleFile();
-        
+        final Provider<File> neoformMappings = context.getProject().getProviders().of(MappingsFileValueSource.class, spec -> {
+            spec.getParameters().getNeoFormArchive().from(context.getProject().fileTree(neoformRuntimeDefinition.getSpecification().getNeoFormArchive()));
+            spec.getParameters().getMappingsFilePath().set(neoformRuntimeDefinition.getNeoFormConfig().getData("mappings"));
+        });
+
         final TaskProvider<? extends Runtime> reverseMappingsTask = context.getProject().getTasks().register(context.getTaskNameBuilder().apply(String.format("combineMappingsFor%s", StringUtils.capitalize(context.getEnvironmentName()))), WriteIMappingsFile.class, task -> {
             task.getMappings().set(
                     context.getClientMappings()
                             .flatMap(WithOutput::getOutput)
-                            .map(TransformerUtils.guard(
-                                    clientMappingsFile -> {
-                                        final IMappingFile neoformConfigMappings = IMappingFile.load(mappingsFile); // OBF -> OBF + PARAM
-                                        final IMappingFile clientMappingFile = IMappingFileUtils.load(clientMappingsFile.getAsFile()).reverse(); // MOJ -> OBF, reversing so that it becomes OBF -> MOJ
-                                        return new CacheableIMappingFile(neoformConfigMappings.rename(makeRenamer(clientMappingFile, true, true, true, false)));//OBF -> OBF + PARAM -> MOJ + PARAM
-                                    }
-                            ))
+                            .zip(neoformMappings, (clientMappingsFile, neoformMappingsFile) -> {
+                                final IMappingFile neoformConfigMappings = IMappingFileUtils.load(neoformMappingsFile); // OBF -> OBF + PARAM
+                                final IMappingFile clientMappingFile = IMappingFileUtils.load(clientMappingsFile.getAsFile()).reverse(); // MOJ -> OBF, reversing so that it becomes OBF -> MOJ
+                                return new CacheableIMappingFile(neoformConfigMappings.rename(makeRenamer(clientMappingFile, true, true, true, false)));//OBF -> OBF + PARAM -> MOJ + PARAM
+                            })
             );
         });
         
@@ -196,5 +201,21 @@ public final class NeoFormOfficialNamingChannelConfigurator {
                 return mtd == null || !params ? value.getMapped() : mtd.remapParameter(value.getIndex(), value.getMapped());
             }
         };
+    }
+
+    public interface MappingsFileValueSourceParameters extends ValueSourceParameters {
+
+        Property<String> getMappingsFilePath();
+
+        ConfigurableFileCollection getNeoFormArchive();
+    }
+
+    public abstract static class MappingsFileValueSource implements ValueSource<File, MappingsFileValueSourceParameters> {
+
+        @Nullable
+        @Override
+        public File obtain() {
+            return getParameters().getNeoFormArchive().filter(f -> f.getAbsoluteFile().getPath().replace(File.separator, "/").endsWith(getParameters().getMappingsFilePath().get())).getSingleFile();
+        }
     }
 }

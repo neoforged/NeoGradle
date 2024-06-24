@@ -46,7 +46,7 @@ public class IMappingFileSourceRenamer extends RegexBasedSourceRenamer {
         return from(pg_client, pg_server);
     }
 
-    public static IMappingFileSourceRenamer from(IMappingFile pg_client, final IMappingFile pg_server) throws IOException {
+    public static IMappingFileSourceRenamer from(IMappingFile pg_client, final IMappingFile pg_server) {
         Map<String, String> names = new ConcurrentHashMap<>();
 
         Map<String, String> cfields = new ConcurrentHashMap<>();

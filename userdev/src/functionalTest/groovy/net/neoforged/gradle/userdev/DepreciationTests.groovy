@@ -1,5 +1,6 @@
 package net.neoforged.gradle.userdev
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -27,6 +28,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -69,6 +71,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-./gradlew determineTests | grep -e '<< TEST >>' | sed -e 's/<< TEST >>//g' > ./tasks
-TESTS=$(cat tasks | jq --raw-input . | jq --compact-output --slurp .)
+TESTS=$(./gradlew determineTests | grep -e '<< TEST >>' | sed -e 's/<< TEST >>//g' | jq -s 'add' | jq -c .)
 # Check if the GITHUB_OUTPUT is set
 if [ -z "$GITHUB_OUTPUT" ]; then
   # We do not have github output, then use the set output command

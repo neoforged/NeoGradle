@@ -1,11 +1,10 @@
 package net.neoforged.gradle.common.runtime.naming.tasks;
 
 import com.google.common.collect.Lists;
-import net.neoforged.gradle.common.runtime.tasks.Execute;
+import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.util.RenameConstants;
@@ -17,11 +16,10 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
-import java.io.File;
 import java.util.List;
 
 @CacheableTask
-public abstract class ApplyOfficialMappingsToCompiledJar extends Execute implements WithOutput {
+public abstract class ApplyOfficialMappingsToCompiledJar extends DefaultExecute implements WithOutput {
 
     public ApplyOfficialMappingsToCompiledJar() {
         super();
@@ -44,11 +42,6 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends Execute impleme
         getOutput().convention(getOutputDirectory().map(d -> d.file("output.jar")));
         
         getShouldReverseMappings().convention(true);
-    }
-
-    @Override
-    public void execute() throws Throwable {
-        super.execute();
     }
 
     @Input

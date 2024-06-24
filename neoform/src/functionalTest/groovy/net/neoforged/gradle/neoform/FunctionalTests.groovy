@@ -1,6 +1,6 @@
 package net.neoforged.gradle.neoform
 
-
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
@@ -30,6 +30,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         }
 
         when:
@@ -56,6 +57,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         }
 
         when:
@@ -100,6 +102,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         }
 
         when:
@@ -138,6 +141,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
             it.enableLocalBuildCache()
         }
 

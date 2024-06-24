@@ -1,0 +1,3 @@
+moduleName = neogradle-test-utils-module
+moduleVersion = 1.0
+extensionClasses = net.neoforged.gradle.utils.test.extensions.FileExtensions,net.neoforged.gradle.utils.test.extensions.RuntimeBuilderExtensions

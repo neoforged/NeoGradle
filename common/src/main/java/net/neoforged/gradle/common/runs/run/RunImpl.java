@@ -4,7 +4,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunSourceSets;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.GradleException;
@@ -16,6 +18,7 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,19 +29,23 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     private final Project project;
     private final String name;
+    private final ListProperty<RunType> runTypes;
+    private final Set<TaskProvider<? extends Task>> dependencies = Sets.newHashSet();
+    private final RunSourceSets modSources;
+    private final RunSourceSets unitTestSources;
 
     private ListProperty<String> jvmArguments;
     private MapProperty<String, String> environmentVariables;
     private ListProperty<String> programArguments;
     private MapProperty<String, String> systemProperties;
-    private final ListProperty<RunType> runTypes;
 
-    private final Set<TaskProvider<? extends Task>> dependencies = Sets.newHashSet();
 
     @Inject
     public RunImpl(final Project project, final String name) {
         this.project = project;
         this.name = name;
+        this.modSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
+        this.unitTestSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
 
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
@@ -85,6 +92,46 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     @Override
     public abstract Property<Boolean> getShouldBuildAllProjects();
+
+    @Override
+    public RunSourceSets getUnitTestSources() {
+        return this.unitTestSources;
+    }
+
+    @Override
+    public void unitTestSource(@NotNull final SourceSet sourceSet) {
+        getUnitTestSources().add(sourceSet);
+    }
+
+    @Override
+    public void unitTestSources(@NotNull final SourceSet... sourceSets) {
+        getUnitTestSources().add(sourceSets);
+    }
+
+    @Override
+    public void unitTestSources(@NotNull final Iterable<? extends SourceSet> sourceSets) {
+        getUnitTestSources().add(sourceSets);
+    }
+
+    @Override
+    public RunSourceSets getModSources() {
+        return this.modSources;
+    }
+
+    @Override
+    public void modSource(@NotNull final SourceSet sourceSet) {
+        getModSources().add(sourceSet);
+    }
+
+    @Override
+    public void modSources(@NotNull final SourceSet... sourceSets) {
+        getModSources().add(sourceSets);
+    }
+
+    @Override
+    public void modSources(@NotNull final Iterable<? extends SourceSet> sourceSets) {
+        getModSources().add(sourceSets);
+    }
 
     @Override
     public ListProperty<String> getProgramArguments() {

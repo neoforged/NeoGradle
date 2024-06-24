@@ -15,7 +15,7 @@ import java.io.File;
 import java.util.List;
 
 @CacheableTask
-public abstract class BinaryAccessTransformer extends Execute {
+public abstract class BinaryAccessTransformer extends DefaultExecute {
 
     public BinaryAccessTransformer() {
         super();

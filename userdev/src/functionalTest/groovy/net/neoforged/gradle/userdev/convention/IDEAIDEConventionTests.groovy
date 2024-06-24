@@ -1,5 +1,6 @@
 package net.neoforged.gradle.userdev.convention
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 
 class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
@@ -34,6 +35,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -69,6 +71,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -104,6 +107,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -139,6 +143,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -173,6 +178,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             }                        
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

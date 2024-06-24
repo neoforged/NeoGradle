@@ -1,6 +1,6 @@
 package net.neoforged.gradle.userdev
 
-
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -44,6 +44,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -53,12 +54,10 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains(
-'''
-implementation - Implementation dependencies for the 'main' feature. (n)
-No dependencies
-'''
-        )
+        def implementationStartLine = run.output.split(System.lineSeparator()).toList().indexOf('implementation - Implementation dependencies for the \'main\' feature. (n)')
+        implementationStartLine != -1
+        def nextLine = run.output.split(System.lineSeparator()).toList().get(implementationStartLine + 1)
+        nextLine.contains("No dependencies")
     }
 
     def "a mod with userdev in the implementation configuration does not leak it via publishing"() {
@@ -102,6 +101,7 @@ No dependencies
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

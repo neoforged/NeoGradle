@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.runs.ide;
 
+import com.google.common.collect.Multimap;
 import net.neoforged.elc.configs.GradleLaunchConfig;
 import net.neoforged.elc.configs.JavaApplicationLaunchConfig;
 import net.neoforged.elc.configs.LaunchConfig;
@@ -301,7 +302,7 @@ public class IdeRunIntegrationManager {
 
         private List<TaskProvider<?>> createEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
-            for (SourceSet sourceSet : run.getModSources().get()) {
+            for (SourceSet sourceSet : run.getModSources().all().get().values()) {
                 final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
                 final String taskName = CommonRuntimeUtils.buildTaskName("eclipseCopy", sourceSet.getProcessResourcesTaskName());
@@ -348,10 +349,10 @@ public class IdeRunIntegrationManager {
         
         private static Map<String, String> adaptEnvironment(
                 final RunImpl run,
-                final Function<ListProperty<SourceSet>, Provider<String>> modClassesProvider
+                final Function<Provider<Multimap<String, SourceSet>>, Provider<String>> modClassesProvider
                 ) {
             final Map<String, String> environment = new HashMap<>(run.getEnvironmentVariables().get());
-            environment.put("MOD_CLASSES", modClassesProvider.apply(run.getModSources()).get());
+            environment.put("MOD_CLASSES", modClassesProvider.apply(run.getModSources().all()).get());
             return environment;
         }
     }

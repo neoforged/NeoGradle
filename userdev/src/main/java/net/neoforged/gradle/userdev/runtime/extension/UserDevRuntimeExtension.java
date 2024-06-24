@@ -48,37 +48,37 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
 
-        final UserdevProfile userdevProfile = spec.getProfile();
+        final UserdevProfile userDevProfile = spec.getProfile();
         final FileTree userDevJar = spec.getUserDevArchive();
 
         final Configuration userDevAdditionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(
                 getProject(),
                 "AdditionalDependenciesFor" + spec.getIdentifier()
         );
-        for (String dependencyCoordinate : userdevProfile.getAdditionalDependencyArtifactCoordinates().get()) {
+        for (String dependencyCoordinate : userDevProfile.getAdditionalDependencyArtifactCoordinates().get()) {
             userDevAdditionalDependenciesConfiguration.getDependencies().add(getProject().getDependencies().create(dependencyCoordinate));
         }
         
-        if (!userdevProfile.getNeoForm().isPresent()) {
+        if (!userDevProfile.getNeoForm().isPresent()) {
             throw new IllegalStateException("Userdev configuration spec has no MCP version. As of now this is not supported!");
         }
 
-        final NeoFormRuntimeDefinition mcpRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
-            builder.withNeoFormDependency(userdevProfile.getNeoForm().get())
+        final NeoFormRuntimeDefinition neoFormRuntimeDefinition = neoFormRuntimeExtension.maybeCreate(builder -> {
+            builder.withNeoFormDependency(userDevProfile.getNeoForm().get())
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
 
-            final TaskTreeAdapter atAdapter = createAccessTransformerAdapter(userdevProfile.getAccessTransformerDirectory().get(), userDevJar)
+            final TaskTreeAdapter atAdapter = createAccessTransformerAdapter(userDevProfile.getAccessTransformerDirectory().get(), userDevJar)
                                                             .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
             
             builder.withPostTaskAdapter("decompile", atAdapter);
 
-            builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userdevProfile.getSourcePatchesDirectory().get()));
+            builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
             builder.withTaskCustomizer("inject", InjectZipContent.class, task -> {
                 FileTree injectionDirectoryTree;
-                if (userdevProfile.getInjectedFilesDirectory().isPresent()) {
-                    injectionDirectoryTree = getProject().fileTree(new File(userdevProfile.getInjectedFilesDirectory().get()));
+                if (userDevProfile.getInjectedFilesDirectory().isPresent()) {
+                    injectionDirectoryTree = getProject().fileTree(new File(userDevProfile.getInjectedFilesDirectory().get()));
                 } else {
                     injectionDirectoryTree = null;
                 }
@@ -86,18 +86,18 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 configureNeoforgeInjects(
                         task,
                         injectionDirectoryTree,
-                        ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeSourceLookupFor" + spec.getIdentifier(), userdevProfile.getSourcesJarArtifactCoordinate()),
-                        ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeRawLookupFor" + spec.getIdentifier(), userdevProfile.getUniversalJarArtifactCoordinate())
+                        ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeSourceLookupFor" + spec.getIdentifier(), userDevProfile.getSourcesJarArtifactCoordinate()),
+                        ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeRawLookupFor" + spec.getIdentifier(), userDevProfile.getUniversalJarArtifactCoordinate())
                 );
             });
         });
         
-        spec.setMinecraftVersion(mcpRuntimeDefinition.getSpecification().getMinecraftVersion());
+        spec.setMinecraftVersion(neoFormRuntimeDefinition.getSpecification().getMinecraftVersion());
 
         final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
         ProjectUtils.afterEvaluate(spec.getProject(), () -> runs.stream()
                 .filter(run -> run.getIsJUnit().get())
-                .flatMap(run -> run.getUnitTestSources().get().stream())
+                .flatMap(run -> run.getUnitTestSources().all().get().values().stream())
                 .distinct()
                 .forEach(src -> {
                     DependencyCollector coll = spec.getProject().getObjects().dependencyCollector();
@@ -106,15 +106,15 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 }));
 
         final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
-        userdevProfile.getRunTypes().forEach((type) -> {
+        userDevProfile.getRunTypes().forEach((type) -> {
             TypesUtil.registerWithPotentialPrefix(runTypes, spec.getIdentifier(), type.getName(), type::copyTo);
         });
 
         return new UserDevRuntimeDefinition(
                 spec,
-                mcpRuntimeDefinition,
+                neoFormRuntimeDefinition,
                 userDevJar,
-                userdevProfile,
+                userDevProfile,
                 userDevAdditionalDependenciesConfiguration
         );
     }

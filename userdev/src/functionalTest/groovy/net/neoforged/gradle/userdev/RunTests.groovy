@@ -1,5 +1,6 @@
 package net.neoforged.gradle.userdev
 
+import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -47,6 +48,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -58,7 +60,11 @@ class RunTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") //Validate that we are failing because of the missing mod file, and not something else.
+
+        def resourcesMainBuildDir = run.file("build/resources/main")
+        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
+                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:\n" +
+                        "\t- File ${resourcesMainBuildDir.absolutePath} is not a valid mod file")//Validate that we are failing because of the missing mod file, and not something else.
     }
 
     def "runs can be declared before the dependencies block"() {
@@ -86,6 +92,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -127,6 +134,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -145,7 +153,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.graalvm.polyglot/polyglot")
+        classpathFile.text.contains("org.graalvm.polyglot${File.separator}polyglot")
         !classpathFile.text.contains(".pom")
     }
 
@@ -178,6 +186,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -196,7 +205,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "userdev supports custom run dependencies from configuration"() {
@@ -233,6 +242,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -251,7 +261,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
     def "userdev supports custom run dependencies from catalog"() {
@@ -293,6 +303,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -311,6 +322,6 @@ class RunTests extends BuilderBasedTestSpecification {
 
         classpathFile.exists()
 
-        classpathFile.text.contains("org.jgrapht/jgrapht-core")
+        classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 }

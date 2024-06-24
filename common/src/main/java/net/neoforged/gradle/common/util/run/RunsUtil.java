@@ -55,14 +55,18 @@ public class RunsUtil {
         //Configure mod sources env vars
         project.afterEvaluate(evaluatedProject -> {
             //Create a combined provider for the mod and unit test sources
-            Provider<? extends Collection<SourceSet>> sourceSets = run.getModSources().map(modSources -> {
-                if (!run.getIsJUnit().get())
-                    //No Unit test sources for non unit test runs
-                    return modSources;
+            Provider<Multimap<String, SourceSet>> sourceSets = run.getModSources().all().zip(
+                    run.getUnitTestSources().all(),
+                    (modSources, unitTestSources) -> {
+                        if (!run.getIsJUnit().get())
+                            //No Unit test sources for non-unit test runs
+                            return modSources;
 
-                //Combine mod sources with unit test sources
-                return Stream.concat(modSources.stream(), run.getUnitTestSources().get().stream()).collect(Collectors.toList());
-            });
+                        //Combine mod sources with unit test sources
+                        final HashMultimap<String, SourceSet> combined = HashMultimap.create(modSources);
+                        combined.putAll(unitTestSources);
+                        return combined;
+                    });
             //Set the mod classes environment variable
             run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(sourceSets));
         });
@@ -85,12 +89,12 @@ public class RunsUtil {
     }
 
     private static void createOrReuseTestTask(Project project, String name, RunImpl run) {
-        final Set<SourceSet> currentProjectsModSources = run.getModSources().get()
+        final Set<SourceSet> currentProjectsModSources = run.getModSources().all().get().values()
                 .stream()
                 .filter(sourceSet -> SourceSetUtils.getProject(sourceSet).equals(project))
                 .collect(Collectors.toSet());
 
-        final Set<SourceSet> currentProjectsTestSources = run.getUnitTestSources().get()
+        final Set<SourceSet> currentProjectsTestSources = run.getUnitTestSources().all().get().values()
                 .stream()
                 .filter(sourceSet -> SourceSetUtils.getProject(sourceSet).equals(project))
                 .collect(Collectors.toSet());
@@ -100,13 +104,13 @@ public class RunsUtil {
         if (
                 (currentProjectsModSources.size() == 1 && currentProjectsModSources.contains(project.getExtensions().getByType(SourceSetContainer.class).getByName("main")))
                         &&
-                (currentProjectsTestSources.size() == 1 && currentProjectsTestSources.contains(project.getExtensions().getByType(SourceSetContainer.class).getByName("test")))
+                        (currentProjectsTestSources.size() == 1 && currentProjectsTestSources.contains(project.getExtensions().getByType(SourceSetContainer.class).getByName("test")))
         ) {
             final Runs runsConventions = project.getExtensions().getByType(Subsystems.class).getConventions().getRuns();
             if (runsConventions.getShouldDefaultTestTaskBeReused().get()) {
                 //Get the default test task
                 final TaskProvider<Test> testTask = project.getTasks().named("test", Test.class);
-                configureTestTAsk(project, testTask.get(), run);
+                configureTestTask(project, testTask, run);
                 return;
             }
         }
@@ -116,66 +120,70 @@ public class RunsUtil {
 
     private static void createNewTestTask(Project project, String name, RunImpl run) {
         //Create a test task for unit tests
-        TaskProvider<Test> newTestTask = project.getTasks().register(createTaskName("test", name), Test.class, testTask -> {
-            configureTestTAsk(project, testTask, run);
-        });
-
+        TaskProvider<Test> newTestTask = project.getTasks().register(createTaskName("test", name), Test.class);
+        configureTestTask(project, newTestTask, run);
         project.getTasks().named("check", check -> check.dependsOn(newTestTask));
     }
 
-    private static void configureTestTAsk(Project project, Test testTask, RunImpl run) {
-        addRunSourcesDependenciesToTask(testTask, run);
-        run.getTaskDependencies().forEach(testTask::dependsOn);
+    private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, RunImpl run) {
+        testTaskProvider.configure(testTask -> {
+            addRunSourcesDependenciesToTask(testTask, run);
+            run.getTaskDependencies().forEach(testTask::dependsOn);
 
-        testTask.setWorkingDir(run.getWorkingDirectory().get());
-        testTask.getSystemProperties().putAll(run.getSystemProperties().get());
+            testTask.setWorkingDir(run.getWorkingDirectory().get());
+            testTask.getSystemProperties().putAll(run.getSystemProperties().get());
 
-        testTask.useJUnitPlatform();
+            testTask.useJUnitPlatform();
 
-        testTask.setGroup("verification");
+            testTask.setGroup("verification");
 
-        File argsFile = new File(testTask.getWorkingDir(), "test_args.txt");
-        testTask.doFirst("writeArgs", task -> {
-            if (!testTask.getWorkingDir().exists()) {
-                testTask.getWorkingDir().mkdirs();
+            File argsFile = new File(testTask.getWorkingDir(), "test_args.txt");
+            final ListProperty<String> programArguments = run.getProgramArguments();
+            testTask.doFirst("writeArgs", task -> {
+                if (!testTask.getWorkingDir().exists()) {
+                    testTask.getWorkingDir().mkdirs();
+                }
+                try {
+                    Files.write(argsFile.toPath(), programArguments.get(), StandardCharsets.UTF_8);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            testTask.systemProperty("fml.junit.argsfile", argsFile.getAbsolutePath());
+
+            testTask.getEnvironment().putAll(run.getEnvironmentVariables().get());
+            testTask.setJvmArgs(run.getJvmArguments().get());
+
+            final ConfigurableFileCollection testCP = project.files();
+            testCP.from(run.getDependencies().get().getRuntimeConfiguration());
+            Stream.concat(run.getModSources().all().get().values().stream(), run.getUnitTestSources().all().get().values().stream())
+                    .forEach(src -> testCP.from(filterOutput(src)));
+
+            testTask.setClasspath(testCP);
+
+            final ConfigurableFileCollection testClassesDirs = project.files();
+            for (SourceSet sourceSet : run.getUnitTestSources().all().get().values()) {
+                testClassesDirs.from(sourceSet.getOutput().getClassesDirs());
             }
-            try {
-                Files.write(argsFile.toPath(), run.getProgramArguments().get(), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
+            testTask.setTestClassesDirs(testClassesDirs);
         });
-        testTask.systemProperty("fml.junit.argsfile", argsFile.getAbsolutePath());
-
-        testTask.getEnvironment().putAll(run.getEnvironmentVariables().get());
-        testTask.setJvmArgs(run.getJvmArguments().get());
-
-        final ConfigurableFileCollection testCP = project.files();
-        testCP.from(run.getDependencies().get().getRuntimeConfiguration());
-        Stream.concat(run.getModSources().get().stream(), run.getUnitTestSources().get().stream())
-                .forEach(src -> testCP.from(filterOutput(src)));
-
-        testTask.setClasspath(testCP);
-
-        final ConfigurableFileCollection testClassesDirs = project.files();
-        for (SourceSet sourceSet : run.getUnitTestSources().get()) {
-            testClassesDirs.from(sourceSet.getOutput().getClassesDirs());
-        }
-
-        testTask.setTestClassesDirs(testClassesDirs);
     }
 
     private static FileCollection filterOutput(SourceSet srcSet) {
         FileCollection collection = srcSet.getRuntimeClasspath();
         if (srcSet.getOutput().getResourcesDir() != null) {
-            collection = collection.filter(file -> !file.equals(srcSet.getOutput().getResourcesDir()));
+            final File resourcesDir = srcSet.getOutput().getResourcesDir();
+            collection = collection.filter(file -> !file.equals(resourcesDir));
         }
-        collection = collection.filter(file -> !srcSet.getOutput().getClassesDirs().contains(file));
+
+        FileCollection classesDirs = srcSet.getOutput().getClassesDirs();
+        collection = collection.filter(file -> !classesDirs.contains(file));
         return collection;
     }
 
     public static void addRunSourcesDependenciesToTask(Task task, Run run) {
-        for (SourceSet sourceSet : run.getModSources().get()) {
+        for (SourceSet sourceSet : run.getModSources().all().get().values()) {
             final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
             //The following tasks are not guaranteed to be in the source sets build dependencies
@@ -189,11 +197,11 @@ public class RunsUtil {
         }
     }
 
-    public static Provider<String> buildGradleModClasses(final Provider<? extends Collection<SourceSet>> sourceSetsProperty) {
+    public static Provider<String> buildGradleModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty) {
         return buildGradleModClasses(sourceSetsProperty, sourceSet -> Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream()));
     }
 
-    public static Provider<String> buildRunWithIdeaModClasses(final Provider<? extends Collection<SourceSet>> sourceSetsProperty) {
+    public static Provider<String> buildRunWithIdeaModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty) {
         return buildGradleModClasses(sourceSetsProperty, sourceSet -> {
             final Project project = SourceSetUtils.getProject(sourceSet);
             final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
@@ -210,7 +218,7 @@ public class RunsUtil {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    public static Provider<String> buildRunWithEclipseModClasses(final ListProperty<SourceSet> sourceSetsProperty) {
+    public static Provider<String> buildRunWithEclipseModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty) {
         return buildGradleModClasses(sourceSetsProperty, sourceSet -> {
             final Project project = SourceSetUtils.getProject(sourceSet);
             final EclipseModel eclipseModel = project.getExtensions().getByType(EclipseModel.class);
@@ -228,14 +236,12 @@ public class RunsUtil {
         return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "production" : sourceSet.getName();
     }
 
-    public static Provider<String> buildGradleModClasses(final Provider<? extends Collection<SourceSet>> sourceSetsProperty, final Function<SourceSet, Stream<File>> directoryBuilder) {
-        return sourceSetsProperty.map(sourceSets -> {
-            final Multimap<String, SourceSet> sourceSetsByRunId = HashMultimap.create();
-            sourceSets.forEach(sourceSet -> sourceSetsByRunId.put(SourceSetUtils.getModIdentifier(sourceSet), sourceSet));
-
-            return sourceSetsByRunId.entries().stream().flatMap(entry -> directoryBuilder.apply(entry.getValue()).peek(directory -> directory.mkdirs())
-                                                              .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath()))).collect(Collectors.joining(File.pathSeparator));
-        });
+    public static Provider<String> buildGradleModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty, final Function<SourceSet, Stream<File>> directoryBuilder) {
+        return sourceSetsProperty.map(sourceSetsByRunId -> sourceSetsByRunId.entries().stream().flatMap(entry ->
+                        directoryBuilder.apply(entry.getValue())
+                                .peek(directory -> directory.mkdirs())
+                                .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath())))
+                .collect(Collectors.joining(File.pathSeparator)));
     }
 
     private static String createTaskName(final String runName) {

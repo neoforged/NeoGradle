@@ -45,4 +45,11 @@ interface Subsystems extends BaseDSLElement<Subsystems> {
     @Nested
     @DSLProperty
     Tools getTools();
+
+    /**
+     * @return settings for the dev login subsystem
+     */
+    @Nested
+    @DSLProperty
+    DevLogin getDevLogin();
 }

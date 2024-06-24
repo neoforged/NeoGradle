@@ -156,7 +156,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         final Map<String, String> runtimeInterpolationData = buildRunInterpolationData(run);
 
         final Map<String, String> workingInterpolationData = new HashMap<>(runtimeInterpolationData);
-        workingInterpolationData.put("source_roots", RunsUtil.buildGradleModClasses(run.getModSources()).get());
+        workingInterpolationData.put("source_roots", RunsUtil.buildGradleModClasses(run.getModSources().all()).get());
 
         if (run.getIsClient().get()) {
             getVersionJson().getPlatformJvmArgs().forEach(arg -> run.getJvmArguments().add(arg));
@@ -177,7 +177,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
         interpolationData.put("runtime_name", specification.getVersionedName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
-        interpolationData.put("assets_root", getAssets().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put("assets_root", DownloadAssets.getAssetsDirectory(specification.getProject(), specification.getProject().provider(this::getVersionJson)).get().getAsFile().getAbsolutePath());
         interpolationData.put("asset_index", getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
         interpolationData.put("natives", getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
 

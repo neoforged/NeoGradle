@@ -8,9 +8,11 @@ import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.common.runs.tasks.RunsReport;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
+import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
@@ -22,23 +24,23 @@ import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.DevLogin;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Configurations;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunDevLogin;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.StartParameter;
 import org.gradle.TaskExecutionRequest;
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
+import org.gradle.api.*;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.attributes.AttributeContainer;
@@ -46,6 +48,7 @@ import org.gradle.api.attributes.Category;
 import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Delete;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.DefaultTaskExecutionRequest;
@@ -59,6 +62,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
     public static final String ASSETS_SERVICE = "ng_assets";
     public static final String LIBRARIES_SERVICE = "ng_libraries";
+    public static final String EXECUTE_SERVICE = "ng_execute";
     public static final String ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION = "accessTransformerElements";
     public static final String ACCESS_TRANSFORMER_API_CONFIGURATION = "accessTransformerApi";
     public static final String ACCESS_TRANSFORMER_CONFIGURATION = "accessTransformer";
@@ -72,8 +76,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getPluginManager().apply(JavaPlugin.class);
 
         //Register the services
-        CentralCacheService.register(project, ASSETS_SERVICE);
-        CentralCacheService.register(project, LIBRARIES_SERVICE);
+        CentralCacheService.register(project, ASSETS_SERVICE, true);
+        CentralCacheService.register(project, LIBRARIES_SERVICE, true);
+        CentralCacheService.register(project, EXECUTE_SERVICE, false);
 
         // Apply both the idea and eclipse IDE plugins
         project.getPluginManager().apply(IdeaPlugin.class);
@@ -113,7 +118,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.MOJANG_MAVEN);
-            e.metadataSources(MavenArtifactRepository.MetadataSources::artifact);
+            e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
         });
 
         project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
@@ -127,21 +132,36 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 project.getObjects().domainObjectContainer(RunType.class, name -> project.getObjects().newInstance(RunType.class, name))
         );
 
+        final NamedDomainObjectContainer<Run> runs = project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name));
         project.getExtensions().add(
                 RunsConstants.Extensions.RUNS,
-                project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name))
+                runs
         );
 
         setupAccessTransformerConfigurations(project, accessTransformers);
 
         IdeRunIntegrationManager.getInstance().setup(project);
 
+        final TaskProvider<?> cleanCache = project.getTasks().register("cleanCache", CleanCache.class);
+
         project.getTasks().named("clean", Delete.class, delete -> {
             delete.delete(configurationData.getLocation());
+            delete.dependsOn(cleanCache);
         });
 
         //Needs to be before after evaluate
         configureConventions(project);
+
+        //Set up reporting tasks
+        project.getTasks().register("runs", RunsReport.class);
+
+        final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
+        if (devLogin.getEnabled().get()) {
+            runs.configureEach(run -> {
+                final RunDevLogin runsDevLogin = run.getExtensions().create("devLogin", RunDevLogin.class);
+                runsDevLogin.getIsEnabled().convention(devLogin.getConventionForRun().zip(run.getIsClient(), (conventionForRun, isClient) -> conventionForRun && isClient));
+            });
+        }
 
         project.afterEvaluate(this::applyAfterEvaluate);
     }
@@ -174,17 +194,22 @@ public class CommonProjectPlugin implements Plugin<Project> {
         }
 
         ProjectUtils.afterEvaluate(project, () -> {
-            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> {
-                if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
-                    //We always register main
-                    run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
-                }
+            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> {
+                runs.configureEach(run -> {
+                    if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+                        //We always register main
+                        run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
+                    }
 
-                if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get())
-                    run.getModSources().get().forEach(sourceSet -> {
-                        run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
-                    });
-            }));
+                    if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get()) {
+                        run.getModSources().all().get().values().forEach(sourceSet -> {
+                            if (project.getConfigurations().findByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())) != null) {
+                                run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
+                            }
+                        });
+                    }
+                });
+            });
         });
 
     }
@@ -335,6 +360,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     }
                 }
 
+                if (run.getModSources().all().get().isEmpty()) {
+                    throw new InvalidUserDataException("Run: " + run.getName() + " has no source sets configured. Please configure at least one source set.");
+                }
+
                 if (run.getConfigureFromDependencies().get()) {
                     final RunImpl runImpl = (RunImpl) run;
 
@@ -342,7 +371,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     //TODO: Determine handling of multiple different runtimes, in multiple projects....
                     final Map<String, CommonRuntimeDefinition<?>> definitionSet = new HashMap<>();
 
-                    runImpl.getModSources().get().forEach(sourceSet -> {
+                    runImpl.getModSources().all().get().values().forEach(sourceSet -> {
                         try {
                             final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
                             if (definition.isPresent()) {
@@ -363,6 +392,41 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     definitionSet.forEach((identifier, definition) -> {
                         definition.configureRun(runImpl);
                     });
+
+                    //Handle dev login.
+                    final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
+                    final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
+                    if (devLogin.getEnabled().get()) {
+                        final RunDevLogin runsDevLogin = runImpl.getExtensions().getByType(RunDevLogin.class);
+
+                        //Dev login is only supported on the client side
+                        if (runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+                            final String mainClass = runImpl.getMainClass().get();
+
+                            //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
+                            final SourceSet defaultSourceSet = runImpl.getModSources().all().get().entries().iterator().next().getValue();
+                            final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
+                            final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
+                            final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
+
+                            sourceSetRuntimeClasspathConfiguration.extendsFrom(sourceSetRuntimeOnlyDevLoginConfiguration);
+                            sourceSetRuntimeOnlyDevLoginConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
+
+                            //Update the program arguments to properly launch the dev login tool
+                            run.getProgramArguments().add("--launch_target");
+                            run.getProgramArguments().add(mainClass);
+
+                            if (runsDevLogin.getProfile().isPresent()) {
+                                run.getProgramArguments().add("--launch_profile");
+                                run.getProgramArguments().add(runsDevLogin.getProfile().get());
+                            }
+
+                            //Set the main class to the dev login tool
+                            run.getMainClass().set(devLogin.getMainClass());
+                        } else if (!runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+                            throw new InvalidUserDataException("Dev login is only supported on runs which are marked as clients! The run: " + runImpl.getName() + " is not a client run.");
+                        }
+                    }
                 }
             }
         });

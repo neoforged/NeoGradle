@@ -13,7 +13,7 @@ public class VanillaProjectPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(CommonPlugin.class);
 
-        VanillaRuntimeExtension runtimeExtension = project.getExtensions().create("vanillaRuntimes", VanillaRuntimeExtension.class, project);
+        project.getExtensions().create("vanillaRuntimes", VanillaRuntimeExtension.class, project);
 
         //Setup handling of the dependencies
         VanillaDependencyManager.getInstance().apply(project);

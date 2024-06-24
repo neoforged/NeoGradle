@@ -1,5 +1,6 @@
 package net.neoforged.gradle.dsl.common.runs.run
 
+
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
@@ -164,9 +165,30 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return The source sets that are used as a mod.
      */
-    @Internal
+    @Nested
     @DSLProperty
-    abstract ListProperty<SourceSet> getModSources();
+    abstract RunSourceSets getModSources();
+
+    /**
+     * Adds a source set to the mod sources.
+     *
+     * @param sourceSet The source set to add.
+     */
+    void modSource(@NotNull final SourceSet sourceSet)
+
+    /**
+     * Adds source sets to the mod sources.
+     *
+     * @param sourceSets The source sets to add.
+     */
+    void modSources(@NotNull final SourceSet... sourceSets)
+
+    /**
+     * Adds source sets to the mod sources.
+     *
+     * @param sourceSets The source sets to add.
+     */
+    void modSources(@NotNull final Iterable<? extends SourceSet> sourceSets)
 
     /**
      * Defines the source sets that are used as a test.
@@ -178,7 +200,28 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Internal
     @DSLProperty
-    abstract ListProperty<SourceSet> getUnitTestSources();
+    abstract RunSourceSets getUnitTestSources();
+
+    /**
+     * Adds a source set to the unit test sources.
+     *
+     * @param sourceSet The source set to add.
+     */
+    void unitTestSource(@NotNull final SourceSet sourceSet)
+
+    /**
+     * Adds source sets to the unit test sources.
+     *
+     * @param sourceSets The source sets to add.
+     */
+    void unitTestSources(@NotNull final SourceSet... sourceSets)
+
+    /**
+     * Adds source sets to the unit test sources.
+     *
+     * @param sourceSets The source sets to add.
+     */
+    void unitTestSources(@NotNull final Iterable<? extends SourceSet> sourceSets)
 
     /**
      * Gives access to the classpath for this run.
@@ -230,7 +273,6 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @DSLProperty
     @Optional
     abstract Property<Boolean> getConfigureFromDependencies();
-
 
     /**
      * Configures the run using the settings of the associated run type.

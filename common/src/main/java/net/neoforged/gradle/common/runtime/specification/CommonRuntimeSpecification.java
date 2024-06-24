@@ -15,6 +15,7 @@ import org.gradle.api.Task;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -63,7 +64,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
     @NotNull
     @Override
     public String getIdentifier() {
-        return getName() + StringUtils.capitalize(getDistribution().getName().toLowerCase()) + version;
+        return getName() + StringUtils.capitalize(getDistribution().getName().toLowerCase(Locale.ROOT)) + version;
     }
     
     @Override

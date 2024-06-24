@@ -16,10 +16,7 @@ import org.gradle.api.artifacts.ExternalModuleDependency;
 import org.gradle.api.tasks.TaskProvider;
 
 import javax.inject.Inject;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public abstract class ExtraJarDependencyManager {
 
@@ -34,7 +31,7 @@ public abstract class ExtraJarDependencyManager {
     }
     
     public static String generateCoordinateFor(final DistributionType type, final String version) {
-        return String.format("net.minecraft:%s:%s:%s-extra", type.getName().toLowerCase(), version, type.getName().toLowerCase());
+        return String.format("net.minecraft:%s:%s:%s-extra", type.getName().toLowerCase(Locale.ROOT), version, type.getName().toLowerCase(Locale.ROOT));
     }
 
     @Inject
