@@ -8,6 +8,8 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.util.GameArtifact
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.annotations.NotNull
 
@@ -87,4 +89,13 @@ interface Definition<S extends Specification> {
      */
     @NotNull
     abstract TaskProvider<? extends WithOutput> getListLibrariesTaskProvider();
+
+    /**
+     * Returns all the files which should be considered dependencies of the runtime.
+     * This includes the runtime's own dependencies, as well as the dependencies of the minecraft dependency.
+     *
+     * @return The dependencies of the runtime.
+     */
+    @NotNull
+    ConfigurableFileCollection getAllDependencies()
 }

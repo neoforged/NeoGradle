@@ -1,9 +1,10 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
-import codechicken.diffpatch.cli.CliOperation;
-import codechicken.diffpatch.cli.PatchOperation;
-import codechicken.diffpatch.util.LoggingOutputStream;
-import codechicken.diffpatch.util.PatchMode;
+import io.codechicken.diffpatch.cli.CliOperation;
+import io.codechicken.diffpatch.cli.PatchOperation;
+import io.codechicken.diffpatch.util.Input.MultiInput;
+import io.codechicken.diffpatch.util.Output.MultiOutput;
+import io.codechicken.diffpatch.util.PatchMode;
 import net.neoforged.gradle.common.CommonProjectPlugin;
 import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
@@ -61,13 +62,13 @@ public abstract class Patch extends DefaultRuntime {
         }
 
         PatchOperation.Builder builder = PatchOperation.builder()
-                .logTo(new LoggingOutputStream(getLogger(), LogLevel.LIFECYCLE))
-                .basePath(input.toPath())
-                .patchesPath(patchArchiveLocator.directory.toPath())
-                .outputPath(output.toPath())
-                .level(getIsVerbose().get() ? codechicken.diffpatch.util.LogLevel.ALL : codechicken.diffpatch.util.LogLevel.WARN)
-                .mode(PatchMode.OFFSET)
-                .rejectsPath(rejects.toPath());
+                .logTo(getLogger()::lifecycle)
+                .baseInput(MultiInput.detectedArchive(input.toPath()))
+                .patchesInput(MultiInput.folder(patchArchiveLocator.directory.toPath()))
+                .patchedOutput(MultiOutput.detectedArchive(output.toPath()))
+                .rejectsOutput(MultiOutput.detectedArchive(rejects.toPath()))
+                .level(getIsVerbose().get() ? io.codechicken.diffpatch.util.LogLevel.ALL : io.codechicken.diffpatch.util.LogLevel.WARN)
+                .mode(PatchMode.OFFSET);
 
         if (getPatchesModifiedPrefix().isPresent()) {
             builder = builder.bPrefix(getPatchesModifiedPrefix().get());

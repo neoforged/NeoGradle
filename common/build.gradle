@@ -18,7 +18,7 @@ dependencies {
     api "org.apache.ivy:ivy:${project.ivy_artifact_version}"
     api "org.apache.httpcomponents:httpclient:${project.httpclient_version}"
     api "net.minecraftforge:srgutils:${project.srgutils_version}"
-    api "codechicken:DiffPatch:${project.diffpatch_version}"
+    api "io.codechicken:DiffPatch:${project.diffpatch_version}"
     api "commons-codec:commons-codec:${project.commons_codec_version}"
     api "net.neoforged:EclipseLaunchConfigs:${project.eclipse_launch_configs_version}"
     api "net.neoforged:JarJarMetadata:${project.jarjar_version}"

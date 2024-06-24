@@ -6,12 +6,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.SkipWhenEmpty;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.util.List;
@@ -38,6 +33,15 @@ public abstract class SourceAccessTransformer extends DefaultExecute {
 
                             args.add("--libraries-list=" + getLibraries().get().getAsFile().getAbsolutePath());
 
+                            final StringBuilder builder = new StringBuilder();
+                            getClasspath().forEach(f -> {
+                                if (!builder.isEmpty()) {
+                                    builder.append(File.pathSeparator);
+                                }
+                                builder.append(f.getAbsolutePath());
+                            });
+                            args.add("--classpath=" + builder.toString());
+
                             args.add(inputFile.getAsFile().getAbsolutePath());
                             args.add(outputFile.getAbsolutePath());
 
@@ -48,6 +52,7 @@ public abstract class SourceAccessTransformer extends DefaultExecute {
 
         getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getTransformers().finalizeValueOnRead();
+        getLogLevel().set(LogLevel.DISABLED);
     }
 
     @InputFile
@@ -57,6 +62,11 @@ public abstract class SourceAccessTransformer extends DefaultExecute {
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getLibraries();
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract ConfigurableFileCollection getClasspath();
 
     @InputFiles
     @SkipWhenEmpty

@@ -54,6 +54,10 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         this.additionalUserDevDependencies.getDependencies().add(
                 clientExtraJar
         );
+
+        this.getAllDependencies().from(neoformRuntimeDefinition.getAllDependencies());
+        this.getAllDependencies().from(getAdditionalUserDevDependencies());
+        this.getAllDependencies().from(getUserdevConfiguration());
     }
 
     @Override
