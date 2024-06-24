@@ -25,6 +25,7 @@ public class ClasspathUtils {
         //Check if the file contains the class:
         //net.minecraft.client.Minecraft
         //This is a class that is always present in the Minecraft jar.
+        //This same heuristic is used by FML: https://github.com/neoforged/FancyModLoader/blob/89a32f970ba9137cb74e681af9cdaed0fc3e2085/loader/src/main/java/net/neoforged/fml/loading/targets/CommonUserdevLaunchHandler.java#L24
         try(final ZipFile zipFile = new ZipFile(entry)) {
             return zipFile.getEntry("net/minecraft/client/Minecraft.class") != null;
         } catch (IOException ignored) {
