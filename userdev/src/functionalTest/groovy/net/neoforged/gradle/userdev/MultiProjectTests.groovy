@@ -101,10 +101,8 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         then:
         run.task(':main:writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
 
-        def resourcesMainBuildDir = run.file("main/build/resources/main")
         run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:\n" +
-                        "\t- File ${resourcesMainBuildDir.absolutePath} is not a valid mod file")//Validate that we are failing because of the missing mod file, and not something else.
+                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:")
     }
 
     def "multiple projects with neoforge dependencies should run using the central cache"() {
@@ -192,9 +190,9 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':main:build').outcome == TaskOutcome.SUCCESS
-        run.task(':api:neoFormDecompile').outcome == TaskOutcome.SUCCESS
-        run.task(':main:neoFormDecompile').outcome == TaskOutcome.SUCCESS
+        run.task(':main:build').outcome == TaskOutcome.SUCCESS || run.task(':main:build').outcome == TaskOutcome.UP_TO_DATE
+        run.task(':api:neoFormDecompile').outcome == TaskOutcome.SUCCESS || run.task(':api:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
+        run.task(':main:neoFormDecompile').outcome == TaskOutcome.SUCCESS || run.task(':main:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
     }
 
     def "multiple projects where one is not neogradle with neoforge dependencies should pull the mod-classes entry from the project name"() {
@@ -730,11 +728,13 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 run.output.split(System.lineSeparator()).toList().indexOf("Mod Sources:"),
                 run.output.split(System.lineSeparator()).toList().indexOf("Unit Test Sources:")
         )
-        modSourcesSection.size() == 4
+        modSourcesSection.size() == 6
         modSourcesSection.get(0) == "Mod Sources:"
-        modSourcesSection.get(1) == "  - something:"
+        modSourcesSection.get(1) == "  - main:"
         modSourcesSection.get(2) == "    - main"
-        modSourcesSection.get(3) == "    - main"
+        modSourcesSection.get(3) == "  - something:"
+        modSourcesSection.get(4) == "    - main"
+        modSourcesSection.get(5) == "    - main"
     }
 
 

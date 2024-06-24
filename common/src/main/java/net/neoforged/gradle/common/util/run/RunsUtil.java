@@ -3,7 +3,7 @@ package net.neoforged.gradle.common.util.run;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
-import net.neoforged.gradle.common.runs.tasks.RunExec;
+import net.neoforged.gradle.common.util.ClasspathUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
@@ -15,12 +15,15 @@ import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
@@ -29,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -74,8 +76,32 @@ public class RunsUtil {
         project.afterEvaluate(evaluatedProject -> {
             if (!run.getIsJUnit().get()) {
                 //Create run exec tasks for all non-unit test runs
-                project.getTasks().register(createTaskName(name), RunExec.class, runExec -> {
-                    runExec.getRun().set(run);
+                project.getTasks().register(createTaskName(name), JavaExec.class, runExec -> {
+                    runExec.setDescription("Runs the " + name + " run.");
+                    runExec.setGroup("NeoGradle/Runs");
+
+                    JavaToolchainService service = evaluatedProject.getExtensions().getByType(JavaToolchainService.class);
+                    runExec.getJavaLauncher().convention(service.launcherFor(evaluatedProject.getExtensions().getByType(JavaPluginExtension.class).getToolchain()));
+
+                    final File workingDir = run.getWorkingDirectory().get().getAsFile();
+                    if (!workingDir.exists()) {
+                        workingDir.mkdirs();
+                    }
+
+                    runExec.getMainClass().convention(run.getMainClass());
+                    runExec.setWorkingDir(workingDir);
+                    runExec.args(run.getProgramArguments().get());
+                    runExec.jvmArgs(run.getJvmArguments().get());
+                    runExec.systemProperties(run.getSystemProperties().get());
+                    runExec.environment(run.getEnvironmentVariables().get());
+                    run.getModSources().all().get().values().stream()
+                            .map(SourceSet::getRuntimeClasspath)
+                            .forEach(runExec::classpath);
+                    runExec.classpath(run.getDependencies().get().getRuntimeConfiguration());
+                    runExec.classpath(run.getClasspath());
+
+                    updateRunExecClasspathBasedOnPrimaryTask(runExec, run);
+
                     addRunSourcesDependenciesToTask(runExec, run);
 
                     run.getTaskDependencies().forEach(runExec::dependsOn);
@@ -86,6 +112,28 @@ public class RunsUtil {
         });
 
         return run;
+    }
+
+    private static void updateRunExecClasspathBasedOnPrimaryTask(final JavaExec runExec, final Run run) {
+        if (run.getModSources().getPrimary().isPresent()) {
+            final SourceSet primary = run.getModSources().getPrimary().get();
+
+            final boolean primaryHasMinecraft = primary.getRuntimeClasspath().getFiles().stream().anyMatch(ClasspathUtils::isMinecraftClasspathEntry);
+
+            //Remove any classpath entries that are already in the primary runtime classpath.
+            //Also remove any classpath entries that are Minecraft, we can only have one Minecraft jar, in the case that the primary runtime classpath already has Minecraft.
+            final FileCollection runtimeClasspathWithoutMinecraftAndWithoutPrimaryRuntimeClasspath =
+                    runExec.classpath().getClasspath().filter(file -> !primary.getRuntimeClasspath().contains(file) && (!primaryHasMinecraft || !ClasspathUtils.isMinecraftClasspathEntry(file)));
+
+            //Combine with the primary runtime classpath.
+            final FileCollection combinedClasspath = primary.getRuntimeClasspath().plus(runtimeClasspathWithoutMinecraftAndWithoutPrimaryRuntimeClasspath);
+            if (runExec.getClasspath() instanceof ConfigurableFileCollection classpath) {
+                //Override
+                classpath.setFrom(combinedClasspath);
+            } else {
+                throw new IllegalStateException("Classpath is not a ConfigurableFileCollection");
+            }
+        }
     }
 
     private static void createOrReuseTestTask(Project project, String name, RunImpl run) {

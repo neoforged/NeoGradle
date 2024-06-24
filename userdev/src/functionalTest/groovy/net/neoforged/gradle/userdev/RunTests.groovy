@@ -60,11 +60,8 @@ class RunTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
-
-        def resourcesMainBuildDir = run.file("build/resources/main")
         run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:\n" +
-                        "\t- File ${resourcesMainBuildDir.absolutePath} is not a valid mod file")//Validate that we are failing because of the missing mod file, and not something else.
+                run.output.contains("Caused by: java.io.IOException: Invalid paths argument, contained no existing paths")
     }
 
     def "runs can be declared before the dependencies block"() {

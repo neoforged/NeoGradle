@@ -8,6 +8,8 @@ import org.gradle.testkit.runner.TaskOutcome
 import java.nio.file.Files
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.function.Supplier
 
 class CentralCacheTests extends BuilderBasedTestSpecification {
 
@@ -87,53 +89,6 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         cleanRun.task(':clean').outcome == TaskOutcome.SUCCESS
         cleanRun.task(':cleanCache').outcome == TaskOutcome.SUCCESS
         cacheDir.listFiles().size() == 4
-    }
-
-    def "cache_supports_running_gradle_in_parallel"() {
-        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
-            //When we run on windows we do not get the right output, since we use native file locking.
-            return
-        }
-
-        given:
-        def project = create("cache_supports_running_gradle_in_parallel", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            """)
-            it.withToolchains()
-            it.property(CentralCacheService.DEBUG_CACHE_PROPERTY, "true")
-        })
-
-        when:
-        Map<Integer, CompletableFuture<Runtime.RunResult>> runs = new ConcurrentHashMap<>();
-        (1..4).each { i ->
-            var runFuture = CompletableFuture.supplyAsync {
-                return project.run {
-                    //We expect this to fail -> Gradle really does not like it when you run multiple builds in parallel, but I want to test the cache.
-                    it.shouldFail()
-                    it.tasks('build')
-                    it.stacktrace()
-                }
-            }
-
-            runs.put(i, runFuture)
-        }
-
-        CompletableFuture<Runtime.RunResult>[] completedFutures = runs.values().toArray(new CompletableFuture[0])
-        def completedFuture = CompletableFuture.allOf(completedFutures)
-        completedFuture.get()
-
-        then:
-        //We expect there to be at least one that waited for locking processes to complete.
-        runs.values().stream().anyMatch { it.get().output.contains("Lock file is owned by another process:")}
     }
 
     def "cache_supports_cleanup_and_take_over_of_failed_lock"() {

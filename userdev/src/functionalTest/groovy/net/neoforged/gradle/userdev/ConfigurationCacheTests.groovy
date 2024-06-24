@@ -2,6 +2,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.gradle.common.caching.CentralCacheService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
+import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
 
 class ConfigurationCacheTests extends BuilderBasedTestSpecification {
@@ -10,11 +11,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
     protected void configurePluginUnderTest() {
         pluginUnderTest = "net.neoforged.gradle.userdev";
         injectIntoAllProject = true;
-    }
-
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build", "userdev")
     }
 
     def "assemble_supports_configuration_cache_build"() {
@@ -99,5 +95,52 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
         thirdRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
         thirdRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
+    }
+
+    def "run_tasks_supports_configuration_cache_build"() {
+        given:
+        def project = create("compile_supports_configuration_cache_build", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            
+            afterEvaluate {
+                //We don't care for the error here, we just want to run the task so that the config cache is created
+                tasks.withType(JavaExec).named('runData') {
+                    ignoreExitValue = true
+                }
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/ConfigurationCacheTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class ConfigurationCacheTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.enableLocalBuildCache()
+            it.enableConfigurationCache()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('runData')
+        }
+
+        then:
+        run.task(':runData').outcome == TaskOutcome.SUCCESS
     }
 }
