@@ -5,11 +5,12 @@
 
 package net.neoforged.gradle.platform.runtime.runtime.tasks;
 
-import codechicken.diffpatch.cli.CliOperation;
-import codechicken.diffpatch.cli.PatchOperation;
-import codechicken.diffpatch.util.LoggingOutputStream;
-import codechicken.diffpatch.util.PatchMode;
-import codechicken.diffpatch.util.archiver.ArchiveFormat;
+import io.codechicken.diffpatch.cli.CliOperation;
+import io.codechicken.diffpatch.cli.PatchOperation;
+import io.codechicken.diffpatch.util.Input.MultiInput;
+import io.codechicken.diffpatch.util.Output.MultiOutput;
+import io.codechicken.diffpatch.util.PatchMode;
+import io.codechicken.diffpatch.util.archiver.ArchiveFormat;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
@@ -49,15 +50,15 @@ public abstract class ApplyPatches extends DefaultRuntime implements WithWorkspa
       Path rejectsPath = rejectsDir.getAsFile().toPath();
       
       PatchOperation.Builder builder = PatchOperation.builder()
-                                             .logTo(new LoggingOutputStream(getLogger(), LogLevel.LIFECYCLE))
-                                             .basePath(getBase().get().getAsFile().toPath())
-                                             .patchesPath(getPatches().get().getAsFile().toPath())
-                                             .outputPath(outputPath, ArchiveFormat.findFormat(outputPath.getFileName()))
-                                             .rejectsPath(rejectsPath, ArchiveFormat.findFormat(rejectsPath.getFileName()))
+                                             .logTo(getLogger()::lifecycle)
+                                             .baseInput(MultiInput.detectedArchive(getBase().get().getAsFile().toPath()))
+                                             .patchesInput(MultiInput.folder(getPatches().get().getAsFile().toPath()))
+                                             .patchedOutput(MultiOutput.detectedArchive(outputPath))
+                                             .rejectsOutput(MultiOutput.folder(rejectsPath))
                                              .mode(getPatchMode().get())
                                              .aPrefix(getOriginalPrefix().get())
                                              .bPrefix(getModifiedPrefix().get())
-                                             .level(getShouldFailOnPatchFailure().get() ? codechicken.diffpatch.util.LogLevel.WARN : codechicken.diffpatch.util.LogLevel.ALL)
+                                             .level(getShouldFailOnPatchFailure().get() ? io.codechicken.diffpatch.util.LogLevel.WARN : io.codechicken.diffpatch.util.LogLevel.ALL)
                                              .patchesPrefix(getPatchesPrefix().get());
 
       builder.minFuzz(getMinimalFuzzingQuality().get());
