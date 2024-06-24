@@ -17,6 +17,7 @@ import org.jetbrains.gradle.ext.IdeaExtPlugin;
 import org.jetbrains.gradle.ext.ProjectSettings;
 import org.jetbrains.gradle.ext.TaskTriggersConfig;
 
+import java.util.function.BiConsumer;
 import javax.inject.Inject;
 
 /**
@@ -75,12 +76,36 @@ public abstract class IdeManagementExtension {
     }
 
     /**
+     * Checks whether Gradle is being invoked:
+     * - from Eclipse plugin and the plugin is sourced from RedHat VSCode extension
+     * - from VSCode Microsoft Gradle plugin
+     * 
+     * @return true if should rather perform VsCode setup instead of Eclipse setup.
+     */
+    public boolean isVscodeImport()
+    {
+        final boolean isNativeEclipse = isEclipseImport() && System.getProperty("eclipse.home.location", "").contains("redhat.java");
+        return isNativeEclipse || isVscodePluginImport(project);
+    }
+
+    /**
+     * Checks whether Gradle is being invoked from VSCode Microsoft Gradle plugin
+     * 
+     * @return true if must perform VsCode setup instead of Eclipse setup.
+     * @implNote reinvestigate after https://github.com/microsoft/vscode-java-debug/issues/1106
+     */
+    public static boolean isVscodePluginImport(final Project project)
+    {
+        return project.getPlugins().stream().anyMatch(p -> p.getClass().getName().equals("com.microsoft.gradle.GradlePlugin"));
+    }
+
+    /**
      * Indicates if an IDE import in any of the supported IDEs is ongoing.
      *
      * @return {@code true} if an IDE import is ongoing, {@code false} otherwise
      */
     public boolean isIdeImportInProgress() {
-        return isIdeaImport() || isEclipseImport();
+        return isIdeaImport() || isEclipseImport() || isVscodeImport();
     }
 
     /**
@@ -124,6 +149,12 @@ public abstract class IdeManagementExtension {
                     //Register the task to run after the Eclipse import is complete, via its build-in support.
                     eclipse.synchronizationTasks(idePostSyncTask);
                 }
+
+                @Override
+                public void vscode(Project project, EclipseModel eclipse) {
+                    // vscode ~= eclipse
+                    eclipse(project, eclipse);
+                }
             });
         }
         else {
@@ -143,7 +174,9 @@ public abstract class IdeManagementExtension {
      */
     public void apply(final IdeImportAction toPerform) {
         onIdea(toPerform);
-        onEclipse(toPerform);
+        // since vscode and eclipse shares EclipseModel import only one of them
+        if (isVscodeImport()) onVscode(toPerform);
+        else onEclipse(toPerform);
         onGradle(toPerform);
     }
     
@@ -182,7 +215,15 @@ public abstract class IdeManagementExtension {
             toPerform.idea(project, model, ideaExt);
         });
     }
-    
+
+    public void onEclipse(final EclipseIdeImportAction toPerform) {
+        onCommonEclipse(toPerform::eclipse);
+    }
+
+    public void onVscode(final VscodeIdeImportAction toPerform) {
+        onCommonEclipse(toPerform::vscode);
+    }
+
     /**
      * Applies the specified configuration action to configure eclipse IDE projects only.
      *
@@ -191,7 +232,7 @@ public abstract class IdeManagementExtension {
      *
      * @param toPerform the actions to perform
      */
-    public void onEclipse(final EclipseIdeImportAction toPerform) {
+    private void onCommonEclipse(final BiConsumer<Project, EclipseModel> toPerform) {
         //When the Eclipse plugin is available, configure it
         project.getPlugins().withType(EclipsePlugin.class, plugin -> {
             //Do not configure the eclipse plugin if we are not importing.
@@ -204,11 +245,13 @@ public abstract class IdeManagementExtension {
             EclipseModel model = project.getExtensions().findByType(EclipseModel.class);
             if (model == null) {
                 model = rootProject.getExtensions().findByType(EclipseModel.class);
-                return;
+                if (model == null) {
+                    return;
+                }
             }
             
             //Configure the project, passing the model and the relevant project. Which does not need to be the root, but can be.
-            toPerform.eclipse(project, model);
+            toPerform.accept(project, model);
         });
     }
     
@@ -218,7 +261,7 @@ public abstract class IdeManagementExtension {
      * @param toPerform the actions to perform
      */
     public void onGradle(final GradleIdeImportAction toPerform) {
-        if (!isEclipseImport() && !isIdeaImport()) {
+        if (!isEclipseImport() && !isIdeaImport() && !isVscodeImport()) {
             toPerform.gradle(project);
         }
     }
@@ -263,7 +306,21 @@ public abstract class IdeManagementExtension {
     }
     
     /**
+     * A configuration action for vscode IDE projects.
+     */
+    public interface VscodeIdeImportAction {
+
+        /**
+         * Configure an vscode project.
+         *
+         * @param project the project being imported
+         * @param eclipse the eclipse project model to modify
+         */
+        void vscode(Project project, EclipseModel eclipse);
+    }
+    
+    /**
      * A configuration action for IDE projects.
      */
-    public interface IdeImportAction extends IdeaIdeImportAction, EclipseIdeImportAction, GradleIdeImportAction { }
+    public interface IdeImportAction extends IdeaIdeImportAction, EclipseIdeImportAction, VscodeIdeImportAction, GradleIdeImportAction { }
 }

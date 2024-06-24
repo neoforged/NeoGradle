@@ -18,6 +18,11 @@ import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.util.FileUtils;
+import net.neoforged.vsclc.BatchedLaunchWriter;
+import net.neoforged.vsclc.LaunchConfiguration;
+import net.neoforged.vsclc.attribute.PathLike;
+import net.neoforged.vsclc.attribute.ShortCmdBehaviour;
+import net.neoforged.vsclc.writer.WritingMode;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -215,6 +220,47 @@ public class IdeRunIntegrationManager {
                         throw new RuntimeException("Failed to write launch files: " + runName, e);
                     }
                 }));
+            });
+        }
+
+        @Override
+        public void vscode(Project project, EclipseModel eclipse)
+        {
+            ProjectUtils.afterEvaluate(project, () -> {
+                final BatchedLaunchWriter launchWriter = new BatchedLaunchWriter(WritingMode.MODIFY_CURRENT);
+                project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                    final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
+                    final RunImpl runImpl = (RunImpl) run;
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
+
+                    final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
+                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(t -> task.dependsOn(t)));
+
+                    final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
+                        .createLaunchConfiguration()
+                        .withAdditionalJvmArgs(runImpl.realiseJvmArguments())
+                        .withArguments(runImpl.getProgramArguments().get())
+                        .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
+                        .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
+                        .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)
+                        .withMainClass(runImpl.getMainClass().get())
+                        .withProjectName(project.getName())
+                        .withName(runName);
+
+                    if (IdeManagementExtension.isVscodePluginImport(project))
+                    {
+                        cfg.withPreTaskName("gradle: " + ideBeforeRunTask.getName());
+                    }
+                    else
+                    {
+                        eclipse.autoBuildTasks(ideBeforeRunTask);
+                    }
+                }));
+                try {
+                    launchWriter.writeToLatestJson(project.getRootDir().toPath());
+                } catch (final IOException e) {
+                    throw new RuntimeException("Failed to write launch files", e);
+                }
             });
         }
 
