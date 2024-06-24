@@ -7,6 +7,7 @@ import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.TaskProvider;
 
 public class NeoFormAccessTransformerUtils {
@@ -24,7 +25,7 @@ public class NeoFormAccessTransformerUtils {
                 return null;
             }
 
-            final TaskProvider<? extends SourceAccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "User", runtimeWorkspace, dependentTaskConfigurationHandler, accessTransformerFiles.getFiles().getAsFileTree(), accessTransformerFiles.getEntries().get(), definition.getListLibrariesTaskProvider());
+            final TaskProvider<? extends SourceAccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "User", runtimeWorkspace, dependentTaskConfigurationHandler, accessTransformerFiles.getFiles().getAsFileTree(), accessTransformerFiles.getEntries().get(), definition.getListLibrariesTaskProvider(), definition.getAllDependencies());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

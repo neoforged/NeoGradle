@@ -6,6 +6,7 @@ import net.minecraftforge.gdi.annotations.DefaultMethods
 import net.neoforged.gradle.dsl.common.tasks.specifications.ExecuteSpecification
 import net.neoforged.gradle.dsl.common.util.RegexUtils
 import org.gradle.api.file.FileTree
+import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
@@ -21,7 +22,6 @@ import java.util.stream.Collectors
 @CompileStatic
 @DefaultMethods
 interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpecification {
-
 
     default List<String> interpolateVariableSubstitution(String value, String previous) {
         final Map<String, Provider<String>> runtimeArguments = getRuntimeArguments().get()
@@ -87,7 +87,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 final List<String> substituted = ((Execute) this).interpolateVariableSubstitution(value, previous)
 
                 if (substituted.size() != 1) {
-                    interpolated.removeAt(interpolated.size() - 1);
+                    interpolated.removeAt(interpolated.size() - 1)
                 }
 
                 interpolated.addAll(substituted)
@@ -110,10 +110,12 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
 
         final Execute me = this
 
-        try (BufferedOutputStream log_out = new BufferedOutputStream(new FileOutputStream(consoleLogFile))) {
+        try (LoggerOutputStream error_out = new LoggerOutputStream(me.getLogger(), me.getLogLevel().get())
+             BufferedOutputStream log_out = new BufferedOutputStream(new FileOutputStream(consoleLogFile))
+             LogLevelAwareOutputStream standard_out = new LogLevelAwareOutputStream(log_out, ExecuteSpecification.LogLevel.WARN, getLogLevel().get()) ){
             getExecuteOperation().javaexec({ JavaExecSpec java ->
                 PrintWriter writer = new PrintWriter(log_out)
-                Function<String, CharSequence> quote = s -> (CharSequence)('"' + s + '"')
+                Function<String, CharSequence> quote = s -> (CharSequence) ('"' + s + '"')
                 writer.println("JVM Args:          " + jvmArgs.get().stream().map(quote).collect(Collectors.joining(", ")))
                 writer.println("Run Args:          " + programArgs.get().stream().map(quote).collect(Collectors.joining(", ")))
                 writer.println("JVM:               " + executable.get())
@@ -130,11 +132,71 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 java.setClasspath(me.getObjectFactory().fileCollection().from(me.getExecutingJar().get()))
                 java.setWorkingDir(me.getOutputDirectory().get())
                 java.getMainClass().set(mainClass)
-                java.setStandardOutput(log_out)
+                java.setStandardOutput(standard_out)
+                java.setErrorOutput(error_out)
             }).rethrowFailure().assertNormalExitValue()
 
-            return outputFile;
+            return outputFile
         }
     }
 
+    private static final class LogLevelAwareOutputStream extends OutputStream {
+
+        private final OutputStream target;
+        private final boolean shouldLog;
+
+        public LogLevelAwareOutputStream(OutputStream target, ExecuteSpecification.LogLevel minLevel, ExecuteSpecification.LogLevel currentLevel) {
+            this.target = target;
+            this.shouldLog = minLevel.ordinal() > currentLevel.ordinal(); //Inverse selection logic, if current is error and min is warn then it should not log.
+        }
+
+        @Override
+        void write(int b) throws IOException {
+            if (shouldLog) {
+                target.write(b);
+            }
+        }
+    }
+
+    private static final class LoggerOutputStream
+            extends OutputStream {
+        private final ByteArrayOutputStream baos = new ByteArrayOutputStream(1000)
+        private final Logger logger
+        private final ExecuteSpecification.LogLevel level
+
+        LoggerOutputStream(Logger logger, ExecuteSpecification.LogLevel level) {
+            this.logger = logger
+            this.level = level
+        }
+
+        @Override
+        void write(int b) {
+            if (level == ExecuteSpecification.LogLevel.DISABLED) return
+
+            if (((char) b) == '\n') {
+                String line = baos.toString()
+                baos.reset()
+
+                switch (level) {
+                    case ExecuteSpecification.LogLevel.TRACE:
+                        logger.trace(line)
+                        break
+                    case ExecuteSpecification.LogLevel.DEBUG:
+                        logger.debug(line)
+                        break
+                    case ExecuteSpecification.LogLevel.ERROR:
+                        logger.error(line)
+                        break
+                    case ExecuteSpecification.LogLevel.INFO:
+                        logger.info(line)
+                        break
+                    case ExecuteSpecification.LogLevel.WARN:
+                        logger.warn(line)
+                        break
+                }
+            } else {
+                baos.write(b)
+            }
+        }
+    }
 }

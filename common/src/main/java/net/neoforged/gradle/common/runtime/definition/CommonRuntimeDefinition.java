@@ -17,6 +17,7 @@ import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.tasks.TaskProvider;
@@ -55,6 +56,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
     @NotNull
     private final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer;
+
+    @NotNull
+    private final ConfigurableFileCollection allDependencies;
     
     @NotNull
     private final VersionJson versionJson;
@@ -76,6 +80,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.minecraftDependenciesConfiguration = minecraftDependenciesConfiguration;
         this.associatedTaskConsumer = associatedTaskConsumer;
         this.versionJson = versionJson;
+
+        this.allDependencies = specification.getProject().files();
+        this.allDependencies.from(getMinecraftDependenciesConfiguration());
     }
 
     @Override
@@ -150,6 +157,12 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @NotNull
     public VersionJson getVersionJson() {
         return versionJson;
+    }
+
+    @NotNull
+    @Override
+    public final ConfigurableFileCollection getAllDependencies() {
+        return allDependencies;
     }
 
     public void configureRun(RunImpl run) {
