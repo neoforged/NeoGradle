@@ -8,6 +8,7 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -21,7 +22,7 @@ public final class CommonRuntimeTaskUtils {
         throw new IllegalStateException("Can not instantiate an instance of: CommonRuntimeTaskUtils. This is a utility class");
     }
 
-    public static TaskProvider<? extends SourceAccessTransformer> createSourceAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data, TaskProvider<? extends WithOutput> listLibs) {
+    public static TaskProvider<? extends SourceAccessTransformer> createSourceAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler, FileTree files, Collection<String> data, TaskProvider<? extends WithOutput> listLibs, FileCollection additionalClasspathElements) {
         final TaskProvider<AccessTransformerFileGenerator> generator;
         if (!data.isEmpty()) {
             generator = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), namePreFix + "AccessTransformerGenerator"), AccessTransformerFileGenerator.class, task -> {
@@ -41,6 +42,7 @@ public final class CommonRuntimeTaskUtils {
             }
             task.dependsOn(listLibs);
             task.getLibraries().set(listLibs.flatMap(WithOutput::getOutput));
+            task.getClasspath().from(additionalClasspathElements);
         });
     }
 

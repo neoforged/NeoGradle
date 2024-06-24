@@ -77,7 +77,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
     }
 
     @Override
-    public FileCollection getAdditionalRecompileDependencies() {
+    public @NotNull FileCollection getAdditionalRecompileDependencies() {
         return additionalRecompileDependencies;
     }
 

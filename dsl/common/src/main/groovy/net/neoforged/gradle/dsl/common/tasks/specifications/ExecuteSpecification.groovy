@@ -18,6 +18,11 @@ import org.gradle.api.tasks.PathSensitivity
 
 interface ExecuteSpecification extends ProjectSpecification, OutputSpecification, JavaVersionSpecification {
 
+    enum LogLevel {
+        TRACE, DEBUG, INFO, WARN, ERROR, DISABLED
+    }
+
+
     /**
      * Defines the jvm arguments in a list which are passed to the java executable.
      *
@@ -114,4 +119,8 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      */
     @Internal
     MapProperty<String, Provider<List<String>>> getMultiRuntimeArguments();
+
+    @DSLProperty
+    @Input
+    Property<LogLevel> getLogLevel();
 }

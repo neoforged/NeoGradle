@@ -1,8 +1,10 @@
 package net.neoforged.gradle.dsl.userdev.runtime.specification;
 
 import groovy.transform.CompileStatic
-import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
-import org.gradle.api.provider.Provider;
+import net.neoforged.gradle.dsl.common.runtime.spec.Specification
+import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
+import org.gradle.api.provider.Provider
+import org.gradle.api.specs.Spec;
 import org.jetbrains.annotations.NotNull;
 
 /**

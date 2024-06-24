@@ -35,6 +35,8 @@ public abstract class DefaultExecute extends DefaultRuntime implements Execute {
 
         getRuntimeProgramArguments().convention(getProgramArguments());
         getMultiRuntimeArguments().convention(getMultiArguments().AsMap());
+
+        getLogLevel().convention(LogLevel.ERROR);
     }
 
     @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)

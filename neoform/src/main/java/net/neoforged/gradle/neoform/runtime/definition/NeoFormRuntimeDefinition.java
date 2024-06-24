@@ -30,7 +30,6 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
 
     private final TaskProvider<DownloadAssets> assetsTaskProvider;
     private final TaskProvider<ExtractNatives> nativesTaskProvider;
-    private TaskProvider<? extends WithOutput> debuggingMappingsTaskProvider;
 
     public NeoFormRuntimeDefinition(@NotNull NeoFormRuntimeSpecification specification,
                                     @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
@@ -47,6 +46,8 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         this.neoform = neoform;
         this.assetsTaskProvider = assetsTaskProvider;
         this.nativesTaskProvider = nativesTaskProvider;
+
+        this.getAllDependencies().from(getSpecification().getAdditionalRecompileDependencies());
     }
 
     @Override
@@ -58,10 +59,8 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof NeoFormRuntimeDefinition)) return false;
+        if (!(o instanceof NeoFormRuntimeDefinition that)) return false;
         if (!super.equals(o)) return false;
-
-        NeoFormRuntimeDefinition that = (NeoFormRuntimeDefinition) o;
 
         return neoform.equals(that.neoform);
     }

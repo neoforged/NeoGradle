@@ -5,10 +5,10 @@
 
 package net.neoforged.gradle.platform.runtime.runtime.tasks;
 
-import codechicken.diffpatch.cli.CliOperation;
-import codechicken.diffpatch.cli.DiffOperation;
-import codechicken.diffpatch.util.LoggingOutputStream;
-import codechicken.diffpatch.util.archiver.ArchiveFormat;
+import io.codechicken.diffpatch.cli.CliOperation;
+import io.codechicken.diffpatch.cli.DiffOperation;
+import io.codechicken.diffpatch.util.Input.MultiInput;
+import io.codechicken.diffpatch.util.Output.MultiOutput;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
@@ -40,12 +40,12 @@ public abstract class GenerateSourcePatches extends DefaultRuntime implements Wi
         getProject().getLogger().info("Modified: {}", modified);
 
         DiffOperation.Builder builder = DiffOperation.builder()
-                .logTo(new LoggingOutputStream(getLogger(), LogLevel.LIFECYCLE))
-                .aPath(base)
-                .bPath(modified)
-                .outputPath(output, ArchiveFormat.findFormat(output.getFileName()))
+                .logTo(getLogger()::lifecycle)
+                .baseInput(MultiInput.detectedArchive(base))
+                .changedInput(MultiInput.detectedArchive(modified))
+                .patchesOutput(MultiOutput.detectedArchive(output))
                 .autoHeader(getShouldCreateAutomaticHeader().get())
-                .level(getShouldOutputVerboseLogging().get() ? codechicken.diffpatch.util.LogLevel.ALL : codechicken.diffpatch.util.LogLevel.WARN)
+                .level(getShouldOutputVerboseLogging().get() ? io.codechicken.diffpatch.util.LogLevel.ALL : io.codechicken.diffpatch.util.LogLevel.WARN)
                 .summary(getShouldPrintSummary().get())
                 .aPrefix(getOriginalPrefix().get())
                 .bPrefix(getModifiedPrefix().get())
