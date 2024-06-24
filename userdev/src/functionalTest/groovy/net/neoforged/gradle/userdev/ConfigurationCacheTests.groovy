@@ -143,4 +143,44 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         then:
         run.task(':runData').outcome == TaskOutcome.SUCCESS
     }
+
+    def "running_clean_does_not_run_anything_else_with_config_cache"() {
+        given:
+        def project = create("can_run_clean_simply", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/ConfigurationCacheTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class ConfigurationCacheTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.enableLocalBuildCache()
+            it.enableConfigurationCache()
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('clean')
+        }
+
+        then:
+        run.task(':clean').outcome == TaskOutcome.SUCCESS
+    }
 }
