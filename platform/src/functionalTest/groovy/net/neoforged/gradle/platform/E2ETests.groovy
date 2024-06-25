@@ -370,7 +370,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     def "default setup can run setup on base project"() {
         given:
-        def project = createPublishingProject("default-setup-runs-setup-on-base")
+        def project = createPublishingProject("setup-base")
 
         when:
         def rootRun = project.rootProject.run {
@@ -384,7 +384,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     def "default setup can run setup on patched project"() {
         given:
-        def project = createPublishingProject("default-setup-runs-setup-on-patched")
+        def project = createPublishingProject("setup-patched")
 
         when:
         def rootRun = project.rootProject.run {
@@ -398,7 +398,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     def "default setup can run setup globally"() {
         given:
-        def project = createPublishingProject("default-setup-runs-setup-globally")
+        def project = createPublishingProject("setup-globally")
 
         when:
         def rootRun = project.rootProject.run {
@@ -413,7 +413,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     def "default setup can run setup globally, but does not requires double decompile"() {
         given:
-        def project = createPublishingProject("default-setup-runs-setup-globally-no-double-decompile")
+        def project = createPublishingProject("setup-caching")
 
         when:
         def rootRun = project.rootProject.run {
@@ -431,7 +431,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     def "patching and building is possible"() {
         given:
-        def project = createPublishingProject("default-setup-patching-and-building")
+        def project = createPublishingProject("patching-assemble")
 
         when:
         def rootRun = project.rootProject.run {
@@ -469,7 +469,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     def "userdev contains patch"() {
         given:
-        def project = createPublishingProject("userdev-contains-patch")
+        def project = createPublishingProject("userdev-with-patch")
 
         when:
         def rootRun = project.rootProject.run {
@@ -517,7 +517,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     def "a published userdev artifact can be loaded into userdev"() {
         given:
-        def project = createPublishingProject("published-userdev-can-be-loaded")
+        def project = createPublishingProject("published-userdev")
         project.rootProject.run { it.tasks ':neoforge:setup' }
         patch(project)
         project.rootProject.run { it.tasks ':neoforge:unpackSourcePatches'}
@@ -532,7 +532,7 @@ class E2ETests extends BuilderBasedTestSpecification {
         publishingRun.task(":neoforge:publishAllPublicationsToTestRepository").outcome == TaskOutcome.SUCCESS
 
         and:
-        def userdevProject = create("published-userdev-can-be-loaded-userdev", {
+        def userdevProject = create("published-userdev-cons", {
             it.plugin("net.neoforged.gradle.userdev")
             it.build("""
             java {
