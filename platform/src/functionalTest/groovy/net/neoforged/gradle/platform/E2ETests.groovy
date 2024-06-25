@@ -298,7 +298,7 @@ class E2ETests extends BuilderBasedTestSpecification {
                     repositories {
                         maven {
                             name = 'test'
-                            url = "file://${getTestTempDirectory().absolutePath}${File.separator}maven"
+                            url = "file://${getTestTempDirectory().absolutePath.replace(File.separator, "/")}/maven"
                         }
                     }
                 }
@@ -549,7 +549,7 @@ class E2ETests extends BuilderBasedTestSpecification {
             repositories {
                 maven {
                     name = 'test'
-                    url = "file://${getTestTempDirectory().absolutePath}/maven"
+                    url = "file://${getTestTempDirectory().absolutePath.replace(File.separator, "/")}/maven"
                 }
             }
             
