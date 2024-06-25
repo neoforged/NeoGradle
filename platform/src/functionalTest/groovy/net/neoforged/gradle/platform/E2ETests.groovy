@@ -549,7 +549,7 @@ class E2ETests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:1.0.0-published-userdev-can-be-loaded'
+                implementation 'net.neoforged:neoforge:1.0.0-published-userdev'
             }
             """)
             it.withToolchains()

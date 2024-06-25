@@ -12,10 +12,7 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
-import net.neoforged.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import org.gradle.api.Project;
-import org.gradle.api.Transformer;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -34,28 +31,28 @@ public class ParchmentStep implements IStep {
         final TaskProvider<? extends WithOutput> collectLibraryInformationTask = pipelineTasks.get(CommonRuntimeUtils.buildTaskName(definition, "libraries"));
 
         return maybeApplyParchment(
-                definition.getSpecification(),
+                definition,
                 inputProvidingTask,
                 workingDirectory,
                 collectLibraryInformationTask.flatMap(WithOutput::getOutput)
         );
     }
 
-    private static TaskProvider<? extends Runtime> maybeApplyParchment(VanillaRuntimeSpecification spec,
+    private static TaskProvider<? extends Runtime> maybeApplyParchment(VanillaRuntimeDefinition definition,
                                                                        TaskProvider<? extends WithOutput> inputProvidingTask,
                                                                        File vanillaDirectory,
                                                                        Provider<RegularFile> listLibrariesOutput) {
-        Project project = spec.getProject();
+        Project project = definition.getSpecification().getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
         Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
 
         if (!parchment.getEnabled().get()) {
-            return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchmentNoop"), NoopRuntime.class, task -> {
+            return project.getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "applyParchmentNoop"), NoopRuntime.class, task -> {
                 task.getInput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
             });
         }
 
-        return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), DefaultExecute.class, task -> {
+        return project.getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "applyParchment"), DefaultExecute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
             File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
@@ -75,10 +72,19 @@ public class ParchmentStep implements IStep {
             task.getProgramArguments().add("{input}");
             task.getProgramArguments().add("{output}");
 
+            final StringBuilder builder = new StringBuilder();
+            definition.getAllDependencies().forEach(f -> {
+                if (!builder.isEmpty()) {
+                    builder.append(File.pathSeparator);
+                }
+                builder.append(f.getAbsolutePath());
+            });
+            task.getProgramArguments().add("--classpath=" + builder);
+
             task.dependsOn(inputProvidingTask);
             task.dependsOn(listLibrariesOutput);
 
-            configureCommonRuntimeTaskParameters(task, Maps.newHashMap(), "applyParchment", spec, vanillaDirectory);
+            configureCommonRuntimeTaskParameters(task, Maps.newHashMap(), "applyParchment", definition.getSpecification(), vanillaDirectory);
         });
     }
 
