@@ -505,7 +505,7 @@ class E2ETests extends BuilderBasedTestSpecification {
         patchedRun.task(":neoforge:assemble").outcome == TaskOutcome.SUCCESS
         patchedRun.task(":neoforge:userdevJar").outcome == TaskOutcome.SUCCESS
 
-        def userdevJar = project.patchedProject.file("build/libs/neoforge-1.0.0-userdev-contains-patch-userdev.jar")
+        def userdevJar = project.patchedProject.file("build/libs/neoforge-1.0.0-userdev-with-patch-userdev.jar")
         userdevJar.exists()
 
         def patch = userdevJar.getZipEntry(PATCH_RESULT_PATH)
