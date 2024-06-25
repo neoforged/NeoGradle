@@ -142,7 +142,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         
         final NeoFormRuntimeExtension neoFormRuntimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
         final NeoFormRuntimeDefinition runtimeDefinition = neoFormRuntimeExtension.create(builder -> {
-            builder.withNeoFormVersion(neoFormVersion).withDistributionType(DistributionType.CLIENT);
+            builder.withNeoFormVersion(neoFormVersion).withDistributionType(DistributionType.JOINED);
             
             NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
         });
@@ -439,7 +439,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 });
                 
                 profile.getLibraries().add(Library.fromOutput(signUniversalJar, project, "net.neoforged", "neoforge", project.getVersion().toString(), "universal"));
-                
+
+                //TODO: Abstract this away to some kind of DSL property
                 profile.getIcon().set(project.provider(() -> {
                     final File icon = new File(project.getRootProject().getProjectDir(), "docs/assets/neoforged.ico");
                     if (!icon.exists()) {
@@ -818,6 +819,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     }
 
     private static void configureInstallerTokens(final TokenizedTask tokenizedTask, final RuntimeDevRuntimeDefinition runtimeDefinition, final Collection<Configuration> ignoreConfigurations, final Configuration pluginLayerLibraries, final Configuration gameLayerLibraries) {
+        //TODO: This should be moved to a DSL configurable model.
+
         tokenizedTask.token("TASK", "forgeserver");
         tokenizedTask.token("MAVEN_PATH", String.format("%s/%s/%s", tokenizedTask.getProject().getGroup().toString().replace('.', '/'), tokenizedTask.getProject().getName(), tokenizedTask.getProject().getVersion()));
         tokenizedTask.token("FORGE_VERSION", tokenizedTask.getProject().getVersion());
@@ -928,7 +931,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     }
 
     private static String createCoordinate(final Project project, final String classifier) {
-        return Artifact.from(project, classifier, "jar").toString();
+        return Objects.toString(Artifact.from(project, classifier, "jar"));
     }
 
     @NotNull

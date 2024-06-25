@@ -22,10 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+//TODO: This task crashes a run when the input template file is not present.
 @CacheableTask
 public abstract class CreateClasspathFiles extends DefaultRuntime implements TokenizedTask {
-    
-    
+
     public CreateClasspathFiles() {
         getTemplate().set(getProject().getRootProject().file("server_files/args.txt"));
         getOutputFileName().convention("args.txt");
@@ -71,7 +71,7 @@ public abstract class CreateClasspathFiles extends DefaultRuntime implements Tok
             copySpec.into(getOutputDirectory().get().getAsFile());
         });
     }
-    
+
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getTemplate();

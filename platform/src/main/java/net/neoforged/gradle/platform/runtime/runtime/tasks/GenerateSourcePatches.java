@@ -36,8 +36,8 @@ public abstract class GenerateSourcePatches extends DefaultRuntime implements Wi
         Path base = getBase().get().getAsFile().toPath();
         Path modified = getModified().get().getAsFile().toPath();
         Path output = getOutput().get().getAsFile().toPath();
-        getProject().getLogger().info("Base: {}", base);
-        getProject().getLogger().info("Modified: {}", modified);
+        getLogger().info("Base: {}", base);
+        getLogger().info("Modified: {}", modified);
 
         DiffOperation.Builder builder = DiffOperation.builder()
                 .logTo(getLogger()::lifecycle)

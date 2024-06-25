@@ -57,7 +57,8 @@ public abstract class CreateLegacyInstaller extends Zip implements WithOutput, W
             spec.into("data");
             spec.rename(name -> "server.lzma");
         });
-        
+
+        //TODO: Handle this better. They are hardcoded and if they don't exists it will fail.
         getUrlIcon().fileValue(getProject().getRootProject().file("src/main/resources/url.png"));
         getInstallerLogo().fileValue(getProject().getRootProject().file("src/main/resources/neoforged_logo.png"));
         from(getData(), spec -> {

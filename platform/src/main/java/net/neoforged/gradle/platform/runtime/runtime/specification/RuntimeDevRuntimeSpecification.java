@@ -57,10 +57,19 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
     }
 
     public Directory getPatchesDirectory() {
+        if (!patchesDirectory.getAsFile().exists()) {
+            //Ensure the directory exists
+            patchesDirectory.getAsFile().mkdirs();
+        }
+
         return patchesDirectory;
     }
     
     public Directory getRejectsDirectory() {
+        if (!rejectsDirectory.getAsFile().exists()) {
+            //Ensure the directory exists
+            rejectsDirectory.getAsFile().mkdirs();
+        }
         return rejectsDirectory;
     }
     
