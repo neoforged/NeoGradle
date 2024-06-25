@@ -505,7 +505,7 @@ class E2ETests extends BuilderBasedTestSpecification {
         patchedRun.task(":neoforge:assemble").outcome == TaskOutcome.SUCCESS
         patchedRun.task(":neoforge:userdevJar").outcome == TaskOutcome.SUCCESS
 
-        def userdevJar = project.patchedProject.file("build/libs/patched-1.0.0-userdev-contains-patch-userdev.jar")
+        def userdevJar = project.patchedProject.file("build/libs/neoforge-1.0.0-userdev-contains-patch-userdev.jar")
         userdevJar.exists()
 
         def patch = userdevJar.getZipEntry(PATCH_RESULT_PATH)
@@ -513,11 +513,6 @@ class E2ETests extends BuilderBasedTestSpecification {
 
         def patchContent = patch.text
         patchContent.contains("This is a comment inserted by the test")
-    }
-
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/roundtrip-test-temp")
     }
 
     def "a published userdev artifact can be loaded into userdev"() {
