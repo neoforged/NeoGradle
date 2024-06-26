@@ -23,6 +23,13 @@ interface Parchment extends ConfigurableDSLElement<Parchment> {
     Property<String> getParchmentArtifact();
 
     /**
+     * The prefix added to parameters in parchment when a conflict arises.
+     */
+    @Input
+    @DSLProperty
+    Property<String> getConflictPrefix();
+
+    /**
      * Minecraft version of parchment to use. This property is
      * ignored if {@link #getParchmentArtifact()} is set explicitly.
      */

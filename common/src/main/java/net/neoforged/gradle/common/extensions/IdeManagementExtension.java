@@ -63,7 +63,7 @@ public abstract class IdeManagementExtension {
      * @return whether this is an IntelliJ-based invocation
      */
     public boolean isIdeaImport() {
-        return Boolean.getBoolean("idea.active");
+        return Boolean.getBoolean("idea.sync.active");
     }
 
     /**

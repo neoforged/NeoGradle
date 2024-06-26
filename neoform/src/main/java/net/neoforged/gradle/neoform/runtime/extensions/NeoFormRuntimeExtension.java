@@ -436,7 +436,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         remapTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task));
 
         TaskProvider<? extends WithOutput> recompileInput = maybeApplyParchment(
-                spec,
+                definition,
                 remapTask,
                 symbolicDataSources,
                 neoFormDirectory,
@@ -492,21 +492,22 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         });
     }
 
-    private static TaskProvider<? extends WithOutput> maybeApplyParchment(NeoFormRuntimeSpecification spec,
+    private static TaskProvider<? extends WithOutput> maybeApplyParchment(NeoFormRuntimeDefinition runtimeDefinition,
                                                              TaskProvider<? extends WithOutput> recompileInput,
                                                              Map<String, String> symbolicDataSources,
                                                              File neoFormDirectory,
                                                              Provider<RegularFile> listLibrariesOutput) {
-        Project project = spec.getProject();
+        Project project = runtimeDefinition.getSpecification().getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
         Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
         if (!parchment.getEnabled().get()) {
             return recompileInput;
         }
 
-        TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "applyParchment"), DefaultExecute.class, task -> {
+        TaskProvider<? extends Runtime> applyParchmentTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeDefinition, "applyParchment"), DefaultExecute.class, task -> {
             // Provide the mappings via artifact
             File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
+            String conflictPrefix = parchment.getConflictPrefix().get();
             File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
 
             task.getArguments().putFile("mappings", project.provider(() -> mappingFile));
@@ -521,13 +522,23 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             task.getProgramArguments().add("{mappings}");
             task.getProgramArguments().add("--in-format=archive");
             task.getProgramArguments().add("--out-format=archive");
+            task.getProgramArguments().add("--parchment-conflict-prefix=%s".formatted(conflictPrefix));
             task.getProgramArguments().add("{input}");
             task.getProgramArguments().add("{output}");
+
+            final StringBuilder builder = new StringBuilder();
+            runtimeDefinition.getAllDependencies().forEach(f -> {
+                if (!builder.isEmpty()) {
+                    builder.append(File.pathSeparator);
+                }
+                builder.append(f.getAbsolutePath());
+            });
+            task.getProgramArguments().add("--classpath=" + builder);
 
             task.dependsOn(listLibrariesOutput);
             task.dependsOn(recompileInput);
 
-            configureCommonRuntimeTaskParameters(task, symbolicDataSources, "applyParchment", spec, neoFormDirectory);
+            configureCommonRuntimeTaskParameters(task, symbolicDataSources, "applyParchment", runtimeDefinition.getSpecification(), neoFormDirectory);
         });
 
         return applyParchmentTask;
