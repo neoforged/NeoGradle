@@ -168,6 +168,11 @@ public class IdeRunIntegrationManager {
         }
 
         @Override
+        public boolean shouldConfigureIdeaImport() {
+            return Boolean.getBoolean("idea.active");
+        }
+
+        @Override
         public void eclipse(Project project, EclipseModel eclipse) {
             ProjectUtils.afterEvaluate(project, () -> {
                 project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {

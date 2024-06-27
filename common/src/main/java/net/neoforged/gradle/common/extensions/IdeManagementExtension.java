@@ -191,7 +191,7 @@ public abstract class IdeManagementExtension {
     public void onIdea(final IdeaIdeImportAction toPerform) {
         //When the IDEA plugin is available, configure it
         project.getPlugins().withType(IdeaExtPlugin.class, plugin -> {
-            if (!isIdeaImport()) {
+            if (!toPerform.shouldConfigureIdeaImport()) {
                 //No IDEA import even though the plugin is available, so don't configure it.
                 return;
             }
@@ -289,6 +289,13 @@ public abstract class IdeManagementExtension {
          * @param ideaExtension JetBrain's extensions to the base idea model
          */
         void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension);
+
+        /**
+         * {@return whether the import action should be configured}
+         */
+        default boolean shouldConfigureIdeaImport() {
+            return Boolean.getBoolean("idea.sync.active");
+        }
     }
     
     /**
