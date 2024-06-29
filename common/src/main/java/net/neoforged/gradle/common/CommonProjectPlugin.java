@@ -273,6 +273,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     if (ideaConventions.getShouldUsePostSyncTask().get())
                         return;
 
+                    if (!ideManagementExtension.isIdeaSyncing())
+                        return;
+
                     final StartParameter startParameter = innerProject.getGradle().getStartParameter();
                     final List<TaskExecutionRequest> taskRequests = new ArrayList<>(startParameter.getTaskRequests());
 

@@ -50,7 +50,7 @@ public abstract class IdeManagementExtension {
         // IntelliJ remembers to run the task post-sync even if the import fails. That will cause
         // situations where import errors (i.e. dependency resolution errors) will be masked by
         // the failed idePostSync task, since it was never created in that particular import.
-        if (isIdeaImport()) {
+        if (isIdeaAttached() && isIdeaSyncing()) {
             getOrCreateIdeImportTask();
         }
     }
@@ -62,7 +62,18 @@ public abstract class IdeManagementExtension {
      *
      * @return whether this is an IntelliJ-based invocation
      */
-    public boolean isIdeaImport() {
+    public boolean isIdeaAttached() {
+        return Boolean.getBoolean("idea.active");
+    }
+
+    /**
+     * Get whether Gradle is being invoked through IntelliJ IDEA.
+     *
+     * <p>This can be through a project import, or a task execution.</p>
+     *
+     * @return whether this is an IntelliJ-based invocation
+     */
+    public boolean isIdeaSyncing() {
         return Boolean.getBoolean("idea.sync.active");
     }
 
@@ -105,7 +116,7 @@ public abstract class IdeManagementExtension {
      * @return {@code true} if an IDE import is ongoing, {@code false} otherwise
      */
     public boolean isIdeImportInProgress() {
-        return isIdeaImport() || isEclipseImport() || isVscodeImport();
+        return isIdeaAttached() || isEclipseImport() || isVscodeImport();
     }
 
     /**
@@ -191,7 +202,7 @@ public abstract class IdeManagementExtension {
     public void onIdea(final IdeaIdeImportAction toPerform) {
         //When the IDEA plugin is available, configure it
         project.getPlugins().withType(IdeaExtPlugin.class, plugin -> {
-            if (!isIdeaImport()) {
+            if (!isIdeaAttached()) {
                 //No IDEA import even though the plugin is available, so don't configure it.
                 return;
             }
@@ -261,7 +272,7 @@ public abstract class IdeManagementExtension {
      * @param toPerform the actions to perform
      */
     public void onGradle(final GradleIdeImportAction toPerform) {
-        if (!isEclipseImport() && !isIdeaImport() && !isVscodeImport()) {
+        if (!isEclipseImport() && !isIdeaAttached() && !isVscodeImport()) {
             toPerform.gradle(project);
         }
     }
