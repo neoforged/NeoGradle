@@ -99,7 +99,6 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
             task.getProgramArguments().add("--no-parchment-javadoc");
             task.getProgramArguments().add("--parchment-mappings");
             task.getProgramArguments().add("{mappings}");
-            task.getProgramArguments().add("--in-format=archive");
             task.getProgramArguments().add("--out-format=archive");
             if (conflictPrefix.isPresent() && !conflictPrefix.get().isBlank()) {
                 task.getProgramArguments().add("--parchment-conflict-prefix=%s".formatted(conflictPrefix.get()));

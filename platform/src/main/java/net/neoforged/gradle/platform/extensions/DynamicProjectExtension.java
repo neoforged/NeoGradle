@@ -728,8 +728,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 final var sourcesWithoutParchment = RuntimeDevRuntimeExtension.applyParchment(
                         project,
                         "reverseParchment",
-                        parchmentArtifact.map(art -> ToolUtilities.resolveTool(project, art)),
-                        // mergeMappings.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile),
+                        mergeMappings.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile),
                         project.provider(() -> "p_"),
                         project.getLayout().file(project.provider(() -> sourceSetDir)),
                         runtimeDefinition.getSpecification(),
