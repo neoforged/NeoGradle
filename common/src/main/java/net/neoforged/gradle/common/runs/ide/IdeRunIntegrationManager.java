@@ -244,7 +244,7 @@ public class IdeRunIntegrationManager {
                         .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                         .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)
                         .withMainClass(runImpl.getMainClass().get())
-                        .withProjectName(project.getName())
+                        .withProjectName(eclipse.getProject().getName())
                         .withName(runName);
 
                     if (IdeManagementExtension.isVscodePluginImport(project))
