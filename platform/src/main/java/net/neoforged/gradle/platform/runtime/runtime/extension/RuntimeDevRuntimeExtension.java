@@ -96,7 +96,6 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, name), DefaultExecute.class, task -> {
             File toolExecutable = ToolUtilities.resolveTool(project, project.getExtensions().getByType(Subsystems.class).getTools().getJST().get());
 
-            task.getOutputs().upToDateWhen(s -> false);
             task.getArguments().putFile("mappings", mappingsFile);
             if (inputFile) {
                 task.getArguments().putFile("input", input);
@@ -121,13 +120,12 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
                 }
                 builder.append(f.getAbsolutePath());
             });
-            task.getProgramArguments().add("--classpath=" + builder);
-
             if (extraClasspath != null) {
-                task.getArguments().putRegularFile("extracp", extraClasspath.flatMap(WithOutput::getOutput));
-                task.getProgramArguments().addAll("--classpath", "{extracp}");
+                builder.append(File.pathSeparator).append(extraClasspath.get().getOutput().get().getAsFile().getAbsolutePath());
                 task.dependsOn(extraClasspath);
             }
+            task.getProgramArguments().add("--classpath=" + builder);
+
             task.getLogLevel().set(ExecuteSpecification.LogLevel.DISABLED);
             task.getProgramArguments().add("{input}");
             task.getProgramArguments().add("{output}");
