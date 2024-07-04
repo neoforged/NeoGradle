@@ -316,7 +316,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
             var mergeMappings = runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getTask("mergeMappings");
             Provider<RegularFile> compiledJarProvider = parchmentArtifact.isPresent() ? renameCompiledJar(
-                    parchmentArtifact.flatMap(ver -> mergeMappings.flatMap(WithOutput::getOutput)),
+                    mergeMappings.flatMap(WithOutput::getOutput),
                     project.getTasks().named(mainSource.getJarTaskName(), Jar.class),
                     runtimeDefinition,
                     workingDirectory
