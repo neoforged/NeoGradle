@@ -1003,7 +1003,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                                                     final File workingDirectory) {
         var inputFile = input.flatMap(Jar::getArchiveFile);
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeDefinition, "renameCompiledJar"), DefaultExecute.class, task -> {
-            task.getArguments().putFile("mappings", mappingsFile.map(RegularFile::getAsFile));
+            task.getArguments().putRegularFile("mappings", mappingsFile);
             task.getArguments().putRegularFile("input", inputFile);
 
             task.getExecutingJar().set(ToolUtilities.resolveTool(project, Constants.FART));
