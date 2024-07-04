@@ -23,7 +23,6 @@ import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
@@ -316,12 +315,12 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
 
             var mergeMappings = runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getTask("mergeMappings");
-            Provider<RegularFile> compiledJarProvider = maybeRenameCompiledJar(
+            Provider<RegularFile> compiledJarProvider = parchmentArtifact.isPresent() ? renameCompiledJar(
                     parchmentArtifact.flatMap(ver -> mergeMappings.flatMap(WithOutput::getOutput)),
                     project.getTasks().named(mainSource.getJarTaskName(), Jar.class),
                     runtimeDefinition,
                     workingDirectory
-            );
+            ) : project.getTasks().named(mainSource.getJarTaskName(), Jar.class).flatMap(Jar::getArchiveFile);
 
             javaPluginExtension.withSourcesJar();
             final TaskProvider<? extends Jar> sourcesJarProvider = project.getTasks().named(mainSource.getSourcesJarTaskName(), Jar.class);
@@ -998,15 +997,11 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
     }
 
-    private Provider<RegularFile> maybeRenameCompiledJar(Provider<RegularFile> mappingsFile,
-                                                             TaskProvider<? extends Jar> input,
-                                                             final RuntimeDevRuntimeDefinition runtimeDefinition,
-                                                             final File workingDirectory) {
+    private Provider<RegularFile> renameCompiledJar(Provider<RegularFile> mappingsFile,
+                                                    TaskProvider<? extends Jar> input,
+                                                    final RuntimeDevRuntimeDefinition runtimeDefinition,
+                                                    final File workingDirectory) {
         var inputFile = input.flatMap(Jar::getArchiveFile);
-        if (!mappingsFile.isPresent()) {
-            return inputFile;
-        }
-
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeDefinition, "renameCompiledJar"), DefaultExecute.class, task -> {
             task.getArguments().putFile("mappings", mappingsFile.map(RegularFile::getAsFile));
             task.getArguments().putRegularFile("input", inputFile);
