@@ -319,7 +319,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     mergeMappings.flatMap(WithOutput::getOutput),
                     project.getTasks().named(mainSource.getJarTaskName(), Jar.class),
                     runtimeDefinition,
-                    workingDirectory
+                    workingDirectory,
+                    mergeMappings
             ) : project.getTasks().named(mainSource.getJarTaskName(), Jar.class).flatMap(Jar::getArchiveFile);
 
             javaPluginExtension.withSourcesJar();
@@ -1000,7 +1001,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     private Provider<RegularFile> renameCompiledJar(Provider<RegularFile> mappingsFile,
                                                     TaskProvider<? extends Jar> input,
                                                     final RuntimeDevRuntimeDefinition runtimeDefinition,
-                                                    final File workingDirectory) {
+                                                    final File workingDirectory,
+                                                    final TaskProvider<?> dependency) {
         var inputFile = input.flatMap(Jar::getArchiveFile);
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeDefinition, "renameCompiledJar"), DefaultExecute.class, task -> {
             task.getArguments().putRegularFile("mappings", mappingsFile);
@@ -1016,6 +1018,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     .forEach(f -> task.getProgramArguments().addAll("--lib", f.getAbsolutePath()));
 
             task.dependsOn(input);
+            task.dependsOn(dependency);
 
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         }).flatMap(WithOutput::getOutput);
