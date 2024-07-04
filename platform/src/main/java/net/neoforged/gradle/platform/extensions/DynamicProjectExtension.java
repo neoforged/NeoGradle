@@ -171,8 +171,31 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
         });
+
+        final var parchmentArtifact = getParchment().map(parch -> {
+            var split = parch.split("-");
+            return DEFAULT_PARCHMENT_GROUP
+                    + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + split[0]
+                    + ":" + split[1]
+                    + "@zip";
+        });
+
+        TaskProvider<? extends WithOutput> sourcesTask = runtimeDefinition.getSourceJarTask();
+        if (parchmentArtifact.isPresent()) {
+            sourcesTask = RuntimeDevRuntimeExtension.applyParchment(
+                    getProject(),
+                    "applyParchment",
+                    getProject().provider(() -> ToolUtilities.resolveTool(getProject(), parchmentArtifact.get())),
+                    getProject().provider(() -> "p_"),
+                    sourcesTask.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile),
+                    true,
+                    runtimeDefinition.getSpecification(),
+                    project.getLayout().getBuildDirectory().dir(String.format("neoForm/%s", neoFormVersion)).get().getAsFile(),
+                    null
+            );
+        }
         
-        configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
+        configureSetupTasks(sourcesTask.flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
     }
     
     public void runtime(final String neoFormVersion) {

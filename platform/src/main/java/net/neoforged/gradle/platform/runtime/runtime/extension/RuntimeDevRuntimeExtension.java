@@ -1,7 +1,9 @@
 package net.neoforged.gradle.platform.runtime.runtime.extension;
 
 import io.codechicken.diffpatch.util.PatchMode;
+import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
@@ -88,7 +90,7 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
                                                        Provider<String> conflictPrefix,
                                                        Provider<File> input,
                                                        boolean inputFile,
-                                                       RuntimeDevRuntimeSpecification spec,
+                                                       CommonRuntimeSpecification spec,
                                                        File workingDirectory,
                                                        @Nullable TaskProvider<? extends WithOutput> extraClasspath) {
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, name), DefaultExecute.class, task -> {
