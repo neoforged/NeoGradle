@@ -23,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<RuntimeDevRuntimeSpecification, RuntimeDevRuntimeSpecification.Builder, RuntimeDevRuntimeDefinition> {
     
@@ -44,7 +46,8 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
                     "applyParchment",
                     getProject().provider(() -> ToolUtilities.resolveTool(getProject(), spec.getParchmentArtifact())),
                     getProject().provider(() -> "p_"),
-                    neoformRuntime.getSourceJarTask().flatMap(WithOutput::getOutput),
+                    neoformRuntime.getSourceJarTask().flatMap(WithOutput::getOutput).map(RegularFile::getAsFile),
+                    true,
                     spec,
                     workingDirectory,
                     null
@@ -83,7 +86,8 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
                                                        String name,
                                                        Provider<File> mappingsFile,
                                                        Provider<String> conflictPrefix,
-                                                       Provider<RegularFile> input,
+                                                       Provider<File> input,
+                                                       boolean inputFile,
                                                        RuntimeDevRuntimeSpecification spec,
                                                        File workingDirectory,
                                                        @Nullable TaskProvider<? extends WithOutput> extraClasspath) {
@@ -92,13 +96,18 @@ public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<
 
             task.getOutputs().upToDateWhen(s -> false);
             task.getArguments().putFile("mappings", mappingsFile);
-            task.getArguments().putFile("input", input.map(RegularFile::getAsFile));
+            if (inputFile) {
+                task.getArguments().putFile("input", input);
+            } else {
+                task.getArguments().putDirectoryFile("input", input);
+            }
 
             task.getExecutingJar().set(toolExecutable);
             task.getProgramArguments().add("--enable-parchment");
             task.getProgramArguments().add("--no-parchment-javadoc");
             task.getProgramArguments().add("--parchment-mappings");
             task.getProgramArguments().add("{mappings}");
+            task.getProgramArguments().add("--in-format=" + (inputFile ? "archive" : "folder"));
             task.getProgramArguments().add("--out-format=archive");
             if (conflictPrefix.isPresent() && !conflictPrefix.get().isBlank()) {
                 task.getProgramArguments().add("--parchment-conflict-prefix=%s".formatted(conflictPrefix.get()));

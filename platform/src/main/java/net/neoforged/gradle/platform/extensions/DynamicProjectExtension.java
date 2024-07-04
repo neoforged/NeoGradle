@@ -730,7 +730,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                         "reverseParchment",
                         mergeMappings.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile),
                         project.provider(() -> ""),
-                        project.getLayout().file(project.provider(() -> sourceSetDir)),
+                        project.provider(() -> sourceSetDir),
+                        false,
                         runtimeDefinition.getSpecification(),
                         workingDirectory,
                         strippedJar
