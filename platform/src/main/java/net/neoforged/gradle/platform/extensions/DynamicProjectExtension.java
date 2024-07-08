@@ -60,6 +60,7 @@ import net.neoforged.gradle.platform.tasks.CreateLauncherJson;
 import net.neoforged.gradle.platform.tasks.CreateLegacyInstaller;
 import net.neoforged.gradle.platform.tasks.CreateLegacyInstallerJson;
 import net.neoforged.gradle.platform.tasks.CreateUserdevJson;
+import net.neoforged.gradle.platform.tasks.OfficialMappingsJustParameters;
 import net.neoforged.gradle.platform.tasks.SetupProjectFromRuntime;
 import net.neoforged.gradle.platform.tasks.StripBinPatchedClasses;
 import net.neoforged.gradle.platform.tasks.TokenizedTask;
@@ -315,13 +316,23 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             });
 
             var mergeMappings = runtimeDefinition.getJoinedNeoFormRuntimeDefinition().getTask("mergeMappings");
-            Provider<RegularFile> compiledJarProvider = parchmentArtifact.isPresent() ? renameCompiledJar(
-                    mergeMappings.flatMap(WithOutput::getOutput),
-                    project.getTasks().named(mainSource.getJarTaskName(), Jar.class),
-                    runtimeDefinition,
-                    workingDirectory,
-                    mergeMappings
-            ) : project.getTasks().named(mainSource.getJarTaskName(), Jar.class).flatMap(Jar::getArchiveFile);
+            Provider<RegularFile> compiledJarProvider;
+            if (parchmentArtifact.isPresent()) {
+                var officialWithParams = project.getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeDefinition, "officialMappingsJustParameters"), OfficialMappingsJustParameters.class, tsk -> {
+                    tsk.getInput().set(mergeMappings.flatMap(WithOutput::getOutput));
+                    tsk.dependsOn(mergeMappings);
+
+                    CommonRuntimeExtension.configureCommonRuntimeTaskParameters(tsk, runtimeDefinition, workingDirectory);
+                });
+                compiledJarProvider = renameCompiledJar(
+                        officialWithParams,
+                        project.getTasks().named(mainSource.getJarTaskName(), Jar.class),
+                        runtimeDefinition,
+                        workingDirectory
+                );
+            } else {
+                compiledJarProvider = project.getTasks().named(mainSource.getJarTaskName(), Jar.class).flatMap(Jar::getArchiveFile);
+            }
 
             javaPluginExtension.withSourcesJar();
             final TaskProvider<? extends Jar> sourcesJarProvider = project.getTasks().named(mainSource.getSourcesJarTaskName(), Jar.class);
@@ -998,14 +1009,13 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         });
     }
 
-    private Provider<RegularFile> renameCompiledJar(Provider<RegularFile> mappingsFile,
+    private Provider<RegularFile> renameCompiledJar(TaskProvider<? extends WithOutput> mappingsFile,
                                                     TaskProvider<? extends Jar> input,
                                                     final RuntimeDevRuntimeDefinition runtimeDefinition,
-                                                    final File workingDirectory,
-                                                    final TaskProvider<?> dependency) {
+                                                    final File workingDirectory) {
         var inputFile = input.flatMap(Jar::getArchiveFile);
         return project.getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeDefinition, "renameCompiledJar"), DefaultExecute.class, task -> {
-            task.getArguments().putRegularFile("mappings", mappingsFile);
+            task.getArguments().putRegularFile("mappings", mappingsFile.flatMap(WithOutput::getOutput));
             task.getArguments().putRegularFile("input", inputFile);
 
             task.getExecutingJar().set(ToolUtilities.resolveTool(project, Constants.FART));
@@ -1018,7 +1028,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     .forEach(f -> task.getProgramArguments().addAll("--lib", f.getAbsolutePath()));
 
             task.dependsOn(input);
-            task.dependsOn(dependency);
+            task.dependsOn(mappingsFile);
 
             CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
         }).flatMap(WithOutput::getOutput);
