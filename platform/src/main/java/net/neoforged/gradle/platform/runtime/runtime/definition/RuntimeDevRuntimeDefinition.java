@@ -10,7 +10,6 @@ import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.platform.runtime.runtime.specification.RuntimeDevRuntimeSpecification;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,10 +21,12 @@ import java.util.Map;
 //TODO: Create DSL for runtime
 public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<RuntimeDevRuntimeSpecification> implements IDelegatingRuntimeDefinition<RuntimeDevRuntimeSpecification> {
     private final NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition;
-    
-    public RuntimeDevRuntimeDefinition(@NotNull RuntimeDevRuntimeSpecification specification, NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider) {
+    private final TaskProvider<? extends WithOutput> patchBase;
+
+    public RuntimeDevRuntimeDefinition(@NotNull RuntimeDevRuntimeSpecification specification, NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider, TaskProvider<? extends WithOutput> patchBase) {
         super(specification, joinedNeoFormRuntimeDefinition.getTasks(), sourcesProvider, joinedNeoFormRuntimeDefinition.getRawJarTask(), joinedNeoFormRuntimeDefinition.getGameArtifactProvidingTasks(), joinedNeoFormRuntimeDefinition.getMinecraftDependenciesConfiguration(), joinedNeoFormRuntimeDefinition::configureAssociatedTask, joinedNeoFormRuntimeDefinition.getVersionJson());
         this.joinedNeoFormRuntimeDefinition = joinedNeoFormRuntimeDefinition;
+        this.patchBase = patchBase;
     }
     
     public NeoFormRuntimeDefinition getJoinedNeoFormRuntimeDefinition() {
@@ -62,6 +63,10 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
     protected Map<String, String> buildRunInterpolationData(RunImpl run) {
         final Map<String, String> interpolationData = joinedNeoFormRuntimeDefinition.buildRunInterpolationData(run);
         return interpolationData;
+    }
+
+    public TaskProvider<? extends WithOutput> getPatchBase() {
+        return patchBase;
     }
 
     @Override

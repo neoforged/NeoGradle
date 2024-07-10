@@ -12,6 +12,7 @@ import org.gradle.api.Task;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -24,6 +25,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
     private final Directory patchesDirectory;
     private final Directory rejectsDirectory;
     private final boolean isUpdating;
+    private final String parchmentArtifact;
     
     public RuntimeDevRuntimeSpecification(NeoFormRuntimeDefinition neoFormRuntime,
                                           Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
@@ -31,7 +33,8 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
                                           Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
                                           Directory patchesDirectory,
                                           Directory rejectsDirectory,
-                                          boolean isUpdating) {
+                                          boolean isUpdating,
+                                          String parchmentArtifact) {
         super(neoFormRuntime.getSpecification().getProject(),
                 "platform",
                 neoFormRuntime.getSpecification().getVersion(),
@@ -44,6 +47,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
         this.patchesDirectory = patchesDirectory;
         this.rejectsDirectory = rejectsDirectory;
         this.isUpdating = isUpdating;
+        this.parchmentArtifact = parchmentArtifact;
     }
 
     public NeoFormRuntimeDefinition getNeoFormRuntime() {
@@ -72,6 +76,11 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
         }
         return rejectsDirectory;
     }
+
+    @Nullable
+    public String getParchmentArtifact() {
+        return parchmentArtifact;
+    }
     
     public boolean isUpdating() {
         return isUpdating;
@@ -97,6 +106,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
         private Provider<Directory> patchesDirectory;
         private Provider<Directory> rejectsDirectory;
         private Provider<Boolean> isUpdating;
+        private Provider<String> parchment;
         
         private Builder(Project project) {
             super(project);
@@ -155,6 +165,11 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
             return isUpdating(project.provider(() -> isUpdating));
         }
 
+        public Builder withParchment(final Provider<String> parchment) {
+            this.parchment = parchment;
+            return getThis();
+        }
+
         public @NotNull RuntimeDevRuntimeSpecification build() {
             if (neoFormRuntimeDefinition == null) {
                 throw new IllegalStateException("Setting a neoFormRuntimeDefinition is required");
@@ -177,7 +192,7 @@ public final class RuntimeDevRuntimeSpecification extends CommonRuntimeSpecifica
                     taskCustomizers,
                     patchesDirectory.get(),
                     rejectsDirectory.get(),
-                    isUpdating.get());
+                    isUpdating.get(), parchment.getOrNull());
         }
     }
 }
