@@ -3,6 +3,7 @@ package net.neoforged.gradle.common.extensions.dependency.replacement;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.tasks.DependencyGenerationTask;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
+import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -62,7 +63,7 @@ public class ReplacementLogicTest {
 
         final ReplacementLogic dependencyReplacementsExtension = new SystemUnderTest(project);
 
-        verify(dependencySet).whenObjectAdded(ArgumentMatchers.<Action<? super Dependency>>any());
+        verify(configuration).withDependencies(any());
     }
 
     @Test
@@ -121,9 +122,11 @@ public class ReplacementLogicTest {
             return null;
         }).when(configurationContainer).configureEach(any());
 
+        when(repository.withEntry(any())).thenReturn(mock(Entry.class));
+
         final ReplacementLogic dependencyReplacementsExtension = new SystemUnderTest(project);
 
-        verify(dependencySet).whenObjectAdded((Action<? super Dependency>) any());
+        verify(dependencySet).configureEach(any());
     }
 
     @Test
@@ -148,6 +151,8 @@ public class ReplacementLogicTest {
             configurationAction.execute(configuration);
             return null;
         }).when(configurationContainer).configureEach(any());
+
+        when(repository.withEntry(any())).thenReturn(mock(Entry.class));
 
         final ReplacementLogic dependencyReplacementsExtension = new SystemUnderTest(project);
 
