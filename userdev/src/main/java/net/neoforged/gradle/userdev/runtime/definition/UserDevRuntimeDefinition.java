@@ -17,6 +17,7 @@ import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
+import org.gradle.api.NamedDomainObjectCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.FileTree;
@@ -136,7 +137,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
         interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
 
-        run.dependsOn(minecraftClasspathSerializer);
+        run.getDependsOn().add(minecraftClasspathSerializer);
 
         return interpolationData;
     }

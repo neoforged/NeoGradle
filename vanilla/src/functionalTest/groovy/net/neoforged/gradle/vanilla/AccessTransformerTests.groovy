@@ -40,6 +40,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -81,6 +82,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -123,6 +125,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -166,6 +169,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -209,6 +213,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

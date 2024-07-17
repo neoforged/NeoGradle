@@ -26,5 +26,12 @@ interface ReplacementAware {
      * @param externalModuleDependency The dependency to get the replacement for.
      * @return The replacement dependency.
      */
-     ExternalModuleDependency getReplacementDependency(ExternalModuleDependency externalModuleDependency)
+    ExternalModuleDependency getReplacementDependency(ExternalModuleDependency externalModuleDependency)
+
+    /**
+     * Invoked when a dependency that is targeted by this replacement has been added to a configuration.
+     * Note: This might be invoked lazily when a provider based dependency is added to a configuration, and the
+     * configuration is about to be resolved.
+     */
+    void onTargetDependencyAdded()
 }

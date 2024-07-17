@@ -138,6 +138,11 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 runs
         );
 
+        runs.configureEach(run -> {
+            RunsUtil.configureModClasses(run);
+            RunsUtil.createTasks(project, run);
+        });
+
         setupAccessTransformerConfigurations(project, accessTransformers);
 
         IdeRunIntegrationManager.getInstance().setup(project);
@@ -351,7 +356,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
     private void applyAfterEvaluate(final Project project) {
         //We now eagerly get all runs and configure them.
         final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
-        runs.forEach(run -> {
+        runs.configureEach(run -> {
             if (run instanceof RunImpl) {
                 run.configure();
 

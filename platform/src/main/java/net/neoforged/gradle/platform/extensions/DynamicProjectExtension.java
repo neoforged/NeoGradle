@@ -54,10 +54,7 @@ import net.neoforged.gradle.vanilla.VanillaProjectPlugin;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.apache.commons.lang3.StringUtils;
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
+import org.gradle.api.*;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
@@ -770,52 +767,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         runType.getEnvironmentVariables().put("NEOFORGE_SPEC", project.getVersion().toString().substring(0, project.getVersion().toString().lastIndexOf(".")));
 
         runType.getClasspath().from(runtimeClasspath);
-
-        Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project, project.provider(runtimeDefinition::getVersionJson)).map(Directory::getAsFile).map(File::getAbsolutePath);
-        Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
-
-        runType.getRunAdapter().set(run -> {
-            if (run.getIsClient().get()) {
-                run.getProgramArguments().addAll("--username", "Dev");
-                run.getProgramArguments().addAll("--version", project.getName());
-                run.getProgramArguments().addAll("--accessToken", "0");
-                run.getProgramArguments().addAll("--launchTarget", "forgeclientdev");
-            }
-
-            if (run.getIsServer().get()) {
-                run.getProgramArguments().addAll("--launchTarget", "forgeserverdev");
-            }
-
-            if (run.getIsGameTest().get()) {
-                run.getSystemProperties().put("neoforge.enableGameTest", "true");
-
-                if (run.getIsServer().get()) {
-                    run.getSystemProperties().put("neoforge.gameTestServer", "true");
-                }
-            }
-
-            if (run.getIsDataGenerator().get()) {
-                run.getProgramArguments().addAll("--launchTarget", "forgedatadev");
-
-                run.getProgramArguments().addAll("--flat", "--all", "--validate");
-                run.getProgramArguments().add("--output");
-                run.getProgramArguments().add(project.getRootProject().file("src/generated/resources/").getAbsolutePath());
-                mainSourceSet.getResources().getSrcDirs().forEach(file -> {
-                    run.getProgramArguments().addAll("--existing", file.getAbsolutePath());
-                });
-            }
-
-            if (run.getIsDataGenerator().get() || run.getIsClient().get() || runType.getIsJUnit().get()) {
-                run.getProgramArguments().add("--assetsDir");
-                run.getProgramArguments().add(assetsDir);
-                run.getProgramArguments().add("--assetIndex");
-                run.getProgramArguments().add(assetIndex);
-            }
-
-            if (run.getIsJUnit().get()) {
-                run.getProgramArguments().addAll("--launchTarget", "forgejunitdev");
-            }
-        });
     }
 
     private static void configureInstallerTokens(final TokenizedTask tokenizedTask, final RuntimeDevRuntimeDefinition runtimeDefinition, final Collection<Configuration> ignoreConfigurations, final Configuration pluginLayerLibraries, final Configuration gameLayerLibraries) {
@@ -866,12 +817,71 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
     }
 
     private void configureRun(final Run run, final RuntimeDevRuntimeDefinition runtimeDefinition) {
+        final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+        final SourceSet mainSourceSet = javaPluginExtension.getSourceSets().getByName("main");
+
         run.getConfigureAutomatically().set(true);
         run.getConfigureFromDependencies().set(false);
 
-        if (run.getIsClient().get()) {
-            run.dependsOn(runtimeDefinition.getAssets(), runtimeDefinition.getNatives());
-        }
+        run.getDependsOn().addAll(
+                TransformerUtils.ifTrue(run.getIsClient(), runtimeDefinition.getAssets(), runtimeDefinition.getNatives())
+        );
+
+        run.getProgramArguments().addAll(
+                TransformerUtils.ifTrue(run.getIsClient(),
+                        "--username", "Dev",
+                        "--version", project.getName(),
+                        "--accessToken", "0",
+                        "--launchTarget", "forgeclientdev")
+
+        );
+
+        run.getProgramArguments().addAll(
+                TransformerUtils.ifTrue(run.getIsServer(),
+                        "--launchTarget", "forgeserverdev")
+        );
+
+        run.getSystemProperties().putAll(
+                TransformerUtils.ifTrueMap(run.getIsGameTest(),
+                        "neoforge.enableGameTest", "true")
+        );
+
+        run.getSystemProperties().putAll(
+                TransformerUtils.ifTrueMap(
+                        run.getIsGameTest().flatMap(TransformerUtils.and(run.getIsServer())),
+                        "neoforge.gameTestServer", "true")
+        );
+
+        run.getProgramArguments().addAll(
+                TransformerUtils.ifTrue(run.getIsDataGenerator(),
+                        "--launchTarget", "forgedatadev",
+                        "--flat", "--all", "--validate",
+                        "--output", project.getRootProject().file("src/generated/resources/").getAbsolutePath())
+        );
+
+        mainSourceSet.getResources().getSrcDirs().forEach(file -> {
+            run.getProgramArguments().addAll(
+                    TransformerUtils.ifTrue(run.getIsDataGenerator(),
+                            "--existing", file.getAbsolutePath())
+            );
+        });
+
+        Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project, project.provider(runtimeDefinition::getVersionJson)).map(Directory::getAsFile).map(File::getAbsolutePath);
+        Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
+
+        run.getProgramArguments().addAll(
+                TransformerUtils.ifTrue(
+                        run.getIsDataGenerator().flatMap(TransformerUtils.or(run.getIsClient(), run.getIsJUnit())),
+                        project.provider(() -> "--assetsDir"),
+                        assetsDir,
+                        project.provider(() -> "--assetIndex"),
+                        assetIndex)
+        );
+
+        run.getProgramArguments().addAll(
+                TransformerUtils.ifTrue(run.getIsJUnit(),
+                        "--launchTarget", "forgejunitdev")
+        );
     }
 
     private TaskProvider<? extends WithOutput> createCleanProvider(final TaskProvider<? extends WithOutput> jarProvider, final RuntimeDevRuntimeDefinition runtimeDefinition, File workingDirectory) {

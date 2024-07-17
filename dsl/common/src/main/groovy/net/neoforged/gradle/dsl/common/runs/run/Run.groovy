@@ -7,6 +7,7 @@ import net.minecraftforge.gdi.NamedDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.minecraftforge.gdi.annotations.ProjectGetter
 import net.neoforged.gradle.dsl.common.runs.type.RunType
+import org.gradle.api.Buildable
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
@@ -15,6 +16,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.jetbrains.annotations.NotNull
 
@@ -275,6 +277,14 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Property<Boolean> getConfigureFromDependencies();
 
     /**
+     * @return The tasks that this run depends on.
+     */
+    @Internal
+    @DSLProperty
+    @Optional
+    abstract SetProperty<Task> getDependsOn();
+
+    /**
      * Configures the run using the settings of the associated run type.
      * <p/>
      * Picks a run type using the name of this run, if no specific run type has been set.
@@ -303,12 +313,4 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      * @param typeProvider The type provider to realise and configure with.
      */
     void configure(@NotNull final Provider<RunType> typeProvider);
-
-    /**
-     * Configures the run to execute the given tasks before running the run.
-     *
-     * @param tasks The tasks to depend on.
-     */
-    @SafeVarargs
-    abstract void dependsOn(@NotNull final TaskProvider<? extends Task>... tasks);
 }

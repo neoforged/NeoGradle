@@ -7,6 +7,7 @@ import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
@@ -318,7 +319,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         //TODO: Right now this is needed so that runs and other components can be order free in the buildscript,
         //TODO: We should consider making this somehow lazy and remove the unneeded complexity because of it.
-        spec.getProject().afterEvaluate(project -> this.bakeDefinition(definition));
+        ProjectUtils.afterEvaluate(spec.getProject(), () -> this.bakeDefinition(definition));
 
         return definition;
     }

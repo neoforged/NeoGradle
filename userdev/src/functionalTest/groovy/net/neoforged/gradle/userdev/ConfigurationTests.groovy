@@ -31,6 +31,16 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
                     modSources.add(project.getSourceSets().main)
                 }
             }
+            
+            tasks.named("dependencies", t -> {
+                //Force fully check if we have dependencies
+                t.doFirst(task -> {
+                    def configuration = project.configurations.getByName("implementation")
+                    if (configuration.hasDependencies()) {
+                        throw new RuntimeException("Still has dependencies")
+                    }
+                })
+            })
             """)
             it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
                 package net.neoforged.gradle.userdev;

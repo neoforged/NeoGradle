@@ -4,11 +4,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunSourceSets;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -30,7 +30,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     private final Project project;
     private final String name;
     private final ListProperty<RunType> runTypes;
-    private final Set<TaskProvider<? extends Task>> dependencies = Sets.newHashSet();
     private final RunSourceSets modSources;
     private final RunSourceSets unitTestSources;
 
@@ -160,64 +159,63 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.systemProperties = systemProperties;
     }
 
-    @Internal
-    public Set<TaskProvider<? extends Task>> getTaskDependencies() {
-        return ImmutableSet.copyOf(this.dependencies);
-    }
-
     @Override
     public final void configure() {
         if (getConfigureFromTypeWithName().get()) {
-            configureInternally(getRunTypeByName(name));
+            runTypes.add(getRunTypeByName(name));
         }
 
-        for (RunType runType : runTypes.get()) {
-            configureInternally(runType);
-        }
+        getEnvironmentVariables().putAll(runTypes.flatMap(TransformerUtils.combineAllMaps(
+                getProject(),
+                String.class,
+                String.class,
+                RunType::getEnvironmentVariables
+        )));
+        getMainClass().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getMainClass)));
+        getProgramArguments().addAll(runTypes.flatMap(TransformerUtils.combineAllLists(
+                getProject(),
+                String.class,
+                RunType::getArguments
+        )));
+        getJvmArguments().addAll(runTypes.flatMap(TransformerUtils.combineAllLists(
+                getProject(),
+                String.class,
+                RunType::getJvmArguments
+        )));
+        getIsSingleInstance().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsSingleInstance)));
+        getSystemProperties().putAll(runTypes.flatMap(TransformerUtils.combineAllMaps(
+                getProject(),
+                String.class,
+                String.class,
+                RunType::getSystemProperties
+        )));
+        getIsClient().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsClient)));
+        getIsServer().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsServer)));
+        getIsDataGenerator().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsDataGenerator)));
+        getIsGameTest().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsGameTest)));
+        getIsJUnit().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsJUnit)));
+        getClasspath().from(runTypes.map(TransformerUtils.combineFileCollections(
+                getProject(),
+                RunType::getClasspath
+        )));
     }
 
     @Override
     public final void configure(final @NotNull String name) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        runTypes.add(project.provider(() -> getRunTypeByName(name)));
+        runTypes.add(getRunTypeByName(name));
     }
 
     @Override
     public final void configure(final @NotNull RunType runType) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        this.runTypes.add(runType);
+        this.runTypes.add(project.provider(() -> runType));
     }
 
     @Override
     public void configure(@NotNull Provider<RunType> typeProvider) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
         this.runTypes.add(typeProvider);
-    }
-
-    @SafeVarargs
-    @Override
-    public final void dependsOn(TaskProvider<? extends Task>... tasks) {
-        this.dependencies.addAll(Arrays.asList(tasks));
-    }
-
-    public void configureInternally(final @NotNull RunType spec) {
-        project.getLogger().debug("Configuring run {} with run type {}", name, spec.getName());
-        getEnvironmentVariables().putAll(spec.getEnvironmentVariables());
-        getMainClass().convention(spec.getMainClass());
-        getProgramArguments().addAll(spec.getArguments());
-        getJvmArguments().addAll(spec.getJvmArguments());
-        getIsSingleInstance().convention(spec.getIsSingleInstance());
-        getSystemProperties().putAll(spec.getSystemProperties());
-        getIsClient().convention(spec.getIsClient());
-        getIsServer().convention(spec.getIsServer());
-        getIsDataGenerator().convention(spec.getIsDataGenerator());
-        getIsGameTest().convention(spec.getIsGameTest());
-        getIsJUnit().convention(spec.getIsJUnit());
-        getClasspath().from(spec.getClasspath());
-
-        if (spec.getRunAdapter().isPresent()) {
-            spec.getRunAdapter().get().adapt(this);
-        }
     }
 
     @NotNull
@@ -237,15 +235,17 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @SuppressWarnings("unchecked")
-    private RunType getRunTypeByName(String name) {
+    private Provider<RunType> getRunTypeByName(String name) {
         NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) project.getExtensions()
                 .getByName(RunsConstants.Extensions.RUN_TYPES);
 
-        if (runTypes.getNames().contains(name)) {
-            return runTypes.getByName(name);
-        } else {
-            throw new GradleException("Could not find run type " + name + ". Available run types: " +
-                    runTypes.getNames());
-        }
+        return project.provider(() -> {
+            if (runTypes.getNames().contains(name)) {
+                return runTypes.getByName(name);
+            } else {
+                throw new GradleException("Could not find run type " + name + ". Available run types: " +
+                        runTypes.getNames());
+            }
+        });
     }
 }
