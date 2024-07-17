@@ -102,7 +102,7 @@ public class RunsUtil {
 
                     updateRunExecClasspathBasedOnPrimaryTask(runExec, run);
 
-                    addRunSourcesDependenciesToTask(runExec, run);
+                    addRunSourcesDependenciesToTask(runExec, run, true);
 
                     run.getTaskDependencies().forEach(runExec::dependsOn);
                 });
@@ -175,7 +175,7 @@ public class RunsUtil {
 
     private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, RunImpl run) {
         testTaskProvider.configure(testTask -> {
-            addRunSourcesDependenciesToTask(testTask, run);
+            addRunSourcesDependenciesToTask(testTask, run, true);
             run.getTaskDependencies().forEach(testTask::dependsOn);
 
             testTask.setWorkingDir(run.getWorkingDirectory().get());
@@ -230,14 +230,17 @@ public class RunsUtil {
         return collection;
     }
 
-    public static void addRunSourcesDependenciesToTask(Task task, Run run) {
+    public static void addRunSourcesDependenciesToTask(Task task, Run run, final boolean requireCompile) {
         for (SourceSet sourceSet : run.getModSources().all().get().values()) {
             final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
             //The following tasks are not guaranteed to be in the source sets build dependencies
             //We however need at least the classes as well as the resources of the source set to be run
             task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
-            task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
+            if (requireCompile) {
+                //When running through the IDE we do not need to compile the IDE already will take care of this if need be.
+                task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
+            }
 
             //There might be additional tasks that are needed to configure and run a source set.
             //Also run those
@@ -249,13 +252,21 @@ public class RunsUtil {
         return buildGradleModClasses(sourceSetsProperty, sourceSet -> Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream()));
     }
 
+    public static boolean isRunWithIdea(final SourceSet sourceSet) {
+        final Project project = SourceSetUtils.getProject(sourceSet);
+        final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
+        final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) rootIdeaModel.getProject()).getExtensions().getByType(IdeaRunsExtension.class);
+
+        return ideaRunsExtension.getRunWithIdea().get();
+    }
+
     public static Provider<String> buildRunWithIdeaModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty) {
         return buildGradleModClasses(sourceSetsProperty, sourceSet -> {
             final Project project = SourceSetUtils.getProject(sourceSet);
             final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
             final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) rootIdeaModel.getProject()).getExtensions().getByType(IdeaRunsExtension.class);
 
-            if (ideaRunsExtension.getRunWithIdea().get()) {
+            if (isRunWithIdea(sourceSet)) {
                 final File parentDir = ideaRunsExtension.getOutDirectory().get().getAsFile();
                 final File sourceSetDir = new File(parentDir, getIntellijOutName(sourceSet));
                 return Stream.of(new File(sourceSetDir, "resources"), new File(sourceSetDir, "classes"));

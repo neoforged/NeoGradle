@@ -28,7 +28,6 @@ import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
@@ -285,7 +284,7 @@ public class IdeRunIntegrationManager {
 
         private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
-                RunsUtil.addRunSourcesDependenciesToTask(task, run);
+                RunsUtil.addRunSourcesDependenciesToTask(task, run, false);
             });
             
             if (!runImpl.getTaskDependencies().isEmpty()) {
