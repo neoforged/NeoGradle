@@ -14,6 +14,8 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.FileSystemLocationProperty;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.ListProperty;
@@ -244,7 +246,11 @@ public class RunsUtil {
 
             //There might be additional tasks that are needed to configure and run a source set.
             //Also run those
-            sourceSet.getOutput().getBuildDependencies().getDependencies(null).forEach(task::dependsOn);
+            //Exclude the compileJava and classes tasks, as they are already added above, if need be.
+            sourceSet.getOutput().getBuildDependencies().getDependencies(null).stream()
+                    .filter(depTask -> !depTask.getName().equals(sourceSet.getCompileJavaTaskName()))
+                    .filter(depTask -> !depTask.getName().equals(sourceSet.getClassesTaskName()))
+                    .forEach(task::dependsOn);
         }
     }
 
@@ -260,16 +266,29 @@ public class RunsUtil {
         return ideaRunsExtension.getRunWithIdea().get();
     }
 
+    public static Provider<? extends FileSystemLocation> getRunWithIdeaDirectory(final SourceSet sourceSet, final String name) {
+        final Project project = SourceSetUtils.getProject(sourceSet);
+        final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
+        final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) rootIdeaModel.getProject()).getExtensions().getByType(IdeaRunsExtension.class);
+
+        return ideaRunsExtension.getOutDirectory().map(dir -> dir.dir(getIntellijOutName(sourceSet)).dir(name));
+    }
+
+    public static Provider<? extends FileSystemLocation> getRunWithIdeaResourcesDirectory(final SourceSet sourceSet) {
+        return getRunWithIdeaDirectory(sourceSet, "resources");
+    }
+
+    public static Provider<? extends FileSystemLocation> getRunWithIdeaClassesDirectory(final SourceSet sourceSet) {
+        return getRunWithIdeaDirectory(sourceSet, "classes");
+    }
+
     public static Provider<String> buildRunWithIdeaModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty) {
         return buildGradleModClasses(sourceSetsProperty, sourceSet -> {
-            final Project project = SourceSetUtils.getProject(sourceSet);
-            final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
-            final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) rootIdeaModel.getProject()).getExtensions().getByType(IdeaRunsExtension.class);
 
             if (isRunWithIdea(sourceSet)) {
-                final File parentDir = ideaRunsExtension.getOutDirectory().get().getAsFile();
-                final File sourceSetDir = new File(parentDir, getIntellijOutName(sourceSet));
-                return Stream.of(new File(sourceSetDir, "resources"), new File(sourceSetDir, "classes"));
+                final File resourcesDir = getRunWithIdeaResourcesDirectory(sourceSet).get().getAsFile();
+                final File classesDir = getRunWithIdeaClassesDirectory(sourceSet).get().getAsFile();
+                return Stream.of(resourcesDir, classesDir);
             }
 
             return Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream());

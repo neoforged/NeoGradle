@@ -141,6 +141,8 @@ public class IdeRunIntegrationManager {
 
                 final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
                 final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
+                final List<TaskProvider<?>> copyProcessResourcesTasks = createIntelliJCopyResourcesTasks(run);
+                ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
                 
                 ideaRuns.register(runName, Application.class, ideaRun -> {
                     runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
@@ -180,7 +182,7 @@ public class IdeRunIntegrationManager {
 
                     final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, name, run, runImpl);
                     final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
-                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(t -> task.dependsOn(t)));
+                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
                     
                     try {
                         final GradleLaunchConfig idePreRunTask = GradleLaunchConfig.builder(eclipse.getProject().getName())
@@ -299,6 +301,32 @@ public class IdeRunIntegrationManager {
             return ideBeforeRunTask;
         }
 
+        private List<TaskProvider<?>> createIntelliJCopyResourcesTasks(Run run) {
+            final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
+            for (SourceSet sourceSet : run.getModSources().all().get().values()) {
+                final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
+
+                final String taskName = CommonRuntimeUtils.buildTaskName("intelliJCopy", sourceSet.getProcessResourcesTaskName());
+                final TaskProvider<?> intelliJResourcesTask;
+
+                if (sourceSetProject.getTasks().findByName(taskName) != null) {
+                    intelliJResourcesTask = sourceSetProject.getTasks().named(taskName);
+                }
+                else {
+                    intelliJResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
+                        final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
+                        task.from(defaultProcessResources.map(ProcessResources::getDestinationDir));
+                        task.into(RunsUtil.getRunWithIdeaResourcesDirectory(sourceSet));
+
+                        task.dependsOn(defaultProcessResources);
+                    });
+                }
+
+                copyProcessResources.add(intelliJResourcesTask);
+            }
+            return copyProcessResources;
+        }
+
         private List<TaskProvider<?>> createEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().all().get().values()) {
@@ -313,7 +341,7 @@ public class IdeRunIntegrationManager {
                 else {
                     eclipseResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
                         final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
-                        task.from(defaultProcessResources.get().getDestinationDir());
+                        task.from(defaultProcessResources.map(ProcessResources::getDestinationDir));
                         Path outputDir = eclipse.getClasspath().getDefaultOutputDir().toPath();
                         if (outputDir.endsWith("default")) {
                             // sometimes it has default value from org.gradle.plugins.ide.eclipse.internal.EclipsePluginConstants#DEFAULT_PROJECT_OUTPUT_PATH
