@@ -398,6 +398,10 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 }
 
                 neoFormRuntimeTaskProvider = createExecute(spec, step, function);
+
+                if (step.getType().equals("mergeMappings")) {
+                    neoFormRuntimeTaskProvider.configure(tsk -> tsk.getOutputFileName().set("output.tsrg"));
+                }
             }
 
             Optional<TaskProvider<? extends WithOutput>> finalAdaptedInput = adaptedInput;
