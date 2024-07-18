@@ -32,13 +32,7 @@ class RunTests extends BuilderBasedTestSpecification {
                     resources.setSrcDirs(['src/main/modResources'])
                 }
             }
-            
-            runs {
-                client {
-                    modSource sourceSets.modRun
-                }
-            }
-            
+                        
             dependencies {
                 implementation "net.neoforged:neoforge:+"
             }

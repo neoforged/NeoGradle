@@ -168,7 +168,10 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
     }
 
     private void create(Entry entry) {
-        this.entries.add(entry);
+        if (!this.entries.add(entry)) {
+            return;
+        }
+
         write(entry);
     }
 

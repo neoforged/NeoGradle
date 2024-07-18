@@ -94,22 +94,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         
         spec.setMinecraftVersion(neoFormRuntimeDefinition.getSpecification().getMinecraftVersion());
 
-        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
-        ProjectUtils.afterEvaluate(spec.getProject(), () -> runs.stream()
-                .filter(run -> run.getIsJUnit().get())
-                .flatMap(run -> run.getUnitTestSources().all().get().values().stream())
-                .distinct()
-                .forEach(src -> {
-                    DependencyCollector coll = spec.getProject().getObjects().dependencyCollector();
-                    spec.getProfile().getAdditionalTestDependencyArtifactCoordinates().get().forEach(coll::add);
-                    spec.getProject().getConfigurations().getByName(src.getImplementationConfigurationName()).fromDependencyCollector(coll);
-                }));
-
-        final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
-        userDevProfile.getRunTypes().forEach((type) -> {
-            TypesUtil.registerWithPotentialPrefix(runTypes, spec.getIdentifier(), type.getName(), type::copyTo);
-        });
-
         return new UserDevRuntimeDefinition(
                 spec,
                 neoFormRuntimeDefinition,
