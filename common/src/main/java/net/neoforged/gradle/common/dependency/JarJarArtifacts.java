@@ -157,6 +157,9 @@ public abstract class JarJarArtifacts {
             ComponentSelector requested = resolvedResult.getRequested();
             ResolvedVariantResult variant = resolvedResult.getResolvedVariant();
 
+            // We do this to account for any available-at usage in module metadata -- the actual artifact will only have
+            // the module ID of the final target of available-at, but the resolved dependency lets us get the whole
+            // hierarchy.
             List<ContainedJarIdentifier> identifiers = new ArrayList<>();
             ResolvedVariantResult currentVariant = variant;
             while (currentVariant != null) {
