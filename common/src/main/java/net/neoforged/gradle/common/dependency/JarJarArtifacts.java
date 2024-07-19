@@ -157,13 +157,19 @@ public abstract class JarJarArtifacts {
             ComponentSelector requested = resolvedResult.getRequested();
             ResolvedVariantResult variant = resolvedResult.getResolvedVariant();
 
-            DependencyManagementObject.ArtifactIdentifier artifactIdentifier = capabilityOrModule(variant);
-            if (artifactIdentifier == null) {
-                continue;
-            }
+            List<ContainedJarIdentifier> identifiers = new ArrayList<>();
+            ResolvedVariantResult currentVariant = variant;
+            while (currentVariant != null) {
+                DependencyManagementObject.ArtifactIdentifier artifactIdentifier = capabilityOrModule(currentVariant);
+                currentVariant = currentVariant.getExternalVariant().orElse(null);
+                if (artifactIdentifier == null) {
+                    continue;
+                }
 
-            ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(artifactIdentifier.getGroup(), artifactIdentifier.getName());
-            knownIdentifiers.add(jarIdentifier);
+                ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(artifactIdentifier.getGroup(), artifactIdentifier.getName());
+                knownIdentifiers.add(jarIdentifier);
+                identifiers.add(jarIdentifier);
+            }
 
             String versionRange = getVersionRangeFrom(variant);
             if (versionRange == null && requested instanceof ModuleComponentSelector) {
@@ -185,10 +191,14 @@ public abstract class JarJarArtifacts {
             String version = getVersionFrom(variant);
 
             if (version != null) {
-                versions.put(jarIdentifier, version);
+                for (ContainedJarIdentifier jarIdentifier : identifiers) {
+                    versions.put(jarIdentifier, version);
+                }
             }
             if (versionRange != null) {
-                versionRanges.put(jarIdentifier, versionRange);
+                for (ContainedJarIdentifier jarIdentifier : identifiers) {
+                    versionRanges.put(jarIdentifier, versionRange);
+                }
             }
         }
     }
