@@ -198,7 +198,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return The source sets that are used as a mod.
      */
-    @Internal
+    @Nested
     @DSLProperty
     abstract RunSourceSets getUnitTestSources();
 
@@ -222,6 +222,13 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      * @param sourceSets The source sets to add.
      */
     void unitTestSources(@NotNull final Iterable<? extends SourceSet> sourceSets)
+
+    /**
+     * @return a scope configuration object that an be used to limit tests further then the test sourcesets alone.
+     */
+    @DSLProperty
+    @Nested
+    abstract RunTestScope getTestScope()
 
     /**
      * Gives access to the classpath for this run.

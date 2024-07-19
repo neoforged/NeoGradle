@@ -109,7 +109,6 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
             super(parent, "idea");
 
             getShouldUseCompilerDetection().convention(getBooleanProperty("compiler-detection").orElse(true));
-            getCompilerOutputDir().convention(getProject().getLayout().getProjectDirectory().dir(getStringProperty("compiler-output-dir").orElse("out")));
             getShouldUsePostSyncTask().convention(getBooleanProperty("use-post-sync-task").orElse(false));
         }
     }

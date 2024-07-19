@@ -7,6 +7,7 @@ import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunSourceSets;
+import net.neoforged.gradle.dsl.common.runs.run.RunTestScope;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.GradleException;
@@ -33,6 +34,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     private final Set<TaskProvider<? extends Task>> dependencies = Sets.newHashSet();
     private final RunSourceSets modSources;
     private final RunSourceSets unitTestSources;
+    private final RunTestScope testScope;
 
     private ListProperty<String> jvmArguments;
     private MapProperty<String, String> environmentVariables;
@@ -46,6 +48,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.name = name;
         this.modSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
         this.unitTestSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
+        this.testScope = project.getObjects().newInstance(RunTestScope.class);
 
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
@@ -163,6 +166,11 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Internal
     public Set<TaskProvider<? extends Task>> getTaskDependencies() {
         return ImmutableSet.copyOf(this.dependencies);
+    }
+
+    @Override
+    public RunTestScope getTestScope() {
+        return testScope;
     }
 
     @Override

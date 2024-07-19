@@ -20,6 +20,8 @@
 
 package net.neoforged.gradle.common.runtime.naming.tasks;
 
+import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.util.FileUtils;
 import net.neoforged.gradle.common.runtime.naming.renamer.ISourceRenamer;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
@@ -27,8 +29,10 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -44,8 +48,15 @@ public abstract class ApplyMappingsToSourceJar extends DefaultRuntime {
         getRemapJavadocs().convention(false);
     }
 
+    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
+    public abstract Property<CentralCacheService> getCacheService();
+
     @TaskAction
-    public void apply() throws Exception {
+    public final void execute() throws Throwable {
+        getCacheService().get().doCached(this, this::apply, getOutput());
+    }
+
+    protected final File apply() throws Exception {
         final ISourceRenamer renamer = getSourceRenamer().get();
         try (ZipFile zin = new ZipFile(getInput().get().getAsFile())) {
             try (FileOutputStream fos = new FileOutputStream(getOutput().get().getAsFile());
@@ -69,6 +80,8 @@ public abstract class ApplyMappingsToSourceJar extends DefaultRuntime {
         }
 
         getLogger().debug("Applying mappings to source jar complete");
+
+        return getOutput().get().getAsFile();
     }
 
     @InputFile

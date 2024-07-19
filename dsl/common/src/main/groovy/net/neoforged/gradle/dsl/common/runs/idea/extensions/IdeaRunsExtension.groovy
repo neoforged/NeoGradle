@@ -24,7 +24,6 @@ abstract class IdeaRunsExtension implements BaseDSLElement<IdeaRunsExtension> {
         this.outDirectory = project.getObjects().directoryProperty();
 
         getRunWithIdea().convention(false);
-        getOutDirectory().convention(getProject().getLayout().getProjectDirectory().dir("out"))
     }
 
     @Override
@@ -35,10 +34,5 @@ abstract class IdeaRunsExtension implements BaseDSLElement<IdeaRunsExtension> {
     @DSLProperty
     Property<Boolean> getRunWithIdea() {
         return runWithIdea;
-    }
-
-    @DSLProperty
-    DirectoryProperty getOutDirectory() {
-        return outDirectory;
     }
 }

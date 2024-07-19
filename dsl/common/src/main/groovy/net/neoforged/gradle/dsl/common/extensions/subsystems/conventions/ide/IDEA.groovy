@@ -23,12 +23,6 @@ interface IDEA extends BaseDSLElement<IDEA> {
     Property<Boolean> getShouldUseCompilerDetection();
 
     /**
-     * The output directory for the IDEA compiler.
-     */
-    @DSLProperty
-    DirectoryProperty getCompilerOutputDir();
-
-    /**
      * Whether or not the IDEA sync should use the post sync task.
      */
     @DSLProperty

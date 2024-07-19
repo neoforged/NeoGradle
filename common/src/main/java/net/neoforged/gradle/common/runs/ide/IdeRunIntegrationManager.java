@@ -8,6 +8,7 @@ import net.neoforged.elc.configs.LaunchGroup;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runs.ide.extensions.IdeaRunExtensionImpl;
 import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.common.tasks.PrepareUnitTestTask;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.constants.RunsConstants;
@@ -117,14 +118,11 @@ public class IdeRunIntegrationManager {
                             return FileUtils.contains(GradleXml, "<option name=\"delegatedBuild\" value=\"false\" />");
                         })
         );
-
-        runsExtension.getOutDirectory().convention(
-                ideaConventions.getCompilerOutputDir()
-        );
     }
 
     private static final class RunsImportAction implements IdeManagementExtension.IdeImportAction {
         
+        @SuppressWarnings("DataFlowIssue")
         @Override
         public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
             final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
@@ -136,36 +134,51 @@ public class IdeRunIntegrationManager {
                 final RunImpl runImpl = (RunImpl) run;
 
                 //Do not generate a run configuration for unit tests
-                if (runImpl.getIsJUnit().get())
-                    return;
+                if (!runImpl.getIsJUnit().get()) {
+                    final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
+                    final List<TaskProvider<?>> copyProcessResourcesTasks = createIntelliJCopyResourcesTasks(run);
+                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
 
-                final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
-                final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
-                final List<TaskProvider<?>> copyProcessResourcesTasks = createIntelliJCopyResourcesTasks(run);
-                ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
-                
-                ideaRuns.register(runName, Application.class, ideaRun -> {
-                    runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
-                    
-                    ideaRun.setMainClass(runImpl.getMainClass().get());
-                    ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                    ideaRun.setJvmArgs(quoteAndJoin(runImpl.realiseJvmArguments()));
-                    ideaRun.moduleRef(project, runIdeaConfig.getPrimarySourceSet().get());
-                    ideaRun.setProgramParameters(quoteAndJoin(runImpl.getProgramArguments().get()));
-                    ideaRun.setEnvs(adaptEnvironment(runImpl, RunsUtil::buildRunWithIdeaModClasses));
-                    ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
-                    
-                    ideaRun.beforeRun(beforeRuns -> {
-                        beforeRuns.create("Build", Make.class);
-                        
-                        beforeRuns.create("Prepare Run", GradleTask.class, gradleTask -> {
-                            gradleTask.setTask(ideBeforeRunTask.get());
+                    ideaRuns.register(runName, Application.class, ideaRun -> {
+                        runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
+
+                        ideaRun.setMainClass(runImpl.getMainClass().get());
+                        ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
+                        ideaRun.setJvmArgs(escapeAndJoin(runImpl.realiseJvmArguments()));
+                        ideaRun.setModuleName(RunsUtil.getIntellijModuleName(runIdeaConfig.getPrimarySourceSet().get()));
+                        ideaRun.setProgramParameters(escapeAndJoin(runImpl.getProgramArguments().get()));
+                        ideaRun.setEnvs(adaptEnvironment(runImpl, multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production)));
+                        ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
+
+                        ideaRun.beforeRun(beforeRuns -> {
+                            beforeRuns.create("Build", Make.class);
+
+                            beforeRuns.create("Prepare Run", GradleTask.class, gradleTask -> {
+                                gradleTask.setTask(ideBeforeRunTask.get());
+                            });
                         });
                     });
-                });
+                } else {
+                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
+                    final TaskProvider<PrepareUnitTestTask> prepareUnitTestTaskTaskProvider = RunsUtil.createPrepareUnitTestTask(project, run);
+
+                    ideBeforeRunTask.configure(task -> task.dependsOn(prepareUnitTestTaskTaskProvider));
+
+                    ideaRuns.register(runName, JUnit.class, ideaRun -> {
+                        ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
+                        ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
+
+                        ideaRun.setPackageName(runImpl.getTestScope().getPackageName().getOrElse(null));
+                        ideaRun.setDirectory(runImpl.getTestScope().getDirectory().map(dir -> dir.getAsFile().getAbsolutePath()).getOrElse(null));
+                        ideaRun.setPattern(runImpl.getTestScope().getPattern().getOrElse(null));
+                        ideaRun.setClassName(runImpl.getTestScope().getClassName().getOrElse(null));
+                        ideaRun.setMethod(runImpl.getTestScope().getMethod().getOrElse(null));
+                        ideaRun.setCategory(runImpl.getTestScope().getCategory().getOrElse(null));
+
+                    });
+                }
             }));
-            
-            
         }
 
         @Override
@@ -195,8 +208,8 @@ public class IdeRunIntegrationManager {
                         final JavaApplicationLaunchConfig debugRun =
                                 JavaApplicationLaunchConfig.builder(eclipse.getProject().getName())
                                         .workingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath())
-                                        .vmArgs(quoteStream(runImpl.realiseJvmArguments()).toArray(String[]::new))
-                                        .args(quoteStream(runImpl.getProgramArguments().get()).toArray(String[]::new))
+                                        .vmArgs(escapeStream(runImpl.realiseJvmArguments()).toArray(String[]::new))
+                                        .args(escapeStream(runImpl.getProgramArguments().get()).toArray(String[]::new))
                                         .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                                         .useArgumentsFile()
                                         .build(runImpl.getMainClass().get());
@@ -265,23 +278,20 @@ public class IdeRunIntegrationManager {
             });
         }
 
-        private static String quoteAndJoin(List<String> args) {
-            return quoteStream(args).collect(Collectors.joining(" "));
+        private static String escapeAndJoin(List<String> args) {
+            return escapeStream(args).collect(Collectors.joining(" "));
         }
 
-        private static Stream<String> quoteStream(List<String> args) {
-            return args.stream().map(RunsImportAction::quote);
+        private static Stream<String> escapeStream(List<String> args) {
+            return args.stream().map(RunsImportAction::escape);
         }
 
         /**
          * This expects users to escape quotes in their system arguments on their own, which matches
          * Gradles own behavior when used in JavaExec.
          */
-        private static String quote(String arg) {
-            if (!arg.contains(" ")) {
-                return arg;
-            }
-            return "\"" + arg + "\"";
+        private static String escape(String arg) {
+            return RunsUtil.escapeJvmArg(arg);
         }
 
         private TaskProvider<?> createIdeBeforeRunTask(Project project, String name, Run run, RunImpl runImpl) {
@@ -316,7 +326,7 @@ public class IdeRunIntegrationManager {
                     intelliJResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
                         final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
                         task.from(defaultProcessResources.map(ProcessResources::getDestinationDir));
-                        task.into(RunsUtil.getRunWithIdeaResourcesDirectory(sourceSet));
+                        task.into(RunsUtil.getRunWithIdeaResourcesDirectory(sourceSet, RunsUtil.IdeaCompileType.Production));
 
                         task.dependsOn(defaultProcessResources);
                     });
