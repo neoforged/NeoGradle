@@ -49,6 +49,7 @@ class RunTests extends BuilderBasedTestSpecification {
             it.tasks(':runData')
             //We are expecting this test to fail, since there is a mod without any files included so it is fine.
             it.shouldFail()
+            it.stacktrace()
         }
 
         then:

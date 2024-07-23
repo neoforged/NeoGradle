@@ -105,10 +105,15 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     return;
                 }
 
-                final Run run = runs.create(runType.getName());
-                run.configure(runType);
-                run.getConfigureFromTypeWithName().set(false);
-                run.getConfigureFromDependencies().set(false);
+                try {
+                    final Run run = runs.create(runType.getName());
+                    run.configure(runType);
+                    run.getConfigureFromTypeWithName().set(false);
+                    run.getConfigureFromDependencies().set(false);
+                } catch (IllegalStateException ignored) {
+                    //thrown when the dependency is added lazily. This is fine.
+                }
+
             });
         }
         
