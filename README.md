@@ -28,7 +28,57 @@ dependencies {
 }
 ```
 
+#### Dependency management by the userdev plugin
 When this plugin detects a dependency on NeoForge, it will spring into action and create the necessary NeoForm runtime tasks to build a usable Minecraft JAR-file that contains the requested NeoForge version.
+It additionally (if configured to do so via conventions, which is the default) will create runs for your project, and add the necessary dependencies to the classpath of the run.
+
+##### Version Catalogues
+Using gradles modern version catalog feature means that dependencies are added at the very last moment possible, regardless of that is during script evaluation or not.
+This means that if you use this feature it might sometimes not be possible to configure the default runs exactly as you wished.
+In that case it might be beneficial to disable the conventions for runs, and configure them manually.
+
+See the following example:
+
+_lib.versions.toml:_
+```toml
+[versions]
+# Neoforge Settings
+neoforge = "+"
+
+[libraries]
+neoforge = { group = "net.neoforged", name = "neoforge", version.ref = "neoforge" }
+```
+_build.gradle:_
+```groovy
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+            
+dependencies {
+    implementation(libs.neoforge)
+}
+
+runs {
+    configureEach { run ->
+        run.modSource sourceSets.main
+    }
+    
+    client { }
+    server { }
+    datagen { }
+    gameTestServer { }
+    junit { }
+}
+```
+You do not need to create all five of the different runs, only the ones you need.
+
+This is because at the point where gradle actually adds the dependency, we can not create any further runs.
 
 ### NeoForm Runtime Plugin
 
@@ -62,7 +112,6 @@ from the [Parchment project](https://parchmentmc.org) can be applied to the Mine
 This is currently only supported when applying the NeoGradle userdev Plugin.
 
 The most basic configuration is using the following properties in gradle.properties:
-
 ```
 neogradle.subsystems.parchment.minecraftVersion=1.20.2
 neogradle.subsystems.parchment.mappingsVersion=2023.12.10
