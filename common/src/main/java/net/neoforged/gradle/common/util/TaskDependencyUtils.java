@@ -233,7 +233,7 @@ public final class TaskDependencyUtils {
         }
 
         private void processConfiguration(Configuration configuration) {
-            DependencySet dependencies = configuration.getAllDependencies();
+            DependencySet dependencies = configuration.getDependencies();
 
             //Grab the original dependencies if we have a replacement extension
             final DependencyReplacement replacement = project.getExtensions().findByType(DependencyReplacement.class);
@@ -251,6 +251,8 @@ public final class TaskDependencyUtils {
                     return false;
                 }
             }).forEach(this::add);
+
+            configuration.getExtendsFrom().forEach(this::add);
         }
 
         private void processSourceDirectorySet(SourceDirectorySet sourceDirectorySet) {

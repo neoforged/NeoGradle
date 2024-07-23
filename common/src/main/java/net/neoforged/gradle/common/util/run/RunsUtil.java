@@ -77,7 +77,7 @@ public class RunsUtil {
                         .map(SourceSet::getRuntimeClasspath)
                         .forEach(runExec::classpath);
                 runExec.classpath(run.getDependencies().get().getRuntimeConfiguration());
-                runExec.classpath(run.getClasspath());
+                runExec.classpath(run.getRuntimeClasspath());
 
                 updateRunExecClasspathBasedOnPrimaryTask(runExec, run);
 
@@ -111,13 +111,7 @@ public class RunsUtil {
     }
 
     public static Run create(final Project project, final String name) {
-        final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
-
-        ProjectUtils.afterEvaluate(project, () -> {
-
-        });
-
-        return run;
+        return project.getObjects().newInstance(RunImpl.class, project, name);
     }
 
     private static void updateRunExecClasspathBasedOnPrimaryTask(final JavaExec runExec, final Run run) {

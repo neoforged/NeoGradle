@@ -10,6 +10,7 @@ import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
+import net.neoforged.gradle.dsl.common.runs.run.DependencyHandler;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
@@ -20,7 +21,11 @@ import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
 import org.gradle.api.NamedDomainObjectCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,6 +59,12 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         //Add it as a user dev dependency, this will trigger replacement, which will need to be addressed down-below.
         this.additionalUserDevDependencies.getDependencies().add(
                 clientExtraJar
+        );
+
+        //Add the userdev artifact as a dependency. This makes it discoverable on the classpath, and as such discoverable
+        //by runs and other interested parties.
+        this.additionalUserDevDependencies.getDependencies().add(
+                this.getSpecification().getUserDevArtifact().toDependency(specification.getProject())
         );
 
         this.getAllDependencies().from(neoformRuntimeDefinition.getAllDependencies());
@@ -103,8 +114,8 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
-    protected Map<String, String> buildRunInterpolationData(RunImpl run) {
-        final Map<String, String> interpolationData = neoformRuntimeDefinition.buildRunInterpolationData(run);
+    protected void buildRunInterpolationData(RunImpl run, @NotNull MapProperty<String, String> interpolationData) {
+        neoformRuntimeDefinition.buildRunInterpolationData(run, interpolationData);
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
             final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
@@ -114,10 +125,19 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
             } else {
                 modulesCfg = getSpecification().getProject().getConfigurations().create(name);
                 modulesCfg.setCanBeResolved(true);
-                userdevConfiguration.getModules().get().forEach(m -> modulesCfg.getDependencies().add(getSpecification().getProject().getDependencies().create(m)));
+                modulesCfg.getDependencies().addAllLater(
+                        userdevConfiguration.getModules().map(
+                                modules -> modules.stream().map(
+                                        m -> getSpecification().getProject().getDependencies().create(m)
+                                ).collect(Collectors.toList())
+                        )
+                );
             }
 
-            interpolationData.put("modules", modulesCfg.resolve().stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
+            interpolationData.put("modules", modulesCfg.getIncoming().getArtifacts().getResolvedArtifacts().map(artifacts -> artifacts.stream()
+                    .map(ResolvedArtifactResult::getFile)
+                    .map(File::getAbsolutePath)
+                    .collect(Collectors.joining(File.pathSeparator))));
         }
 
         final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer = getSpecification().getProject().getTasks().register(
@@ -128,28 +148,18 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     task.getInputFiles().from(this.additionalUserDevDependencies);
                     task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
                     task.getInputFiles().from(this.userdevClasspathElementProducer.flatMap(WithOutput::getOutput));
-
-                    Configuration userDependencies = run.getDependencies().get().getRuntimeConfiguration();
-                    task.getInputFiles().from(userDependencies);
+                    task.getInputFiles().from(run.getDependencies().map(DependencyHandler::getRuntimeConfiguration));
                 }
         );
         configureAssociatedTask(minecraftClasspathSerializer);
-
-        interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.get().getOutput().get().getAsFile().getAbsolutePath());
+        interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.flatMap(ClasspathSerializer::getTargetFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
 
         run.getDependsOn().add(minecraftClasspathSerializer);
-
-        return interpolationData;
     }
 
     @Override
     public Definition<?> getDelegate() {
         return neoformRuntimeDefinition;
-    }
-
-    @Override
-    public @NotNull VersionJson getVersionJson() {
-        return getNeoFormRuntimeDefinition().getVersionJson();
     }
 
     public TaskProvider<? extends WithOutput> getUserdevClasspathElementProducer() {

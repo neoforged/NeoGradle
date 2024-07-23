@@ -1,33 +1,40 @@
 package net.neoforged.gradle.vanilla.util;
 
 import net.neoforged.gradle.common.util.BundledServerUtils;
+import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskProvider;
 
 import java.io.File;
 
 public class ServerLaunchInformation {
 
-    public static ServerLaunchInformation from(final File serverFile) {
-        if (BundledServerUtils.isBundledServer(serverFile)) {
-            return new ServerLaunchInformation(BundledServerUtils.getBundledMainClass(serverFile), true);
-        }
+    public static ServerLaunchInformation from(final TaskProvider<? extends WithOutput> serverFile) {
+        final Provider<Boolean> isBundled = serverFile.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(BundledServerUtils::isBundledServer);
 
-        //TODO: Auto extract this from the manifest, but for now this will do.
-        return new ServerLaunchInformation("net.minecraft.server.Main", false);
+        final Provider<String> mainClass = serverFile.flatMap(WithOutput::getOutput).map(RegularFile::getAsFile).map(BundledServerUtils::getBundledMainClass)
+                .orElse("net.minecraft.server.Main");
+
+        return new ServerLaunchInformation(
+                mainClass,
+                isBundled
+        );
     }
 
-    private final String mainClass;
-    private final boolean isBundledServer;
+    private final Provider<String> mainClass;
+    private final Provider<Boolean> isBundledServer;
 
-    private ServerLaunchInformation(String mainClass, boolean isBundledServer) {
+    private ServerLaunchInformation(Provider<String> mainClass, Provider<Boolean> isBundledServer) {
         this.mainClass = mainClass;
         this.isBundledServer = isBundledServer;
     }
 
-    public String getMainClass() {
+    public Provider<String> getMainClass() {
         return mainClass;
     }
 
-    public boolean isBundledServer() {
+    public Provider<Boolean> isBundledServer() {
         return isBundledServer;
     }
 }

@@ -8,6 +8,5 @@ public final class RunsConstants {
 
     public static final class Extensions {
         public static final String RUNS = "runs";
-        public static final String RUN_TYPES = "runTypes";
     }
 }

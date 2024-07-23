@@ -1,16 +1,27 @@
 package net.neoforged.gradle.userdev.dependency;
 
+import net.neoforged.gradle.common.util.SourceSetUtils;
+import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
+import net.neoforged.gradle.util.TransformerUtils;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.*;
+import org.gradle.api.artifacts.dsl.DependencyCollector;
+import org.gradle.api.file.FileSystemLocation;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 public final class UserDevDependencyManager {
     private static final UserDevDependencyManager INSTANCE = new UserDevDependencyManager();
@@ -23,18 +34,58 @@ public final class UserDevDependencyManager {
     }
     
     public void apply(final Project project) {
+        registerReplacementHandler(project);
+        registerRunTypeParser(project);
+        registerUnitTestDependencyMapping(project);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void registerUnitTestDependencyMapping(Project project) {
+        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
+
+        runs.configureEach(run -> {
+            run.getUnitTestSources().whenSourceSetAdded(sourceSet -> {
+                final Configuration implementation = SourceSetUtils.getProject(sourceSet).getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
+                final UserDevAdditionalTestDependenciesParser parser = new UserDevAdditionalTestDependenciesParser(project);
+
+                //Parse out all the additional test dependencies of a run
+                implementation.getDependencies().addAllLater(
+                        TransformerUtils.ifTrue(run.getIsJUnit(),
+                                run.getCompileClasspathElements()
+                                        .map(files -> files.stream()
+                                                .map(FileSystemLocation::getAsFile)
+                                                .map(parser::parse).toList())
+                                        .flatMap(TransformerUtils.combineAllLists(project, String.class, Function.identity()))
+                                        .map(dependencyCoordinates -> {
+                                            final DependencyCollector collector = project.getObjects().dependencyCollector();
+                                            dependencyCoordinates.forEach(collector::add);
+                                            return collector;
+                                        })
+                                        .flatMap(DependencyCollector::getDependencies)
+                                )
+                );
+            });
+        });
+    }
+
+    private void registerRunTypeParser(Project project) {
+        final RunTypeManager runTypes = project.getExtensions().getByType(RunTypeManager.class);
+        runTypes.registerParser(new UserDevRunTypeParser(project));
+    }
+
+    private void registerReplacementHandler(Project project) {
         final DependencyReplacement dependencyReplacer = project.getExtensions().getByType(DependencyReplacement.class);
         dependencyReplacer.getReplacementHandlers().create("neoForge", dependencyReplacementHandler -> dependencyReplacementHandler.getReplacer().set(context -> {
             if (isNotAMatchingDependency(context.getDependency())) {
                 return Optional.empty();
             }
-            
+
             if (!(context.getDependency() instanceof ExternalModuleDependency externalModuleDependency)) {
                 return Optional.empty();
             }
 
             final UserDevRuntimeDefinition runtimeDefinition = buildForgeUserDevRuntimeFrom(project, externalModuleDependency);
-            
+
             final Configuration additionalDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(
                     project,
                     "NeoForgeUserDevAdditionalReplacementDependenciesFor" + runtimeDefinition.getSpecification().getIdentifier(),
@@ -44,7 +95,7 @@ public final class UserDevDependencyManager {
                         configuration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
                     }
             );
-            
+
             return Optional.of(
                     new UserDevReplacementResult(
                             project,
@@ -56,7 +107,7 @@ public final class UserDevDependencyManager {
                     ));
         }));
     }
-    
+
     private boolean isNotAMatchingDependency(final Dependency dependencyToCheck) {
         if (dependencyToCheck instanceof ExternalModuleDependency) {
             final ExternalModuleDependency externalModuleDependency = (ExternalModuleDependency) dependencyToCheck;

@@ -13,6 +13,8 @@ import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfiguration
 import net.neoforged.gradle.dsl.neoform.runtime.definition.NeoFormDefinition;
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,7 +40,7 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
                                     @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
                                     @NotNull Configuration minecraftDependenciesConfiguration,
                                     @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
-                                    @NotNull VersionJson versionJson,
+                                    @NotNull Provider<VersionJson> versionJson,
                                     @NotNull NeoFormConfigConfigurationSpecV2 neoform,
                                     @NotNull TaskProvider<DownloadAssets> assetsTaskProvider,
                                     @NotNull TaskProvider<ExtractNatives> nativesTaskProvider) {
@@ -83,14 +85,12 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
     }
 
     @Override
-    public Map<String, String> buildRunInterpolationData(RunImpl run) {
-        final Map<String, String> interpolationData = new HashMap<>(super.buildRunInterpolationData(run));
-
+    public void buildRunInterpolationData(RunImpl run, MapProperty<String, String> interpolationData) {
+        super.buildRunInterpolationData(run, interpolationData);
         interpolationData.put("mcp_version", neoform.getVersion());
         // NeoForge still references this in the environment variable MCP_MAPPINGS, which is unused since 1.20.2
         // Remove this interpolation placeholder once NeoForge removes the environment variable from its config.json
         interpolationData.put("mcp_mappings", "UNUSED_DEPRECATED");
-        return interpolationData;
     }
 
     @NotNull

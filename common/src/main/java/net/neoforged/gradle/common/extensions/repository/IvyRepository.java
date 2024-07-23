@@ -204,14 +204,14 @@ public abstract class IvyRepository implements ConfigurableDSLElement<Repository
         //Create the raw artifact file and sources file if they don't exist.
         if (!ConfigurationPhaseFileUtils.isRegularFile(jarFile)) {
             FileUtils.delete(jarFile);
-            ConfigurationPhaseFileUtils.createFile(jarFile);
+            ConfigurationPhaseFileUtils.createEmptyZipFile(jarFile);
         }
 
         if (hasSource) {
             final Path sourcesFile = buildArtifactPath(entry, "sources");
             if (!ConfigurationPhaseFileUtils.isRegularFile(sourcesFile)) {
                 FileUtils.delete(sourcesFile);
-                ConfigurationPhaseFileUtils.createFile(sourcesFile);
+                ConfigurationPhaseFileUtils.createEmptyZipFile(sourcesFile);
             }
         }
     }

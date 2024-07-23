@@ -12,9 +12,7 @@ import java.io.File;
 
 @CacheableTask
 public abstract class UnpackBundledServer extends NeoGradleBase implements WithOutput {
-    
-    
-    
+
     @TaskAction
     public void doUnpack() throws Exception {
         final File serverJar = getServerJar().get().getAsFile();

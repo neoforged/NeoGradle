@@ -5,6 +5,7 @@ import com.google.common.collect.Iterators;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.tasks.UnpackBundledServer;
 import net.neoforged.gradle.common.util.BundledServerUtils;
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -18,6 +19,7 @@ import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.Constants;
+import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.neoforged.gradle.vanilla.runtime.steps.*;
@@ -25,6 +27,7 @@ import net.neoforged.gradle.vanilla.util.ServerLaunchInformation;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,46 +64,16 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
-        final Map<GameArtifact, File> gameArtifacts = artifactCacheExtension.cacheGameVersion(spec.getMinecraftVersion(), spec.getDistribution());
-        if (gameArtifacts.containsKey(GameArtifact.SERVER_JAR)) {
-            final File serverJar = gameArtifacts.get(GameArtifact.SERVER_JAR);
-            if (BundledServerUtils.isBundledServer(serverJar)) {
-                final File vanillaServerJar = new File(minecraftCache, String.format("minecraft_server.%s.jar", spec.getMinecraftVersion()));
-                BundledServerUtils.extractBundledVersion(serverJar, vanillaServerJar);
-                gameArtifacts.put(GameArtifact.SERVER_JAR, vanillaServerJar);
-            }
-        }
-
-        final VersionJson versionJson;
-        try {
-            versionJson = VersionJson.get(gameArtifacts.get(GameArtifact.VERSION_MANIFEST));
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
-        }
-
-        final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), "VanillaMinecraftDependenciesFor" + spec.getIdentifier());
-        if (spec.getDistribution().isClient() || !BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
-            for (VersionJson.Library library : versionJson.getLibraries()) {
-                minecraftDependenciesConfiguration.getDependencies().add(
-                        spec.getProject().getDependencies().create(library.getName())
-                );
-            }
-        } else {
-            BundledServerUtils.getBundledDependencies(gameArtifacts.get(GameArtifact.SERVER_JAR)).forEach(
-                    dependency -> minecraftDependenciesConfiguration.getDependencies().add(
-                            spec.getProject().getDependencies().create(dependency)));
-        }
+        final MinecraftArtifactCache artifactCache = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
 
         final File vanillaDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("vanilla/%s", spec.getIdentifier())).get().getAsFile();
         final File runtimeWorkingDirectory = new File(vanillaDirectory, "runtime");
         final File stepsMcpDirectory = new File(vanillaDirectory, "steps");
 
-        stepsMcpDirectory.mkdirs();
-
-        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
-        if (gameArtifactTasks.containsKey(GameArtifact.SERVER_JAR) && BundledServerUtils.isBundledServer(gameArtifacts.get(GameArtifact.SERVER_JAR))) {
+        if (gameArtifactTasks.containsKey(GameArtifact.SERVER_JAR)) {
             final TaskProvider<? extends WithOutput> serverJarTask = gameArtifactTasks.get(GameArtifact.SERVER_JAR);
-            
+
             final TaskProvider<? extends WithOutput> extractedBundleTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "extractBundle"), UnpackBundledServer.class, task -> {
                 task.getServerJar().set(serverJarTask.flatMap(WithOutput::getOutput));
                 task.getOutput().fileValue(new File(vanillaDirectory, "files/server.jar"));
@@ -110,6 +83,15 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             gameArtifactTasks.put(GameArtifact.SERVER_JAR, extractedBundleTask);
         }
 
+        final Provider<VersionJson> versionJson = artifactCache.cacheVersionManifest(spec.getMinecraftVersion()).map(TransformerUtils.guard(VersionJson::get));
+
+        final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), "VanillaMinecraftDependenciesFor" + spec.getIdentifier());
+        minecraftDependenciesConfiguration.getDependencies().addAllLater(
+                        versionJson.map(VersionJson::getLibraries).map(libraries -> libraries.stream().map(library -> spec.getProject().getDependencies().create(library.getName())).toList())
+        );
+
+        stepsMcpDirectory.mkdirs();
+
         final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
             task.getOutput().set(new File(runtimeWorkingDirectory, "sources.jar"));
         });
@@ -117,17 +99,18 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
             task.getOutput().set(new File(runtimeWorkingDirectory, "raw.jar"));
         });
 
-        final Optional<ServerLaunchInformation> launchInformation = spec.getDistribution().isClient() ? Optional.empty() : Optional.of(ServerLaunchInformation.from(gameArtifacts.get(GameArtifact.SERVER_JAR)));
+        final Optional<ServerLaunchInformation> launchInformation = spec.getDistribution().isClient() ? Optional.empty() : Optional.of(ServerLaunchInformation.from(gameArtifactTasks.get(GameArtifact.SERVER_JAR)));
 
-        final VanillaRuntimeDefinition definition = new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
+        return new VanillaRuntimeDefinition(spec, new LinkedHashMap<>(), sourceJarTask, rawJarTask, gameArtifactTasks, minecraftDependenciesConfiguration, taskProvider -> taskProvider.configure(vanillaRuntimeTask -> {
             configureCommonRuntimeTaskParameters(vanillaRuntimeTask, CommonRuntimeUtils.buildStepName(spec, vanillaRuntimeTask.getName()), spec, vanillaDirectory);
-        }), versionJson, createDownloadAssetsTasks(spec, runtimeWorkingDirectory, versionJson), createExtractNativesTasks(spec, runtimeWorkingDirectory, versionJson), launchInformation);
+        }), versionJson, createDownloadAssetsTasks(spec, versionJson), createExtractNativesTasks(spec, runtimeWorkingDirectory, versionJson), launchInformation);
+    }
 
+    @Override
+    protected void afterRegistration(VanillaRuntimeDefinition runtime) {
         //TODO: Right now this is needed so that runs and other components can be order free in the buildscript,
         //TODO: We should consider making this somehow lazy and remove the unneeded complexity because of it.
-        spec.getProject().afterEvaluate(afterEvalProject -> bakeDefinition(definition));
-
-        return definition;
+        ProjectUtils.afterEvaluate(runtime.getSpecification().getProject(), () -> this.bakeDefinition(runtime));
     }
 
     protected VanillaRuntimeSpecification.Builder createBuilder() {

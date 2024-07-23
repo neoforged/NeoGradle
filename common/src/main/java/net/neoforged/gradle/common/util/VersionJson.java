@@ -23,6 +23,7 @@ package net.neoforged.gradle.common.util;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.*;
 import net.neoforged.gradle.dsl.common.util.Artifact;
+import org.gradle.api.file.RegularFile;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -160,6 +161,10 @@ public class VersionJson implements Serializable {
 
     public String getMainClass() {
         return mainClass;
+    }
+
+    public static VersionJson get(RegularFile regularFile) throws IOException {
+        return get(regularFile.getAsFile());
     }
 
     public static class JavaVersion implements Serializable {

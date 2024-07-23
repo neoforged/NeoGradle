@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.util;
 
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,7 +46,11 @@ public final class BundledServerUtils {
         }
     }
 
+    @Nullable
     public static String getBundledMainClass(final File serverJar) {
+        if (!isBundledServer(serverJar))
+            return null;
+
         try(final ZipFile file = new ZipFile(serverJar)) {
             final InputStream inputStream = file.getInputStream(file.getEntry("META-INF/main-class"));
             final String mainClass = IOUtils.readLines(inputStream, Charset.defaultCharset()).get(0);

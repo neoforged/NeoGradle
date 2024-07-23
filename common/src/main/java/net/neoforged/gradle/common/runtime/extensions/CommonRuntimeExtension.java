@@ -2,7 +2,6 @@ package net.neoforged.gradle.common.runtime.extensions;
 
 import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
-import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
@@ -117,7 +116,12 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
 
         final D runtime = doCreate(spec);
         definitions.put(spec.getIdentifier(), runtime);
+        afterRegistration(runtime);
         return runtime;
+    }
+
+    protected void afterRegistration(D runtime) {
+        // no-op
     }
 
     @Override
@@ -185,17 +189,13 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                 .collect(Collectors.toSet());
     }
 
-    protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Map<String, String> symbolicDataSources, final File runtimeDirectory, final VersionJson versionJson) {
+    protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final Provider<VersionJson> versionJson) {
         return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "downloadAssets"), DownloadAssets.class, task -> {
             task.getVersionJson().set(versionJson);
         });
     }
 
-    protected final TaskProvider<DownloadAssets> createDownloadAssetsTasks(final CommonRuntimeSpecification specification, final File runtimeDirectory, final VersionJson versionJson) {
-        return createDownloadAssetsTasks(specification, Collections.emptyMap(), runtimeDirectory, versionJson);
-    }
-
-    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final Map<String, String> symbolicDataSources, final File runtimeDirectory, final VersionJson versionJson) {
+    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final Map<String, String> symbolicDataSources, final File runtimeDirectory, final Provider<VersionJson> versionJson) {
         return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "extractNatives"), ExtractNatives.class, task -> {
             task.getVersionJson().set(versionJson);
 
@@ -204,7 +204,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         });
     }
 
-    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final File runtimeDirectory, final VersionJson versionJson) {
+    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final File runtimeDirectory, final Provider<VersionJson> versionJson) {
         return createExtractNativesTasks(specification, Collections.emptyMap(), runtimeDirectory, versionJson);
     }
 }

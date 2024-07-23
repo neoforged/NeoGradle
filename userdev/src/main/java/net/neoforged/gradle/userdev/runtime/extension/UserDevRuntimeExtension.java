@@ -8,6 +8,8 @@ import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
@@ -44,6 +46,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         super(project);
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
@@ -91,6 +94,23 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 );
             });
         });
+
+        final Conventions conventions = getProject().getExtensions().getByType(Subsystems.class).getConventions();
+        if (conventions.getIsEnabled().get()
+                && conventions.getRuns().getIsEnabled().get()
+                && conventions.getRuns().getShouldDefaultRunsBeCreated().get()) {
+            final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
+            userDevProfile.getRunTypes().forEach(runType -> {
+                if (runs.getNames().contains(runType.getName())) {
+                    return;
+                }
+
+                final Run run = runs.create(runType.getName());
+                run.configure(runType);
+                run.getConfigureFromTypeWithName().set(false);
+                run.getConfigureFromDependencies().set(false);
+            });
+        }
         
         spec.setMinecraftVersion(neoFormRuntimeDefinition.getSpecification().getMinecraftVersion());
 

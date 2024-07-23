@@ -96,6 +96,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             it.tasks(':main:runData')
             //We are expecting this test to fail, since there is a mod without any files included so it is fine.
             it.shouldFail()
+            it.debug()
         }
 
         then:
@@ -719,6 +720,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         def run = rootProject.run {
             it.tasks(':main:runs')
             it.stacktrace()
+            it.debug()
         }
 
         then:

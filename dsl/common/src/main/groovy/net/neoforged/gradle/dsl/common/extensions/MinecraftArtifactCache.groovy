@@ -35,16 +35,6 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
     Map<CacheFileSelector, File> getCacheFiles();
 
     /**
-     * Caches an entire game version eagerly.
-     *
-     * @param gameVersion The game version to cache.
-     * @param side The distribution side to cache.
-     * @return A map which contains all cached files.
-     */
-    @NotNull
-    Map<GameArtifact, File> cacheGameVersion(@NotNull String gameVersion, @NotNull DistributionType side);
-
-    /**
      * Caches an entire game version lazily.
      *
      * @param project The project to use.
@@ -71,7 +61,7 @@ interface MinecraftArtifactCache extends BaseDSLElement<MinecraftArtifactCache> 
      * @return The cached game versions manifest.
      */
     @NotNull
-    File cacheVersionManifest(@NotNull String gameVersion);
+    Provider<File> cacheVersionManifest(@NotNull String gameVersion);
 
     /**
      * Eagerly caches the given artifact of the given game version.

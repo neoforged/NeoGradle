@@ -6,8 +6,10 @@ import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.replacement.ReplacementLogic;
 import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
+import net.neoforged.gradle.common.rules.LaterAddedReplacedDependencyRule;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunImpl;
+import net.neoforged.gradle.common.runs.run.RunTypeManagerImpl;
 import net.neoforged.gradle.common.runs.tasks.RunsReport;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
@@ -35,6 +37,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDE
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLogin;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
+import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
@@ -101,6 +104,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
         extensionManager.registerExtension("minecraft", Minecraft.class, (p) -> p.getObjects().newInstance(MinecraftExtension.class, p));
         extensionManager.registerExtension("mappings", Mappings.class, (p) -> p.getObjects().newInstance(MappingsExtension.class, p));
 
+        extensionManager.registerExtension("runTypes", RunTypeManager.class, (p) -> p.getObjects().newInstance(RunTypeManagerImpl.class, p));
+
+
         project.getExtensions().create("clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
         final ConfigurationData configurationData = project.getExtensions().create(ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
@@ -127,16 +133,13 @@ public class CommonProjectPlugin implements Plugin<Project> {
             sourceSet.getExtensions().add("runtimeDefinition", project.getObjects().property(CommonRuntimeDefinition.class));
         });
 
-        project.getExtensions().add(
-                RunsConstants.Extensions.RUN_TYPES,
-                project.getObjects().domainObjectContainer(RunType.class, name -> project.getObjects().newInstance(RunType.class, name))
-        );
-
         final NamedDomainObjectContainer<Run> runs = project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name));
         project.getExtensions().add(
                 RunsConstants.Extensions.RUNS,
                 runs
         );
+        //Register a task creation rule that checks for runs.
+        project.getTasks().addRule(new LaterAddedReplacedDependencyRule(project));
 
         runs.configureEach(run -> {
             RunsUtil.configureModClasses(run);
@@ -219,28 +222,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
     }
 
-    @SuppressWarnings("unchecked")
     private void configureRunConventions(Project project, Conventions conventions) {
         final Configurations configurations = conventions.getConfigurations();
         final Runs runs = conventions.getRuns();
 
         if (!runs.getIsEnabled().get())
             return;
-
-        if (runs.getShouldDefaultRunsBeCreated().get()) {
-            final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) project.getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
-            //Force none lazy resolve here.
-            runTypes.whenObjectAdded(runType -> {
-                project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runContainer -> {
-                    if (runContainer.getAsMap().containsKey(runType.getName()))
-                        return;
-
-                    runContainer.create(runType.getName(), run -> {
-                        run.configure(runType);
-                    });
-                });
-            });
-        }
 
         if (!configurations.getIsEnabled().get())
             return;
@@ -357,7 +344,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //We now eagerly get all runs and configure them.
         final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
         runs.configureEach(run -> {
-            if (run instanceof RunImpl) {
+            if (run instanceof RunImpl runImpl) {
                 run.configure();
 
                 // We add default junit sourcesets here because we need to know the type of the run first
@@ -372,68 +359,38 @@ public class CommonProjectPlugin implements Plugin<Project> {
                     throw new InvalidUserDataException("Run: " + run.getName() + " has no source sets configured. Please configure at least one source set.");
                 }
 
-                if (run.getConfigureFromDependencies().get()) {
-                    final RunImpl runImpl = (RunImpl) run;
+                //Handle dev login.
+                final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
+                final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
+                if (devLogin.getEnabled().get()) {
+                    final RunDevLogin runsDevLogin = runImpl.getExtensions().getByType(RunDevLogin.class);
 
-                    //Let's keep track of all runtimes that have been configured.
-                    //TODO: Determine handling of multiple different runtimes, in multiple projects....
-                    final Map<String, CommonRuntimeDefinition<?>> definitionSet = new HashMap<>();
+                    //Dev login is only supported on the client side
+                    if (runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+                        final String mainClass = runImpl.getMainClass().get();
 
-                    runImpl.getModSources().all().get().values().forEach(sourceSet -> {
-                        try {
-                            final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
-                            if (definition.isPresent()) {
-                                final CommonRuntimeDefinition<?> runtimeDefinition = definition.get();
-                                //First time we see this runtime add, it.
-                                if (!definitionSet.containsKey(runtimeDefinition.getSpecification().getIdentifier())) {
-                                    definitionSet.put(runtimeDefinition.getSpecification().getIdentifier(), runtimeDefinition);
-                                } else if (SourceSetUtils.getProject(sourceSet) == project) {
-                                    //We have seen this runtime before, but this time it is our own, which we prefer.
-                                    definitionSet.put(runtimeDefinition.getSpecification().getIdentifier(), runtimeDefinition);
-                                }
-                            }
-                        } catch (MultipleDefinitionsFoundException e) {
-                            throw new RuntimeException("Failed to configure run: " + run.getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
+                        //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
+                        final SourceSet defaultSourceSet = runImpl.getModSources().all().get().entries().iterator().next().getValue();
+                        final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
+                        final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
+                        final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
+
+                        sourceSetRuntimeClasspathConfiguration.extendsFrom(sourceSetRuntimeOnlyDevLoginConfiguration);
+                        sourceSetRuntimeOnlyDevLoginConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
+
+                        //Update the program arguments to properly launch the dev login tool
+                        run.getProgramArguments().add("--launch_target");
+                        run.getProgramArguments().add(mainClass);
+
+                        if (runsDevLogin.getProfile().isPresent()) {
+                            run.getProgramArguments().add("--launch_profile");
+                            run.getProgramArguments().add(runsDevLogin.getProfile().get());
                         }
-                    });
 
-                    definitionSet.forEach((identifier, definition) -> {
-                        definition.configureRun(runImpl);
-                    });
-
-                    //Handle dev login.
-                    final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
-                    final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
-                    if (devLogin.getEnabled().get()) {
-                        final RunDevLogin runsDevLogin = runImpl.getExtensions().getByType(RunDevLogin.class);
-
-                        //Dev login is only supported on the client side
-                        if (runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
-                            final String mainClass = runImpl.getMainClass().get();
-
-                            //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
-                            final SourceSet defaultSourceSet = runImpl.getModSources().all().get().entries().iterator().next().getValue();
-                            final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
-                            final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
-                            final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
-
-                            sourceSetRuntimeClasspathConfiguration.extendsFrom(sourceSetRuntimeOnlyDevLoginConfiguration);
-                            sourceSetRuntimeOnlyDevLoginConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
-
-                            //Update the program arguments to properly launch the dev login tool
-                            run.getProgramArguments().add("--launch_target");
-                            run.getProgramArguments().add(mainClass);
-
-                            if (runsDevLogin.getProfile().isPresent()) {
-                                run.getProgramArguments().add("--launch_profile");
-                                run.getProgramArguments().add(runsDevLogin.getProfile().get());
-                            }
-
-                            //Set the main class to the dev login tool
-                            run.getMainClass().set(devLogin.getMainClass());
-                        } else if (!runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
-                            throw new InvalidUserDataException("Dev login is only supported on runs which are marked as clients! The run: " + runImpl.getName() + " is not a client run.");
-                        }
+                        //Set the main class to the dev login tool
+                        run.getMainClass().set(devLogin.getMainClass());
+                    } else if (!runImpl.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+                        throw new InvalidUserDataException("Dev login is only supported on runs which are marked as clients! The run: " + runImpl.getName() + " is not a client run.");
                     }
                 }
             }
