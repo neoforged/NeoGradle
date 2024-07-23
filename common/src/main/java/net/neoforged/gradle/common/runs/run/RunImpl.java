@@ -261,13 +261,17 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         )));
 
         final Set<SourceSet> unconfiguredSourceSets = new HashSet<>();
-        final Set<SourceSet> configuredSourceSets = new HashSet<>();
+        final Set<CommonRuntimeDefinition<?>> configuredDefinitions = new HashSet<>();
 
         getModSources().whenSourceSetAdded(sourceSet -> {
+            // Only configure the run if the source set is from the same project
+            if (SourceSetUtils.getProject(sourceSet) != getProject())
+                return;
+
             try {
                 final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
                 definition.ifPresentOrElse(def -> {
-                    if (configuredSourceSets.add(sourceSet)) {
+                    if (configuredDefinitions.add(def)) {
                         def.configureRun(this);
                     }
                 }, () -> unconfiguredSourceSets.add(sourceSet));
@@ -284,10 +288,14 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
             for (final Iterator<SourceSet> iterator = unconfiguredSourceSets.iterator(); iterator.hasNext(); ) {
                 SourceSet unconfiguredSourceSet = iterator.next();
+                // Only configure the run if the source set is from the same project
+                if (SourceSetUtils.getProject(unconfiguredSourceSet) != getProject())
+                    return;
+
                 try {
                     final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(unconfiguredSourceSet);
                     definition.ifPresent(def -> {
-                        if (configuredSourceSets.add(unconfiguredSourceSet)) {
+                        if (configuredDefinitions.add(def)) {
                             def.configureRun(this);
                         }
                         iterator.remove();

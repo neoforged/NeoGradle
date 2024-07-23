@@ -38,6 +38,11 @@ public class LaterAddedReplacedDependencyRule implements Rule {
             return;
         }
 
+        //This prevents things like runtime from triggering the task creation.
+        if (domainObjectName.length() < 4 || !Character.isUpperCase(domainObjectName.charAt(3))) {
+            return;
+        }
+
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
         if (conventions.getIsEnabled().get() && conventions.getRuns().getIsEnabled().get() && conventions.getRuns().getShouldDefaultRunsBeCreated().get()) {
             final String runName = domainObjectName.substring(3);
