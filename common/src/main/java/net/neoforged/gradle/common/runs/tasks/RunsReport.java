@@ -101,7 +101,7 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
             this.isGameTest = run.getIsGameTest().get();
             this.modSources = run.getModSources().all().get();
             this.unitTestSources = run.getUnitTestSources().all().get();
-            this.classpath = run.getClasspath().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toSet());
+            this.classpath = run.getRuntimeClasspath().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toSet());
             this.dependencies = run.getDependencies().get().getRuntimeConfiguration().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toSet());
         }
 

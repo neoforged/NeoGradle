@@ -37,7 +37,8 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         this.assetsCache = getAssetsDirectory(getProject(), getVersionJson());
         getAssetIndex().convention("asset-index");
         getAssetIndexFileName().convention(getAssetIndex().map(index -> index + ".json"));
-        getAssetIndexFile().convention(getRegularFileInAssetsDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
+        getAssetIndexTargetFile().convention(getRegularFileInAssetsDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
+        getAssetIndexFile().convention(getAssetIndexTargetFile());
         getVersionJson().convention(getVersionJsonFile().map(TransformerUtils.guard(file -> VersionJson.get(file.getAsFile()))));
         getAssetRepository().convention("https://resources.download.minecraft.net/");
         getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
@@ -122,6 +123,9 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
 
     @Input
     public abstract Property<String> getAssetRepository();
+
+    @Internal
+    public abstract RegularFileProperty getAssetIndexTargetFile();
 
     @OutputFile
     public abstract RegularFileProperty getAssetIndexFile();

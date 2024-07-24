@@ -223,7 +223,7 @@ public final class TransformerUtils {
      * @param <I> The type of the input to the transformer
      * @param <C> The type of the collection of inputs
      */
-    public static <V, I, C extends List<I>> Transformer<? extends Provider<? extends Iterable<V>>, C> combineAllLists(final Project project, Class<V> valueClass, Function<I, Provider<List<V>>> valueProvider) {
+    public static <V, I, C extends List<I>> Transformer<Provider<List<V>>, C> combineAllLists(final Project project, Class<V> valueClass, Function<I, Provider<List<V>>> valueProvider) {
         return guard(t -> {
             final ListProperty<V> values = project.getObjects().listProperty(valueClass);
             for (I i : t) {
@@ -284,6 +284,30 @@ public final class TransformerUtils {
      * @return A transformed provider if the predicate is true, otherwise null
      * @param <V> The type of the value to return
      */
+    public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, Provider<? extends Collection<V>> whenTrue) {
+        return predicate.zip(whenTrue, (p, v) -> p ? List.copyOf(v) : List.of());
+    }
+
+    /**
+     * Creates a transformed provider that returns a list of values if the predicate is true.
+     *
+     * @param predicate The predicate to check
+     * @param whenTrue The value to return if the predicate is true
+     * @return A transformed provider if the predicate is true, otherwise null
+     * @param <V> The type of the value to return
+     */
+    public static <V> Provider<? extends List<V>> ifTrue(Boolean predicate, Provider<? extends Collection<V>> whenTrue) {
+        return whenTrue.map(v -> predicate ? List.copyOf(v) : List.of());
+    }
+
+    /**
+     * Creates a transformed provider that returns a list of values if the predicate is true.
+     *
+     * @param predicate The predicate to check
+     * @param whenTrue The value to return if the predicate is true
+     * @return A transformed provider if the predicate is true, otherwise null
+     * @param <V> The type of the value to return
+     */
     @SafeVarargs
     public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, V... whenTrue) {
         if (whenTrue.length == 0) {
@@ -327,22 +351,25 @@ public final class TransformerUtils {
     }
 
     @SafeVarargs
-    public static Transformer<Provider<Boolean>, Boolean> or(Provider<Boolean>... rightProvider) {
+    public static Provider<Boolean> or(Boolean initial, Provider<Boolean>... rightProvider) {
         if (rightProvider.length == 0) {
             throw new IllegalStateException("No right provider provided");
         }
 
         if (rightProvider.length == 1) {
-            return left -> rightProvider[0].map(o -> left || o);
+            return rightProvider[0].map(o -> initial || o);
         }
 
-        return inputBoolean -> {
-            Provider<Boolean> result = rightProvider[0].map(o -> inputBoolean || o);
-            for (int i = 1; i < rightProvider.length; i++) {
-                result = result.zip(rightProvider[i], (l, r) -> l || r);
-            }
-            return result;
-        };
+        Provider<Boolean> input = rightProvider[0].map(o -> initial || o);
+        for (int i = 1; i < rightProvider.length; i++) {
+            input = input.zip(rightProvider[i], (l, r) -> l || r);
+        }
+        return input;
+    }
+
+    @SafeVarargs
+    public static Transformer<Provider<Boolean>, Boolean> or(Provider<Boolean>... rightProvider) {
+        return inputBoolean -> or(inputBoolean, rightProvider);
     }
 
     /**

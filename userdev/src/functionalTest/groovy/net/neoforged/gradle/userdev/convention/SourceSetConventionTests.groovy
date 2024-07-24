@@ -483,6 +483,10 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
                 localRuntime 'org.jgrapht:jgrapht-core:+'
             }
             
+            runs {
+                client { }
+            }
+            
             afterEvaluate {
                 logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
             }
@@ -518,6 +522,10 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
+            }
+            
+            runs {
+                client { }
             }
             
             afterEvaluate {

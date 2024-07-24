@@ -50,8 +50,6 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Run count: 0")
-        run.output.contains("Runtype count:")
-        !run.output.contains("Runtype count: 0")
     }
 
     def "disabling run conventions does not register runs"() {
@@ -89,8 +87,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Run count: 0")
-        run.output.contains("Runtype count:")
-        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: 0")
     }
 
     def "disabling automatic registration does not register runs"() {
@@ -128,13 +125,12 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Run count: 0")
-        run.output.contains("Runtype count:")
-        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: 0")
     }
 
     def "enabling automatic registration does not register runs"() {
         given:
-        def project = create("disable_automatic_registration_disables_registration", {
+        def project = create("enabling_automatic_run_registration_does_not_register_types", {
             it.build("""
             java {
                 toolchain {
@@ -169,9 +165,8 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         then:
         run.output.contains("Run count: ")
         !run.output.contains("Run count: 0")
-        run.output.contains("Runtype count:")
-        !run.output.contains("Runtype count: 0")
-        run.output.contains("Equal: true")
+        run.output.contains("Runtype count: 0")
+        run.output.contains("Equal: false")
     }
 
     def "disabling conventions globally prevents creation of runs configuration run"() {
@@ -241,6 +236,11 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         run.output.contains("Could not find method runs() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
     }
 
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("build/functionalTest")
+    }
+
     def "using the run convention configuration puts the dependency on the runtime config"() {
         given:
         def project = create("run_can_download_runtime_elements", {
@@ -271,6 +271,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
+            it.stacktrace()
         }
 
         then:
@@ -295,6 +296,10 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
                 runs 'org.jgrapht:jgrapht-core:+'
+            }
+            
+            runs {
+                client { }
             }
             
             afterEvaluate {

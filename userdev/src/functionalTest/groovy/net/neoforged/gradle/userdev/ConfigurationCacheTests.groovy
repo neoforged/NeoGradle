@@ -1,6 +1,7 @@
 package net.neoforged.gradle.userdev
 
 import net.neoforged.gradle.common.caching.CentralCacheService
+import net.neoforged.gradle.dsl.common.tasks.specifications.ExecuteSpecification
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
@@ -97,6 +98,11 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         thirdRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("build/test-temp")
+    }
+
     def "run_tasks_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {
@@ -111,10 +117,15 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
                 implementation 'net.neoforged:neoforge:+'
             }
             
+            runs {
+                data { }
+            }
+            
             afterEvaluate {
                 //We don't care for the error here, we just want to run the task so that the config cache is created
                 tasks.withType(JavaExec).named('runData') {
                     ignoreExitValue = true
+                    group = 'run'
                 }
             }
             """)
@@ -132,12 +143,12 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
             it.enableLocalBuildCache()
-            it.enableConfigurationCache()
         })
 
         when:
         def run = project.run {
             it.tasks('runData')
+            
         }
 
         then:

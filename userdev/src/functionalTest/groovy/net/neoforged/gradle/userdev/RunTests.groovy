@@ -12,6 +12,53 @@ class RunTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
+    def "a mod using a version library should be able to run the game"() {
+        given:
+        def project = create("version_libs_runnable", {
+            it.file("gradle/libs.versions.toml",
+                    """
+                    [versions]
+                    # Neoforge Settings
+                    neoforge = "+"
+                    
+                    [libraries]
+                    neoforge = { group = "net.neoforged", name = "neoforge", version.ref = "neoforge" }
+                    """.trim())
+
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+                        
+            dependencies {
+                implementation(libs.neoforge)
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':runData')
+            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
+            it.shouldFail()
+            it.stacktrace()
+        }
+
+        then:
+        true
+        run.task(':writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
+        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
+                run.output.contains("Caused by: java.io.IOException: Invalid paths argument, contained no existing paths")
+    }
+
     def "configuring of the configurations after the dependencies block should work"() {
         given:
         def project = create("runs_configuration_after_dependencies", {
@@ -35,6 +82,12 @@ class RunTests extends BuilderBasedTestSpecification {
                         
             dependencies {
                 implementation "net.neoforged:neoforge:+"
+            }
+            
+            runs {
+                data {
+                    modSource project.sourceSets.main
+                }
             }
             
             configurations {
@@ -214,7 +267,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             
             configurations {
-                runRuntime
+                runRuntime { }
             }
             
             dependencies {
@@ -239,6 +292,8 @@ class RunTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
+            it.stacktrace()
+            
         }
 
         then:
@@ -276,7 +331,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             
             configurations {
-                runRuntime
+                runRuntime { }
             }
             
             dependencies {

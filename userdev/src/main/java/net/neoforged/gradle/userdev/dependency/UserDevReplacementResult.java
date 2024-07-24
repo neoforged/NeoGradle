@@ -26,7 +26,6 @@ import java.util.Set;
  * Is needed because userdev needs to know where the neoforge jar is, so it can put it on the classpathm
  * additionally we need to be notified when somebody registers us as a dependency and add the runtypes.
  */
-@SuppressWarnings("unchecked")
 public class UserDevReplacementResult extends ReplacementResult implements ReplacementAware {
 
     private final UserDevRuntimeDefinition definition;
@@ -59,24 +58,5 @@ public class UserDevReplacementResult extends ReplacementResult implements Repla
             throw new IllegalStateException("Resolved dependency is not an ExternalModuleDependency");
 
         return (ExternalModuleDependency) resolvedExactVersionDependency;
-    }
-
-    @Override
-    public void onTargetDependencyAdded() {
-        final NamedDomainObjectContainer<RunType> runTypes = (NamedDomainObjectContainer<RunType>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUN_TYPES);
-        definition.getSpecification().getProfile().getRunTypes().forEach((type) -> {
-            TypesUtil.registerWithPotentialPrefix(runTypes, definition.getSpecification().getIdentifier(), type.getName(), type::copyTo);
-        });
-
-        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
-        ProjectUtils.afterEvaluate(definition.getSpecification().getProject(), () -> runs.stream()
-                .filter(run -> run.getIsJUnit().get())
-                .flatMap(run -> run.getUnitTestSources().all().get().values().stream())
-                .distinct()
-                .forEach(src -> {
-                    DependencyCollector coll = definition.getSpecification().getProject().getObjects().dependencyCollector();
-                    definition.getSpecification().getProfile().getAdditionalTestDependencyArtifactCoordinates().get().forEach(coll::add);
-                    definition.getSpecification().getProject().getConfigurations().getByName(src.getImplementationConfigurationName()).fromDependencyCollector(coll);
-                }));
     }
 }

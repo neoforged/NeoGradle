@@ -35,6 +35,7 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
     private final String forgeName;
     private final String forgeVersion;
     private final UserdevProfile profile;
+    private final Artifact userDevArtifact;
     @Nullable
     private String minecraftVersion = null;
 
@@ -48,13 +49,15 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
                                        Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
                                        String forgeGroup,
                                        String forgeName,
-                                       String forgeVersion) {
+                                       String forgeVersion,
+                                       Artifact artifact) {
         super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, UserDevRuntimeExtension.class);
         this.userDevArchive = userDevArchive;
         this.profile = profile;
         this.forgeGroup = forgeGroup;
         this.forgeName = forgeName;
         this.forgeVersion = forgeVersion;
+        this.userDevArtifact = artifact;
     }
 
     @Override
@@ -76,6 +79,10 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
 
     public UserdevProfile getProfile() {
         return profile;
+    }
+
+    public Artifact getUserDevArtifact() {
+        return userDevArtifact;
     }
 
     @NotNull
@@ -193,7 +200,8 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
                     taskCustomizers,
                     effectiveVersion.getGroup(),
                     effectiveVersion.getName(),
-                    effectiveVersion.getVersion()
+                    effectiveVersion.getVersion(),
+                    artifact
             );
         }
     }

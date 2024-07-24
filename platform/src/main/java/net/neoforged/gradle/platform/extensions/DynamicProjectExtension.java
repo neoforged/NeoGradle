@@ -25,6 +25,7 @@ import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
+import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -265,7 +266,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         project.getConfigurations().getByName(mainSource.getApiConfigurationName()).extendsFrom(gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, installerConfiguration);
         project.getConfigurations().getByName(mainSource.getRuntimeClasspathConfigurationName()).extendsFrom(clientExtraConfiguration);
         
-        project.getExtensions().configure(RunsConstants.Extensions.RUN_TYPES, (Action<NamedDomainObjectContainer<RunType>>) types -> types.configureEach(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
+        project.getExtensions().configure(RunTypeManager.class, (Action<NamedDomainObjectContainer<RunType>>) types -> types.configureEach(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
         project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> configureRun(run, runtimeDefinition)));
 
         project.getExtensions().create(net.neoforged.gradle.dsl.common.extensions.JarJar.class, JarJarExtension.EXTENSION_NAME, JarJarExtension.class, project);
@@ -965,7 +966,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             );
         });
 
-        Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project, project.provider(runtimeDefinition::getVersionJson)).map(Directory::getAsFile).map(File::getAbsolutePath);
+        Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project, runtimeDefinition.getVersionJson()).map(Directory::getAsFile).map(File::getAbsolutePath);
         Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
 
         run.getProgramArguments().addAll(

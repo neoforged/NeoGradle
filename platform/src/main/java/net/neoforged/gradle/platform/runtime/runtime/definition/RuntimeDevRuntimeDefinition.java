@@ -10,6 +10,7 @@ import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.platform.runtime.runtime.specification.RuntimeDevRuntimeSpecification;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,11 +49,6 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
         return joinedNeoFormRuntimeDefinition.getMappingVersionData();
     }
 
-    @Override
-    public void configureRun(RunImpl run) {
-        super.configureRun(run);
-    }
-
     @NotNull
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
@@ -60,9 +56,8 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
     }
 
     @Override
-    protected Map<String, String> buildRunInterpolationData(RunImpl run) {
-        final Map<String, String> interpolationData = joinedNeoFormRuntimeDefinition.buildRunInterpolationData(run);
-        return interpolationData;
+    protected void buildRunInterpolationData(RunImpl run, MapProperty<String, String> interpolationData) {
+        joinedNeoFormRuntimeDefinition.buildRunInterpolationData(run, interpolationData);
     }
 
     public TaskProvider<? extends WithOutput> getPatchBase() {

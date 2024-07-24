@@ -155,11 +155,13 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
             }
             
             project.getExtensions().create("example", ExampleExtensions)
-            
+           
+                        
             project.getConfigurations().create("exampleDependencies", conf -> {
                 conf.canBeResolved = true
                 conf.fromDependencyCollector(project.example.getDependencies().getExample())
             });
+           
             
             example.dependencies {
                 example("junit:junit:4.12")

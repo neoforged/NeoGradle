@@ -88,21 +88,6 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     }
 
     @Override
-    public final Map<GameArtifact, File> cacheGameVersion(String gameVersion, DistributionType side) {
-        final MinecraftVersionAndUrl resolvedVersion = resolveVersion(gameVersion);
-
-        final Map<GameArtifact, File> result = new EnumMap<>(GameArtifact.class);
-
-        GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> result.put(GameArtifact.VERSION_MANIFEST, this.cacheVersionManifest(resolvedVersion)));
-        GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_JAR, this.cacheVersionArtifact(resolvedVersion, DistributionType.CLIENT)));
-        GameArtifact.SERVER_JAR.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_JAR, this.cacheVersionArtifact(resolvedVersion, DistributionType.SERVER)));
-        GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.CLIENT_MAPPINGS, this.cacheVersionMappings(resolvedVersion, DistributionType.CLIENT)));
-        GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> result.put(GameArtifact.SERVER_MAPPINGS, this.cacheVersionMappings(resolvedVersion, DistributionType.SERVER)));
-
-        return result;
-    }
-
-    @Override
     @NotNull
     public final Map<GameArtifact, TaskProvider<? extends WithOutput>> cacheGameVersionTasks(final Project project, String gameVersion, final DistributionType side) {
         final MinecraftVersionAndUrl resolvedVersion = resolveVersion(gameVersion);
@@ -130,10 +115,12 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
     }
 
     @Override
-    public final File cacheVersionManifest(String gameVersion) {
-        final MinecraftVersionAndUrl resolvedVersion = resolveVersion(gameVersion);
+    public final Provider<File> cacheVersionManifest(String gameVersion) {
+        return project.provider(() -> {
+            final MinecraftVersionAndUrl resolvedVersion = resolveVersion(gameVersion);
 
-        return this.cacheVersionManifest(resolvedVersion);
+            return this.cacheVersionManifest(resolvedVersion);
+        });
     }
 
     public final File cacheVersionManifest(MinecraftVersionAndUrl resolvedVersion) {
@@ -149,20 +136,10 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
         return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionArtifactToCache(project, getCacheDirectory().get().getAsFile(), resolvedVersion.getVersion(), side));
     }
 
-    public final File cacheVersionArtifact(MinecraftVersionAndUrl resolvedVersion, DistributionType side) {
-        final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionJar(resolvedVersion.getVersion(), side.getName());
-        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionArtifactToCache(project, getCacheDirectory().get().getAsFile(), resolvedVersion.getVersion(), side));
-    }
-
     @Override
     public final File cacheVersionMappings(@NotNull String gameVersion, DistributionType side) {
         final MinecraftVersionAndUrl resolvedVersion = resolveVersion(gameVersion);
 
-        final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionMappings(resolvedVersion.getVersion(), side.getName());
-        return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionMappingsToCache(project, getCacheDirectory().get().getAsFile(), resolvedVersion.getVersion(), side));
-    }
-
-    public final File cacheVersionMappings(@NotNull MinecraftVersionAndUrl resolvedVersion, DistributionType side) {
         final CacheFileSelector cacheFileSelector = CacheFileSelector.forVersionMappings(resolvedVersion.getVersion(), side.getName());
         return this.cacheFiles.computeIfAbsent(cacheFileSelector, selector -> downloadVersionMappingsToCache(project, getCacheDirectory().get().getAsFile(), resolvedVersion.getVersion(), side));
     }
