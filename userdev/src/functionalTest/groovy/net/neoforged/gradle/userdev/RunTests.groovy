@@ -293,7 +293,7 @@ class RunTests extends BuilderBasedTestSpecification {
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
             it.stacktrace()
-            it.debug()
+            
         }
 
         then:

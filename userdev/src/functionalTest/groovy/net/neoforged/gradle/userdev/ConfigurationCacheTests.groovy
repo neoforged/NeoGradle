@@ -148,7 +148,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks('runData')
-            it.debug()
+            
         }
 
         then:

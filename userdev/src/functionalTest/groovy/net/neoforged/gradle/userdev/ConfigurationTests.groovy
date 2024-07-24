@@ -189,7 +189,6 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
         def run = project.run {
             it.tasks('validateConfiguration')
             it.stacktrace()
-            it.debug()
         }
 
         then:

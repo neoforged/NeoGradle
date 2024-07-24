@@ -131,7 +131,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
         when:
         def initialRun = project.run {
             it.tasks('build')
-            it.debug()
+            
         }
 
         then:
