@@ -162,15 +162,6 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     abstract ConfigurableFileCollection getClasspath();
 
     /**
-     * An optional configurable run adapter which can be used to change the behaviour of already configured runs when the type is applied to them.
-     *
-     * @return The run adapter.
-     */
-    @Internal
-    @DSLProperty
-    abstract Property<RunAdapter> getRunAdapter();
-
-    /**
      * Copies this run type into a new instance.
      *
      * @param other The other run type to copy into.

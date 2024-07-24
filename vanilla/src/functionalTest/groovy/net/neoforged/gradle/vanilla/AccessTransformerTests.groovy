@@ -40,6 +40,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -81,6 +82,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -123,11 +125,13 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
         def initialRun = project.run {
             it.tasks('build')
+            
         }
 
         then:
@@ -166,6 +170,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -209,6 +214,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
                 }
             """)
             it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

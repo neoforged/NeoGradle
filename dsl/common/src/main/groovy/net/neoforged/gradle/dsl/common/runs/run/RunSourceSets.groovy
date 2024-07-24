@@ -4,6 +4,7 @@ import com.google.common.collect.Multimap
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import org.gradle.api.Action
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -109,4 +110,11 @@ interface RunSourceSets extends ConfigurableDSLElement<RunSourceSets> {
      */
     @Internal
     Provider<Multimap<String, SourceSet>> all();
+
+    /**
+     * Registers a callback that get called when a source set is added to this run
+     *
+     * @param action The action to call
+     */
+    void whenSourceSetAdded(Action<SourceSet> action)
 }

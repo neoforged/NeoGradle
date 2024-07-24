@@ -3,6 +3,7 @@ package net.neoforged.gradle.dsl.common.extensions.dependency.replacement
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
@@ -39,4 +40,26 @@ interface DependencyReplacement extends BaseDSLElement<DependencyReplacement> {
      */
     @NotNull
     Dependency optionallyConvertBackToOriginal(Dependency dependency, Configuration configuration)
+
+    /**
+     * Invoked when a dependency is replaced.
+     *
+     * @param dependencyAction The action to invoke when a dependency is replaced, it is given the old dependency as argument.
+     */
+    void whenDependencyReplaced(DependencyReplacedCallback dependencyAction);
+
+    /**
+     * Callback definition for when a dependency is replaced.
+     */
+    interface DependencyReplacedCallback {
+
+        /**
+         * Invoked when a dependency is replaced.
+         *
+         * @param virtualDependency The virtual dependency.
+         * @param targetConfiguration The target configuration in which the virtual dependency resides.
+         * @param originalDependency The original dependency.
+         */
+        void apply(Dependency virtualDependency, Configuration targetConfiguration, Dependency originalDependency);
+    }
 }

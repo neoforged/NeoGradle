@@ -11,10 +11,12 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.jetbrains.annotations.NotNull
 
@@ -232,15 +234,96 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
 
     /**
      * Gives access to the classpath for this run.
-     * Does not contain the full classpath since that is dependent on the actual run environment, but contains the additional classpath elements
-     * needed to run the game with this run.
      *
      * @return The property which holds the classpath.
      */
     @InputFiles
     @Classpath
     @DSLProperty
-    abstract ConfigurableFileCollection getClasspath();
+    abstract ConfigurableFileCollection getRuntimeClasspath();
+
+    /**
+     * Gives access to the runtime classpath elements for this run.
+     *
+     * @return A provider that provides the classpath elements.
+     * @implNote This is a loosely coupled provider, because if you call {@link ConfigurableFileCollection#getElements()} directly, it will return a provider that is not transformable.
+     */
+    @Internal
+    abstract Provider<Set<FileSystemLocation>> getRuntimeClasspathElements()
+
+    /**
+     * Gives access to the classpath for this run.
+     *
+     * @return The property which holds the classpath.
+     */
+    @InputFiles
+    @Classpath
+    @DSLProperty
+    abstract ConfigurableFileCollection getTestRuntimeClasspath();
+
+    /**
+     * Gives access to the test runtime classpath elements for this run.
+     *
+     * @return A provider that provides the classpath elements.
+     * @implNote This is a loosely coupled provider, because if you call {@link ConfigurableFileCollection#getElements()} directly, it will return a provider that is not transformable.
+     */
+    @Internal
+    abstract Provider<Set<FileSystemLocation>> getTestRuntimeClasspathElements()
+
+    /**
+     * Gives access to the compile classpath classpath for this run.
+     *
+     * @return The property which holds the compile classpath.
+     */
+    @InputFiles
+    @Classpath
+    @DSLProperty
+    abstract ConfigurableFileCollection getCompileClasspath();
+
+    /**
+     * Gives access to the compile classpath elements for this run.
+     *
+     * @return A provider that provides the classpath elements.
+     * @implNote This is a loosely coupled provider, because if you call {@link ConfigurableFileCollection#getElements()} directly, it will return a provider that is not transformable.
+     */
+    @Internal
+    abstract Provider<Set<FileSystemLocation>> getCompileClasspathElements()
+
+    /**
+     * Gives access to the compile classpath classpath for this run.
+     *
+     * @return The property which holds the compile classpath.
+     */
+    @InputFiles
+    @Classpath
+    @DSLProperty
+    abstract ConfigurableFileCollection getTestCompileClasspath()
+
+    /**
+     * Gives access to the test compile classpath elements for this run.
+     *
+     * @return A provider that provides the classpath elements.
+     * @implNote This is a loosely coupled provider, because if you call {@link ConfigurableFileCollection#getElements()} directly, it will return a provider that is not transformable.
+     */
+    @Internal
+    abstract Provider<Set<FileSystemLocation>> getTestCompileClasspathElements()
+
+    /**
+     * Defines the run types that are applied to this run.
+     *
+     * @return The run types that are applied to this run.
+     */
+    @Nested
+    @DSLProperty
+    @Optional
+    abstract ListProperty<RunType> getRunTypes();
+
+    /**
+     * Adds a run type to this run using the run type name.
+     *
+     * @param runType The run type to add.
+     */
+    void runType(@NotNull final String string);
 
     /**
      * Defines the custom dependency handler for each run.
@@ -282,6 +365,14 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Property<Boolean> getConfigureFromDependencies();
 
     /**
+     * @return The tasks that this run depends on.
+     */
+    @Internal
+    @DSLProperty
+    @Optional
+    abstract SetProperty<Task> getDependsOn();
+
+    /**
      * Configures the run using the settings of the associated run type.
      * <p/>
      * Picks a run type using the name of this run, if no specific run type has been set.
@@ -310,12 +401,4 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      * @param typeProvider The type provider to realise and configure with.
      */
     void configure(@NotNull final Provider<RunType> typeProvider);
-
-    /**
-     * Configures the run to execute the given tasks before running the run.
-     *
-     * @param tasks The tasks to depend on.
-     */
-    @SafeVarargs
-    abstract void dependsOn(@NotNull final TaskProvider<? extends Task>... tasks);
 }

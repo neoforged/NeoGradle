@@ -7,6 +7,7 @@ import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
@@ -29,10 +30,10 @@ import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecific
 import net.neoforged.gradle.neoform.runtime.tasks.*;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeConstants;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -45,14 +46,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"}) // API Design
@@ -103,7 +97,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             case "listLibraries":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), ListLibraries.class, task -> {
                     task.getDownloadedVersionJsonFile()
-                            .fileProvider(task.newProvider(cache.cacheVersionManifest(spec.getMinecraftVersion())));
+                            .fileProvider(cache.cacheVersionManifest(spec.getMinecraftVersion()));
                 });
             case "inject":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), InjectZipContent.class, task -> {
@@ -258,24 +252,23 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
-        final Map<GameArtifact, File> gameArtifacts = artifactCacheExtension.cacheGameVersion(spec.getMinecraftVersion(), spec.getDistribution());
+        final MinecraftArtifactCache artifactCache = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
+        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
 
-        final VersionJson versionJson;
-        try {
-            versionJson = VersionJson.get(gameArtifacts.get(GameArtifact.VERSION_MANIFEST));
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Failed to read VersionJson from the launcher metadata for the minecraft version: %s", spec.getMinecraftVersion()), e);
-        }
+        final Provider<VersionJson> versionJson = artifactCache.cacheVersionManifest(spec.getMinecraftVersion()).map(TransformerUtils.guard(VersionJson::get));
 
         final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
                 spec.getProject().getConfigurations(),
                 "NeoFormMinecraftDependenciesFor" + spec.getIdentifier()
         );
-        for (VersionJson.Library library : versionJson.getLibraries()) {
-            minecraftDependenciesConfiguration.getDependencies().add(
-                    spec.getProject().getDependencies().create(library.getName())
-            );
-        }
+
+        minecraftDependenciesConfiguration.getDependencies().addAllLater(
+                versionJson.map(VersionJson::getLibraries)
+                        .map(libraries -> libraries.stream()
+                                .map(library -> getProject().getDependencies().create(library.getName()))
+                                .toList()
+                        )
+        );
 
         final File neoFormDirectory = spec.getProject().getExtensions().getByType(ConfigurationData.class)
                 .getLocation()
@@ -289,7 +282,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 spec.getProject().getDependencies().create(library)
         ));
 
-        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks = buildDefaultArtifactProviderTasks(spec);
 
         final Map<String, String> symbolicDataSources = buildDataFilesMap(neoFormConfig, spec.getDistribution());
 
@@ -300,7 +292,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             task.getOutput().set(new File(neoFormDirectory, "raw.jar"));
         });
 
-        final NeoFormRuntimeDefinition definition = new NeoFormRuntimeDefinition(
+        return new NeoFormRuntimeDefinition(
                 spec,
                 new LinkedHashMap<>(),
                 sourceJarTask,
@@ -312,15 +304,16 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 }),
                 versionJson,
                 neoFormConfig,
-                createDownloadAssetsTasks(spec, symbolicDataSources, neoFormDirectory, versionJson),
+                createDownloadAssetsTasks(spec, versionJson),
                 createExtractNativesTasks(spec, symbolicDataSources, neoFormDirectory, versionJson)
         );
+    }
 
+    @Override
+    protected void afterRegistration(NeoFormRuntimeDefinition runtime) {
         //TODO: Right now this is needed so that runs and other components can be order free in the buildscript,
         //TODO: We should consider making this somehow lazy and remove the unneeded complexity because of it.
-        spec.getProject().afterEvaluate(project -> this.bakeDefinition(definition));
-
-        return definition;
+        ProjectUtils.afterEvaluate(runtime.getSpecification().getProject(), () -> this.bakeDefinition(runtime));
     }
 
     @Override
@@ -472,7 +465,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
 
-                    task.getJavaVersion().set(JavaLanguageVersion.of(definition.getVersionJson().getJavaVersion().getMajorVersion()));
+                    task.getJavaVersion().set(
+                            definition.getVersionJson()
+                                    .map(VersionJson::getJavaVersion)
+                                    .map(VersionJson.JavaVersion::getMajorVersion)
+                                    .map(JavaLanguageVersion::of)
+                    );
                 });
 
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));

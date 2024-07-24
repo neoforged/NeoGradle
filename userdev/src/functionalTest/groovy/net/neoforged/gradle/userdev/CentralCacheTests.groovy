@@ -35,6 +35,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
@@ -151,6 +152,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             it.withToolchains()
             it.property(CentralCacheService.IS_ENABLED_PROPERTY, "false")
             it.property(CentralCacheService.DEBUG_CACHE_PROPERTY, "true")
+            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:

@@ -1,6 +1,5 @@
 package net.neoforged.gradle.vanilla.runtime;
 
-import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
@@ -14,9 +13,14 @@ import net.neoforged.gradle.vanilla.runtime.spec.VanillaRuntimeSpecification;
 import net.neoforged.gradle.vanilla.util.InterpolationConstants;
 import net.neoforged.gradle.vanilla.util.ServerLaunchInformation;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,7 +44,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
                                     @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
                                     @NotNull Configuration minecraftDependenciesConfiguration,
                                     @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
-                                    VersionJson versionJson,
+                                    Provider<VersionJson> versionJson,
                                     TaskProvider<DownloadAssets> assetsTaskProvider,
                                     TaskProvider<ExtractNatives> nativesTaskProvider,
                                     Optional<ServerLaunchInformation> serverLaunchInformation) {
@@ -73,34 +77,50 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
     }
 
     @Override
-    protected Map<String, String> buildRunInterpolationData(RunImpl run) {
-        final Map<String, String> interpolationData = Maps.newHashMap();
-
-        final String fgVersion = this.getClass().getPackage().getImplementationVersion();
+    protected void buildRunInterpolationData(RunImpl run, MapProperty<String, String> interpolationData) {
+        final String runtimeVersion = this.getClass().getPackage().getImplementationVersion();
 
         interpolationData.put(InterpolationConstants.VERSION_NAME, getSpecification().getMinecraftVersion());
-        interpolationData.put(InterpolationConstants.ASSETS_ROOT, DownloadAssets.getAssetsDirectory(run.getProject(), run.getProject().provider(this::getVersionJson)).get().getAsFile().getAbsolutePath());
-        interpolationData.put(InterpolationConstants.ASSETS_INDEX_NAME, getAssets().get().getAssetIndexFile().get().getAsFile().getName().substring(0, getAssets().get().getAssetIndexFile().get().getAsFile().getName().lastIndexOf('.')));
+        interpolationData.put(InterpolationConstants.ASSETS_ROOT, DownloadAssets.getAssetsDirectory(run.getProject(), getVersionJson()).map(Directory::getAsFile).map(File::getAbsolutePath));
+        interpolationData.put(InterpolationConstants.ASSETS_INDEX_NAME, getAssets().flatMap(DownloadAssets::getAssetIndexFile).map(RegularFile::getAsFile).map(File::getName).map(s -> s.substring(0, s.lastIndexOf('.'))));
         interpolationData.put(InterpolationConstants.AUTH_ACCESS_TOKEN, "0");
         interpolationData.put(InterpolationConstants.USER_TYPE, "legacy");
-        interpolationData.put(InterpolationConstants.VERSION_TYPE, getVersionJson().getType());
-        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, getNatives().get().getOutputDirectory().get().getAsFile().getAbsolutePath());
+        interpolationData.put(InterpolationConstants.VERSION_TYPE, getVersionJson().map(VersionJson::getType));
+        interpolationData.put(InterpolationConstants.NATIVES_DIRECTORY, getNatives().flatMap(ExtractNatives::getOutputDirectory).map(Directory::getAsFile).map(File::getAbsolutePath));
         interpolationData.put(InterpolationConstants.LAUNCHER_NAME, "NeoGradle-Vanilla");
-        interpolationData.put(InterpolationConstants.LAUNCHER_VERSION, fgVersion == null ? "DEV" : fgVersion);
-
-        return interpolationData;
+        interpolationData.put(InterpolationConstants.LAUNCHER_VERSION, runtimeVersion == null ? "DEV" : runtimeVersion);
     }
 
     @Override
     public void configureRun(RunImpl run) {
         if (getSpecification().getDistribution().isClient()) {
-            Arrays.stream(getVersionJson().getArguments().getGame()).filter(arg -> arg.getRules() == null || arg.getRules().length == 0).flatMap(arg -> arg.value.stream()).forEach(arg -> run.getProgramArguments().add(arg));
-            Arrays.stream(getVersionJson().getArguments().getJvm()).filter(VersionJson.RuledObject::isAllowed).flatMap(arg -> arg.value.stream()).forEach(arg -> run.getJvmArguments().add(arg));
-            run.getMainClass().set(getVersionJson().getMainClass());
+            run.getProgramArguments().addAll(
+                    getVersionJson().map(VersionJson::getArguments)
+                            .map(VersionJson.Arguments::getGame)
+                            .map(Arrays::stream)
+                            .map(stream -> stream
+                                    .filter(VersionJson.RuledObject::isAllowed)
+                                    .flatMap(arg -> arg.value.stream())
+                                    .toList()
+                            )
+
+            );
+            run.getJvmArguments().addAll(
+                    getVersionJson().map(VersionJson::getArguments)
+                            .map(VersionJson.Arguments::getJvm)
+                            .map(Arrays::stream)
+                            .map(stream -> stream
+                                    .filter(VersionJson.RuledObject::isAllowed)
+                                    .flatMap(arg -> arg.value.stream())
+                                    .toList()
+                            )
+            );
+            run.getMainClass().set(getVersionJson().map(VersionJson::getMainClass));
             run.getIsClient().set(true);
             run.getIsSingleInstance().set(false);
             
-            final Map<String, String> interpolationData = Maps.newHashMap(buildRunInterpolationData(run));
+            final MapProperty<String, String> interpolationData = run.getProject().getObjects().mapProperty(String.class, String.class);
+            buildRunInterpolationData(run, interpolationData);
 
             interpolationData.put(InterpolationConstants.GAME_DIRECTORY, run.getWorkingDirectory().get().getAsFile().getAbsolutePath());
             run.overrideJvmArguments(interpolate(run.getJvmArguments(), interpolationData, "$"));

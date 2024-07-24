@@ -3,6 +3,7 @@ package net.neoforged.gradle.common.runtime.tasks;
 import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -55,6 +56,18 @@ public abstract class SourceAccessTransformer extends DefaultExecute {
         getLogLevel().set(LogLevel.DISABLED);
     }
 
+    @Override
+    public File doExecute() throws Throwable {
+        //We need a separate check here that skips the execute call if there are no transformers.
+        if (getTransformers().isEmpty()) {
+            final File output = ensureFileWorkspaceReady(getOutput());
+            FileUtils.copyFile(getInputFile().get().getAsFile(), output);
+            return output;
+        }
+
+        return super.doExecute();
+    }
+
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInputFile();
@@ -69,7 +82,6 @@ public abstract class SourceAccessTransformer extends DefaultExecute {
     public abstract ConfigurableFileCollection getClasspath();
 
     @InputFiles
-    @SkipWhenEmpty
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getTransformers();
 }

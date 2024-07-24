@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.PrepareUnitTestTask;
 import net.neoforged.gradle.common.util.ClasspathUtils;
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
@@ -55,67 +56,66 @@ public class RunsUtil {
         return createTaskName(prefix, run.getName());
     }
 
-    public static Run create(final Project project, final String name) {
-        final RunImpl run = project.getObjects().newInstance(RunImpl.class, project, name);
+    public static void createTasks(Project project, Run run) {
+        if (!run.getIsJUnit().get()) {
+            //Create run exec tasks for all non-unit test runs
+            project.getTasks().register(createTaskName(run.getName()), JavaExec.class, runExec -> {
+                runExec.setDescription("Runs the " + run.getName() + " run.");
+                runExec.setGroup("NeoGradle/Runs");
 
-        //Configure mod sources env vars
-        project.afterEvaluate(evaluatedProject -> {
-            //Create a combined provider for the mod and unit test sources
-            Provider<Multimap<String, SourceSet>> sourceSets = run.getModSources().all().zip(
-                    run.getUnitTestSources().all(),
-                    (modSources, unitTestSources) -> {
-                        if (!run.getIsJUnit().get())
-                            //No Unit test sources for non-unit test runs
-                            return modSources;
+                JavaToolchainService service = project.getExtensions().getByType(JavaToolchainService.class);
+                runExec.getJavaLauncher().convention(service.launcherFor(project.getExtensions().getByType(JavaPluginExtension.class).getToolchain()));
 
-                        //Combine mod sources with unit test sources
-                        final HashMultimap<String, SourceSet> combined = HashMultimap.create(modSources);
-                        combined.putAll(unitTestSources);
-                        return combined;
-                    });
-            //Set the mod classes environment variable
-            run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(sourceSets));
-        });
+                final File workingDir = run.getWorkingDirectory().get().getAsFile();
+                if (!workingDir.exists()) {
+                    workingDir.mkdirs();
+                }
 
-        project.afterEvaluate(evaluatedProject -> {
-            if (!run.getIsJUnit().get()) {
-                //Create run exec tasks for all non-unit test runs
-                project.getTasks().register(createTaskName(name), JavaExec.class, runExec -> {
-                    runExec.setDescription("Runs the " + name + " run.");
-                    runExec.setGroup("NeoGradle/Runs");
+                runExec.getMainClass().convention(run.getMainClass());
+                runExec.setWorkingDir(workingDir);
+                runExec.args(run.getProgramArguments().get());
+                runExec.jvmArgs(run.getJvmArguments().get());
+                runExec.systemProperties(run.getSystemProperties().get());
+                runExec.environment(run.getEnvironmentVariables().get());
+                run.getModSources().all().get().values().stream()
+                        .map(SourceSet::getRuntimeClasspath)
+                        .forEach(runExec::classpath);
+                runExec.classpath(run.getDependencies().get().getRuntimeConfiguration());
+                runExec.classpath(run.getRuntimeClasspath());
 
-                    JavaToolchainService service = evaluatedProject.getExtensions().getByType(JavaToolchainService.class);
-                    runExec.getJavaLauncher().convention(service.launcherFor(evaluatedProject.getExtensions().getByType(JavaPluginExtension.class).getToolchain()));
+                updateRunExecClasspathBasedOnPrimaryTask(runExec, run);
 
-                    final File workingDir = run.getWorkingDirectory().get().getAsFile();
-                    if (!workingDir.exists()) {
-                        workingDir.mkdirs();
-                    }
+                addRunSourcesDependenciesToTask(runExec, run, true);
 
-                    runExec.getMainClass().convention(run.getMainClass());
-                    runExec.setWorkingDir(workingDir);
-                    runExec.args(run.getProgramArguments().get());
-                    runExec.jvmArgs(run.getJvmArguments().get());
-                    runExec.systemProperties(run.getSystemProperties().get());
-                    runExec.environment(run.getEnvironmentVariables().get());
-                    run.getModSources().all().get().values().stream()
-                            .map(SourceSet::getRuntimeClasspath)
-                            .forEach(runExec::classpath);
-                    runExec.classpath(run.getDependencies().get().getRuntimeConfiguration());
-                    runExec.classpath(run.getClasspath());
+                if (run instanceof RunImpl runImpl) {
+                    runExec.getDependsOn().add(runImpl.getDependsOn());
+                }
+            });
+        } else {
+            createOrReuseTestTask(project, run.getName(), run);
+        }
+    }
 
-                    updateRunExecClasspathBasedOnPrimaryTask(runExec, run);
+    public static void configureModClasses(Run run) {
+        //Create a combined provider for the mod and unit test sources
+        Provider<Multimap<String, SourceSet>> sourceSets = run.getModSources().all().zip(
+                run.getUnitTestSources().all(),
+                (modSources, unitTestSources) -> {
+                    if (!run.getIsJUnit().get())
+                        //No Unit test sources for non-unit test runs
+                        return modSources;
 
-                    addRunSourcesDependenciesToTask(runExec, run, true);
-
-                    run.getTaskDependencies().forEach(runExec::dependsOn);
+                    //Combine mod sources with unit test sources
+                    final HashMultimap<String, SourceSet> combined = HashMultimap.create(modSources);
+                    combined.putAll(unitTestSources);
+                    return combined;
                 });
-            } else {
-                createOrReuseTestTask(project, name, run);
-            }
-        });
+        //Set the mod classes environment variable
+        run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(sourceSets));
+    }
 
-        return run;
+    public static Run create(final Project project, final String name) {
+        return project.getObjects().newInstance(RunImpl.class, project, name);
     }
 
     private static void updateRunExecClasspathBasedOnPrimaryTask(final JavaExec runExec, final Run run) {
@@ -140,7 +140,7 @@ public class RunsUtil {
         }
     }
 
-    private static void createOrReuseTestTask(Project project, String name, RunImpl run) {
+    private static void createOrReuseTestTask(Project project, String name, Run run) {
         final Set<SourceSet> currentProjectsModSources = run.getModSources().all().get().values()
                 .stream()
                 .filter(sourceSet -> SourceSetUtils.getProject(sourceSet).equals(project))
@@ -170,7 +170,7 @@ public class RunsUtil {
         createNewTestTask(project, name, run);
     }
 
-    private static void createNewTestTask(Project project, String name, RunImpl run) {
+    private static void createNewTestTask(Project project, String name, Run run) {
         //Create a test task for unit tests
         TaskProvider<Test> newTestTask = project.getTasks().register(createTaskName("test", name), Test.class);
         configureTestTask(project, newTestTask, run);
@@ -190,12 +190,11 @@ public class RunsUtil {
         });
     }
 
-    private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, RunImpl run) {
+    private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, Run run) {
         TaskProvider<PrepareUnitTestTask> prepareTask = createPrepareUnitTestTask(project, run);
-
         testTaskProvider.configure(testTask -> {
             addRunSourcesDependenciesToTask(testTask, run, true);
-            run.getTaskDependencies().forEach(testTask::dependsOn);
+            testTask.getDependsOn().add(run.getDependsOn());
 
             testTask.setWorkingDir(run.getWorkingDirectory().get());
             testTask.getSystemProperties().putAll(run.getSystemProperties().get());

@@ -1,14 +1,22 @@
 package net.neoforged.gradle.util;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
+import org.gradle.api.Project;
 import org.gradle.api.Transformer;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Utility class which handles gradles transformers.
@@ -156,6 +164,212 @@ public final class TransformerUtils {
             }
             return t;
         });
+    }
+
+    /**
+     * Creates a transformer which will combine all the values into a single map.
+     *
+     * @param project The project to use for creating the map property
+     * @param keyClass The class of the key of the map
+     * @param valueClass The class of the value of the map
+     * @param valueProvider The function to provide the map for each input
+     * @return The transformer which will combine all the maps into a single map
+     * @param <K> The type of the key of the map
+     * @param <V> The type of the value of the map
+     * @param <I> The type of the input to the transformer
+     * @param <C> The type of the collection of inputs
+     */
+    public static <K, V, I, C extends List<I>> Transformer<? extends Provider<Map<K, V>>, C> combineAllMaps(final Project project, final Class<K> keyClass, final Class<V> valueClass, final Function<I, Provider<Map<K, V>>> valueProvider) {
+        final MapProperty<K, V> map = project.getObjects().mapProperty(keyClass, valueClass);
+        return guard(t -> {
+            for (I i : t) {
+                map.putAll(valueProvider.apply(i));
+            }
+            return map;
+        });
+    }
+
+    /**
+     * Creates a transformer which will execute a callback on the inputs last value before passing it back as a result.
+     * @param project The project to use for creating the provider
+     * @param valueProvider The function to provide the value for the last input
+     * @return The transformer which will provide the value for the last input
+     * @param <V> The type of the output of the transformer
+     * @param <I> The type of the input to the transformer
+     * @param <C> The type of the collection of inputs
+     */
+    public static <V, I, C extends List<I>> Transformer<? extends Provider<V>, C> takeLast(final Project project, final Function<I, Provider<V>> valueProvider) {
+        return guard(t -> {
+            Provider<V> result = project.provider(() -> null);
+            if (t.isEmpty())
+                return result;
+
+            for (int i = t.size() - 1; i >= 0; i--) {
+                result = result.orElse(valueProvider.apply(t.get(i)));
+            }
+
+            return result;
+        });
+    }
+
+    /**
+     * Creates a transformer which will combine all the values into a single list.
+     *
+     * @param project The project to use for creating the list property
+     * @param valueClass The class of the value of the list
+     * @param valueProvider The function to provide the list for each input
+     * @return The transformer which will combine all the lists into a single list
+     * @param <V> The type of the value of the list
+     * @param <I> The type of the input to the transformer
+     * @param <C> The type of the collection of inputs
+     */
+    public static <V, I, C extends List<I>> Transformer<Provider<List<V>>, C> combineAllLists(final Project project, Class<V> valueClass, Function<I, Provider<List<V>>> valueProvider) {
+        return guard(t -> {
+            final ListProperty<V> values = project.getObjects().listProperty(valueClass);
+            for (I i : t) {
+                values.addAll(valueProvider.apply(i));
+            }
+            return values;
+        });
+    }
+
+    public static <I, C extends Collection<I>> Transformer<? extends ConfigurableFileCollection, C> combineFileCollections(final Project project, Function<I, ConfigurableFileCollection> valueProvider) {
+        return guard(t -> {
+            final ConfigurableFileCollection files = project.files();
+            for (I i : t) {
+                files.from(valueProvider.apply(i));
+            }
+            return files;
+        });
+    }
+
+    /**
+     * Creates a transformed provider that returns a list of values if the predicate is true.
+     *
+     * @param predicate The predicate to check
+     * @param whenTrue The value to return if the predicate is true
+     * @return A transformed provider if the predicate is true, otherwise null
+     * @param <V> The type of the value to return
+     */
+    @SafeVarargs
+    public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, Provider<? extends V>... whenTrue) {
+        if (whenTrue.length == 0) {
+            return predicate.map(p -> List.of());
+        }
+
+        if (whenTrue.length == 1) {
+            return whenTrue[0].zip(predicate, (v, p) -> p ? List.of(v) : List.of());
+        }
+
+        Provider<? extends List<V>> zippedArray = whenTrue[0].zip(predicate, (v, p) -> p ? List.of(v) : List.of());
+        for (int i = 1; i < whenTrue.length; i++) {
+            zippedArray = zippedArray.zip(
+                    whenTrue[1].zip(predicate, (v, p) -> p ? List.of(v) : List.of()),
+                    (BiFunction<List<V>, List<V>, List<V>>) (vs, objects) -> {
+                        final ArrayList<V> ret = new ArrayList<>(vs);
+                        ret.addAll(objects);
+                        return ret;
+                    }
+            );
+        }
+
+        return zippedArray;
+    }
+
+    /**
+     * Creates a transformed provider that returns a list of values if the predicate is true.
+     *
+     * @param predicate The predicate to check
+     * @param whenTrue The value to return if the predicate is true
+     * @return A transformed provider if the predicate is true, otherwise null
+     * @param <V> The type of the value to return
+     */
+    public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, Provider<? extends Collection<V>> whenTrue) {
+        return predicate.zip(whenTrue, (p, v) -> p ? List.copyOf(v) : List.of());
+    }
+
+    /**
+     * Creates a transformed provider that returns a list of values if the predicate is true.
+     *
+     * @param predicate The predicate to check
+     * @param whenTrue The value to return if the predicate is true
+     * @return A transformed provider if the predicate is true, otherwise null
+     * @param <V> The type of the value to return
+     */
+    public static <V> Provider<? extends List<V>> ifTrue(Boolean predicate, Provider<? extends Collection<V>> whenTrue) {
+        return whenTrue.map(v -> predicate ? List.copyOf(v) : List.of());
+    }
+
+    /**
+     * Creates a transformed provider that returns a list of values if the predicate is true.
+     *
+     * @param predicate The predicate to check
+     * @param whenTrue The value to return if the predicate is true
+     * @return A transformed provider if the predicate is true, otherwise null
+     * @param <V> The type of the value to return
+     */
+    @SafeVarargs
+    public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, V... whenTrue) {
+        if (whenTrue.length == 0) {
+            return predicate.map(p -> List.of());
+        }
+
+        return predicate.map(p -> p ? List.of(whenTrue) : List.of());
+    }
+
+    /**
+     * Creates a transformed provider that returns a map of with the key value pair.
+     *
+     * @param predicate The predicate to check
+     * @param keyWhenTrue The key to return if the predicate is true
+     * @param valueWhenTrue The value to return if the predicate is true
+     * @return A transformed provider if the predicate is true, otherwise null
+     * @param <K> The type of the key to return
+     * @param <V> The type of the value to return
+     */
+    public static <K, V> Provider<? extends Map<K, V>> ifTrueMap(Provider<Boolean> predicate, K keyWhenTrue, V valueWhenTrue) {
+        return predicate.map(p -> p ? Map.of(keyWhenTrue, valueWhenTrue) : Map.of());
+    }
+
+    @SafeVarargs
+    public static Transformer<Provider<Boolean>, Boolean> and(Provider<Boolean>... rightProvider) {
+        if (rightProvider.length == 0) {
+            throw new IllegalStateException("No right provider provided");
+        }
+
+        if (rightProvider.length == 1) {
+            return left -> rightProvider[0].map(o -> left && o);
+        }
+
+        return inputBoolean -> {
+            Provider<Boolean> result = rightProvider[0].map(o -> inputBoolean && o);
+            for (int i = 1; i < rightProvider.length; i++) {
+                result = result.zip(rightProvider[i], (l, r) -> l && r);
+            }
+            return result;
+        };
+    }
+
+    @SafeVarargs
+    public static Provider<Boolean> or(Boolean initial, Provider<Boolean>... rightProvider) {
+        if (rightProvider.length == 0) {
+            throw new IllegalStateException("No right provider provided");
+        }
+
+        if (rightProvider.length == 1) {
+            return rightProvider[0].map(o -> initial || o);
+        }
+
+        Provider<Boolean> input = rightProvider[0].map(o -> initial || o);
+        for (int i = 1; i < rightProvider.length; i++) {
+            input = input.zip(rightProvider[i], (l, r) -> l || r);
+        }
+        return input;
+    }
+
+    @SafeVarargs
+    public static Transformer<Provider<Boolean>, Boolean> or(Provider<Boolean>... rightProvider) {
+        return inputBoolean -> or(inputBoolean, rightProvider);
     }
 
     /**

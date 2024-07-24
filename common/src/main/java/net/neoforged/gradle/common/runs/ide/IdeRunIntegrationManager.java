@@ -298,16 +298,11 @@ public class IdeRunIntegrationManager {
             final TaskProvider<?> ideBeforeRunTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName("ideBeforeRun", name), task -> {
                 RunsUtil.addRunSourcesDependenciesToTask(task, run, false);
             });
-            
-            if (!runImpl.getTaskDependencies().isEmpty()) {
-                ideBeforeRunTask.configure(task -> {
-                    runImpl.getTaskDependencies().forEach(dep -> {
-                        //noinspection Convert2MethodRef Creates a compiler error regarding incompatible types.
-                        task.dependsOn(dep);
-                    });
-                });
-            }
-            
+
+            ideBeforeRunTask.configure(task -> {
+                task.getDependsOn().add(runImpl.getDependsOn());
+            });
+
             return ideBeforeRunTask;
         }
 
