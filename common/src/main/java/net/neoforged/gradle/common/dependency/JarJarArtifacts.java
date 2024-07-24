@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -141,6 +142,8 @@ public abstract class JarJarArtifacts {
 
             if (version != null && versionRange != null) {
                 data.add(new ResolvedJarJarArtifact(result.getFile(), version, versionRange, jarIdentifier.group(), jarIdentifier.artifact()));
+            } else {
+                throw new IllegalStateException("Could not determine version or version range for " + jarIdentifier.group()+":"+jarIdentifier.artifact());
             }
         }
         return data.stream()
@@ -150,18 +153,22 @@ public abstract class JarJarArtifacts {
 
     private static void collectFromComponent(ResolvedComponentResult rootComponent, Set<ContainedJarIdentifier> knownIdentifiers, Map<ContainedJarIdentifier, String> versions, Map<ContainedJarIdentifier, String> versionRanges) {
         for (DependencyResult result : rootComponent.getDependencies()) {
-            if (!(result instanceof ResolvedDependencyResult)) {
+            if (!(result instanceof ResolvedDependencyResult resolvedResult)) {
                 continue;
             }
-            ResolvedDependencyResult resolvedResult = (ResolvedDependencyResult) result;
             ComponentSelector requested = resolvedResult.getRequested();
-            ResolvedVariantResult variant = resolvedResult.getResolvedVariant();
-
+            ResolvedVariantResult originalVariant = resolvedResult.getResolvedVariant();
+            ResolvedVariantResult variant = originalVariant;
+            // We do this to account for any available-at usage in module metadata -- the actual artifact will only have
+            // the module ID of the final target of available-at, but the resolved dependency lets us get the whole
+            // hierarchy.
+            while (variant.getExternalVariant().isPresent()) {
+                variant = variant.getExternalVariant().get();
+            }
             DependencyManagementObject.ArtifactIdentifier artifactIdentifier = capabilityOrModule(variant);
             if (artifactIdentifier == null) {
                 continue;
             }
-
             ContainedJarIdentifier jarIdentifier = new ContainedJarIdentifier(artifactIdentifier.getGroup(), artifactIdentifier.getName());
             knownIdentifiers.add(jarIdentifier);
 
@@ -183,6 +190,13 @@ public abstract class JarJarArtifacts {
             }
 
             String version = getVersionFrom(variant);
+            String originalVersion = getVersionFrom(originalVariant);
+
+            if (!Objects.equals(version, originalVersion)) {
+                throw new IllegalStateException("Version mismatch for " + originalVariant.getOwner() + ": available-at directs to " +
+                        version + " but original is " + originalVersion + " which jarJar cannot handle well; consider depending on the available-at target directly"
+                );
+            }
 
             if (version != null) {
                 versions.put(jarIdentifier, version);
