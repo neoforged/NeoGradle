@@ -1,6 +1,7 @@
 package net.neoforged.gradle.dsl.common.runs.run;
 
-import groovy.transform.CompileStatic;
+import groovy.transform.CompileStatic
+import net.minecraftforge.gdi.BaseDSLElement;
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.file.DirectoryProperty;
@@ -19,7 +20,7 @@ import org.gradle.api.tasks.PathSensitivity;
  * </p>
  */
 @CompileStatic
-interface RunTestScope extends ConfigurableDSLElement<RunTestScope> {
+interface RunTestScope extends BaseDSLElement<RunTestScope> {
 
     /**
      * @return The name of the package that houses the tests.

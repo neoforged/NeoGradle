@@ -1,12 +1,11 @@
 package net.neoforged.gradle.common.dependency;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import net.neoforged.gradle.common.runtime.tasks.GenerateExtraJar;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
@@ -88,6 +87,7 @@ public abstract class ExtraJarDependencyManager {
             return new ReplacementResult(
                     project,
                     extraJarTaskProvider,
+                    project.getConfigurations().detachedConfiguration(),
                     ConfigurationUtils.temporaryUnhandledConfiguration(
                             project.getConfigurations(),
                             "EmptyExtraJarConfigurationFor" + minecraftVersion.replace(".", "_")

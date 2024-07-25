@@ -4,9 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.tasks.UnpackBundledServer;
-import net.neoforged.gradle.common.util.BundledServerUtils;
 import net.neoforged.gradle.common.util.ProjectUtils;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
@@ -32,7 +31,6 @@ import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

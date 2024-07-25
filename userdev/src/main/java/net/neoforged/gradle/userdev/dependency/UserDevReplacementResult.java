@@ -33,10 +33,11 @@ public class UserDevReplacementResult extends ReplacementResult implements Repla
     public UserDevReplacementResult(Project project,
                                     TaskProvider<? extends WithOutput> sourcesJar,
                                     TaskProvider<? extends WithOutput> rawJar,
+                                    Configuration sdk,
                                     Configuration dependencies,
                                     Set<TaskProvider<? extends Task>> additionalTasks,
                                     UserDevRuntimeDefinition definition) {
-        super(project, sourcesJar, rawJar, dependencies, additionalTasks);
+        super(project, sourcesJar, rawJar, sdk, dependencies, additionalTasks);
 
         this.definition = definition;
     }

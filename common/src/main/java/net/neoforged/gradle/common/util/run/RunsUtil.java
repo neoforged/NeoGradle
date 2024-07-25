@@ -5,7 +5,6 @@ import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.PrepareUnitTestTask;
 import net.neoforged.gradle.common.util.ClasspathUtils;
-import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
@@ -32,7 +31,6 @@ import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 import org.xml.sax.InputSource;
 
-import javax.annotation.Nonnull;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.*;
@@ -256,7 +254,7 @@ public class RunsUtil {
     }
 
     public static Provider<String> buildGradleModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty) {
-        return buildGradleModClasses(sourceSetsProperty, sourceSet -> Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream()));
+        return buildModClasses(sourceSetsProperty, sourceSet -> Stream.concat(Stream.of(sourceSet.getOutput().getResourcesDir()), sourceSet.getOutput().getClassesDirs().getFiles().stream()));
     }
 
     public static boolean isRunWithIdea(final SourceSet sourceSet) {
@@ -369,8 +367,10 @@ public class RunsUtil {
         return getRunWithIdeaDirectory(sourceSet, compileType, "classes");
     }
 
-    public static Provider<String> buildRunWithIdeaModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty, final IdeaCompileType compileType) {
-        return buildGradleModClasses(sourceSetsProperty, sourceSet -> {
+    public static Provider<String> buildRunWithIdeaModClasses(
+            final Provider<Multimap<String, SourceSet>> compileSourceSets,
+            final IdeaCompileType compileType) {
+        return buildModClasses(compileSourceSets, sourceSet -> {
 
             if (isRunWithIdea(sourceSet)) {
                 final File resourcesDir = getRunWithIdeaResourcesDirectory(sourceSet, compileType).get().getAsFile();
@@ -383,8 +383,8 @@ public class RunsUtil {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    public static Provider<String> buildRunWithEclipseModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty) {
-        return buildGradleModClasses(sourceSetsProperty, sourceSet -> {
+    public static Provider<String> buildRunWithEclipseModClasses(final Provider<Multimap<String, SourceSet>> compileSourceSets) {
+        return buildModClasses(compileSourceSets, sourceSet -> {
             final Project project = SourceSetUtils.getProject(sourceSet);
             final EclipseModel eclipseModel = project.getExtensions().getByType(EclipseModel.class);
 
@@ -397,14 +397,11 @@ public class RunsUtil {
         });
     }
 
-    public static String getIntellijOutName(@Nonnull final SourceSet sourceSet) {
-        return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "production" : sourceSet.getName();
-    }
-
-    public static Provider<String> buildGradleModClasses(final Provider<Multimap<String, SourceSet>> sourceSetsProperty, final Function<SourceSet, Stream<File>> directoryBuilder) {
-        return sourceSetsProperty.map(sourceSetsByRunId -> sourceSetsByRunId.entries().stream().flatMap(entry ->
+    public static Provider<String> buildModClasses(final Provider<Multimap<String, SourceSet>> compileSourceSets,
+                                                   final Function<SourceSet, Stream<File>> directoryBuilder) {
+        return compileSourceSets.map(sourceSetsByRunId -> sourceSetsByRunId.entries().stream().flatMap(entry ->
                         directoryBuilder.apply(entry.getValue())
-                                .peek(directory -> directory.mkdirs())
+                                .peek(File::mkdirs)
                                 .map(directory -> String.format("%s%%%%%s", entry.getKey(), directory.getAbsolutePath())))
                 .collect(Collectors.joining(File.pathSeparator)));
     }

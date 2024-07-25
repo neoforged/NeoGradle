@@ -3,9 +3,9 @@ package net.neoforged.gradle.common.runs.run;
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
@@ -16,10 +16,7 @@ import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.GradleException;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.ListProperty;
@@ -31,8 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
@@ -55,7 +50,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.name = name;
         this.modSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
         this.unitTestSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
-        this.testScope = project.getObjects().newInstance(RunTestScope.class);
+        this.testScope = project.getObjects().newInstance(RunTestScopeImpl.class, project);
 
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
@@ -95,6 +90,14 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getTestCompileClasspath().from(
                 getUnitTestSources().all().map(Multimap::values)
                         .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getCompileClasspath).toList())
+        );
+        getSdkClasspath().from(
+                getModSources().all().map(Multimap::values)
+                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).toList())
+        );
+        getSdkClasspath().from(
+                getUnitTestSources().all().map(Multimap::values)
+                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).toList())
         );
     }
 
@@ -216,6 +219,11 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     public Provider<Set<FileSystemLocation>> getTestCompileClasspathElements() {
         return getLooselyCoupledConfigurableFileCollectionElements(getTestCompileClasspath());
+    }
+
+    @Override
+    public Provider<Set<FileSystemLocation>> getSdkClasspathElements() {
+        return getLooselyCoupledConfigurableFileCollectionElements(getSdkClasspath());
     }
 
     @Override
@@ -360,7 +368,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
             }
         }).orElse(
                 TransformerUtils.ifTrue(getConfigureFromDependencies(),
-                        getCompileClasspathElements()
+                        getSdkClasspathElements()
                                 .map(files -> files.stream()
                                         .map(FileSystemLocation::getAsFile)
                                         .map(runTypes::parse)

@@ -61,12 +61,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                 clientExtraJar
         );
 
-        //Add the userdev artifact as a dependency. This makes it discoverable on the classpath, and as such discoverable
-        //by runs and other interested parties.
-        this.additionalUserDevDependencies.getDependencies().add(
-                this.getSpecification().getUserDevArtifact().toDependency(specification.getProject())
-        );
-
         this.getAllDependencies().from(neoformRuntimeDefinition.getAllDependencies());
         this.getAllDependencies().from(getAdditionalUserDevDependencies());
         this.getAllDependencies().from(getUserdevConfiguration());

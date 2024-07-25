@@ -2,10 +2,13 @@ package net.neoforged.gradle.common.util;
 
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
 import net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.util.internal.GUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -50,4 +53,6 @@ public class SourceSetUtils {
             return project.getName();
         }
     }
+
+
 }

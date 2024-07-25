@@ -5,9 +5,7 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
-import net.minecraftforge.gdi.annotations.ProjectGetter
 import net.neoforged.gradle.dsl.common.runs.type.RunType
-import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -26,14 +24,6 @@ import org.jetbrains.annotations.NotNull
  */
 @CompileStatic
 interface Run extends BaseDSLElement<Run>, NamedDSLElement {
-
-    /**
-     * The project which holds the extension.
-     *
-     * @return The project.
-     */
-    @ProjectGetter
-    abstract Project getProject();
 
     /**
      * Defines the environment variables that are passed to the JVM when running the game.
@@ -307,6 +297,25 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Internal
     abstract Provider<Set<FileSystemLocation>> getTestCompileClasspathElements()
+
+    /**
+     * Gives access to the sdk classpath for this run.
+     *
+     * @return The property which holds the mdk classpath.
+     */
+    @InputFiles
+    @Classpath
+    @DSLProperty
+    abstract ConfigurableFileCollection getSdkClasspath()
+
+    /**
+     * Gives access to the sdk classpath elements for this run.
+     *
+     * @return A provider that provides the classpath elements.
+     * @implNote This is a loosely coupled provider, because if you call {@link ConfigurableFileCollection#getElements()} directly, it will return a provider that is not transformable.
+     */
+    @Internal
+    abstract Provider<Set<FileSystemLocation>> getSdkClasspathElements()
 
     /**
      * Defines the run types that are applied to this run.
