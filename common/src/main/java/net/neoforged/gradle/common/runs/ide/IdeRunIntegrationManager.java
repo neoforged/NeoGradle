@@ -28,10 +28,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.language.jvm.tasks.ProcessResources;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
@@ -121,69 +123,85 @@ public class IdeRunIntegrationManager {
     }
 
     private static final class RunsImportAction implements IdeManagementExtension.IdeImportAction {
-        
+
+        private void common(Project project) {
+            final SourceSetContainer container = project.getExtensions().getByType(SourceSetContainer.class);
+            container.forEach(sourceSet -> {
+                final Configuration compileClasspath = project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
+                final Configuration runtimeClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
+
+                compileClasspath.resolve();
+                runtimeClasspath.resolve();
+            });
+        }
+
         @SuppressWarnings("DataFlowIssue")
         @Override
         public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
-            final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
-            
-            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
-                final String nameWithoutSpaces = name.replace(" ", "-");
-                final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
-                
-                final RunImpl runImpl = (RunImpl) run;
+            project.afterEvaluate(evaluatedProject -> {
+                common(project);
 
-                //Do not generate a run configuration for unit tests
-                if (!runImpl.getIsJUnit().get()) {
-                    final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
-                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
-                    final List<TaskProvider<?>> copyProcessResourcesTasks = createIntelliJCopyResourcesTasks(run);
-                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
+                final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
 
-                    ideaRuns.register(runName, Application.class, ideaRun -> {
-                        runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
+                project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
+                    final String nameWithoutSpaces = name.replace(" ", "-");
+                    final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
 
-                        ideaRun.setMainClass(runImpl.getMainClass().get());
-                        ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                        ideaRun.setJvmArgs(escapeAndJoin(runImpl.realiseJvmArguments()));
-                        ideaRun.setModuleName(RunsUtil.getIntellijModuleName(runIdeaConfig.getPrimarySourceSet().get()));
-                        ideaRun.setProgramParameters(escapeAndJoin(runImpl.getProgramArguments().get()));
-                        ideaRun.setEnvs(adaptEnvironment(runImpl, multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production)));
-                        ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
+                    final RunImpl runImpl = (RunImpl) run;
 
-                        ideaRun.beforeRun(beforeRuns -> {
-                            beforeRuns.create("Build", Make.class);
+                    //Do not generate a run configuration for unit tests
+                    if (!runImpl.getIsJUnit().get()) {
+                        final IdeaRunExtension runIdeaConfig = run.getExtensions().getByType(IdeaRunExtension.class);
+                        final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
+                        final List<TaskProvider<?>> copyProcessResourcesTasks = createIntelliJCopyResourcesTasks(run);
+                        ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
 
-                            beforeRuns.create("Prepare Run", GradleTask.class, gradleTask -> {
-                                gradleTask.setTask(ideBeforeRunTask.get());
+                        ideaRuns.register(runName, Application.class, ideaRun -> {
+                            runImpl.getWorkingDirectory().get().getAsFile().mkdirs();
+
+                            ideaRun.setMainClass(runImpl.getMainClass().get());
+                            ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
+                            ideaRun.setJvmArgs(escapeAndJoin(runImpl.realiseJvmArguments()));
+                            ideaRun.setModuleName(RunsUtil.getIntellijModuleName(runIdeaConfig.getPrimarySourceSet().get()));
+                            ideaRun.setProgramParameters(escapeAndJoin(runImpl.getProgramArguments().get()));
+                            ideaRun.setEnvs(adaptEnvironment(runImpl, multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production)));
+                            ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
+
+                            ideaRun.beforeRun(beforeRuns -> {
+                                beforeRuns.create("Build", Make.class);
+
+                                beforeRuns.create("Prepare Run", GradleTask.class, gradleTask -> {
+                                    gradleTask.setTask(ideBeforeRunTask.get());
+                                });
                             });
                         });
-                    });
-                } else {
-                    final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
-                    final TaskProvider<PrepareUnitTestTask> prepareUnitTestTaskTaskProvider = RunsUtil.createPrepareUnitTestTask(project, run);
+                    } else {
+                        final TaskProvider<?> ideBeforeRunTask = createIdeBeforeRunTask(project, nameWithoutSpaces, run, runImpl);
+                        final TaskProvider<PrepareUnitTestTask> prepareUnitTestTaskTaskProvider = RunsUtil.createPrepareUnitTestTask(project, run);
 
-                    ideBeforeRunTask.configure(task -> task.dependsOn(prepareUnitTestTaskTaskProvider));
+                        ideBeforeRunTask.configure(task -> task.dependsOn(prepareUnitTestTaskTaskProvider));
 
-                    ideaRuns.register(runName, JUnit.class, ideaRun -> {
-                        ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                        ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
+                        ideaRuns.register(runName, JUnit.class, ideaRun -> {
+                            ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
+                            ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
 
-                        ideaRun.setPackageName(runImpl.getTestScope().getPackageName().getOrElse(null));
-                        ideaRun.setDirectory(runImpl.getTestScope().getDirectory().map(dir -> dir.getAsFile().getAbsolutePath()).getOrElse(null));
-                        ideaRun.setPattern(runImpl.getTestScope().getPattern().getOrElse(null));
-                        ideaRun.setClassName(runImpl.getTestScope().getClassName().getOrElse(null));
-                        ideaRun.setMethod(runImpl.getTestScope().getMethod().getOrElse(null));
-                        ideaRun.setCategory(runImpl.getTestScope().getCategory().getOrElse(null));
-
-                    });
-                }
-            }));
+                            ideaRun.setPackageName(runImpl.getTestScope().getPackageName().getOrElse(null));
+                            ideaRun.setDirectory(runImpl.getTestScope().getDirectory().map(dir -> dir.getAsFile().getAbsolutePath()).getOrElse(null));
+                            ideaRun.setPattern(runImpl.getTestScope().getPattern().getOrElse(null));
+                            ideaRun.setClassName(runImpl.getTestScope().getClassName().getOrElse(null));
+                            ideaRun.setMethod(runImpl.getTestScope().getMethod().getOrElse(null));
+                            ideaRun.setCategory(runImpl.getTestScope().getCategory().getOrElse(null));
+                        });
+                    }
+                }));
+            });
         }
 
         @Override
         public void eclipse(Project project, EclipseModel eclipse) {
             ProjectUtils.afterEvaluate(project, () -> {
+                common(project);
+
                 project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     
@@ -241,6 +259,8 @@ public class IdeRunIntegrationManager {
         public void vscode(Project project, EclipseModel eclipse)
         {
             ProjectUtils.afterEvaluate(project, () -> {
+                common(project);
+
                 final BatchedLaunchWriter launchWriter = new BatchedLaunchWriter(WritingMode.MODIFY_CURRENT);
                 project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.getAsMap().forEach((name, run) -> {
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));

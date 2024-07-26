@@ -155,20 +155,18 @@ public abstract class IdeManagementExtension {
                 final Configuration noneProjectDependentRuntimeClasspath = project.getConfigurations().maybeCreate(ConfigurationUtils.configurationNameOf(
                         sourceSet, "noneProjectDependentRuntimeClasspath"));
 
-                noneProjectDependentCompileClasspath.extendsFrom(compileClasspath);
-                noneProjectDependentRuntimeClasspath.extendsFrom(runtimeClasspath);
+                noneProjectDependentCompileClasspath.getDependencies().addAllLater(
+                        project.provider(compileClasspath::getAllDependencies)
+                );
+                noneProjectDependentRuntimeClasspath.getDependencies().addAllLater(
+                        project.provider(runtimeClasspath::getAllDependencies)
+                );
 
                 noneProjectDependentCompileClasspath.withDependencies(dependencies -> {
-                    dependencies.removeIf(dependency -> {
-                        project.getLogger().warn("Removing compile dependency: " + dependency + " type: " + dependency.getClass());
-                        return dependency instanceof ProjectDependency;
-                    });
+                    dependencies.removeIf(dependency -> dependency instanceof ProjectDependency);
                 });
                 noneProjectDependentRuntimeClasspath.withDependencies(dependencies -> {
-                    dependencies.removeIf(dependency -> {
-                        project.getLogger().warn("Removing runtime dependency: " + dependency + " type: " + dependency.getClass());
-                        return dependency instanceof ProjectDependency;
-                    });
+                    dependencies.removeIf(dependency -> dependency instanceof ProjectDependency);
                 });
 
                 idePostSyncTask.configure(task -> {

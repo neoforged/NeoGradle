@@ -137,7 +137,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //Register a task creation rule that checks for runs.
         project.getTasks().addRule(new LaterAddedReplacedDependencyRule(project));
 
-        runs.configureEach(run -> {
+        //Realise all runs.
+        runs.whenObjectAdded(run -> {
             RunsUtil.configureModClasses(run);
             RunsUtil.createTasks(project, run);
         });

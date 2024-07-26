@@ -4,7 +4,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.PrepareUnitTestTask;
+import net.neoforged.gradle.common.tasks.RenderDocDownloaderTask;
 import net.neoforged.gradle.common.util.ClasspathUtils;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
@@ -12,8 +14,10 @@ import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.*;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -28,6 +32,7 @@ import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.gradle.plugins.ide.idea.model.IdeaModule;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.xml.sax.InputSource;
 
@@ -55,6 +60,42 @@ public class RunsUtil {
     }
 
     public static void createTasks(Project project, Run run) {
+        if (run.getRenderDoc().getIsEnabled().get()) {
+            if (!run.getIsClient().get())
+                throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
+
+            final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createTaskName("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
+                renderDoc.getRenderDocVersion().set(run.getRenderDoc().getVersion());
+                renderDoc.getRenderDocOutputDirectory().set(run.getRenderDoc().getRenderDocPath());
+            });
+
+            run.getDependsOn().add(setupRenderDoc);
+
+            Configuration renderNurse;
+            if (run.getModSources().getPrimary().isPresent()) {
+                renderNurse = addLocalRenderNurse(run.getModSources().getPrimary().get());
+            } else {
+                renderNurse = null;
+                run.getModSources().whenSourceSetAdded(RunsUtil::addLocalRenderNurse);
+            }
+
+            if (renderNurse == null) {
+                //This happens when no primary source set is set, and the renderNurse configuration is not added to the runtime classpath.
+                renderNurse = registerRenderNurse(run.getProject());
+            }
+
+            //Add the relevant properties, so that render nurse can be used, see its readme for the required values.
+            run.getEnvironmentVariables().put("LD_PRELOAD", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
+            run.getSystemProperties().put(
+                    "neoforge.rendernurse.renderdoc.library", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath)
+            );
+            run.getJvmArguments().add(renderNurse.getIncoming().getArtifacts().getResolvedArtifacts()
+                    .map(artifactView -> artifactView.iterator().next())
+                    .map(resolvedArtifact -> "-javaagent:%s".formatted(resolvedArtifact.getFile().getAbsolutePath())));
+            run.getJvmArguments().add("--enable-preview");
+            run.getJvmArguments().add("--enable-native-access=ALL-UNNAMED");
+        }
+
         if (!run.getIsJUnit().get()) {
             //Create run exec tasks for all non-unit test runs
             project.getTasks().register(createTaskName(run.getName()), JavaExec.class, runExec -> {
@@ -92,6 +133,23 @@ public class RunsUtil {
         } else {
             createOrReuseTestTask(project, run.getName(), run);
         }
+    }
+
+    private static Configuration addLocalRenderNurse(SourceSet sourceSet) {
+        final Project project = SourceSetUtils.getProject(sourceSet);
+        final Configuration renderNurse = registerRenderNurse(project);
+
+        final Configuration runtimeClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
+        runtimeClasspath.extendsFrom(renderNurse);
+        return renderNurse;
+    }
+
+    private static @NotNull Configuration registerRenderNurse(Project project) {
+        return ConfigurationUtils.temporaryUnhandledConfiguration(
+                project.getConfigurations(),
+                "renderNurse",
+                project.getDependencies().create("net.neoforged:render-nurse:1.0.0")
+        );
     }
 
     public static void configureModClasses(Run run) {

@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.tasks;
 
-import org.gradle.api.Task;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.*;
@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 @CacheableTask
-public abstract class PrepareUnitTestTask implements Task {
+public abstract class PrepareUnitTestTask extends NeoGradleBase {
 
     public void execute() throws Exception {
         final File output = getProgramArgumentsFile().get().getAsFile();

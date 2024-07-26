@@ -16,6 +16,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
+import org.gradle.internal.impldep.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop
 import org.jetbrains.annotations.NotNull
 
 /**
@@ -148,6 +149,13 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @DSLProperty
     @Optional
     abstract Property<Boolean> getIsGameTest();
+
+    /**
+     * @returns the RenderDoc options for this run. RenderDoc can only be used on client runs.
+     */
+    @Nested
+    @DSLProperty
+    abstract RunRenderDocOptions getRenderDoc();
 
     /**
      * Defines the source sets that are used as a mod.

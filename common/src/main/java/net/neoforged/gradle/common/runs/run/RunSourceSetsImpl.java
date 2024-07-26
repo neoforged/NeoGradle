@@ -20,7 +20,6 @@ import java.util.List;
 public abstract class RunSourceSetsImpl implements RunSourceSets {
 
     private final Project project;
-    private final Provider<Multimap<String, SourceSet>> provider;
     private final Multimap<String, SourceSet> sourceSets;
     private final List<Action<SourceSet>> callbacks = new ArrayList<>();
 
@@ -28,7 +27,6 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
     public RunSourceSetsImpl(Project project) {
         this.project = project;
         this.sourceSets = HashMultimap.create();
-        this.provider = project.provider(() -> sourceSets);
     }
 
 
@@ -113,7 +111,7 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
 
     @Override
     public Provider<Multimap<String, SourceSet>> all() {
-        return this.provider;
+        return this.project.provider(() -> this.sourceSets);
     }
 
     @Override
