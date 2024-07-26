@@ -37,7 +37,7 @@ public final class FileDownloadingUtils {
      */
     public static boolean downloadTo(boolean isOffline, DownloadInfo info, File file) throws IOException {
         // Check if file exists in local installer cache
-        if (info.type.equals("jar") && info.side.equals("client")) {
+        if (info.type != null && info.type.equals("jar") && info.side.equals("client")) {
             File localPath = new File(getMCDir() + File.separator + "versions" + File.separator + info.version + File.separator + info.version + ".jar");
             if (localPath.exists() && HashFunction.SHA1.hash(localPath).equalsIgnoreCase(info.hash)) {
                 org.apache.commons.io.FileUtils.copyFile(localPath, file);
@@ -161,7 +161,7 @@ public final class FileDownloadingUtils {
         private String version;
         private String side;
 
-        public DownloadInfo(String url, @Nullable String hash, String type, @Nullable String version, @Nullable String side) {
+        public DownloadInfo(String url, @Nullable String hash, @Nullable String type, @Nullable String version, @Nullable String side) {
             this.url = url;
             this.hash = hash;
             this.type = type;
@@ -189,6 +189,7 @@ public final class FileDownloadingUtils {
         }
 
         @Input
+        @Optional
         public String getType() {
             return type;
         }

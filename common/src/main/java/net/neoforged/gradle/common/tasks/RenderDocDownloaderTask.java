@@ -8,9 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
-import org.gradle.internal.enterprise.test.FileProperty;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,26 +20,28 @@ public abstract class RenderDocDownloaderTask extends NeoGradleBase {
         getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
         getRenderDocVersion().convention("1.33"); // Current default.
         getRenderDocOutputDirectory().convention(getProject().getLayout().getBuildDirectory().dir("renderdoc/download"));
-        getRenderDocInstallationPath().convention(getProject().getLayout().getBuildDirectory().dir("renderdoc/installation"));
+        getRenderDocInstallationDirectory().convention(getProject().getLayout().getBuildDirectory().dir("renderdoc/installation"));
         getRenderDocLibraryFile().fileProvider(
-                getRenderDocOutputDirectory().map(dir -> getOSSpecificRenderDocLibraryFile(dir.getAsFile()))
+                getRenderDocInstallationDirectory().map(dir -> getOSSpecificRenderDocLibraryFile(dir.getAsFile()))
         );
+
+        getOutputs().upToDateWhen(task -> false);
     }
 
     @TaskAction
     public void doDownload() throws IOException {
-        final File outputRoot = getRenderDocOutputDirectory().get().getAsFile();
+        final File outputRoot = getRenderDocInstallationDirectory().get().getAsFile();
         if (outputRoot.exists() && outputRoot.isDirectory()) {
             final File renderDocLibraryFile = getOSSpecificRenderDocLibraryFile(outputRoot);
             if (renderDocLibraryFile.exists() && renderDocLibraryFile.isFile()) {
-                setDidWork(false);
-                return;
+                //setDidWork(false);
+                //return;
             }
         }
 
         final String url = getOSSpecificRenderDocUrl();
 
-        final File output = getRenderDocOutputDirectory().get().getAsFile();
+        final File output = getRenderDocInstallationDirectory().get().getAsFile();
         if (output.exists()) {
             if (output.isFile()) {
                 output.delete();
@@ -54,10 +54,10 @@ public abstract class RenderDocDownloaderTask extends NeoGradleBase {
         }
 
         final FileDownloadingUtils.DownloadInfo downloadInfo = new FileDownloadingUtils.DownloadInfo(url, null, null, null, null);
-        final File compressedDownloadTarget = new File(output, getOSSpecificFileName());
+        final File compressedDownloadTarget = new File(getRenderDocOutputDirectory().get().getAsFile(), getOSSpecificFileName());
         FileDownloadingUtils.downloadTo(getIsOffline().getOrElse(false), downloadInfo, compressedDownloadTarget);
 
-        extractOSSpecific(output);
+        extractOSSpecific(compressedDownloadTarget);
     }
 
     @Input
@@ -71,18 +71,30 @@ public abstract class RenderDocDownloaderTask extends NeoGradleBase {
     public abstract DirectoryProperty getRenderDocOutputDirectory();
 
     @Internal
-    public abstract DirectoryProperty getRenderDocInstallationPath();
+    public abstract DirectoryProperty getRenderDocInstallationDirectory();
 
-    @OutputFile
+    @Internal
     public abstract RegularFileProperty getRenderDocLibraryFile();
 
     private File getOSSpecificRenderDocLibraryFile(final File root) {
         if (VersionJson.OS.getCurrent() == VersionJson.OS.WINDOWS) {
-            return new File(root, "renderdoc.dll");
+            return new File(root, "RenderDoc_%s_64/renderdoc.dll".formatted(getRenderDocVersion().get()));
         }
 
         if (VersionJson.OS.getCurrent() == VersionJson.OS.LINUX) {
-            return new File(root, "lib/librenderdoc.so");
+            return new File(root, "renderdoc_%s/lib/librenderdoc.so".formatted(getRenderDocVersion().get()));
+        }
+
+        throw new IllegalStateException("Unsupported OS: " + VersionJson.OS.getCurrent().name());
+    }
+
+    private File getOSSpecificRenderDocExecutableFile(final File root) {
+        if (VersionJson.OS.getCurrent() == VersionJson.OS.WINDOWS) {
+            throw new IllegalStateException("Not implemented yet");
+        }
+
+        if (VersionJson.OS.getCurrent() == VersionJson.OS.LINUX) {
+            return new File(root, "renderdoc_%s/bin/qrenderdoc".formatted(getRenderDocVersion().get()));
         }
 
         throw new IllegalStateException("Unsupported OS: " + VersionJson.OS.getCurrent().name());
@@ -90,7 +102,7 @@ public abstract class RenderDocDownloaderTask extends NeoGradleBase {
 
     private String getOSSpecificRenderDocUrl() {
         if (VersionJson.OS.getCurrent() == VersionJson.OS.WINDOWS) {
-            return "https://renderdoc.org/stable/1.33/RenderDoc_" + getRenderDocVersion().get() + "_64.zip";
+            return "https://renderdoc.org/stable/1.33/RenderDoc_%s_64.zip".formatted(getRenderDocVersion().get());
         }
 
         if (VersionJson.OS.getCurrent() == VersionJson.OS.LINUX) {
@@ -112,30 +124,31 @@ public abstract class RenderDocDownloaderTask extends NeoGradleBase {
         throw new IllegalStateException("Unsupported OS: " + VersionJson.OS.getCurrent().name());
     }
 
-    private void extractOSSpecific(final File root) {
+    private void extractOSSpecific(final File input) {
         if (VersionJson.OS.getCurrent() == VersionJson.OS.WINDOWS) {
-            extractWindows(root);
+            extractWindows(input);
         } else if (VersionJson.OS.getCurrent() == VersionJson.OS.LINUX) {
-            extractLinux(root);
+            extractLinux(input);
         } else {
             throw new IllegalStateException("Unsupported OS: " + VersionJson.OS.getCurrent().name());
         }
     }
 
-    private void extractWindows(final File root) {
-        final File zip = new File(root, "renderdoc.zip");
-        final File output = getRenderDocInstallationPath().get().getAsFile();
+    private void extractWindows(final File input) {
+        final File output = getRenderDocInstallationDirectory().get().getAsFile();
 
         final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(output.toPath());
-        getArchiveOperations().zipTree(zip).visit(visitor);
+        getArchiveOperations().zipTree(input).visit(visitor);
     }
 
-    private void extractLinux(final File root) {
-        final File tar = new File(root, "renderdoc.tar.gz");
-        final File output = getRenderDocInstallationPath().get().getAsFile();
+    private void extractLinux(final File input) {
+        final File output = getRenderDocInstallationDirectory().get().getAsFile();
 
         final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(output.toPath());
-        getArchiveOperations().tarTree(tar).visit(visitor);
+        getArchiveOperations().tarTree(input).visit(visitor);
+
+        final File executable = getOSSpecificRenderDocExecutableFile(output);
+        executable.setExecutable(true);
     }
 
 

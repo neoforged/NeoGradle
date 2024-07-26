@@ -9,6 +9,7 @@ import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunRenderDocOptions;
 import net.neoforged.gradle.dsl.common.runs.run.RunSourceSets;
 import net.neoforged.gradle.dsl.common.runs.run.RunTestScope;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
@@ -37,6 +38,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     private final RunSourceSets modSources;
     private final RunSourceSets unitTestSources;
     private final RunTestScope testScope;
+    private final RunRenderDocOptions renderDocOptions;
 
     private ListProperty<String> jvmArguments;
     private MapProperty<String, String> environmentVariables;
@@ -51,6 +53,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.modSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
         this.unitTestSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
         this.testScope = project.getObjects().newInstance(RunTestScopeImpl.class, project);
+        this.renderDocOptions = project.getObjects().newInstance(RunRenderDocOptionsImpl.class, project);
 
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
@@ -65,7 +68,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsGameTest().convention(false);
         getIsJUnit().convention(false);
         getShouldBuildAllProjects().convention(false);
-        getUseRenderDoc().convention(false);
         getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project, String.format("RunRuntimeDependencies%s", StringCapitalizationUtils.capitalize(name))));
 
         getConfigureAutomatically().convention(true);
@@ -122,10 +124,9 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    public abstract Property<String> getMainClass();
-
-    @Override
-    public abstract Property<Boolean> getShouldBuildAllProjects();
+    public RunRenderDocOptions getRenderDoc() {
+        return renderDocOptions;
+    }
 
     @Override
     public RunSourceSets getUnitTestSources() {

@@ -20,7 +20,7 @@ interface RunRenderDocOptions extends BaseDSLElement<RunRenderDocOptions> {
     @DSLProperty
     @Input
     @Optional
-    Property<Boolean> getIsEnabled()
+    Property<Boolean> getEnabled()
 
     /**
      * @returns The path to where RenderDoc is installed, or will be installed if the directory is empty or none-existent

@@ -60,13 +60,14 @@ public class RunsUtil {
     }
 
     public static void createTasks(Project project, Run run) {
-        if (run.getRenderDoc().getIsEnabled().get()) {
+        if (run.getRenderDoc().getEnabled().get()) {
             if (!run.getIsClient().get())
                 throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
 
             final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createTaskName("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
                 renderDoc.getRenderDocVersion().set(run.getRenderDoc().getVersion());
-                renderDoc.getRenderDocOutputDirectory().set(run.getRenderDoc().getRenderDocPath());
+                renderDoc.getRenderDocOutputDirectory().set(run.getRenderDoc().getRenderDocPath().dir("download"));
+                renderDoc.getRenderDocInstallationDirectory().set(run.getRenderDoc().getRenderDocPath().dir("installation"));
             });
 
             run.getDependsOn().add(setupRenderDoc);
@@ -148,7 +149,7 @@ public class RunsUtil {
         return ConfigurationUtils.temporaryUnhandledConfiguration(
                 project.getConfigurations(),
                 "renderNurse",
-                project.getDependencies().create("net.neoforged:render-nurse:1.0.0")
+                project.getDependencies().create("net.neoforged:RenderNurse:0.0.7")
         );
     }
 
