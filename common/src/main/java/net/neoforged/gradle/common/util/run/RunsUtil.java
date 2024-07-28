@@ -187,12 +187,9 @@ public class RunsUtil {
 
             run.getDependsOn().add(setupRenderDoc);
 
-            Configuration renderNurse;
+            Configuration renderNurse = null;
             if (run.getModSources().getPrimary().isPresent()) {
                 renderNurse = addLocalRenderNurse(run.getModSources().getPrimary().get());
-            } else {
-                renderNurse = null;
-                run.getModSources().whenSourceSetAdded(RunsUtil::addLocalRenderNurse);
             }
 
             if (renderNurse == null) {

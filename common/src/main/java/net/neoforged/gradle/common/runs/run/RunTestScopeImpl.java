@@ -11,7 +11,6 @@ import java.io.File;
 public abstract class RunTestScopeImpl implements RunTestScope {
 
     private static final String DEFAULT_PATTERN = ".*";
-    private static final String NOTHING_DEFINED_MARKER = "__________NOTHING_DEFINED__________";
 
     private final Project project;
 
@@ -26,7 +25,7 @@ public abstract class RunTestScopeImpl implements RunTestScope {
                             .orElse(getMethod())
                             .orElse(getCategory())
                             .getOrNull() == null) {
-                        return NOTHING_DEFINED_MARKER;
+                        return DEFAULT_PATTERN;
                     }
 
                     return null;
