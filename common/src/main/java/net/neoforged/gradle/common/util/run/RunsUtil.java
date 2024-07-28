@@ -18,9 +18,9 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
+import net.neoforged.gradle.dsl.common.runs.run.RunRenderDocOptions;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -28,8 +28,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.*;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.problems.ProblemSpec;
-import org.gradle.api.problems.Severity;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -180,7 +178,7 @@ public class RunsUtil {
                 throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
 
             final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createTaskName("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
-                renderDoc.getRenderDocVersion().set(run.getRenderDoc().getVersion());
+                renderDoc.getRenderDocVersion().set(run.getRenderDoc().getRenderDocVersion());
                 renderDoc.getRenderDocOutputDirectory().set(run.getRenderDoc().getRenderDocPath().dir("download"));
                 renderDoc.getRenderDocInstallationDirectory().set(run.getRenderDoc().getRenderDocPath().dir("installation"));
             });
@@ -189,12 +187,12 @@ public class RunsUtil {
 
             Configuration renderNurse = null;
             if (run.getModSources().getPrimary().isPresent()) {
-                renderNurse = addLocalRenderNurse(run.getModSources().getPrimary().get());
+                renderNurse = addLocalRenderNurse(run.getModSources().getPrimary().get(), run);
             }
 
             if (renderNurse == null) {
                 //This happens when no primary source set is set, and the renderNurse configuration is not added to the runtime classpath.
-                renderNurse = registerRenderNurse(run.getProject());
+                renderNurse = registerRenderNurse(run.getProject(), run);
             }
 
             //Add the relevant properties, so that render nurse can be used, see its readme for the required values.
@@ -210,20 +208,22 @@ public class RunsUtil {
         }
     }
 
-    private static Configuration addLocalRenderNurse(SourceSet sourceSet) {
+    private static Configuration addLocalRenderNurse(SourceSet sourceSet, Run run) {
         final Project project = SourceSetUtils.getProject(sourceSet);
-        final Configuration renderNurse = registerRenderNurse(project);
+        final Configuration renderNurse = registerRenderNurse(project, run);
 
         final Configuration runtimeClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
         runtimeClasspath.extendsFrom(renderNurse);
         return renderNurse;
     }
 
-    private static @NotNull Configuration registerRenderNurse(Project project) {
+    private static @NotNull Configuration registerRenderNurse(Project project, Run run) {
+        final RunRenderDocOptions renderDocOptions = run.getRenderDoc();
+
         return ConfigurationUtils.temporaryUnhandledConfiguration(
                 project.getConfigurations(),
-                "renderNurse",
-                project.getDependencies().create("net.neoforged:RenderNurse:0.0.7")
+                ConfigurationUtils.getRunName(run, "renderNurse"),
+                project.getDependencies().create("net.neoforged.rendernurse:RenderNurse:%s".formatted(renderDocOptions.getRenderNurseVersion().get()))
         );
     }
 

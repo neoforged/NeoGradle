@@ -36,6 +36,12 @@ interface RunRenderDocOptions extends BaseDSLElement<RunRenderDocOptions> {
      */
     @DSLProperty
     @Input
-    Property<String> getVersion()
+    Property<String> getRenderDocVersion()
 
+    /**
+     * @returns The version of RenderNurse to use
+     */
+    @DSLProperty
+    @Input
+    Property<String> getRenderNurseVersion()
 }
