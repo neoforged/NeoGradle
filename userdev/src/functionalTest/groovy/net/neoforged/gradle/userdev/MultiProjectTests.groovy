@@ -105,6 +105,103 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:")
     }
 
+    def "multiple projects with neoforge dependencies should be able to run the game when renderDoc is enabled"() {
+        given:
+        def rootProject = create("multi_neoforge_root_renderdoc", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        def apiProject = create(rootProject, "api", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
+                package net.neoforged.gradle.apitest;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin(this.pluginUnderTest)
+        })
+
+        def mainProject = create(rootProject,"main", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+                implementation project(':api')
+            }
+            
+            runs {
+                client {
+                    modSource project(':api').sourceSets.main
+                    
+                    renderDoc {
+                        enabled = true
+                    }
+                }
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/main/ApiTests.java", """
+                package net.neoforged.gradle.main;
+                
+                import net.minecraft.client.Minecraft;
+                import net.neoforged.gradle.apitest.FunctionalTests;
+                
+                public class ApiTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                        FunctionalTests.main(args);
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin(this.pluginUnderTest)
+        })
+
+        when:
+        def run = rootProject.run {
+            it.tasks(':main:runData')
+            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
+            it.shouldFail()
+        }
+
+        then:
+        run.task(':main:writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
+
+        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
+                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:")
+    }
+
     def "multiple projects with neoforge dependencies should run using the central cache"() {
         given:
         def rootProject = create("multi_neoforge_root_cached", {
