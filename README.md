@@ -81,7 +81,8 @@ You do not need to create all five of the different runs, only the ones you need
 This is because at the point where gradle actually adds the dependency, we can not create any further runs.
 
 ### Common Plugin
-#### Available Dependency Management
+#### <a id="common-dep-management" /> Available Dependency Management
+##### <a id="common-dep-management-extra-jar" /> Extra Jar
 The common plugin provides dependency management for extra-jar of minecraft.
 This is a special jar containing just the resources and assets of minecraft, no code.
 This is useful for mods that want to depend on the resources of minecraft, but not the code.
