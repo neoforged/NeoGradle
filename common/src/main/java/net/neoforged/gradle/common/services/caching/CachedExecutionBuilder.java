@@ -163,7 +163,6 @@ public class CachedExecutionBuilder<T> {
                     GradleInternalUtils.setTaskFromCache(targetTask, "NeoGradle Cache: Restored from cache");
                 }
 
-
                 //The cache was restored successfully, we do not need to execute the stage
                 return CacheStatus.cachedWithLock(lock);
             } catch (Exception e) {
