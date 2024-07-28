@@ -86,7 +86,7 @@ public abstract class ListLibraries extends DefaultRuntime {
         // Write the list
         final File output = ensureFileWorkspaceReady(getOutput());
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8));
-        Iterator<File> itr = libraries.stream().sorted(Comparator.naturalOrder()).iterator();
+        Iterator<File> itr = libraries.stream().sorted(Comparator.comparing(File::getAbsolutePath)).iterator();
         while (itr.hasNext()) {
             writer.println("-e=" + itr.next().getAbsolutePath());
         }
