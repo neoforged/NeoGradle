@@ -1,8 +1,11 @@
 package net.neoforged.gradle.util;
 
 import groovy.lang.Closure;
+import org.gradle.api.Task;
 import org.gradle.api.internal.GeneratedSubclass;
 import org.gradle.api.internal.plugins.ExtensionContainerInternal;
+import org.gradle.api.internal.tasks.TaskExecutionOutcome;
+import org.gradle.api.internal.tasks.TaskStateInternal;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.util.internal.ConfigureUtil;
@@ -74,6 +77,16 @@ public final class GradleInternalUtils {
         } catch (final ClassNotFoundException | NoSuchMethodException | NoSuchFieldException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException("Failed to get progress logger", e);
         }
+    }
+
+    public static void setTaskUpToDate(Task targetTask, final String reason) {
+        ((TaskStateInternal) targetTask.getState()).setOutcome(TaskExecutionOutcome.UP_TO_DATE);
+        ((TaskStateInternal) targetTask.getState()).setSkipReasonMessage(reason);
+    }
+
+    public static void setTaskFromCache(Task targetTask, String reason) {
+        ((TaskStateInternal) targetTask.getState()).setOutcome(TaskExecutionOutcome.FROM_CACHE);
+        ((TaskStateInternal) targetTask.getState()).setSkipReasonMessage(reason);
     }
 
     /**

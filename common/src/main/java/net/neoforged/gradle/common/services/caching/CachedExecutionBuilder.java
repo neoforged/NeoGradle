@@ -10,6 +10,7 @@ import net.neoforged.gradle.common.services.caching.logging.CacheLogger;
 import net.neoforged.gradle.common.util.hash.HashCode;
 import net.neoforged.gradle.common.util.hash.Hasher;
 import net.neoforged.gradle.common.util.hash.Hashing;
+import net.neoforged.gradle.util.GradleInternalUtils;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
@@ -125,7 +126,7 @@ public class CachedExecutionBuilder<T> {
 
         logger.debug("Task hash: %s".formatted(taskHash));
         executeAll(
-                shouldExecuteCachedFor(taskHash),
+                shouldExecuteCachedFor(targetTask, taskHash),
                 afterExecution()
         );
     }
@@ -133,10 +134,11 @@ public class CachedExecutionBuilder<T> {
     /**
      * Creates a function that determines if a stage should be executed.
      *
+     * @param targetTask The target task.
      * @param taskHash The hash of the task.
      * @return The function that determines if a stage should be executed.
      */
-    private Function<ICacheableJob<?,?>, CacheStatus> shouldExecuteCachedFor(HashCode taskHash) {
+    private Function<ICacheableJob<?,?>, CacheStatus> shouldExecuteCachedFor(Task targetTask, HashCode taskHash) {
         return (stage) -> {
             //Create the cache
             final ICache cache = createCache(taskHash, stage);
@@ -156,7 +158,11 @@ public class CachedExecutionBuilder<T> {
                 if (!cache.restoreTo(stage.output())) {
                     //No cache restore was needed, we can skip the stage
                     logger.onCacheEquals(stage);
+                    GradleInternalUtils.setTaskUpToDate(targetTask, "NeoGradle Cache: Output already exists");
+                } else {
+                    GradleInternalUtils.setTaskFromCache(targetTask, "NeoGradle Cache: Restored from cache");
                 }
+
 
                 //The cache was restored successfully, we do not need to execute the stage
                 return CacheStatus.cachedWithLock(lock);

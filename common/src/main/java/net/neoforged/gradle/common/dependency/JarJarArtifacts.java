@@ -73,6 +73,7 @@ public abstract class JarJarArtifacts {
         return dependencyVersionInformationHandler;
     }
 
+    @Inject
     public JarJarArtifacts(Project project) {
         this.project = project;
         dependencyFilter = getObjectFactory().newInstance(DefaultDependencyFilter.class);
