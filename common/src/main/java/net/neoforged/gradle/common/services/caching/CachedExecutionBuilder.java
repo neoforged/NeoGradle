@@ -158,10 +158,9 @@ public class CachedExecutionBuilder<T> {
                 if (!cache.restoreTo(stage.output())) {
                     //No cache restore was needed, we can skip the stage
                     logger.onCacheEquals(stage);
-                    GradleInternalUtils.setTaskUpToDate(targetTask, "NeoGradle Cache: Output already exists");
-                } else {
-                    GradleInternalUtils.setTaskFromCache(targetTask, "NeoGradle Cache: Restored from cache");
                 }
+
+                targetTask.setDidWork(false);
 
                 //The cache was restored successfully, we do not need to execute the stage
                 return CacheStatus.cachedWithLock(lock);

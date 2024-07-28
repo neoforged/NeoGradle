@@ -79,19 +79,6 @@ public final class GradleInternalUtils {
         }
     }
 
-    public static void setTaskUpToDate(Task targetTask, final String reason) {
-        ((TaskStateInternal) targetTask.getState()).setOutcome(TaskExecutionOutcome.UP_TO_DATE);
-        ((TaskStateInternal) targetTask.getState()).setSkipReasonMessage(reason);
-        ((TaskStateInternal) targetTask.getState()).setDidWork(false);
-
-    }
-
-    public static void setTaskFromCache(Task targetTask, String reason) {
-        ((TaskStateInternal) targetTask.getState()).setOutcome(TaskExecutionOutcome.FROM_CACHE);
-        ((TaskStateInternal) targetTask.getState()).setSkipReasonMessage(reason);
-        ((TaskStateInternal) targetTask.getState()).setDidWork(false);
-    }
-
     /**
      * A wrapper for a progress logger.
      * The usage of this logger varies between gradle versions a tiny bit, so we use reflection to handle it.
