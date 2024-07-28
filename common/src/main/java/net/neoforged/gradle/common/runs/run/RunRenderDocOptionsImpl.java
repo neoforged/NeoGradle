@@ -16,7 +16,7 @@ public abstract class RunRenderDocOptionsImpl implements RunRenderDocOptions {
         getEnabled().convention(false);
         getRenderDocPath().convention(getProject().getLayout().getBuildDirectory().dir("renderdoc"));
         getRenderDocVersion().convention("1.33");
-        getRenderNurseVersion().convention("0.0.9");
+        getRenderNurseVersion().convention("0.0.12");
     }
 
     @Override
