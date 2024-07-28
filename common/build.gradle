@@ -42,5 +42,7 @@ dependencies {
 def versionFile = file('src/main/generated/version.neogradle')
 if (versionFile.exists()) {
     versionFile.delete()
+} else {
+    versionFile.parentFile.mkdirs()
 }
 versionFile << project.version.toString()
