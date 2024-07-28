@@ -82,11 +82,14 @@ public final class GradleInternalUtils {
     public static void setTaskUpToDate(Task targetTask, final String reason) {
         ((TaskStateInternal) targetTask.getState()).setOutcome(TaskExecutionOutcome.UP_TO_DATE);
         ((TaskStateInternal) targetTask.getState()).setSkipReasonMessage(reason);
+        ((TaskStateInternal) targetTask.getState()).setDidWork(false);
+
     }
 
     public static void setTaskFromCache(Task targetTask, String reason) {
         ((TaskStateInternal) targetTask.getState()).setOutcome(TaskExecutionOutcome.FROM_CACHE);
         ((TaskStateInternal) targetTask.getState()).setSkipReasonMessage(reason);
+        ((TaskStateInternal) targetTask.getState()).setDidWork(false);
     }
 
     /**
