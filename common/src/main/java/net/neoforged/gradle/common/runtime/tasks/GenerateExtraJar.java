@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
@@ -28,15 +28,19 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         getOutputFileName().set("client-extra.jar");
     }
 
-    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
-    public abstract Property<CentralCacheService> getCacheService();
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
 
     @TaskAction
     public void run() throws Throwable {
-        getCacheService().get().doCached(this, this::doRun, getOutput());
+        getCacheService().get()
+                        .cached(
+                                this,
+                                ICacheableJob.Default.file(getOutput(), this::doRun)
+                        ).execute();
     }
 
-    public File doRun() throws Exception {
+    private void doRun() throws Exception {
         final File originalJar = getOriginalJar().get().getAsFile();
         final File outputJar = ensureFileWorkspaceReady(getOutput());
 
@@ -49,8 +53,6 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(outputJar))) {
             filteredInput.visit(new ZipBuildingFileTreeVisitor(zos));
         }
-
-        return outputJar;
     }
 
     @InputFile

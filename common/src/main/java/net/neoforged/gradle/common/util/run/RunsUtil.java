@@ -2,18 +2,25 @@ package net.neoforged.gradle.common.util.run;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.PrepareUnitTestTask;
 import net.neoforged.gradle.common.tasks.RenderDocDownloaderTask;
 import net.neoforged.gradle.common.util.ClasspathUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
+import net.neoforged.gradle.common.util.VersionJson;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.DevLogin;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -21,6 +28,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.*;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.problems.ProblemSpec;
+import org.gradle.api.problems.Severity;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -60,43 +69,6 @@ public class RunsUtil {
     }
 
     public static void createTasks(Project project, Run run) {
-        if (run.getRenderDoc().getEnabled().get()) {
-            if (!run.getIsClient().get())
-                throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
-
-            final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createTaskName("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
-                renderDoc.getRenderDocVersion().set(run.getRenderDoc().getVersion());
-                renderDoc.getRenderDocOutputDirectory().set(run.getRenderDoc().getRenderDocPath().dir("download"));
-                renderDoc.getRenderDocInstallationDirectory().set(run.getRenderDoc().getRenderDocPath().dir("installation"));
-            });
-
-            run.getDependsOn().add(setupRenderDoc);
-
-            Configuration renderNurse;
-            if (run.getModSources().getPrimary().isPresent()) {
-                renderNurse = addLocalRenderNurse(run.getModSources().getPrimary().get());
-            } else {
-                renderNurse = null;
-                run.getModSources().whenSourceSetAdded(RunsUtil::addLocalRenderNurse);
-            }
-
-            if (renderNurse == null) {
-                //This happens when no primary source set is set, and the renderNurse configuration is not added to the runtime classpath.
-                renderNurse = registerRenderNurse(run.getProject());
-            }
-
-            //Add the relevant properties, so that render nurse can be used, see its readme for the required values.
-            run.getEnvironmentVariables().put("LD_PRELOAD", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
-            run.getSystemProperties().put(
-                    "neoforge.rendernurse.renderdoc.library", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath)
-            );
-            run.getJvmArguments().add(renderNurse.getIncoming().getArtifacts().getResolvedArtifacts()
-                    .map(artifactView -> artifactView.iterator().next())
-                    .map(resolvedArtifact -> "-javaagent:%s".formatted(resolvedArtifact.getFile().getAbsolutePath())));
-            run.getJvmArguments().add("--enable-preview");
-            run.getJvmArguments().add("--enable-native-access=ALL-UNNAMED");
-        }
-
         if (!run.getIsJUnit().get()) {
             //Create run exec tasks for all non-unit test runs
             project.getTasks().register(createTaskName(run.getName()), JavaExec.class, runExec -> {
@@ -133,6 +105,113 @@ public class RunsUtil {
             });
         } else {
             createOrReuseTestTask(project, run.getName(), run);
+        }
+    }
+
+    public static void ensureMacOsSupport(Run run) {
+        //When we are on mac-os we need to add the -XstartOnFirstThread argument to the JVM arguments
+        if (VersionJson.OS.getCurrent() == VersionJson.OS.OSX && run.getIsClient().get()) {
+            //This argument is only needed on the client.
+            run.getJvmArguments().add("-XstartOnFirstThread");
+        }
+    }
+
+    public static void setupModSources(Project project, Run run) {
+        // We add default junit sourcesets here because we need to know the type of the run first
+        final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
+        if (conventions.getIsEnabled().get() && conventions.getSourceSets().getIsEnabled().get() && conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+            if (run.getIsJUnit().get()) {
+                run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
+            }
+        }
+
+        //Warn the user if no source sets are configured
+        if (run.getModSources().all().get().isEmpty()) {
+            final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+
+            throw reporter.throwing(problemSpec -> problemSpec.id("runs", "noSourceSetsConfigured")
+                    .contextualLabel("Run: " + run.getName())
+                    .details("The run: " + run.getName() + " has no source sets configured.")
+                    .severity(Severity.ERROR)
+                    .solution("Please configure at least one source set.")
+                    .withException(new IllegalStateException("No source sets configured for run: " + run.getName()))
+                    .documentedAt(reporter.readMeUrl("handling-of-none-neogradle-sibling-projects")));
+        }
+    }
+
+    public static void setupDevLoginSupport(Project project, Run run) {
+        //Handle dev login.
+        final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
+        final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
+        if (devLogin.getEnabled().get()) {
+            final RunDevLoginOptions runsDevLogin = run.getDevLogin();
+
+            //Dev login is only supported on the client side
+            if (run.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+                final String mainClass = run.getMainClass().get();
+
+                //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
+                final SourceSet defaultSourceSet = run.getModSources().all().get().entries().iterator().next().getValue();
+                final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
+                final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
+                final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
+
+                sourceSetRuntimeClasspathConfiguration.extendsFrom(sourceSetRuntimeOnlyDevLoginConfiguration);
+                sourceSetRuntimeOnlyDevLoginConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
+
+                //Update the program arguments to properly launch the dev login tool
+                run.getProgramArguments().add("--launch_target");
+                run.getProgramArguments().add(mainClass);
+
+                if (runsDevLogin.getProfile().isPresent()) {
+                    run.getProgramArguments().add("--launch_profile");
+                    run.getProgramArguments().add(runsDevLogin.getProfile().get());
+                }
+
+                //Set the main class to the dev login tool
+                run.getMainClass().set(devLogin.getMainClass());
+            } else if (!run.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+                throw new InvalidUserDataException("Dev login is only supported on runs which are marked as clients! The run: " + run.getName() + " is not a client run.");
+            }
+        }
+    }
+
+    public static void setupRenderDocSupport(Project project, Run run) {
+        if (run.getRenderDoc().getEnabled().get()) {
+            if (!run.getIsClient().get())
+                throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
+
+            final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createTaskName("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
+                renderDoc.getRenderDocVersion().set(run.getRenderDoc().getVersion());
+                renderDoc.getRenderDocOutputDirectory().set(run.getRenderDoc().getRenderDocPath().dir("download"));
+                renderDoc.getRenderDocInstallationDirectory().set(run.getRenderDoc().getRenderDocPath().dir("installation"));
+            });
+
+            run.getDependsOn().add(setupRenderDoc);
+
+            Configuration renderNurse;
+            if (run.getModSources().getPrimary().isPresent()) {
+                renderNurse = addLocalRenderNurse(run.getModSources().getPrimary().get());
+            } else {
+                renderNurse = null;
+                run.getModSources().whenSourceSetAdded(RunsUtil::addLocalRenderNurse);
+            }
+
+            if (renderNurse == null) {
+                //This happens when no primary source set is set, and the renderNurse configuration is not added to the runtime classpath.
+                renderNurse = registerRenderNurse(run.getProject());
+            }
+
+            //Add the relevant properties, so that render nurse can be used, see its readme for the required values.
+            run.getEnvironmentVariables().put("LD_PRELOAD", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
+            run.getSystemProperties().put(
+                    "neoforge.rendernurse.renderdoc.library", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath)
+            );
+            run.getJvmArguments().add(renderNurse.getIncoming().getArtifacts().getResolvedArtifacts()
+                    .map(artifactView -> artifactView.iterator().next())
+                    .map(resolvedArtifact -> "-javaagent:%s".formatted(resolvedArtifact.getFile().getAbsolutePath())));
+            run.getJvmArguments().add("--enable-preview");
+            run.getJvmArguments().add("--enable-native-access=ALL-UNNAMED");
         }
     }
 

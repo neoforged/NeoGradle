@@ -5,13 +5,10 @@ import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;

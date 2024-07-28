@@ -1,6 +1,6 @@
 package net.neoforged.gradle.userdev.convention
 
-import net.neoforged.gradle.common.caching.CentralCacheService
+
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -234,11 +234,6 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Could not find method runs() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
-    }
-
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/functionalTest")
     }
 
     def "using the run convention configuration puts the dependency on the runtime config"() {

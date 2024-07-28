@@ -1,12 +1,10 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
-import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.util.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
@@ -45,21 +43,24 @@ import java.util.zip.ZipOutputStream;
 @CacheableTask
 public abstract class InjectZipContent extends DefaultRuntime {
 
-    private final CacheableMinecraftVersion minimalSupportedVersion = CacheableMinecraftVersion.from("1.14.4", getProject());
-
-    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
-    public abstract Property<CentralCacheService> getCacheService();
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
 
     @TaskAction
     public void run() throws Throwable {
-        getCacheService().get().doCached(this, () -> {
-            final Provider<RegularFile> inputZipFile = getInjectionSource();
-            final File outputFile = ensureFileWorkspaceReady(getOutput());
+        getCacheService().get()
+                .cached(
+                        this,
+                        ICacheableJob.Default.file(
+                                getOutput(),
+                                () -> {
+                                    final Provider<RegularFile> inputZipFile = getInjectionSource();
+                                    final File outputFile = ensureFileWorkspaceReady(getOutput());
 
-            injectCode(inputZipFile.get().getAsFile(), outputFile);
-
-            return outputFile;
-        }, getOutput());
+                                    injectCode(inputZipFile.get().getAsFile(), outputFile);
+                                }
+                        )
+                ).execute();
     }
 
     @InputFile
@@ -132,14 +133,6 @@ public abstract class InjectZipContent extends DefaultRuntime {
     }
 
     /**
-     * Configures this task to inject the content of the given Zip or Jar-File.
-     */
-    public void injectZip(Provider<File> zipFile) {
-        injectZip(zipFile, filter -> {
-        });
-    }
-
-    /**
      * Configures this task to inject the content of the given Zip-file matching the given filter.
      */
     public void injectZip(Provider<File> zipFile, Consumer<PatternFilterable> filter) {
@@ -156,7 +149,8 @@ public abstract class InjectZipContent extends DefaultRuntime {
         InjectFromFileTreeSource zipInject = getProject().getObjects().newInstance(InjectFromFileTreeSource.class);
         zipInject.getFiles().from(directory);
 
-        addSource(zipInject, filter -> {});
+        addSource(zipInject, filter -> {
+        });
     }
 
     private void addSource(AbstractInjectSource zipInject, Consumer<PatternFilterable> filter) {

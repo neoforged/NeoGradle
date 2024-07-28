@@ -21,7 +21,6 @@
 package net.neoforged.gradle.common.runtime.naming;
 
 import net.minecraftforge.gdi.ConfigurableDSLElement;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.Project;
 

@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.extensions;
 
 import net.neoforged.gradle.common.CommonProjectPlugin;
+import net.neoforged.gradle.common.accesstransformers.AccessTransformerPublishing;
 import net.neoforged.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import org.gradle.api.Action;
@@ -26,15 +27,15 @@ public abstract class AccessTransformersExtension extends BaseFilesWithEntriesEx
 
         // We have to add these after project evaluation because of dependency replacement making configurations non-lazy; adding them earlier would prevent further addition of dependencies
         project.afterEvaluate(p -> {
-            p.getConfigurations().maybeCreate(CommonProjectPlugin.ACCESS_TRANSFORMER_CONFIGURATION).fromDependencyCollector(getConsume());
-            p.getConfigurations().maybeCreate(CommonProjectPlugin.ACCESS_TRANSFORMER_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());
+            p.getConfigurations().maybeCreate(AccessTransformerPublishing.ACCESS_TRANSFORMER_CONFIGURATION).fromDependencyCollector(getConsume());
+            p.getConfigurations().maybeCreate(AccessTransformerPublishing.ACCESS_TRANSFORMER_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());
         });
     }
 
     @Override
     public void expose(Object path, Action<ConfigurablePublishArtifact> action) {
         file(path);
-        projectArtifacts.add(CommonProjectPlugin.ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION, path, action);
+        projectArtifacts.add(AccessTransformerPublishing.ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION, path, action);
     }
 
     @Override
@@ -44,6 +45,6 @@ public abstract class AccessTransformersExtension extends BaseFilesWithEntriesEx
 
     @Override
     public void expose(Dependency dependency) {
-        projectDependencies.add(CommonProjectPlugin.ACCESS_TRANSFORMER_API_CONFIGURATION, dependency);
+        projectDependencies.add(AccessTransformerPublishing.ACCESS_TRANSFORMER_API_CONFIGURATION, dependency);
     }
 }

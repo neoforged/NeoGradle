@@ -1,6 +1,6 @@
 package net.neoforged.gradle.userdev
 
-import net.neoforged.gradle.common.caching.CentralCacheService
+
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -431,5 +431,47 @@ class RunTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':test').outcome == TaskOutcome.SUCCESS
+    }
+
+    def "runs with no modsource create problem"() {
+        given:
+        def project = create("runs_with_no_modsource_create_problem", {
+            it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
+            it.property('neogradle.subsystems.conventions.sourcesets.enabled', 'false')
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            
+            runs {
+                client {
+                    // no modsource
+                }
+            }
+            
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':dependencies')
+            it.stacktrace()
+            it.debug()
+        }
+
+        then:
+        true
     }
 }

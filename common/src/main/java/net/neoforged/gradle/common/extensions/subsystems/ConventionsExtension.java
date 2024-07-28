@@ -9,7 +9,6 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import org.gradle.api.Project;
-import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
 

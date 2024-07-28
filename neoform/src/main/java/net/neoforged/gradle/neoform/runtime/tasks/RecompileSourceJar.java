@@ -1,12 +1,13 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
 import net.neoforged.gradle.common.runtime.tasks.RuntimeArgumentsImpl;
 import net.neoforged.gradle.common.runtime.tasks.RuntimeMultiArgumentsImpl;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
+import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -14,15 +15,18 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.services.ServiceReference;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
-import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.work.InputChanges;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.util.Objects;
 
 @CacheableTask
@@ -38,9 +42,9 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
-        
+
         this.javaVersion = getProject().getObjects().property(JavaLanguageVersion.class);
-        
+
         final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
         this.javaToolchainService = getProviderFactory().provider(() -> service);
 
@@ -87,13 +91,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     public RuntimeArguments getArguments() {
         return arguments;
     }
-    
+
     @Override
     @Nested
     public RuntimeMultiArguments getMultiArguments() {
         return multiArguments;
     }
-    
+
     @Override
     public String getGroup() {
         final String name = getRuntimeName().getOrElse("unknown");
@@ -126,18 +130,24 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @Override
     public abstract ProviderFactory getProviderFactory();
 
-    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
-    public abstract Property<CentralCacheService> getCacheService();
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
 
     @Override
     protected void compile(InputChanges inputs) {
         try {
-            getCacheService().get().doCachedDirectory(this, () -> {
-                super.compile(inputs);
-                return getDestinationDirectory().get().getAsFile();
-            }, getDestinationDirectory());
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to recompile using caching.", e);
+            getCacheService().get()
+                    .cached(
+                            this,
+                            ICacheableJob.Default.directory(
+                                    getDestinationDirectory(),
+                                    () -> {
+                                        super.compile(inputs);
+                                    }
+                            )
+                    ).execute();
+        } catch (IOException e) {
+            throw new GradleException("Failed to recompile!", e);
         }
     }
 }

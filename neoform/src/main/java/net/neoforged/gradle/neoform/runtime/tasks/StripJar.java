@@ -1,13 +1,11 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
-import net.neoforged.gradle.util.FileUtils;
-import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
+import net.neoforged.gradle.util.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -51,26 +49,23 @@ public abstract class StripJar extends DefaultRuntime {
         getFilters().finalizeValueOnRead();
     }
 
-    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
-    public abstract Property<CentralCacheService> getCacheService();
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
 
     @TaskAction
     protected void run() throws Throwable {
-        getCacheService().get().doCached(
+        getCacheService().get().cached(
                 this,
-                this::doRun,
-                getOutput()
-        );
+                ICacheableJob.Default.file(getOutput(), this::doRun)
+        ).execute();
     }
 
-    protected File doRun() throws Throwable {
+    protected void doRun() throws Exception {
         final File input = getInput().get().getAsFile();
         final File output = ensureFileWorkspaceReady(getOutput());
         final boolean isWhitelist = getIsWhitelistMode().get();
 
         strip(input, output, isWhitelist);
-
-        return output;
     }
 
     private void strip(File input, File output, boolean whitelist) throws IOException {

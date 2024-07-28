@@ -10,7 +10,6 @@ import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.Buildable;
 import org.gradle.api.Project;
-import org.gradle.api.ProjectConfigurationException;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;

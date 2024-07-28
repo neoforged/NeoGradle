@@ -2,7 +2,6 @@ package net.neoforged.gradle.common.runtime.naming.tasks;
 
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.naming.renamer.IMappingFileSourceRenamer;
-import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;

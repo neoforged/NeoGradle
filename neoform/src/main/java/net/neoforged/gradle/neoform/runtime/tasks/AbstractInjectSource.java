@@ -1,6 +1,5 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
-import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.Input;

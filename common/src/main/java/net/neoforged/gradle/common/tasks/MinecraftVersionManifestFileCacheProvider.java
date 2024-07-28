@@ -1,8 +1,6 @@
 package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
-import net.neoforged.gradle.dsl.common.util.MinecraftVersionAndUrl;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 

@@ -8,8 +8,6 @@ import net.neoforged.gradle.dsl.userdev.runtime.specification.UserDevSpecificati
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileTree;
 
-import java.io.File;
-
 @CompileStatic
 public interface UserDevDefinition<S extends UserDevSpecification> extends Definition<S> {
     NeoFormDefinition<?> getNeoFormRuntimeDefinition();

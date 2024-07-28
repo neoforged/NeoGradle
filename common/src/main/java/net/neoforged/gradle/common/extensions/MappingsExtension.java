@@ -2,7 +2,6 @@ package net.neoforged.gradle.common.extensions;
 
 import groovy.lang.MissingMethodException;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
-import net.neoforged.gradle.common.util.MappingUtils;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;

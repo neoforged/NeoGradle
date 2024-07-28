@@ -2,16 +2,14 @@ package net.neoforged.gradle.common.runs.run;
 
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.common.runs.run.RunRenderDocOptions;
-import net.neoforged.gradle.dsl.common.runs.run.RunSourceSets;
-import net.neoforged.gradle.dsl.common.runs.run.RunTestScope;
+import net.neoforged.gradle.dsl.common.runs.run.*;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
@@ -22,7 +20,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +36,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     private final RunSourceSets unitTestSources;
     private final RunTestScope testScope;
     private final RunRenderDocOptions renderDocOptions;
+    private final RunDevLoginOptions devLoginOptions;
 
     private ListProperty<String> jvmArguments;
     private MapProperty<String, String> environmentVariables;
@@ -54,6 +52,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.unitTestSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
         this.testScope = project.getObjects().newInstance(RunTestScopeImpl.class, project);
         this.renderDocOptions = project.getObjects().newInstance(RunRenderDocOptionsImpl.class, project);
+        this.devLoginOptions = project.getObjects().newInstance(RunDevLoginOptionsImpl.class, project, this);
 
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
@@ -126,6 +125,11 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     public RunRenderDocOptions getRenderDoc() {
         return renderDocOptions;
+    }
+
+    @Override
+    public RunDevLoginOptions getDevLogin() {
+        return devLoginOptions;
     }
 
     @Override
@@ -379,7 +383,13 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                                         .toList()
                                 ))).map(types -> {
             if (types.isEmpty()) {
-                throw new GradleException("No run type found with name: " + name);
+                final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+                reporter.reporting(problem -> problem
+                        .id("run-type-not-found", "Run type not found")
+                        .contextualLabel("The run type '%s' was not found".formatted(name))
+                        .severity(org.gradle.api.problems.Severity.ERROR)
+                        .solution("Ensure the run type is defined in the run or a dependency")
+                );
             }
             return types;
         });

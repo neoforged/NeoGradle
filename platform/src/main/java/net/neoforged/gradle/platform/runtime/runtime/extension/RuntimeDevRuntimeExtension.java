@@ -1,7 +1,6 @@
 package net.neoforged.gradle.platform.runtime.runtime.extension;
 
 import io.codechicken.diffpatch.util.PatchMode;
-import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
@@ -25,8 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public abstract class RuntimeDevRuntimeExtension extends CommonRuntimeExtension<RuntimeDevRuntimeSpecification, RuntimeDevRuntimeSpecification.Builder, RuntimeDevRuntimeDefinition> {
     

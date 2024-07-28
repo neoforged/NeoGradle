@@ -158,6 +158,13 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract RunRenderDocOptions getRenderDoc();
 
     /**
+     * @returns the DevLogin options for this run.
+     */
+    @Nested
+    @DSLProperty
+    abstract RunDevLoginOptions getDevLogin();
+
+    /**
      * Defines the source sets that are used as a mod.
      * <p>
      * For changing the mod identifier a source set belongs to see

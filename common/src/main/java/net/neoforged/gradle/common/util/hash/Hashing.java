@@ -60,6 +60,22 @@ public class Hashing {
         return DEFAULT.hashFile(file);
     }
 
+    public static HashCode hashDirectory(File file) throws IOException {
+        Hasher hasher = newHasher();
+        hasher.putString("DIRECTORY");
+        hasher.putString(file.getName());
+        for (File listFile : Objects.requireNonNull(file.listFiles())) {
+            final HashCode innerHash;
+            if (listFile.isFile()) {
+                 innerHash = hashFile(listFile);
+            } else {
+                innerHash = hashDirectory(listFile);
+            }
+            hasher.putHash(innerHash);
+        }
+        return hasher.hash();
+    }
+
     public static HashCode hashHashable(Hashable hashable) {
         Hasher hasher = newHasher();
         hasher.put(hashable);

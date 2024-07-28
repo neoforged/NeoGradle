@@ -18,11 +18,9 @@ import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 
-import java.io.File;
 import java.nio.file.Path;
 
 @CacheableTask

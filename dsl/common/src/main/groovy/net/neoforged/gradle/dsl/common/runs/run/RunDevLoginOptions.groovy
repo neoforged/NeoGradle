@@ -11,7 +11,7 @@ import org.gradle.api.tasks.Optional
  * Defines the object structure for the dev login configuration of a run
  */
 @CompileStatic
-interface RunDevLogin extends ConfigurableDSLElement<RunDevLogin> {
+interface RunDevLoginOptions extends ConfigurableDSLElement<RunDevLoginOptions> {
 
     /**
      * Indicates if the dev login is enabled.

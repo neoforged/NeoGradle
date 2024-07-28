@@ -1,23 +1,15 @@
 package net.neoforged.gradle.userdev.dependency;
 
-import net.neoforged.gradle.common.util.ProjectUtils;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
-import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementAware;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ExternalModuleDependency;
-import org.gradle.api.artifacts.dsl.DependencyCollector;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
