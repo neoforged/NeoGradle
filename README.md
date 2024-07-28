@@ -80,6 +80,21 @@ You do not need to create all five of the different runs, only the ones you need
 
 This is because at the point where gradle actually adds the dependency, we can not create any further runs.
 
+### Common Plugin
+#### Available Dependency Management
+The common plugin provides dependency management for extra-jar of minecraft.
+This is a special jar containing just the resources and assets of minecraft, no code.
+This is useful for mods that want to depend on the resources of minecraft, but not the code.
+```gradle
+plugins {
+  id 'net.neoforged.gradle.common' version '<neogradle_version>'
+}
+
+dependencies {
+  implementation "net.minecraft:client:<minecraft_version>:client-extra"
+}
+```
+
 ### NeoForm Runtime Plugin
 
 This plugin enables use of the NeoForm runtime and allows projects to depend directly on deobfuscated but otherwise
