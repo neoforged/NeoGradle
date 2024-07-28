@@ -13,6 +13,7 @@ import net.neoforged.gradle.common.util.hash.Hashing;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -41,18 +42,27 @@ public class CachedExecutionBuilder<T> {
         }
     }
 
-    private record CacheStatus(@Nullable FileBasedLock lock, boolean shouldExecute) implements AutoCloseable {
+    private record CacheStatus(@Nullable FileBasedLock lock, boolean shouldExecute, @Nullable ICache cache) implements AutoCloseable {
 
         private static CacheStatus alwaysUnlocked() {
-            return new CacheStatus(null, true);
+            return new CacheStatus(null, true, null);
         }
 
-        public static CacheStatus runWithLock(FileBasedLock lock) {
-            return new CacheStatus(lock, true);
+        public static CacheStatus runWithLock(FileBasedLock lock, ICache cache) {
+            return new CacheStatus(lock, true, cache);
         }
 
         public static CacheStatus cachedWithLock(FileBasedLock lock) {
-            return new CacheStatus(lock, false);
+            return new CacheStatus(lock, false, null);
+        }
+
+        @NotNull
+        public ICache cache() {
+            if (cache == null) {
+                throw new IllegalStateException("No cache is available.");
+            }
+
+            return cache;
         }
 
         @Override
@@ -138,7 +148,7 @@ public class CachedExecutionBuilder<T> {
                 //A cached execution is only healthy if the healthy file exists
                 if (lock.hasPreviousFailure()) {
                     logger.debug("Previous failure detected for stage: %s".formatted(stage));
-                    return CacheStatus.runWithLock(lock);
+                    return CacheStatus.runWithLock(lock, cache);
                 }
 
                 //We have a healthy lock, and the previous execution was successful
@@ -156,11 +166,12 @@ public class CachedExecutionBuilder<T> {
         };
     }
 
-    private BiConsumer<ICacheableJob<?,?>, CacheStatus> afterExecution() {
+    private AfterExecute afterExecution() {
         //Return a consumer that logs the cache hit or miss
         return (stage, status) -> {
             if (status.shouldExecute()) {
                 logger.onCacheMiss(stage);
+                status.cache().loadFrom(stage.output());
             } else {
                 logger.onCacheHit(stage);
             }
@@ -229,7 +240,7 @@ public class CachedExecutionBuilder<T> {
      */
     private void executeAll(
             final Function<ICacheableJob<?,?>, CacheStatus> beforeExecute,
-            final BiConsumer<ICacheableJob<?,?>, CacheStatus> afterExecute
+            final AfterExecute afterExecute
             ) {
         //Holds the current state.
         Object state = null;
@@ -257,5 +268,9 @@ public class CachedExecutionBuilder<T> {
                 throw new GradleException("Failed to execute stage: %s".formatted(stage), e);
             }
         }
+    }
+
+    private interface AfterExecute {
+        void accept(ICacheableJob<?,?> stage, CacheStatus status) throws Exception;
     }
 }
