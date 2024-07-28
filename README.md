@@ -172,7 +172,7 @@ runs {
 }
 ```
 
-### NeoForm Runtime Plugin --
+### NeoForm Runtime Plugin
 This plugin enables use of the NeoForm runtime and allows projects to depend directly on deobfuscated but otherwise
 unmodified Minecraft artifacts.
 
