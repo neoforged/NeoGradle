@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.stream.Stream;
 
 public final class TaskHasher {
@@ -43,16 +44,25 @@ public final class TaskHasher {
             hasher.put(value, false); //We skin unknown types (mostly file collections)
         });
 
+        final Set<File> inputFiles = new HashSet<>();
+
         for (File file : inputs.getFiles()) {
             try (Stream<Path> pathStream = Files.walk(file.toPath())) {
                 for (Path path : pathStream.filter(Files::isRegularFile).toList()) {
-                    logger.debug("Hashing task input file: " + path.toAbsolutePath());
-                    hasher.putString(path.getFileName().toString());
-                    final HashCode code = hashFunction.hashFile(path.toFile());
-                    logger.debug("Hashing task input file hash: " + code);
-                    hasher.putHash(code);
+                    inputFiles.add(path.toFile());
                 }
             }
+        }
+
+        final List<File> files = new ArrayList<>(inputFiles);
+        files.sort(Comparator.comparing(File::getAbsolutePath));
+
+        for (File file : files) {
+            logger.debug("Hashing task input file: " + file.getAbsolutePath());
+            hasher.putString(file.getName());
+            final HashCode code = hashFunction.hashFile(file);
+            logger.debug("Hashing task input file hash: " + code);
+            hasher.putHash(code);
         }
     }
 
