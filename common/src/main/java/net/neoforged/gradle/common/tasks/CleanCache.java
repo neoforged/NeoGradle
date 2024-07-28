@@ -15,7 +15,7 @@ public abstract class CleanCache extends DefaultTask {
     public abstract Property<CachedExecutionService> getCacheService();
 
     public CleanCache() {
-        setGroup("neoforged");
+        setGroup("neogradle");
         setDescription("Cleans the cache directory");
     }
 

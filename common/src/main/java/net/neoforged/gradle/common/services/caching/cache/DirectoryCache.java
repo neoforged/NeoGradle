@@ -20,12 +20,12 @@ public class DirectoryCache implements ICache {
 
     @Override
     public void loadFrom(File file) throws IOException {
-        if (!cacheDir.exists()) {
-            cacheDir.mkdirs();
-        }
-
         if (file.exists()) {
             final File output = new File(cacheDir, "output");
+            if (!output.exists()) {
+                output.mkdirs();
+            }
+
             FileUtils.cleanDirectory(output);
             FileUtils.copyDirectory(file, output);
         }
