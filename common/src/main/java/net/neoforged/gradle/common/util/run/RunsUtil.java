@@ -223,7 +223,7 @@ public class RunsUtil {
         return ConfigurationUtils.temporaryUnhandledConfiguration(
                 project.getConfigurations(),
                 ConfigurationUtils.getRunName(run, "renderNurse"),
-                project.getDependencies().create("net.neoforged.rendernurse:RenderNurse:%s".formatted(renderDocOptions.getRenderNurseVersion().get()))
+                project.getDependencies().create("net.neoforged:render-nurse:%s".formatted(renderDocOptions.getRenderNurseVersion().get()))
         );
     }
 
