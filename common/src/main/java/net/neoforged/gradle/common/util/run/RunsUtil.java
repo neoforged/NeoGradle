@@ -131,11 +131,9 @@ public class RunsUtil {
 
             throw reporter.throwing(problemSpec -> problemSpec.id("runs", "noSourceSetsConfigured")
                     .contextualLabel("Run: " + run.getName())
-                    .details("The run: " + run.getName() + " has no source sets configured.")
-                    .severity(Severity.ERROR)
-                    .solution("Please configure at least one source set.")
-                    .withException(new IllegalStateException("No source sets configured for run: " + run.getName()))
-                    .documentedAt(reporter.readMeUrl("handling-of-none-neogradle-sibling-projects")));
+                    .details("The run: " + run.getName() + " has no source sets configured")
+                    .solution("Please configure at least one source set")
+                    .section("handling-of-none-neogradle-sibling-projects"));
         }
     }
 

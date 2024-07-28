@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.dependency;
 
 import com.google.common.collect.Maps;
+import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import net.neoforged.gradle.common.runtime.tasks.GenerateExtraJar;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
@@ -73,8 +74,16 @@ public abstract class ExtraJarDependencyManager {
 
     private ReplacementResult generateReplacement(final Project project, final Dependency dependency) {
         final String minecraftVersion = dependency.getVersion();
-        if (minecraftVersion == null)
-            throw new IllegalArgumentException("Dependency version is null");
+        if (minecraftVersion == null) {
+            final NeoGradleProblemReporter problemReporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+            throw problemReporter.throwing(spec -> {
+                        spec.id("dependencies.extra-jar", "missingVersion")
+                        .contextualLabel("Client-Extra Jar: Missing Version")
+                        .details("The dependency %s does not have a version specified".formatted(dependency))
+                        .solution("Specify a version for the dependency")
+                        .section("common-dep-management-extra-jar");
+            });
+        }
 
         return replacements.computeIfAbsent(minecraftVersion, (v) -> {
             final MinecraftArtifactCache minecraftArtifactCacheExtension = project.getExtensions().getByType(MinecraftArtifactCache.class);

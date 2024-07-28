@@ -48,7 +48,7 @@ public class ResolvedJarJarArtifact {
     }
 
     public ContainedJarMetadata createContainerMetadata() {
-        return new ContainedJarMetadata(createContainedJarIdentifier(), createContainedVersion(), "META-INF/jarjar/"+file.getName(), isObfuscated(file));
+        return new ContainedJarMetadata(createContainedJarIdentifier(), createContainedVersion(), "META-INF/jarjar/"+file.getName(), false);
     }
 
     @InputFile
@@ -75,14 +75,5 @@ public class ResolvedJarJarArtifact {
     @Input
     public String getArtifact() {
         return artifact;
-    }
-
-    private static boolean isObfuscated(final File dependency) {
-        try(final JarFile jarFile = new JarFile(dependency)) {
-            final Manifest manifest = jarFile.getManifest();
-            return manifest.getMainAttributes().containsKey("Obfuscated-By");
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read jar file for dependency", e);
-        }
     }
 }

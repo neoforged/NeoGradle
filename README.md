@@ -96,6 +96,82 @@ dependencies {
 }
 ```
 
+#### Jar-In-Jar support
+The common plugin provides support for jar-in-jar dependencies, both for publishing and when you consume them.
+##### Consuming Jar-In-Jar dependencies
+If you want to depend on a project that uses jar-in-jar dependencies, you can do so by adding the following to your build.gradle:
+```groovy
+dependencies {
+    implementation "project.with:jar-in-jar:1.2.3"
+}
+```
+Obviously you need to replace `project.with:jar-in-jar:1.2.3` with the actual coordinates of the project you want to depend on,
+and any configuration can be used to determine the scope of your dependency.
+##### <a id="common-jar-in-jar-publishing" /> Publishing
+If you want to publish a jar-in-jar dependency, you can do so by adding the following to your build.gradle:
+```groovy
+dependencies {
+    jarJar("project.you.want.to:include-as-jar-in-jar:[my.lowe.supported.version,potentially.my.upper.supported.version)") {
+        version {
+            prefer "the.version.you.want.to.use"
+        }
+    }
+}
+```
+Important here to note is that specifying a version range is needed. Jar-in-jar dependencies are not supported with a single version, directly.
+If you need to specify a single version, you can do so by specifying the same version for both the lower and upper bounds of the version range: `[the.version.you.want.to.use]`.
+
+###### <a id="common-jar-in-jar-publishing-moves-and-collisions" /> Handling of moved Jar-In-Jar dependencies
+When dependency gets moved from one GAV to another, generally a transfer coordinate gets published, either via maven-metadata.xml, a seperate pom file, or via gradles available-at metadata.
+This can cause the version of the dependency to be different from the version you specified.
+It is best that you update your dependency to the new GAV to prevent problems and confusion in the future.
+
+#### Managing runs
+The common plugin provides a way to manage runs in your project.
+Its main purpose is to ensure that whether you use the vanilla, neoform, platform or userdev modules, you can always manage your runs in the same way.
+```groovy
+plugins {
+  id 'net.neoforged.gradle.common' version '<neogradle_version>'
+}
+
+runs {
+    //...Run configuration
+}
+```
+
+##### <a id="common-runs-configuration-runs" /> Configuration of runs
+When a run is added the common plugin will also inspect it and figure out if any SDK or MDK was added to any of its sourcesets,
+if so, it gives that SDK/MDK a chance to add its own settings to the run.
+This allows provides like NeoForge to preconfigure runs for you.
+
+However if you setup the run as follows:
+```groovy
+runs {
+    someRun {
+        modSource sourceSets.some_version_a_sourceset
+        modSource sourceSets.some_version_b_sourceset
+    }
+}
+```
+where the relevant sourcesets have a dependency in their compile classpath on the given sdk version, and those differ, and error will be raised.
+This is because the common plugin can not determine which version of the sdk to use for the run.
+To fix this, choose one of the versions and add it to the run:
+```groovy
+runs {
+    someRun {
+        modSource sourceSets.some_version_a_sourceset
+    }
+}
+```
+or
+```groovy
+runs {
+    someRun {
+        modSource sourceSets.some_version_b_sourceset
+    }
+}
+```
+
 ### NeoForm Runtime Plugin
 
 This plugin enables use of the NeoForm runtime and allows projects to depend directly on deobfuscated but otherwise

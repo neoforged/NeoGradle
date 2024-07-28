@@ -28,22 +28,26 @@ import java.util.stream.Collectors;
 
 public abstract class JarJar extends Jar {
 
-    @Nested
-    public abstract JarJarArtifacts getJarJarArtifacts();
+    private final CopySpec jarJarCopySpec;
+    private final JarJarArtifacts artifacts;
+
+    public JarJar() {
+        this.artifacts = getProject().getObjects().newInstance(JarJarArtifacts.class, getProject());
+        this.jarJarCopySpec = this.getMainSpec().addChild();
+        this.jarJarCopySpec.into("META-INF/jarjar");
+
+        setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //As opposed to shadow, we do not filter out our entries early!, So we need to handle them accordingly.
+        setManifest(new DefaultInheritManifest(getServices().get(FileResolver.class)));
+    }
 
     @Override
     public InheritManifest getManifest() {
         return (InheritManifest) super.getManifest();
     }
 
-    private final CopySpec jarJarCopySpec;
-
-    public JarJar() {
-        this.jarJarCopySpec = this.getMainSpec().addChild();
-        this.jarJarCopySpec.into("META-INF/jarjar");
-
-        setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //As opposed to shadow, we do not filter out our entries early!, So we need to handle them accordingly.
-        setManifest(new DefaultInheritManifest(getServices().get(FileResolver.class)));
+    @Nested
+    public JarJarArtifacts getJarJarArtifacts() {
+        return artifacts;
     }
 
     // Already included in the JarJarArtifacts

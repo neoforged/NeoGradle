@@ -125,11 +125,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //Set up the IDE run integration manager
         IdeRunIntegrationManager.getInstance().setup(project);
 
-        final TaskProvider<?> cleanCache = project.getTasks().register("cleanCache", CleanCache.class);
-
+        project.getTasks().register("cleanCache", CleanCache.class);
         project.getTasks().named("clean", Delete.class, delete -> {
             delete.delete(configurationData.getLocation());
-            delete.dependsOn(cleanCache);
         });
 
         //Needs to be before after evaluate

@@ -298,7 +298,14 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                     }
                 }, () -> unconfiguredSourceSets.add(sourceSet));
             } catch (MultipleDefinitionsFoundException e) {
-                throw new RuntimeException("Failed to configure run: " + getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
+                final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+                throw reporter.throwing(problem -> problem
+                        .id("multiple-definitions-found", "Multiple runtime definitions found")
+                        .contextualLabel("Run: " + this.getName())
+                        .solution("Ensure only one SDK definition is present for the source set")
+                        .details("There are multiple runtime definitions found for the source set: " + sourceSet.getName())
+                        .section("common-runs-configuration-runs")
+                );
             }
         });
 
