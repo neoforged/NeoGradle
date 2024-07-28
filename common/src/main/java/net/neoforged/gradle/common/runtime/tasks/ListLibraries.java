@@ -199,7 +199,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getDownloadedVersionJsonFile();
     
-    @InputDirectory
+    @OutputDirectory
     @PathSensitive(PathSensitivity.NONE)
     public abstract DirectoryProperty getLibrariesDirectory();
     
