@@ -435,7 +435,7 @@ public class RunsUtil {
 
             testTask.setTestClassesDirs(testClassesDirs);
 
-            testTask.dependsOn(preparedEnvironment);
+            testTask.dependsOn(preparedEnvironment); //TODO: Remove
         });
     }
 

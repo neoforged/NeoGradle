@@ -12,6 +12,7 @@ import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
@@ -136,7 +137,7 @@ public class IdeRunIntegrationManager {
         }
 
         @Override
-        public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
+        public void idea(Project project, Project rootProject, IdeaModel idea, ProjectSettings ideaExtension) {
             project.afterEvaluate(evaluatedProject -> {
                 common(project);
 
@@ -146,10 +147,12 @@ public class IdeRunIntegrationManager {
 
                 project.getExtensions().configure(RunManager.class, runs -> runs.all(run -> createIdeaRun(project, run, ideaRuns, false)));
 
-                final ExtensionAware ideaModelExtensions = (ExtensionAware) idea;
-                final Run ideaDefaultUnitTestRun = ideaModelExtensions.getExtensions().getByType(Run.class);
+                if (project.getExtensions().getByType(Subsystems.class).getConventions().getIde().getIdea().getShouldReconfigureTemplatesForTests().get()) {
+                    final ExtensionAware ideaModelExtensions = (ExtensionAware) idea;
+                    final Run ideaDefaultUnitTestRun = ideaModelExtensions.getExtensions().getByType(Run.class);
 
-                createIdeaRun(project, ideaDefaultUnitTestRun, ideaRuns, true);
+                    createIdeaRun(project, ideaDefaultUnitTestRun, ideaRuns, true);
+                }
             });
         }
 

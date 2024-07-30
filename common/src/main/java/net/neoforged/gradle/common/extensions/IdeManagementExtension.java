@@ -1,17 +1,13 @@
 package net.neoforged.gradle.common.extensions;
 
 import net.neoforged.gradle.common.tasks.IdePostSyncExecutionTask;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
@@ -155,6 +151,7 @@ public abstract class IdeManagementExtension {
             //None found -> Create one.
             idePostSyncTask = project.getTasks().register(IDE_POST_SYNC_TASK_NAME, IdePostSyncExecutionTask.class);
 
+            /*
             final SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
             sourceSets.configureEach(sourceSet -> {
                 final Configuration compileClasspath = project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
@@ -185,11 +182,12 @@ public abstract class IdeManagementExtension {
                 });
             });
 
+            */
 
             //Register the task to run after the IDE import is complete
             apply(new IdeImportAction() {
                 @Override
-                public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
+                public void idea(Project project, Project rootProject, IdeaModel idea, ProjectSettings ideaExtension) {
                     final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
                     final IDE ideConventions = conventions.getIde();
                     final IDEA ideaConventions = ideConventions.getIdea();
@@ -270,7 +268,7 @@ public abstract class IdeManagementExtension {
             final ProjectSettings ideaExt = ((ExtensionAware) model.getProject()).getExtensions().getByType(ProjectSettings.class);
             
             //Configure the project, passing the model, extension, and the relevant project. Which does not need to be the root, but can be.
-            toPerform.idea(project, model, ideaExt);
+            toPerform.idea(project, rootProject, model, ideaExt);
         });
     }
 
@@ -343,10 +341,11 @@ public abstract class IdeManagementExtension {
          * Configure an IntelliJ project.
          *
          * @param project       the project to configure on import
+         * @param rootProject   the root project to configure
          * @param idea          the basic idea gradle extension
          * @param ideaExtension JetBrain's extensions to the base idea model
          */
-        void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension);
+        void idea(Project project, Project rootProject, IdeaModel idea, ProjectSettings ideaExtension);
     }
     
     /**

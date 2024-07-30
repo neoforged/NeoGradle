@@ -69,6 +69,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
             super(parent, "sourcesets");
 
             getShouldMainSourceSetBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion").orElse(true));
+            getShouldTestSourceSetBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion-test").orElse(false));
             getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion-local-run-runtime").orElse(true));
         }
     }
@@ -97,7 +98,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
             super(parent, "runs");
 
             getShouldDefaultRunsBeCreated().convention(getBooleanProperty("create-default-run-per-type").orElse(true));
-            getShouldDefaultTestTaskBeReused().convention(getBooleanProperty("reuse-default-test-task").orElse(true));
+            getShouldDefaultTestTaskBeReused().convention(getBooleanProperty("reuse-default-test-task").orElse(false));
         }
     }
 
@@ -109,6 +110,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
 
             getShouldUseCompilerDetection().convention(getBooleanProperty("compiler-detection").orElse(true));
             getShouldUsePostSyncTask().convention(getBooleanProperty("use-post-sync-task").orElse(false));
+            getShouldReconfigureTemplatesForTests().convention(getBooleanProperty("reconfigure-unit-test-templates").orElse(true));
         }
     }
 }

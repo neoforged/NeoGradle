@@ -27,4 +27,10 @@ interface IDEA extends BaseDSLElement<IDEA> {
      */
     @DSLProperty
     Property<Boolean> getShouldUsePostSyncTask();
+
+    /**
+     * Whether or not the IDEA conventions should be reconfigured to support templates for tests.
+     */
+    @DSLProperty
+    Property<Boolean> getShouldReconfigureTemplatesForTests();
 }

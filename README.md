@@ -172,6 +172,33 @@ runs {
 }
 ```
 
+##### Resource processing
+Gradle supports resource processing out of the box, using the `processResources` task (or equivalent for none main sourcesets).
+However, no IDE supports this out of the box. To provide you with the best experience NeoGradle, will run the `processResources` task for you, before you run the game.
+
+If you are using IDEA and have enabled the "Build and Run using IntelliJ IDEA" option, then NeoGradle will additionally modify its runs, 
+to ensure that the `processResources` task is run before the game is started, and redirects its output to a separate location in your build directory, and these processed 
+resources are used during your run.
+
+> [!WARNING]
+> This means that the resource files created by ideas compile process are not used, and you should not rely on them being up-to-date.   
+
+##### IDEA Compatibility
+Due to the way IDEA starts Unit Tests from the gutter, it is not possible to reconfigure these kinds of tests, if you are running with the IDEA testing engine.
+To support this scenario, by default NeoGradle will reconfigure IDEAs testing defaults to support running these tests within a unit test environment.
+
+However, due to the many constructs it is not possible to configure the defaults correctly for everybody, if you have a none standard testing setup, you can configure the defaults like so:
+```groovy
+idea {
+    unitTests {
+        //Normal run properties, and sourceset configuration as if you are configuring a run:
+        modSource sourceSets.anotherTestSourceSet
+    }
+}
+```
+
+If you want to disable this feature, you can disable the relevant conventions, see [Disabling conventions](#disabling-conventions).
+
 ### NeoForm Runtime Plugin
 This plugin enables use of the NeoForm runtime and allows projects to depend directly on deobfuscated but otherwise
 unmodified Minecraft artifacts.
@@ -194,6 +221,19 @@ dependencies {
   implementation "net.minecraft:neoform_server:<neoform-version>"
 }
 ```
+
+### Userdev Runtime Plugin
+This plugin enables you to develop mods for Modding APIs that use the Platform module to publish their SDKs, Installers and other components.
+Most notably this is currently NeoForge.
+
+This will generally be the plugin you add to your project to develop mods for NeoForge.
+```gradle
+plugins {
+  id 'net.neoforged.gradle.userdev' version '<neogradle_version>'
+}
+```
+
+
 
 ## Apply Parchment Mappings
 
@@ -405,7 +445,13 @@ neogradle.subsystems.conventions.sourcesets.enabled=false
 ```
 
 #### Automatic inclusion of the current project in its runs
-By default, the current project is automatically included in its runs.
+By default, the current projects main sourceset is automatically included in its runs.
+If you want to disable this, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.sourcesets.automatic-inclusion=false
+```
+
+
 If you want to disable this, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.sourcesets.automatic-inclusion=false
@@ -474,11 +520,18 @@ idea {
 }
 ```
 
-#### Post Sync Task Usage
+##### Post Sync Task Usage
 By default, the import in IDEA is run during the sync task.
 If you want to disable this, and use a post sync task, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.ide.idea.use-post-sync-task=true
+```
+
+##### Reconfiguration of IDEA Unit Test Templates
+By default, the IDEA unit test templates are reconfigured to support running unit tests from the gutter.
+You can disable this behavior by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.ide.idea.reconfigure-unit-test-templates=false
 ```
 
 ### Runs

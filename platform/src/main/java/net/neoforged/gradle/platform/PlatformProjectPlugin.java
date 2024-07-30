@@ -30,6 +30,6 @@ public class PlatformProjectPlugin implements Plugin<Project> {
         
         run.getModSources().add(mainSourceSet);
         
-        project.getExtensions().getByType(IdeManagementExtension.class).onIdea((project1, idea, ideaExtension) -> run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().convention(mainSourceSet));
+        project.getExtensions().getByType(IdeManagementExtension.class).onIdea((project1, rootProject, idea, ideaExtension) -> run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().convention(mainSourceSet));
     }
 }

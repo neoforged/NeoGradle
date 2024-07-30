@@ -88,7 +88,7 @@ public class ConventionConfigurator {
         //We need to configure the tasks to run during sync.
         final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
         ideManagementExtension
-                .onIdea((innerProject, idea, ideaExtension) -> {
+                .onIdea((innerProject, rootProject, idea, ideaExtension) -> {
                     if (!ideaConventions.getIsEnabled().get())
                         return;
 
