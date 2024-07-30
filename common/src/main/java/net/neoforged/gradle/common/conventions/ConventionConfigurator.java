@@ -3,8 +3,6 @@ package net.neoforged.gradle.common.conventions;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
-import net.neoforged.gradle.common.util.ProjectUtils;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Configurations;
@@ -12,11 +10,9 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.StartParameter;
 import org.gradle.TaskExecutionRequest;
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -54,26 +50,6 @@ public class ConventionConfigurator {
                 sourceSetRuntimeClasspath.extendsFrom(sourceSetLocalRuntimeConfiguration);
             });
         }
-
-        ProjectUtils.afterEvaluate(project, () -> {
-            project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> {
-                runs.configureEach(run -> {
-                    if (sourceSets.getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
-                        //We always register main
-                        run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
-                    }
-
-                    if (sourceSets.getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && configurations.getIsEnabled().get()) {
-                        run.getModSources().all().get().values().forEach(sourceSet -> {
-                            if (project.getConfigurations().findByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())) != null) {
-                                run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, configurations.getRunRuntimeConfigurationPostFix().get())));
-                            }
-                        });
-                    }
-                });
-            });
-        });
-
     }
 
     private static void configureRunConventions(Project project, Conventions conventions) {
@@ -88,7 +64,7 @@ public class ConventionConfigurator {
 
         final Configuration runRuntimeConfiguration = project.getConfigurations().maybeCreate(configurations.getRunRuntimeConfigurationName().get());
 
-        project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runContainer -> runContainer.configureEach(run -> {
+        project.getExtensions().configure(RunManager.class, runContainer -> runContainer.configureAll(run -> {
             final Configuration runSpecificRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getRunName(run, configurations.getPerRunRuntimeConfigurationPostFix().get()));
 
             run.getDependencies().get().getRuntime().add(runRuntimeConfiguration);

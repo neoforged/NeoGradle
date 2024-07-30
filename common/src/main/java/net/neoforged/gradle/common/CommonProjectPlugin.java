@@ -9,25 +9,25 @@ import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.rules.LaterAddedReplacedDependencyRule;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
+import net.neoforged.gradle.common.runs.run.RunManagerImpl;
 import net.neoforged.gradle.common.runs.run.RunTypeManagerImpl;
 import net.neoforged.gradle.common.runs.tasks.RunsReport;
+import net.neoforged.gradle.common.runs.unittest.UnitTestConfigurator;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigurator;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
@@ -35,7 +35,6 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.problems.Problems;
 import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.TaskProvider;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
@@ -82,8 +81,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
         project.getExtensions().create(Mappings.class,"mappings", MappingsExtension.class, project);
-        project.getExtensions().create(RunTypeManager.class, "runTypes", RunTypeManagerImpl.class, project);
+        project.getExtensions().create(RunTypeManager.class, "runTypeManager", RunTypeManagerImpl.class, project);
         project.getExtensions().create(ExtraJarDependencyManager.class, "clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
+        project.getExtensions().create(RunManager.class, "runManager", RunManagerImpl.class, project);
 
         final ConfigurationData configurationData = project.getExtensions().create(ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
@@ -110,11 +110,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
             sourceSet.getExtensions().add("runtimeDefinition", project.getObjects().property(CommonRuntimeDefinition.class));
         });
 
-        final NamedDomainObjectContainer<Run> runs = project.getObjects().domainObjectContainer(Run.class, name -> RunsUtil.create(project, name));
-        project.getExtensions().add(
-                RunsConstants.Extensions.RUNS,
-                runs
-        );
+        //Setup IDE specific unit test handling.
+        UnitTestConfigurator.configureIdeUnitTests(project);
 
         //Register a task creation rule that checks for runs.
         project.getTasks().addRule(new LaterAddedReplacedDependencyRule(project));
@@ -125,35 +122,27 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //Set up the IDE run integration manager
         IdeRunIntegrationManager.getInstance().setup(project);
 
+        //Clean the shared cache
         project.getTasks().register("cleanCache", CleanCache.class);
+
+        //Clean the configuration data location.
         project.getTasks().named("clean", Delete.class, delete -> {
             delete.delete(configurationData.getLocation());
         });
 
-        //Needs to be before after evaluate
-        ConventionConfigurator.configureConventions(project);
-
         //Set up reporting tasks
         project.getTasks().register("runs", RunsReport.class);
+
+        //Needs to be before after evaluate
+        ConventionConfigurator.configureConventions(project);
 
         project.afterEvaluate(this::applyAfterEvaluate);
     }
 
-    @SuppressWarnings("unchecked")
     private void applyAfterEvaluate(final Project project) {
         //We now eagerly get all runs and configure them.
-        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
-        runs.all(run -> {
-            run.configure();
-
-            RunsUtil.ensureMacOsSupport(run);
-            RunsUtil.setupModSources(project, run);
-            RunsUtil.configureModClasses(run);
-            RunsUtil.setupDevLoginSupport(project, run);
-            RunsUtil.setupRenderDocSupport(project, run);
-            RunsUtil.createTasks(project, run);
-        });
-
+        final RunManager runs = project.getExtensions().getByType(RunManager.class);
+        runs.realizeAll(run -> RunsUtil.configure(project, run));
         IdeRunIntegrationManager.getInstance().apply(project);
     }
 }

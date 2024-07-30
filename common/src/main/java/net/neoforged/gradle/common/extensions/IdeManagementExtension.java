@@ -133,6 +133,18 @@ public abstract class IdeManagementExtension {
         //Configure the idePostSync task to depend on the task to run, causing the past in task to become part of the task-tree that is ran after import.
         idePostSyncTask.configure(task -> task.dependsOn(taskToRun));
     }
+
+
+    /**
+     * Configures the current project to run a task after the IDE import is complete.
+     *
+     * @param taskToRun The task to run
+     */
+    public void registerTaskToRun(Task taskToRun) {
+        final TaskProvider<? extends Task> idePostSyncTask = getOrCreateIdeImportTask();
+        //Configure the idePostSync task to depend on the task to run, causing the past in task to become part of the task-tree that is ran after import.
+        idePostSyncTask.configure(task -> task.dependsOn(taskToRun));
+    }
     
     @NotNull
     public TaskProvider<? extends IdePostSyncExecutionTask> getOrCreateIdeImportTask() {

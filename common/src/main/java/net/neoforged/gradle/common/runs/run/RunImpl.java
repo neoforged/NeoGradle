@@ -374,31 +374,32 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         RunTypeManager runTypes = project.getExtensions().getByType(RunTypeManager.class);
 
         return project.provider(() -> {
-            if (runTypes.getNames().contains(name)) {
-                return List.of(runTypes.getByName(name));
-            } else {
-                return null;
-            }
-        }).orElse(
-                TransformerUtils.ifTrue(getConfigureFromDependencies(),
-                        getSdkClasspathElements()
-                                .map(files -> files.stream()
-                                        .map(FileSystemLocation::getAsFile)
-                                        .map(runTypes::parse)
-                                        .flatMap(Collection::stream)
-                                        .filter(runType -> runType.getName().equals(name))
-                                        .toList()
-                                ))).map(types -> {
-            if (types.isEmpty()) {
-                final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
-                reporter.reporting(problem -> problem
-                        .id("run-type-not-found", "Run type not found")
-                        .contextualLabel("The run type '%s' was not found".formatted(name))
-                        .severity(org.gradle.api.problems.Severity.ERROR)
-                        .solution("Ensure the run type is defined in the run or a dependency")
-                );
-            }
-            return types;
-        });
+                    if (runTypes.getNames().contains(name)) {
+                        return List.of(runTypes.getByName(name));
+                    } else {
+                        return null;
+                    }
+                })
+                .orElse(
+                        TransformerUtils.ifTrue(getConfigureFromDependencies(),
+                                getSdkClasspathElements()
+                                        .map(files -> files.stream()
+                                                .map(FileSystemLocation::getAsFile)
+                                                .map(runTypes::parse)
+                                                .flatMap(Collection::stream)
+                                                .filter(runType -> runType.getName().equals(name))
+                                                .toList()
+                                        ))).map(types -> {
+                    if (types.isEmpty()) {
+                        final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+                        reporter.reporting(problem -> problem
+                                .id("run-type-not-found", "Run type not found")
+                                .contextualLabel("The run type '%s' was not found".formatted(name))
+                                .severity(org.gradle.api.problems.Severity.ERROR)
+                                .solution("Ensure the run type is defined in the run or a dependency")
+                        );
+                    }
+                    return types;
+                });
     }
 }

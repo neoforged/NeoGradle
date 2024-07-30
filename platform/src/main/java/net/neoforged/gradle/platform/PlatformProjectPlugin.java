@@ -2,12 +2,10 @@ package net.neoforged.gradle.platform;
 
 import net.neoforged.gradle.common.CommonPlugin;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.platform.extensions.DynamicProjectExtension;
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -21,7 +19,7 @@ public class PlatformProjectPlugin implements Plugin<Project> {
         target.getPlugins().apply(CommonPlugin.class);
         target.getExtensions().create("dynamicProject", DynamicProjectExtension.class, target);
         
-        target.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> configureRun(target, run)));
+        target.getExtensions().configure(RunManager.class, runs -> runs.configureAll(run -> configureRun(target, run)));
     }
     
     private void configureRun(final Project project, final Run run) {

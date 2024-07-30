@@ -2,9 +2,9 @@ package net.neoforged.gradle.common.util.run;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import net.neoforged.gradle.common.runs.run.RunImpl;
-import net.neoforged.gradle.common.tasks.PrepareUnitTestTask;
 import net.neoforged.gradle.common.tasks.RenderDocDownloaderTask;
 import net.neoforged.gradle.common.util.ClasspathUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
@@ -20,7 +20,6 @@ import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
 import net.neoforged.gradle.dsl.common.runs.run.RunRenderDocOptions;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -28,6 +27,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.*;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -46,6 +46,10 @@ import org.xml.sax.InputSource;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
@@ -64,6 +68,25 @@ public class RunsUtil {
 
     public static String createTaskName(final String prefix, final Run run) {
         return createTaskName(prefix, run.getName());
+    }
+
+    public static void configure(Project project, Run run) {
+        RunsUtil.configureModSourceDefaults(project, run);
+
+        run.configure();
+
+        RunsUtil.setupModSources(project, run);
+        RunsUtil.configureModClasses(run);
+        RunsUtil.ensureMacOsSupport(run);
+        RunsUtil.setupDevLoginSupport(project, run);
+        RunsUtil.setupRenderDocSupport(project, run);
+        RunsUtil.createTasks(project, run);
+        RunsUtil.registerPostSyncTasks(project, run);
+    }
+
+    public static void registerPostSyncTasks(Project project, Run run) {
+        final IdeManagementExtension ideManager = project.getExtensions().getByType(IdeManagementExtension.class);
+        run.getPostSyncTasks().get().forEach(ideManager::registerTaskToRun);
     }
 
     public static void createTasks(Project project, Run run) {
@@ -114,13 +137,30 @@ public class RunsUtil {
         }
     }
 
+    public static void configureModSourceDefaults(Project project, Run run) {
+        // We add default junit sourcesets here because we need to know the type of the run first
+        final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
+        if (conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+            //We always register main
+            run.getModSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("main"));
+        }
+    }
+
     public static void setupModSources(Project project, Run run) {
         // We add default junit sourcesets here because we need to know the type of the run first
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
-        if (conventions.getIsEnabled().get() && conventions.getSourceSets().getIsEnabled().get() && conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+        if (conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
             if (run.getIsJUnit().get()) {
                 run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
             }
+        }
+
+        if (conventions.getSourceSets().getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && conventions.getConfigurations().getIsEnabled().get()) {
+            run.getModSources().all().get().values().forEach(sourceSet -> {
+                if (project.getConfigurations().findByName(ConfigurationUtils.getSourceSetName(sourceSet, conventions.getConfigurations().getRunRuntimeConfigurationPostFix().get())) != null) {
+                    run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, conventions.getConfigurations().getRunRuntimeConfigurationPostFix().get())));
+                }
+            });
         }
 
         //Warn the user if no source sets are configured
@@ -308,33 +348,78 @@ public class RunsUtil {
         project.getTasks().named("check", check -> check.dependsOn(newTestTask));
     }
 
-    public static TaskProvider<PrepareUnitTestTask> createPrepareUnitTestTask(Project project, Run run) {
-        final String name = "prepare" + StringUtils.capitalize(run.getName());
+    public static String escapeAndJoin(List<String> args, String... additional) {
+        return escapeStream(args, additional).collect(Collectors.joining(" "));
+    }
 
-        if (project.getTasks().getNames().contains(name)) {
-            return project.getTasks().named(name, PrepareUnitTestTask.class);
+    public static Stream<String> escapeStream(List<String> args, String... additional) {
+        return Stream.concat(args.stream(), Stream.of(additional)).map(RunsUtil::escape);
+    }
+
+    /**
+     * This expects users to escape quotes in their system arguments on their own, which matches
+     * Gradles own behavior when used in JavaExec.
+     */
+    private static String escape(String arg) {
+        return escapeJvmArg(arg);
+    }
+
+    public record PreparedUnitTestEnvironment(File programArgumentsFile, File jvmArgumentsFile) {
+    }
+
+    public static PreparedUnitTestEnvironment prepareUnitTestEnvironment(Run run) {
+
+        return new PreparedUnitTestEnvironment(
+                createArgsFile(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())), run.getProgramArguments()),
+                createArgsFile(run.getWorkingDirectory().file("%s_jvm_args.txt".formatted(run.getName())), run.getJvmArguments())
+        );
+    }
+
+    private static File createArgsFile(Provider<RegularFile> outputFile, ListProperty<String> inputs) {
+        final File output = outputFile.get().getAsFile();
+
+        if (!output.getParentFile().exists()) {
+            if (!output.getParentFile().mkdirs()) {
+                throw new RuntimeException("Failed to create directory: " + output.getParentFile());
+            }
+        }
+        try {
+            final List<String> value = inputs.get();
+            if (output.exists()) {
+                if (Files.readAllLines(output.toPath()).equals(value)) {
+                    return output;
+                }
+
+                if (!output.delete()) {
+                    throw new RuntimeException("Failed to delete file: " + output);
+                }
+            }
+
+            Files.write(output.toPath(), value, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
-        return project.getTasks().register(name, PrepareUnitTestTask.class, prepare -> {
-            prepare.getProgramArgumentsFile().set(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())));
-            prepare.getProgramArguments().convention(run.getProgramArguments());
-        });
+        return output;
     }
 
     private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, Run run) {
-        TaskProvider<PrepareUnitTestTask> prepareTask = createPrepareUnitTestTask(project, run);
         testTaskProvider.configure(testTask -> {
+            PreparedUnitTestEnvironment preparedEnvironment = prepareUnitTestEnvironment(run);
+
             addRunSourcesDependenciesToTask(testTask, run, true);
             testTask.getDependsOn().add(run.getDependsOn());
 
             testTask.setWorkingDir(run.getWorkingDirectory().get());
             testTask.getSystemProperties().putAll(run.getSystemProperties().get());
+            testTask.getSystemProperties().put("fml.junit.argsfile", preparedEnvironment.programArgumentsFile().getAbsolutePath());
 
             testTask.useJUnitPlatform();
             testTask.setGroup("verification");
-            testTask.systemProperty("fml.junit.argsfile", prepareTask.flatMap(PrepareUnitTestTask::getProgramArgumentsFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
+            testTask.systemProperties(run.getSystemProperties().get());
             testTask.getEnvironment().putAll(run.getEnvironmentVariables().get());
             testTask.setJvmArgs(run.getJvmArguments().get());
+            testTask.jvmArgs("@%s".formatted(preparedEnvironment.jvmArgumentsFile().getAbsolutePath()));
 
             final ConfigurableFileCollection testCP = project.files();
             testCP.from(run.getDependencies().get().getRuntimeConfiguration());
@@ -349,6 +434,8 @@ public class RunsUtil {
             }
 
             testTask.setTestClassesDirs(testClassesDirs);
+
+            testTask.dependsOn(preparedEnvironment);
         });
     }
 
@@ -392,6 +479,10 @@ public class RunsUtil {
 
     public static boolean isRunWithIdea(final SourceSet sourceSet) {
         final Project project = SourceSetUtils.getProject(sourceSet);
+        return isRunWithIdea(project);
+    }
+
+    public static boolean isRunWithIdea(final Project project) {
         final IdeaModel rootIdeaModel = project.getRootProject().getExtensions().getByType(IdeaModel.class);
         final IdeaRunsExtension ideaRunsExtension = ((ExtensionAware) rootIdeaModel.getProject()).getExtensions().getByType(IdeaRunsExtension.class);
 
@@ -493,7 +584,11 @@ public class RunsUtil {
     }
 
     public static Provider<? extends FileSystemLocation> getRunWithIdeaResourcesDirectory(final SourceSet sourceSet, final IdeaCompileType compileType) {
-        return getRunWithIdeaDirectory(sourceSet, compileType, "resources");
+        //When running with idea we forcefully redirect all sourcesets to a directory in build, to prevent issues
+        //with unit tests started from the gutter -> We can only have a single task, that should run always, regardless of run or sourceset:
+        final Project project = SourceSetUtils.getProject(sourceSet);
+        final ProjectLayout buildLayout = project.getLayout();
+        return buildLayout.getBuildDirectory().map(dir -> dir.dir("idea").dir("resources").dir(sourceSet.getName()));
     }
 
     public static Provider<? extends FileSystemLocation> getRunWithIdeaClassesDirectory(final SourceSet sourceSet, final IdeaCompileType compileType) {

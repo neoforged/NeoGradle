@@ -1,10 +1,9 @@
 package net.neoforged.gradle.mixin;
 
 import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.mixin.extension.Mixin;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
@@ -26,16 +25,16 @@ public class MixinProjectPlugin implements Plugin<Project> {
         
         project.getTasks().withType(Jar.class).configureEach(this::setupJarTask);
         
-        project.getExtensions().<NamedDomainObjectContainer<Run>>configure(
-                RunsConstants.Extensions.RUNS,
-                runs -> runs.configureEach(MixinProjectPlugin.this::setupRun)
+        project.getExtensions().configure(
+                RunManager.class,
+                runs -> runs.configureAll(MixinProjectPlugin.this::setupRun)
         );
         
         project.afterEvaluate(p -> {
             p.getTasks().withType(Jar.class).all(this::configureJarTask);
-            p.getExtensions().<NamedDomainObjectContainer<Run>>configure(
-                    RunsConstants.Extensions.RUNS,
-                    runs -> runs.configureEach(MixinProjectPlugin.this::configureRun)
+            p.getExtensions().configure(
+                    RunManager.class,
+                    runs -> runs.configureAll(MixinProjectPlugin.this::configureRun)
             );
         });
     }

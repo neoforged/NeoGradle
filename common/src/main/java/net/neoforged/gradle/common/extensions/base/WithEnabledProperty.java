@@ -15,7 +15,7 @@ public abstract class WithEnabledProperty extends WithPropertyLookup {
         this.prefix = prefix;
 
         getIsEnabled().convention(
-                getBooleanProperty("enabled").orElse(true)
+                getBooleanLocalProperty("enabled").orElse(true)
         );
     };
 
@@ -24,24 +24,45 @@ public abstract class WithEnabledProperty extends WithPropertyLookup {
 
         this.prefix = String.format("%s.%s", parent.prefix, prefix);
         getIsEnabled().convention(
-                parent.getIsEnabled().zip(getBooleanProperty("enabled"), (parentEnabled, enabled) -> parentEnabled && enabled).orElse(true)
+                parent.getIsEnabled().zip(getBooleanLocalProperty("enabled"), (parentEnabled, enabled) -> parentEnabled && enabled).orElse(true)
         );
     }
 
     public abstract Property<Boolean> getIsEnabled();
 
+    private Provider<String> getStringLocalProperty(String propertyName) {
+        return super.getStringProperty(String.format("%s.%s", prefix, propertyName));
+    }
+
+    private Provider<Boolean> getBooleanLocalProperty(String propertyName) {
+        return super.getBooleanProperty(String.format("%s.%s", prefix, propertyName));
+    }
+
+    private Provider<List<String>> getSpaceSeparatedListLocalProperty(String propertyName) {
+        return super.getSpaceSeparatedListProperty(String.format("%s.%s", prefix, propertyName));
+    }
+
     @Override
     protected Provider<String> getStringProperty(String propertyName) {
-        return super.getStringProperty(String.format("%s.%s", prefix, propertyName));
+        return getIsEnabled().zip(
+                getStringLocalProperty(propertyName),
+                (enabled, value) -> enabled ? value : ""
+        );
     }
 
     @Override
     protected Provider<Boolean> getBooleanProperty(String propertyName) {
-        return super.getBooleanProperty(String.format("%s.%s", prefix, propertyName));
+        return getIsEnabled().zip(
+                getBooleanLocalProperty(propertyName),
+                (enabled, value) -> enabled ? value : false
+        );
     }
 
     @Override
     protected Provider<List<String>> getSpaceSeparatedListProperty(String propertyName) {
-        return super.getSpaceSeparatedListProperty(String.format("%s.%s", prefix, propertyName));
+        return getIsEnabled().zip(
+                getSpaceSeparatedListLocalProperty(propertyName),
+                (enabled, value) -> enabled ? value : List.of()
+        );
     }
 }

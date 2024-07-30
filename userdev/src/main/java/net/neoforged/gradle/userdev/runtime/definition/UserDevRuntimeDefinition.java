@@ -143,7 +143,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         configureAssociatedTask(minecraftClasspathSerializer);
         interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.flatMap(ClasspathSerializer::getTargetFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
 
-        run.getDependsOn().add(minecraftClasspathSerializer);
+        run.getPostSyncTasks().add(minecraftClasspathSerializer);
     }
 
     @Override

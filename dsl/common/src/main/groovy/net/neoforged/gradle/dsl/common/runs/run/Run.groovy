@@ -95,7 +95,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @return The working directory that is used when running the game.
      */
-    @OutputDirectory
+    @Internal
     @DSLProperty
     abstract DirectoryProperty getWorkingDirectory();
 
@@ -395,6 +395,11 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @DSLProperty
     @Optional
     abstract SetProperty<Task> getDependsOn();
+
+    /**
+     * @return The tasks that should be ran on post sync.
+     */
+    abstract SetProperty<Task> getPostSyncTasks();
 
     /**
      * Configures the run using the settings of the associated run type.

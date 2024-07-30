@@ -1,9 +1,8 @@
 package net.neoforged.gradle.common.runs.tasks;
 
 import com.google.common.collect.Multimap;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import org.gradle.api.NamedDomainObjectContainer;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.diagnostics.AbstractProjectBasedReportTask;
@@ -36,10 +35,9 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
         renderer.completeProject(project);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected @NotNull RunsReport.RunsProjectReport calculateReportModelFor(@NotNull Project project) {
-        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
+        final RunManager runs = project.getExtensions().getByType(RunManager.class);
         final RunsProjectReport report = new RunsProjectReport();
         runs.forEach(run -> {
             report.addRun(new RenderableRun(run));
