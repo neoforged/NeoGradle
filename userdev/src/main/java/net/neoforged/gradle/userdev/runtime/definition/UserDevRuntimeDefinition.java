@@ -137,7 +137,7 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     task.getInputFiles().from(this.additionalUserDevDependencies);
                     task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
                     task.getInputFiles().from(this.userdevClasspathElementProducer.flatMap(WithOutput::getOutput));
-                    task.getInputFiles().from(run.getDependencies().map(DependencyHandler::getRuntimeConfiguration));
+                    task.getInputFiles().from(run.getDependencies().getRuntimeConfiguration());
                 }
         );
         configureAssociatedTask(minecraftClasspathSerializer);

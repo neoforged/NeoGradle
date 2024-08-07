@@ -95,7 +95,7 @@ public class CachedExecutionBuilder<T> {
         this.options = options;
         this.targetTask = targetTask;
         this.stages = stages;
-        this.logger = new CacheLogger(targetTask, options.logging().cacheHits(), options.logging().debug());
+        this.logger = new CacheLogger(targetTask, options.logging().debug(), options.logging().cacheHits());
     }
 
     public <Y> CachedExecutionBuilder<Y> withStage(ICacheableJob<T, Y> job) {

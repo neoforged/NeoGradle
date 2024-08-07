@@ -42,7 +42,7 @@ public abstract class JarJarArtifacts {
     private transient final SetProperty<ResolvedComponentResult> includedRootComponents;
     private transient final SetProperty<ResolvedArtifactResult> includedArtifacts;
 
-    private final Project project;
+    private final NeoGradleProblemReporter reporter;
     private final DependencyFilter dependencyFilter;
     private final DependencyVersionInformationHandler dependencyVersionInformationHandler;
 
@@ -74,8 +74,8 @@ public abstract class JarJarArtifacts {
     }
 
     @Inject
-    public JarJarArtifacts(Project project) {
-        this.project = project;
+    public JarJarArtifacts(NeoGradleProblemReporter reporter) {
+        this.reporter = reporter;
         dependencyFilter = getObjectFactory().newInstance(DefaultDependencyFilter.class);
         dependencyVersionInformationHandler = getObjectFactory().newInstance(DefaultDependencyVersionInformationHandler.class);
         includedRootComponents = getObjectFactory().setProperty(ResolvedComponentResult.class);
@@ -148,8 +148,6 @@ public abstract class JarJarArtifacts {
             if (version != null && versionRange != null) {
                 data.add(new ResolvedJarJarArtifact(result.getFile(), version, versionRange, jarIdentifier.group(), jarIdentifier.artifact()));
             } else {
-                final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
-
                 throw reporter.throwing(spec ->
                         spec.id("jarjar", "no-version-range")
                                 .contextualLabel("Missing version range for " + jarIdentifier.group() + ":" + jarIdentifier.artifact())
@@ -207,7 +205,6 @@ public abstract class JarJarArtifacts {
             String originalVersion = getVersionFrom(originalVariant);
 
             if (!Objects.equals(version, originalVersion)) {
-                final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
                 throw reporter.throwing(spec ->
                         spec.id("jarjar", "version-mismatch")
                                 .contextualLabel("Version mismatch for " + originalVariant.getOwner())

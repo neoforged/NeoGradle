@@ -94,7 +94,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
     @Override
     public void configureRun(RunImpl run) {
         if (getSpecification().getDistribution().isClient()) {
-            run.getProgramArguments().addAll(
+            run.getArguments().addAll(
                     getVersionJson().map(VersionJson::getArguments)
                             .map(VersionJson.Arguments::getGame)
                             .map(Arrays::stream)
@@ -124,7 +124,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
 
             interpolationData.put(InterpolationConstants.GAME_DIRECTORY, run.getWorkingDirectory().get().getAsFile().getAbsolutePath());
             run.overrideJvmArguments(interpolate(run.getJvmArguments(), interpolationData, "$"));
-            run.overrideProgramArguments(interpolate(run.getProgramArguments(), interpolationData, "$"));
+            run.overrideArguments(interpolate(run.getArguments(), interpolationData, "$"));
             run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), interpolationData, "$"));
             run.overrideSystemProperties(interpolate(run.getSystemProperties(), interpolationData, "$"));
         } else if (getSpecification().getDistribution().isServer()) {

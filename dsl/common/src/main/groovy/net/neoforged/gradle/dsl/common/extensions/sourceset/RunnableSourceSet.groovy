@@ -1,8 +1,9 @@
-package net.neoforged.gradle.dsl.common.extensions
+package net.neoforged.gradle.dsl.common.extensions.sourceset
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gradle.dsl.common.extensions.Minecraft
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 

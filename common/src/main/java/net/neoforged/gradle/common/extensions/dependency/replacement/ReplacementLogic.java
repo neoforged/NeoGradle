@@ -234,9 +234,16 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         //Create a new dependency in our dummy repo
         final Entry newRepoEntry = createDummyDependency(dependency, result);
 
+        //We need all tasks tot exist before we can register them.
         registerTasks(dependency, result, newRepoEntry);
 
+        //We create all tasks before we register the sdks, so that the sdks can depend on the tasks.
         registerSdks(result, target);
+
+        //Additionally we also ensure that we have discovered, and created all configurations that we need as targets
+        //Else we can get into concurrent modification exceptions, when dependencies are replaced and as such replacement
+        //configurations are created during general configuration handling.
+        ConfigurationUtils.findReplacementConfigurations(project, target);
 
         if (result instanceof ReplacementAware replacementAware) {
             replacementAware.onTargetDependencyAdded();

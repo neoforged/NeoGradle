@@ -503,7 +503,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         Project project = runtimeDefinition.getSpecification().getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
         Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
-        if (!parchment.getEnabled().get()) {
+        if (!parchment.getIsEnabled().get()) {
             return recompileInput;
         }
 

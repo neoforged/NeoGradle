@@ -1,5 +1,8 @@
 package net.neoforged.gradle.common.runs.run;
 
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.RenderDoc;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunRenderDocOptions;
 import org.gradle.api.Project;
 
@@ -10,13 +13,11 @@ public abstract class RunRenderDocOptionsImpl implements RunRenderDocOptions {
     private final Project project;
 
     @Inject
-    public RunRenderDocOptionsImpl(Project project) {
+    public RunRenderDocOptionsImpl(Project project, Run run) {
         this.project = project;
 
-        getEnabled().convention(false);
-        getRenderDocPath().convention(getProject().getLayout().getBuildDirectory().dir("renderdoc"));
-        getRenderDocVersion().convention("1.33");
-        getRenderNurseVersion().convention("0.0.12");
+        final RenderDoc renderDoc = project.getExtensions().getByType(Subsystems.class).getConventions().getRuns().getRenderDoc();
+        getEnabled().convention(renderDoc.getConventionForRun().zip(run.getIsClient(), (renderDocRun, runIsClient) -> renderDocRun && runIsClient));
     }
 
     @Override

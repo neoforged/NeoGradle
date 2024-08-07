@@ -5,18 +5,16 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
-import net.neoforged.gradle.dsl.common.runs.type.RunType
+import net.neoforged.gradle.dsl.common.runs.RunSpecification
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
-import org.gradle.internal.impldep.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop
 import org.jetbrains.annotations.NotNull
 
 /**
@@ -24,71 +22,18 @@ import org.jetbrains.annotations.NotNull
  * Gradle tasks, IDE run configurations, and other run configurations are all created from this object.
  */
 @CompileStatic
-interface Run extends BaseDSLElement<Run>, NamedDSLElement {
+interface Run extends BaseDSLElement<Run>, NamedDSLElement, RunSpecification {
 
     /**
-     * Defines the environment variables that are passed to the JVM when running the game.
+     * Gives access to the application arguments for the run type.
      *
-     * @return The environment variables that are passed to the JVM when running the game.
+     * @return The property which holds the application arguments.
+     * @deprecated Use {@link #getArguments()} instead.
      */
-    @Input
+    @Deprecated
     @DSLProperty
-    abstract MapProperty<String, String> getEnvironmentVariables();
-
-    /**
-     * Defines the main class that is executed when the game is started.
-     *
-     * @return The main class that is executed when the game is started.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<String> getMainClass();
-
-    /**
-     * Indicates if all the projects in the current Gradle project should be build ahead of running the game.
-     *
-     * @return {@code true} if all the projects in the current Gradle project should be build ahead of running the game; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<Boolean> getShouldBuildAllProjects();
-
-    /**
-     * Defines the program arguments that are passed to the application when running the game.
-     *
-     * @return The program arguments that are passed to the application when running the game.
-     */
-    @Input
-    @DSLProperty
+    @Internal
     abstract ListProperty<String> getProgramArguments();
-
-    /**
-     * Defines the JVM arguments that are passed to the JVM when running the game.
-     *
-     * @return The JVM arguments that are passed to the JVM when running the game.
-     */
-    @Input
-    @DSLProperty
-    abstract ListProperty<String> getJvmArguments();
-
-    /**
-     * Indicates if this run is a single instance run.
-     * If this is set to true, then no other copy of this run configuration can be started while this run configuration is running.
-     *
-     * @return {@code true} if this run is a single instance run; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<Boolean> getIsSingleInstance();
-
-    /**
-     * Defines the system properties that are passed to the JVM when running the game.
-     *
-     * @return The system properties that are passed to the JVM when running the game.
-     */
-    @Input
-    @DSLProperty
-    abstract MapProperty<String, String> getSystemProperties();
 
     /**
      * Defines the working directory that is used when running the game.
@@ -98,57 +43,6 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     @Internal
     @DSLProperty
     abstract DirectoryProperty getWorkingDirectory();
-
-    /**
-     * Indicates if this run is a client run.
-     *
-     * @return {@code true} if this run is a client run; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty
-    @Optional
-    abstract Property<Boolean> getIsClient();
-
-    /**
-     * Indicates if this run is a server run.
-     *
-     * @return {@code true} if this run is a server run; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty
-    @Optional
-    abstract Property<Boolean> getIsServer();
-
-    /**
-     * Indicates if this run is a unit test run.
-     *
-     * @return {@code true} if this run is a unit test run; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty(propertyName = 'junit')
-    @Optional
-    abstract Property<Boolean> getIsJUnit();
-
-
-    /**
-     * Indicates if this run is a data generation run.
-     *
-     * @return {@code true} if this run is a data generation run; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty
-    @Optional
-    abstract Property<Boolean> getIsDataGenerator();
-
-    /**
-     * Indicates if this run is a game test run.
-     *
-     * @return {@code true} if this run is a game test run; otherwise, {@code false}.
-     */
-    @Input
-    @DSLProperty
-    @Optional
-    abstract Property<Boolean> getIsGameTest();
 
     /**
      * @returns the RenderDoc options for this run. RenderDoc can only be used on client runs.
@@ -165,10 +59,18 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract RunDevLoginOptions getDevLogin();
 
     /**
+     * @returns whether or not this run should be exported to the IDE.
+     */
+    @Input
+    @DSLProperty
+    @Optional
+    abstract Property<Boolean> getShouldExportToIDE();
+
+    /**
      * Defines the source sets that are used as a mod.
      * <p>
      * For changing the mod identifier a source set belongs to see
-     * {@link net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet#getModIdentifier RunnableSourceSet#getModIdentifier}.
+     * {@link net.neoforged.gradle.dsl.common.extensions.sourceset.RunnableSourceSet#getModIdentifier RunnableSourceSet#getModIdentifier}.
      *
      * @return The source sets that are used as a mod.
      */
@@ -201,7 +103,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      * Defines the source sets that are used as a test.
      * <p>
      * For changing the mod identifier a source set belongs to see
-     * {@link net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet#getModIdentifier RunnableSourceSet#getModIdentifier}.
+     * {@link net.neoforged.gradle.dsl.common.extensions.sourceset.RunnableSourceSet#getModIdentifier RunnableSourceSet#getModIdentifier}.
      *
      * @return The source sets that are used as a mod.
      */
@@ -333,21 +235,18 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     abstract Provider<Set<FileSystemLocation>> getSdkClasspathElements()
 
     /**
-     * Defines the run types that are applied to this run.
-     *
-     * @return The run types that are applied to this run.
-     */
-    @Nested
-    @DSLProperty
-    @Optional
-    abstract ListProperty<RunType> getRunTypes();
-
-    /**
      * Adds a run type to this run using the run type name.
      *
      * @param runType The run type to add.
      */
     void runType(@NotNull final String string);
+
+    /**
+     * Adds a run type to this run.
+     *
+     * @param runType The run type to add.
+     */
+    void run(@NotNull final String name);
 
     /**
      * Defines the custom dependency handler for each run.
@@ -356,7 +255,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      */
     @Nested
     @DSLProperty
-    abstract Property<DependencyHandler> getDependencies();
+    abstract DependencyHandler getDependencies();
 
     /**
      * Indicates if this run should automatically be configured.
@@ -399,12 +298,15 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
     /**
      * @return The tasks that should be ran on post sync.
      */
+    @Internal
+    @DSLProperty
+    @Optional
     abstract SetProperty<Task> getPostSyncTasks();
 
     /**
      * Configures the run using the settings of the associated run type.
      * <p/>
-     * Picks a run type using the name of this run, if no specific run type has been set.
+     * If no configuration specification is set then this will try to lookup a run type with the same name as the run.
      */
     abstract void configure();
 
@@ -414,6 +316,7 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @param type The name of the type to use to configure the run.
      */
+    @Deprecated
     abstract void configure(@NotNull final String type);
 
     /**
@@ -421,13 +324,12 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement {
      *
      * @param type The type to use to configure the run.
      */
-    abstract void configure(@NotNull final RunType type);
+    abstract void configure(@NotNull final RunSpecification type);
 
     /**
      * Configures the run using the given type provider.
-     * This will realise the provider to query the values of the type.
      *
      * @param typeProvider The type provider to realise and configure with.
      */
-    void configure(@NotNull final Provider<RunType> typeProvider);
+    void configure(@NotNull final Provider<? extends RunSpecification> typeProvider);
 }

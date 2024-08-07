@@ -8,6 +8,8 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.DevLogin;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.RenderDoc;
 import org.gradle.api.Project;
 
 import javax.inject.Inject;
@@ -55,10 +57,10 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
         public ConfigurationsExtension(WithEnabledProperty parent) {
             super(parent, "configurations");
 
-            getLocalRuntimeConfigurationPostFix().convention(getStringProperty("localRuntimeConfigurationPostFix").orElse("LocalRuntime"));
-            getRunRuntimeConfigurationPostFix().convention(getStringProperty("perSourceSetRunRuntimeConfigurationPostFix").orElse("LocalRunRuntime"));
-            getPerRunRuntimeConfigurationPostFix().convention(getStringProperty("perRunRuntimeConfigurationPostFix").orElse("Run"));
-            getRunRuntimeConfigurationName().convention(getStringProperty("runRuntimeConfigurationName").orElse("runs"));
+            getLocalRuntimeConfigurationPostFix().convention(getStringProperty("localRuntimeConfigurationPostFix", "LocalRuntime"));
+            getRunRuntimeConfigurationPostFix().convention(getStringProperty("perSourceSetRunRuntimeConfigurationPostFix", "LocalRunRuntime"));
+            getPerRunRuntimeConfigurationPostFix().convention(getStringProperty("perRunRuntimeConfigurationPostFix", "Run"));
+            getRunRuntimeConfigurationName().convention(getStringProperty("runRuntimeConfigurationName", "runs"));
         }
     }
 
@@ -68,9 +70,9 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
         public SourceSetsExtension(WithEnabledProperty parent) {
             super(parent, "sourcesets");
 
-            getShouldMainSourceSetBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion").orElse(true));
-            getShouldTestSourceSetBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion-test").orElse(false));
-            getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion-local-run-runtime").orElse(true));
+            getShouldMainSourceSetBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion", true, false));
+            getShouldTestSourceSetBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion-test", false, false));
+            getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().convention(getBooleanProperty("automatic-inclusion-local-run-runtime", true, false));
         }
     }
 
@@ -93,12 +95,48 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
 
     public static abstract class RunsExtension extends WithEnabledProperty implements BaseDSLElement<Runs>, Runs {
 
+        private final DevLogin devLogin;
+        private final RenderDoc renderDoc;
+
         @Inject
         public RunsExtension(WithEnabledProperty parent) {
             super(parent, "runs");
 
-            getShouldDefaultRunsBeCreated().convention(getBooleanProperty("create-default-run-per-type").orElse(true));
-            getShouldDefaultTestTaskBeReused().convention(getBooleanProperty("reuse-default-test-task").orElse(false));
+            this.devLogin = getProject().getObjects().newInstance(DevLoginExtension.class, this);
+            this.renderDoc = getProject().getObjects().newInstance(RenderDocExtension.class, this);
+
+            getShouldDefaultRunsBeCreated().convention(getBooleanProperty("create-default-run-per-type", true, false));
+            getShouldDefaultTestTaskBeReused().convention(getBooleanProperty("reuse-default-test-task", false, false));
+        }
+
+        @Override
+        public DevLogin getDevLogin() {
+            return devLogin;
+        }
+
+        @Override
+        public RenderDoc getRenderDoc() {
+            return renderDoc;
+        }
+    }
+
+    public static abstract class DevLoginExtension extends WithEnabledProperty implements BaseDSLElement<DevLogin>, DevLogin {
+
+        @Inject
+        public DevLoginExtension(WithEnabledProperty parent) {
+            super(parent, "devlogin");
+
+            getConventionForRun().convention(getBooleanProperty("conventionForRun", false, false));
+        }
+    }
+
+    public static abstract class RenderDocExtension extends WithEnabledProperty implements BaseDSLElement<RenderDoc>, RenderDoc {
+
+        @Inject
+        public RenderDocExtension(WithEnabledProperty parent) {
+            super(parent, "renderdoc");
+
+            getConventionForRun().convention(getBooleanProperty("conventionForRun", false, false));
         }
     }
 
@@ -108,9 +146,9 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
         public IDEAExtension(WithEnabledProperty parent) {
             super(parent, "idea");
 
-            getShouldUseCompilerDetection().convention(getBooleanProperty("compiler-detection").orElse(true));
-            getShouldUsePostSyncTask().convention(getBooleanProperty("use-post-sync-task").orElse(false));
-            getShouldReconfigureTemplatesForTests().convention(getBooleanProperty("reconfigure-unit-test-templates").orElse(true));
+            getShouldUseCompilerDetection().convention(getBooleanProperty("compiler-detection", true, false));
+            getShouldUsePostSyncTask().convention(getBooleanProperty("use-post-sync-task", false, false));
+            getShouldReconfigureTemplatesForTests().convention(getBooleanProperty("reconfigure-unit-test-templates", true, false));
         }
     }
 }

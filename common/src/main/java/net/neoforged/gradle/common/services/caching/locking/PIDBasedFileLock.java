@@ -41,6 +41,7 @@ public final class PIDBasedFileLock implements AutoCloseable {
                 //No lock file exists, create one
                 lockFile.getParentFile().mkdirs();
                 Files.write(lockFile.toPath(), String.valueOf(ProcessHandle.current().pid()).getBytes(), StandardOpenOption.CREATE_NEW);
+                lockFileForCurrentProcess();
                 return true;
             }
 
@@ -50,9 +51,7 @@ public final class PIDBasedFileLock implements AutoCloseable {
                 int pid = Integer.parseInt(s);
                 if (ProcessHandle.current().pid() == pid) {
                     logger.debug("Lock file is owned by current process: " + lockFile.getAbsolutePath() + " pid: " + pid);
-                    final OwnerAwareReentrantLock lock = FILE_LOCKS.computeIfAbsent(lockFile.getAbsolutePath(), s1 -> new OwnerAwareReentrantLock());
-                    logger.debug("Lock file is held by thread: " + lock.getOwner().getId() + " - " + lock.getOwner().getName() + " current thread: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
-                    lock.lock();
+                    lockFileForCurrentProcess();
                     return true;
                 }
 
@@ -61,6 +60,7 @@ public final class PIDBasedFileLock implements AutoCloseable {
                     //Process is not running, we can take over the lock
                     logger.debug("Lock file is owned by a killed process: " + lockFile.getAbsolutePath() + " taking over. Old pid: " + pid);
                     Files.write(lockFile.toPath(), String.valueOf(ProcessHandle.current().pid()).getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+                    lockFileForCurrentProcess();
                     return true;
                 }
 
@@ -73,9 +73,7 @@ public final class PIDBasedFileLock implements AutoCloseable {
             //No pid found in lock file, we can take over the lock
             logger.debug("Lock file is empty: " + lockFile.getAbsolutePath());
             Files.write(lockFile.toPath(), String.valueOf(ProcessHandle.current().pid()).getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
-            final OwnerAwareReentrantLock lock = FILE_LOCKS.computeIfAbsent(lockFile.getAbsolutePath(), s1 -> new OwnerAwareReentrantLock());
-            logger.debug("Created local thread lock for thread: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
-            lock.lock();
+            lockFileForCurrentProcess();
             return true;
         } catch (Exception e) {
             logger.debug("Failed to acquire lock on file: " + lockFile.getAbsolutePath() + " -  Failure message: " + e.getLocalizedMessage(), e);
@@ -83,12 +81,27 @@ public final class PIDBasedFileLock implements AutoCloseable {
         }
     }
 
+    private void lockFileForCurrentProcess() {
+        final OwnerAwareReentrantLock lock = FILE_LOCKS.computeIfAbsent(lockFile.getAbsolutePath(), s1 -> new OwnerAwareReentrantLock());
+        if (lock.getOwner() != null) {
+            logger.debug("Lock file is held by thread: " + lock.getOwner().getId() + " - " + lock.getOwner().getName() + " current thread: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
+        } else {
+            logger.debug("Lock file is not held by any thread");
+        }
+        lock.lock();
+    }
+
     @Override
     public void close() throws Exception {
         logger.debug("Releasing lock on file: " + lockFile.getAbsolutePath());
         Files.write(lockFile.toPath(), Lists.newArrayList(), StandardOpenOption.TRUNCATE_EXISTING);
         if (FILE_LOCKS.containsKey(lockFile.getAbsolutePath())) {
-            FILE_LOCKS.get(lockFile.getAbsolutePath()).unlock();
+            logger.debug("Unlocking: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
+            final OwnerAwareReentrantLock lock = FILE_LOCKS.get(lockFile.getAbsolutePath());
+            lock.unlock();
+            if (lock.getHoldCount() == 0) {
+                FILE_LOCKS.remove(lockFile.getAbsolutePath());
+            }
         }
     }
 }

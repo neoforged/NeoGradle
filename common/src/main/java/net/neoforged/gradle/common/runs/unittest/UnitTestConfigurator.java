@@ -21,11 +21,11 @@ public class UnitTestConfigurator {
             //The actual project that this run is associated with does not matter,
             //So we can just use the idea project, we can use the root project,
             //because it is not guaranteed to have all the needed extensions.
-            final Run ideaDefaultTestRun = RunsUtil.create(ideaProject, "ideaDefaultUnitTesting");
+            final Run ideaDefaultTestRun = RunsUtil.create(ideaProject, "idea");
             extensionAware.getExtensions().add(Run.class, "unitTests", ideaDefaultTestRun);
 
             ideaDefaultTestRun.getIsJUnit().set(true);
-            ideaDefaultTestRun.configure("junit");
+            ideaDefaultTestRun.runType("junit");
 
             RunManager runManager = project.getExtensions().getByType(RunManager.class);
             runManager.addInternal(ideaDefaultTestRun);

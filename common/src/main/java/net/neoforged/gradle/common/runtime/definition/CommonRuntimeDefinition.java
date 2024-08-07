@@ -177,7 +177,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         );
 
         run.overrideJvmArguments(interpolate(run.getJvmArguments(), runtimeInterpolationData));
-        run.overrideProgramArguments(interpolate(run.getProgramArguments(), runtimeInterpolationData));
+        run.overrideArguments(interpolate(run.getArguments(), runtimeInterpolationData));
         run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), runtimeInterpolationData));
         run.overrideSystemProperties(interpolate(run.getSystemProperties(), runtimeInterpolationData));
 

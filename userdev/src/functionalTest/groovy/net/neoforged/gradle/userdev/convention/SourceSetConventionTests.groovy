@@ -1,6 +1,7 @@
 package net.neoforged.gradle.userdev.convention
 
-
+import net.neoforged.gradle.common.services.caching.CachedExecutionBuilder
+import net.neoforged.gradle.common.services.caching.CachedExecutionService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -234,7 +235,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run sources: \${project.runs.client.modSources.get()}")
+                logger.lifecycle("Run sources: \${project.runs.client.modSources.all().get().values()}")
             }
             """)
             it.withToolchains()
@@ -248,7 +249,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
+        run.output.contains("(Run: client) The run: client has no source sets configured")
     }
 
     def "disabling sourceset conventions prevents registration of main sourceset to run"() {
@@ -275,7 +276,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run sources: \${project.runs.client.modSources.get()}")
+                logger.lifecycle("Run sources: \${project.runs.client.modSources.all().get().values()}")
             }
             """)
             it.withToolchains()
@@ -289,7 +290,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
+        run.output.contains("(Run: client) The run: client has no source sets configured")
     }
 
     def "disabling main source set registration conventions prevents registration of main sourceset to run"() {
@@ -316,7 +317,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run sources: \${project.runs.client.modSources.get()}")
+                logger.lifecycle("Run sources: \${project.runs.client.modSources.all().get().values()}")
             }
             """)
             it.withToolchains()
@@ -330,7 +331,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.output.contains("Run: client has no source sets configured. Please configure at least one source set.")
+        run.output.contains("(Run: client) The run: client has no source sets configured.")
     }
 
     def "having the conventions for main sourceset registration enabled registers it"() {
@@ -356,7 +357,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run sources: \${project.runs.client.modSources.all().get()}")
+                logger.lifecycle("Run sources: \${project.runs.client.modSources.all().get().values()}")
             }
             """)
             it.withToolchains()
@@ -370,7 +371,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':dependencies').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Run sources: {registration_enabled=[source set 'main']}")
+        run.output.contains("Run sources: [source set 'main']")
     }
 
     def "disabling sourceset local run runtime registration conventions prevents registration of localRunRuntime"() {

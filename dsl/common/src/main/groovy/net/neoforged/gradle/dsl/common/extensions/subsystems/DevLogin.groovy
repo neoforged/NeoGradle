@@ -14,14 +14,6 @@ import org.gradle.api.tasks.Optional
 interface DevLogin extends ConfigurableDSLElement<DevLogin> {
 
     /**
-     * @return Whether or not dev login is enabled on launch.
-     */
-    @Input
-    @Optional
-    @DSLProperty
-    Property<Boolean> getEnabled();
-
-    /**
      * @return The main class to use when launching the game through dev login.
      */
     @Input
@@ -37,11 +29,4 @@ interface DevLogin extends ConfigurableDSLElement<DevLogin> {
     @DSLProperty
     Property<String> getConfigurationSuffix()
 
-    /**
-     * @return The default usage flag state for runs. This is by default false (meaning the dev login configuration is not used by default), setting this to true will make all clients use dev login by default.
-     */
-    @Input
-    @Optional
-    @DSLProperty
-    Property<Boolean> getConventionForRun()
 }

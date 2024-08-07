@@ -29,6 +29,7 @@ class Constants {
     public static final String DEFAULT_PARCHMENT_MAVEN_URL = "https://maven.parchmentmc.org/"
     public static final String JST_TOOL_ARTIFACT = "net.neoforged.jst:jst-cli-bundle:1.0.55"
     public static final String DEVLOGIN_TOOL_ARTIFACT = "net.covers1624:DevLogin:0.1.0.4"
+    public static final String RENDERNURSE_TOOL_ARTIFACT = "net.neoforged:render-nurse:0.0.12";
     public static final String DEVLOGIN_MAIN_CLASS = "net.covers1624.devlogin.DevLogin"
 
     public static final String DEFAULT_RECOMPILER_MAX_MEMORY = "1g"

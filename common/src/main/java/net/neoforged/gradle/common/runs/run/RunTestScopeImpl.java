@@ -10,7 +10,7 @@ import java.io.File;
 
 public abstract class RunTestScopeImpl implements RunTestScope {
 
-    private static final String DEFAULT_PATTERN = ".*";
+    static final String DEFAULT_PATTERN = ".*";
 
     private final Project project;
 

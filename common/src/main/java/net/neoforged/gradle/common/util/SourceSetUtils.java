@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.util;
 
 import net.neoforged.gradle.dsl.common.extensions.ProjectHolder;
-import net.neoforged.gradle.dsl.common.extensions.RunnableSourceSet;
+import net.neoforged.gradle.dsl.common.extensions.sourceset.RunnableSourceSet;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;

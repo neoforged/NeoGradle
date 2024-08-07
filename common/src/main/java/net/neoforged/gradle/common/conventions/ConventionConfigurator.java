@@ -67,8 +67,8 @@ public class ConventionConfigurator {
         project.getExtensions().configure(RunManager.class, runContainer -> runContainer.configureAll(run -> {
             final Configuration runSpecificRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getRunName(run, configurations.getPerRunRuntimeConfigurationPostFix().get()));
 
-            run.getDependencies().get().getRuntime().add(runRuntimeConfiguration);
-            run.getDependencies().get().getRuntime().add(runSpecificRuntimeConfiguration);
+            run.getDependencies().getRuntime().add(runRuntimeConfiguration);
+            run.getDependencies().getRuntime().add(runSpecificRuntimeConfiguration);
         }));
     }
 

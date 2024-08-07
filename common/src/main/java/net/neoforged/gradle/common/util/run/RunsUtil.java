@@ -10,15 +10,12 @@ import net.neoforged.gradle.common.util.ClasspathUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.VersionJson;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.DevLogin;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
-import net.neoforged.gradle.dsl.common.runs.run.RunRenderDocOptions;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -62,25 +59,23 @@ public class RunsUtil {
         throw new IllegalStateException("Tried to create utility class!");
     }
 
-    public static String createTaskName(final Run run) {
-        return createTaskName(run.getName());
-    }
-
     public static String createTaskName(final String prefix, final Run run) {
         return createTaskName(prefix, run.getName());
     }
 
-    public static void configure(Project project, Run run) {
-        RunsUtil.configureModSourceDefaults(project, run);
+    public static void configure(Project project, Run run, boolean isInternal) {
+        RunsUtil.configureModSourceDefaults(project, run, isInternal);
 
         run.configure();
 
-        RunsUtil.setupModSources(project, run);
+        RunsUtil.setupModSources(project, run, isInternal);
         RunsUtil.configureModClasses(run);
         RunsUtil.ensureMacOsSupport(run);
         RunsUtil.setupDevLoginSupport(project, run);
         RunsUtil.setupRenderDocSupport(project, run);
-        RunsUtil.createTasks(project, run);
+        if (!isInternal) {
+            RunsUtil.createTasks(project, run);
+        }
         RunsUtil.registerPostSyncTasks(project, run);
     }
 
@@ -106,23 +101,22 @@ public class RunsUtil {
 
                 runExec.getMainClass().convention(run.getMainClass());
                 runExec.setWorkingDir(workingDir);
-                runExec.args(run.getProgramArguments().get());
+                runExec.args(run.getArguments().get());
                 runExec.jvmArgs(run.getJvmArguments().get());
                 runExec.systemProperties(run.getSystemProperties().get());
                 runExec.environment(run.getEnvironmentVariables().get());
                 run.getModSources().all().get().values().stream()
                         .map(SourceSet::getRuntimeClasspath)
                         .forEach(runExec::classpath);
-                runExec.classpath(run.getDependencies().get().getRuntimeConfiguration());
+                runExec.classpath(run.getDependencies().getRuntimeConfiguration());
                 runExec.classpath(run.getRuntimeClasspath());
 
                 updateRunExecClasspathBasedOnPrimaryTask(runExec, run);
 
                 addRunSourcesDependenciesToTask(runExec, run, true);
 
-                if (run instanceof RunImpl runImpl) {
-                    runExec.getDependsOn().add(runImpl.getDependsOn());
-                }
+                runExec.getDependsOn().add(run.getDependsOn());
+                runExec.getDependsOn().add(run.getPostSyncTasks()); //We need this additionally here, in-case the user runs this through gradle without an IDE
             });
         } else {
             createOrReuseTestTask(project, run.getName(), run);
@@ -137,7 +131,11 @@ public class RunsUtil {
         }
     }
 
-    public static void configureModSourceDefaults(Project project, Run run) {
+    public static void configureModSourceDefaults(Project project, Run run, boolean isInternal) {
+        if (isInternal) {
+            return;
+        }
+
         // We add default junit sourcesets here because we need to know the type of the run first
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
         if (conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
@@ -146,10 +144,10 @@ public class RunsUtil {
         }
     }
 
-    public static void setupModSources(Project project, Run run) {
+    public static void setupModSources(Project project, Run run, boolean isInternal) {
         // We add default junit sourcesets here because we need to know the type of the run first
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
-        if (conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
+        if (!isInternal && conventions.getSourceSets().getShouldTestSourceSetBeAutomaticallyAddedToRuns().get()) {
             if (run.getIsJUnit().get()) {
                 run.getUnitTestSources().add(project.getExtensions().getByType(SourceSetContainer.class).getByName("test"));
             }
@@ -158,7 +156,7 @@ public class RunsUtil {
         if (conventions.getSourceSets().getShouldSourceSetsLocalRunRuntimesBeAutomaticallyAddedToRuns().get() && conventions.getConfigurations().getIsEnabled().get()) {
             run.getModSources().all().get().values().forEach(sourceSet -> {
                 if (project.getConfigurations().findByName(ConfigurationUtils.getSourceSetName(sourceSet, conventions.getConfigurations().getRunRuntimeConfigurationPostFix().get())) != null) {
-                    run.getDependencies().get().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, conventions.getConfigurations().getRunRuntimeConfigurationPostFix().get())));
+                    run.getDependencies().getRuntime().add(project.getConfigurations().getByName(ConfigurationUtils.getSourceSetName(sourceSet, conventions.getConfigurations().getRunRuntimeConfigurationPostFix().get())));
                 }
             });
         }
@@ -179,36 +177,41 @@ public class RunsUtil {
         //Handle dev login.
         final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
         final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
-        if (devLogin.getEnabled().get()) {
-            final RunDevLoginOptions runsDevLogin = run.getDevLogin();
+        final RunDevLoginOptions runsDevLogin = run.getDevLogin();
 
-            //Dev login is only supported on the client side
-            if (run.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
-                final String mainClass = run.getMainClass().get();
+        //Dev login is only supported on the client side
+        if (run.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+            final String mainClass = run.getMainClass().get();
 
-                //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
-                final SourceSet defaultSourceSet = run.getModSources().all().get().entries().iterator().next().getValue();
-                final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
-                final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
-                final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
+            //We add the dev login tool to a custom configuration which runtime classpath extends from the default runtime classpath
+            final SourceSet defaultSourceSet = run.getModSources().all().get().entries().iterator().next().getValue();
+            final String runtimeOnlyDevLoginConfigurationName = ConfigurationUtils.getSourceSetName(defaultSourceSet, devLogin.getConfigurationSuffix().get());
+            final Configuration sourceSetRuntimeOnlyDevLoginConfiguration = project.getConfigurations().maybeCreate(runtimeOnlyDevLoginConfigurationName);
+            final Configuration sourceSetRuntimeClasspathConfiguration = project.getConfigurations().maybeCreate(defaultSourceSet.getRuntimeClasspathConfigurationName());
 
-                sourceSetRuntimeClasspathConfiguration.extendsFrom(sourceSetRuntimeOnlyDevLoginConfiguration);
-                sourceSetRuntimeOnlyDevLoginConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
+            sourceSetRuntimeClasspathConfiguration.extendsFrom(sourceSetRuntimeOnlyDevLoginConfiguration);
+            sourceSetRuntimeOnlyDevLoginConfiguration.getDependencies().add(project.getDependencies().create(tools.getDevLogin().get()));
 
-                //Update the program arguments to properly launch the dev login tool
-                run.getProgramArguments().add("--launch_target");
-                run.getProgramArguments().add(mainClass);
+            //Update the program arguments to properly launch the dev login tool
+            run.getArguments().add("--launch_target");
+            run.getArguments().add(mainClass);
 
-                if (runsDevLogin.getProfile().isPresent()) {
-                    run.getProgramArguments().add("--launch_profile");
-                    run.getProgramArguments().add(runsDevLogin.getProfile().get());
-                }
-
-                //Set the main class to the dev login tool
-                run.getMainClass().set(devLogin.getMainClass());
-            } else if (!run.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
-                throw new InvalidUserDataException("Dev login is only supported on runs which are marked as clients! The run: " + run.getName() + " is not a client run.");
+            if (runsDevLogin.getProfile().isPresent()) {
+                run.getArguments().add("--launch_profile");
+                run.getArguments().add(runsDevLogin.getProfile().get());
             }
+
+            //Set the main class to the dev login tool
+            run.getMainClass().set(devLogin.getMainClass());
+        } else if (!run.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
+            final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+            throw reporter.throwing(spec -> spec
+                    .id("runs", "dev-login-not-supported")
+                    .contextualLabel("Run: " + run.getName())
+                    .details("Dev login is only supported on runs which are marked as clients! The run: " + run.getName() + " is not a client run.")
+                    .solution("Please mark the run as a client run or disable dev login.")
+                    .section("common-runs-devlogin-configuration")
+            );
         }
     }
 
@@ -217,10 +220,11 @@ public class RunsUtil {
             if (!run.getIsClient().get())
                 throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
 
+            final RenderDocTools renderDocTools = project.getExtensions().getByType(Subsystems.class).getTools().getRenderDoc();
             final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createTaskName("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
-                renderDoc.getRenderDocVersion().set(run.getRenderDoc().getRenderDocVersion());
-                renderDoc.getRenderDocOutputDirectory().set(run.getRenderDoc().getRenderDocPath().dir("download"));
-                renderDoc.getRenderDocInstallationDirectory().set(run.getRenderDoc().getRenderDocPath().dir("installation"));
+                renderDoc.getRenderDocVersion().set(renderDocTools.getRenderDocVersion());
+                renderDoc.getRenderDocOutputDirectory().set(renderDocTools.getRenderDocPath().dir("download"));
+                renderDoc.getRenderDocInstallationDirectory().set(renderDocTools.getRenderDocPath().dir("installation"));
             });
 
             run.getDependsOn().add(setupRenderDoc);
@@ -232,7 +236,7 @@ public class RunsUtil {
 
             if (renderNurse == null) {
                 //This happens when no primary source set is set, and the renderNurse configuration is not added to the runtime classpath.
-                renderNurse = registerRenderNurse(run.getProject(), run);
+                renderNurse = registerRenderNurse(run.getProject());
             }
 
             //Add the relevant properties, so that render nurse can be used, see its readme for the required values.
@@ -250,20 +254,21 @@ public class RunsUtil {
 
     private static Configuration addLocalRenderNurse(SourceSet sourceSet, Run run) {
         final Project project = SourceSetUtils.getProject(sourceSet);
-        final Configuration renderNurse = registerRenderNurse(project, run);
+        final Configuration renderNurse = registerRenderNurse(project);
 
         final Configuration runtimeClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
         runtimeClasspath.extendsFrom(renderNurse);
         return renderNurse;
     }
 
-    private static @NotNull Configuration registerRenderNurse(Project project, Run run) {
-        final RunRenderDocOptions renderDocOptions = run.getRenderDoc();
+    private static @NotNull Configuration registerRenderNurse(Project project) {
+        final RenderDocTools renderDocTools = project.getExtensions().getByType(Subsystems.class).getTools().getRenderDoc();
+        final RenderDoc renderDocSubSystem = project.getExtensions().getByType(Subsystems.class).getRenderDoc();
 
         return ConfigurationUtils.temporaryUnhandledConfiguration(
                 project.getConfigurations(),
-                ConfigurationUtils.getRunName(run, "renderNurse"),
-                project.getDependencies().create("net.neoforged:render-nurse:%s".formatted(renderDocOptions.getRenderNurseVersion().get()))
+                renderDocSubSystem.getConfigurationSuffix().get(),
+                project.getDependencies().create(renderDocTools.getRenderNurse().get())
         );
     }
 
@@ -370,7 +375,7 @@ public class RunsUtil {
     public static PreparedUnitTestEnvironment prepareUnitTestEnvironment(Run run) {
 
         return new PreparedUnitTestEnvironment(
-                createArgsFile(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())), run.getProgramArguments()),
+                createArgsFile(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())), run.getArguments()),
                 createArgsFile(run.getWorkingDirectory().file("%s_jvm_args.txt".formatted(run.getName())), run.getJvmArguments())
         );
     }
@@ -409,6 +414,7 @@ public class RunsUtil {
 
             addRunSourcesDependenciesToTask(testTask, run, true);
             testTask.getDependsOn().add(run.getDependsOn());
+            testTask.getDependsOn().add(run.getPostSyncTasks()); //We need this additionally here in case the user runs this through gradle without an IDE
 
             testTask.setWorkingDir(run.getWorkingDirectory().get());
             testTask.getSystemProperties().putAll(run.getSystemProperties().get());
@@ -422,7 +428,7 @@ public class RunsUtil {
             testTask.jvmArgs("@%s".formatted(preparedEnvironment.jvmArgumentsFile().getAbsolutePath()));
 
             final ConfigurableFileCollection testCP = project.files();
-            testCP.from(run.getDependencies().get().getRuntimeConfiguration());
+            testCP.from(run.getDependencies().getRuntimeConfiguration());
             Stream.concat(run.getModSources().all().get().values().stream(), run.getUnitTestSources().all().get().values().stream())
                     .forEach(src -> testCP.from(filterOutput(src)));
 
@@ -434,8 +440,6 @@ public class RunsUtil {
             }
 
             testTask.setTestClassesDirs(testClassesDirs);
-
-            testTask.dependsOn(preparedEnvironment); //TODO: Remove
         });
     }
 
@@ -559,6 +563,7 @@ public class RunsUtil {
         return ideaDir.exists() ? ideaDir : null;
     }
 
+    @SuppressWarnings("SameParameterValue")
     @Nullable
     private static String evaluateXPath(File file, @Language("xpath") String expression) {
         try (var fis = new FileInputStream(file)) {
@@ -583,7 +588,7 @@ public class RunsUtil {
         return getIdeaModuleOutDirectory(sourceSet, compileType).map(dir -> dir.dir(name));
     }
 
-    public static Provider<? extends FileSystemLocation> getRunWithIdeaResourcesDirectory(final SourceSet sourceSet, final IdeaCompileType compileType) {
+    public static Provider<? extends FileSystemLocation> getRunWithIdeaResourcesDirectory(final SourceSet sourceSet) {
         //When running with idea we forcefully redirect all sourcesets to a directory in build, to prevent issues
         //with unit tests started from the gutter -> We can only have a single task, that should run always, regardless of run or sourceset:
         final Project project = SourceSetUtils.getProject(sourceSet);
@@ -601,7 +606,7 @@ public class RunsUtil {
         return buildModClasses(compileSourceSets, sourceSet -> {
 
             if (isRunWithIdea(sourceSet)) {
-                final File resourcesDir = getRunWithIdeaResourcesDirectory(sourceSet, compileType).get().getAsFile();
+                final File resourcesDir = getRunWithIdeaResourcesDirectory(sourceSet).get().getAsFile();
                 final File classesDir = getRunWithIdeaClassesDirectory(sourceSet, compileType).get().getAsFile();
                 return Stream.of(resourcesDir, classesDir);
             }

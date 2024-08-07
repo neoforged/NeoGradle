@@ -92,6 +92,13 @@ interface RunSourceSets extends ConfigurableDSLElement<RunSourceSets> {
     void add(String groupId, SourceSet... sourceSets);
 
     /**
+     * Adds all lazy source sets to this run
+     *
+     * @param sourceSets The source sets to add
+     */
+    void addAllLater(Provider<Multimap<String, SourceSet>> sourceSets);
+
+    /**
      * Defines the primary sourceset of the run,
      * If defined as to be part of the run, it will be used as the primary source set, who's minecraft dependency will be used
      * instead of the default combined runtime classpath of the mod sources.

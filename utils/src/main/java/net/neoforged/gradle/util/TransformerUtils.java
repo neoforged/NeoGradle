@@ -1,5 +1,7 @@
 package net.neoforged.gradle.util;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
@@ -9,6 +11,8 @@ import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.SourceSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,6 +193,25 @@ public final class TransformerUtils {
         });
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static <K, V, I, C extends List<I>> Transformer<? extends Provider<Multimap<K, V>>, C> combineAllMultiMaps(final Project project, final Class<K> keyClass, final Class<V> valueClass, final Function<I, Provider<Multimap<K, V>>> valueProvider) {
+        record Entry<K, V>(K key, V value) {}
+        final ListProperty<Entry<K, V>> map = (ListProperty) project.getObjects().listProperty(Entry.class);
+        return guard(t -> {
+            for (I i : t) {
+                map.addAll(valueProvider.apply(i).map(m -> m.entries().stream().map(e -> new Entry<>(e.getKey(), e.getValue())).toList()));
+            }
+            return map.map(entries -> {
+                final Multimap<K, V> multimap = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
+                for (Entry<K, V> entry : entries) {
+                    multimap.put(entry.key, entry.value);
+                }
+                return multimap;
+            });
+        });
+    }
+
+
     /**
      * Creates a transformer which will execute a callback on the inputs last value before passing it back as a result.
      * @param project The project to use for creating the provider
@@ -226,6 +249,27 @@ public final class TransformerUtils {
     public static <V, I, C extends List<I>> Transformer<Provider<List<V>>, C> combineAllLists(final Project project, Class<V> valueClass, Function<I, Provider<List<V>>> valueProvider) {
         return guard(t -> {
             final ListProperty<V> values = project.getObjects().listProperty(valueClass);
+            for (I i : t) {
+                values.addAll(valueProvider.apply(i));
+            }
+            return values;
+        });
+    }
+
+    /**
+     * Creates a transformer which will combine all the values into a single set.
+     *
+     * @param project The project to use for creating the set property
+     * @param valueClass The class of the value of the set
+     * @param valueProvider The function to provide the set for each input
+     * @return The transformer which will combine all the sets into a single set
+     * @param <V> The type of the value of the set
+     * @param <I> The type of the input to the transformer
+     * @param <C> The type of the collection of inputs
+     */
+    public static <V, I, C extends List<I>> Transformer<Provider<Set<V>>, C> combineAllSets(final Project project, Class<V> valueClass, Function<I, Provider<Set<V>>> valueProvider) {
+        return guard(t -> {
+            final SetProperty<V> values = project.getObjects().setProperty(valueClass);
             for (I i : t) {
                 values.addAll(valueProvider.apply(i));
             }
@@ -370,6 +414,43 @@ public final class TransformerUtils {
     @SafeVarargs
     public static Transformer<Provider<Boolean>, Boolean> or(Provider<Boolean>... rightProvider) {
         return inputBoolean -> or(inputBoolean, rightProvider);
+    }
+
+    /**
+     * This method is a short-cut to fix a compiler error:
+     * <p>
+     *     When using the {@link Provider#orElse(T)} method, the compiler can not infer the type of the object,
+     *     and for some reason returns a {@link Provider<Object>} instead of the expected type: {@link Provider<T>}.
+     *     This method is a short-cut to fix that issue.
+     *     <br>
+     *     <b>NOTE:</b> This method is not needed in all cases, only when the compiler can not infer the type.
+     * </p>
+     * @param provider The provider to get the value from
+     * @param value The value to return if the provider is empty
+     * @return The value of the provider, or the default value if the provider is empty
+     * @param <T> The type of the value
+     */
+    public static <T> Provider<T> defaulted(Provider<T> provider, T value) {
+        return provider.orElse(value);
+    }
+
+    /**
+     * This method is a short-cut to fix a compiler error:
+     * <p>
+     *     When using the {@link Provider#orElse(T)} method, the compiler can not infer the type of the object,
+     *     and for some reason returns a {@link Provider<Object>} instead of the expected type: {@link Provider<T>}.
+     *     This method is a short-cut to fix that issue.
+     *     <br>
+     *     <b>NOTE:</b> This method is not needed in all cases, only when the compiler can not infer the type.
+     * </p>
+     * @param provider The provider to get the value from
+     * @param value The value to return if the provider is empty
+     * @return The value of the provider, or the default value if the provider is empty
+     * @param <T> The type of the value
+     */
+
+    public static <T> Provider<T> lazyDefaulted(Provider<T> provider, Provider<T> value) {
+        return provider.orElse(value);
     }
 
     /**

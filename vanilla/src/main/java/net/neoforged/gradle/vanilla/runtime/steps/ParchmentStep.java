@@ -46,7 +46,7 @@ public class ParchmentStep implements IStep {
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
         Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
 
-        if (!parchment.getEnabled().get()) {
+        if (!parchment.getIsEnabled().get()) {
             return project.getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "applyParchmentNoop"), NoopRuntime.class, task -> {
                 task.getInput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
             });

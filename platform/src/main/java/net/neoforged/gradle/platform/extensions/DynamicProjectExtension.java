@@ -910,7 +910,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 TransformerUtils.ifTrue(run.getIsClient(), runtimeDefinition.getAssets(), runtimeDefinition.getNatives())
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsClient(),
                         "--username", "Dev",
                         "--version", project.getName(),
@@ -919,7 +919,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsServer(),
                         "--launchTarget", "forgeserverdev")
         );
@@ -935,7 +935,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                         "neoforge.gameTestServer", "true")
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsDataGenerator(),
                         "--launchTarget", "forgedatadev",
                         "--flat", "--all", "--validate",
@@ -943,7 +943,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         );
 
         mainSourceSet.getResources().getSrcDirs().forEach(file -> {
-            run.getProgramArguments().addAll(
+            run.getArguments().addAll(
                     TransformerUtils.ifTrue(run.getIsDataGenerator(),
                             "--existing", file.getAbsolutePath())
             );
@@ -952,7 +952,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project, runtimeDefinition.getVersionJson()).map(Directory::getAsFile).map(File::getAbsolutePath);
         Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(
                         run.getIsDataGenerator().flatMap(TransformerUtils.or(run.getIsClient(), run.getIsJUnit())),
                         project.provider(() -> "--assetsDir"),
@@ -961,7 +961,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                         assetIndex)
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsJUnit(),
                         "--launchTarget", "forgejunitdev")
         );

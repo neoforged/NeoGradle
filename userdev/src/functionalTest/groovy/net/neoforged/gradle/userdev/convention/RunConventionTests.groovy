@@ -87,7 +87,8 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Run count: 0")
-        run.output.contains("Runtype count: 0")
+        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: ")
     }
 
     def "disabling automatic registration does not register runs"() {
@@ -125,7 +126,8 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Run count: 0")
-        run.output.contains("Runtype count: 0")
+        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: ")
     }
 
     def "enabling automatic registration does not register runs"() {
@@ -165,8 +167,9 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         then:
         run.output.contains("Run count: ")
         !run.output.contains("Run count: 0")
-        run.output.contains("Runtype count: 0")
-        run.output.contains("Equal: false")
+        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: ")
+        run.output.contains("Equal: true")
     }
 
     def "disabling conventions globally prevents creation of runs configuration run"() {

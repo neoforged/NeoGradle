@@ -77,8 +77,7 @@ runs {
 }
 ```
 You do not need to create all five of the different runs, only the ones you need.
-
-This is because at the point where gradle actually adds the dependency, we can not create any further runs.
+This is because at the point where gradle actually adds the dependency, we can not create any further runs, yet we can still configure them for you when the dependency is added.
 
 ### Common Plugin
 #### <a id="common-dep-management" /> Available Dependency Management
@@ -107,6 +106,7 @@ dependencies {
 ```
 Obviously you need to replace `project.with:jar-in-jar:1.2.3` with the actual coordinates of the project you want to depend on,
 and any configuration can be used to determine the scope of your dependency.
+
 ##### <a id="common-jar-in-jar-publishing" /> Publishing
 If you want to publish a jar-in-jar dependency, you can do so by adding the following to your build.gradle:
 ```groovy
@@ -139,12 +139,91 @@ runs {
 }
 ```
 
+##### <a id="common-runs-configuring-runs" /> Configuring runs
+When you create a run in your project, it will initially be empty.
+If you do not use a run type, or clone the configuration from another run, as described below, you will have to configure the run yourself.
+```groovy
+runs {
+    someRun {
+        isIsSingleInstance true //This will make the run a single instance run, meaning that only one instance of the run can be run at a time
+        mainClass 'com.example.Main' //This will set the main class of the run
+        arguments 'arg1', 'arg2' //This will set the arguments of the run
+        jvmArguments '-Xmx4G' //This will set the jvm arguments of the run
+        isClient true //This will set the run to be a client run
+        isServer true //This will set the run to be a server run
+        isDataGenerator true //This will set the run to be a data gen run
+        isGameTest true //This will set the run to be a game test run
+        isJUnit true //This will set the run to be a junit run, indicating that a Unit Test environment should be used and not a normal run
+        environmentVariables 'key1': 'value1', 'key2': 'value2' //This will set the environment variables of the run
+        systemProperties 'key1': 'value1', 'key2': 'value2' //This will set the system properties of the run
+        classPath.from project.configurations.runtimeClasspath //This will add an element to just the classpath of this run
+        
+        shouldBuildAllProjects true //This will set the run to build all projects before running
+        workingDirectory file('some/path') //This will set the working directory of the run
+    }
+}
+```
+Beyond these basic configurations you can always look at the [Runs DSL object](dsl/common/src/main/groovy/net/neoforged/gradle/dsl/common/runs/run/Run.groovy) to see what other options are available.
+
+##### <a id="common-runs-configuring-types" /> Configuring run types
+If you are using run types that do not come from an SDK (like those that the userdev plugin), you can configure them as follows:
+```groovy
+runs {
+    someRun {
+        isIsSingleInstance true //This will make the runs of this type a single instance run, meaning that only one instance of the run can be run at a time
+        mainClass 'com.example.Main' //This will set the main class of the runs of this type
+        arguments 'arg1', 'arg2' //This will set the arguments of the runs of this type
+        jvmArguments '-Xmx4G' //This will set the jvm arguments of the runs of this type
+        isClient true //This will set the run to be a client runs of this type
+        isServer true //This will set the run to be a server runs of this type
+        isDataGenerator true //This will set the run to be a data gen runs of this type
+        isGameTest true //This will set the run to be a game test runs of this type
+        isJUnit true //This will set the run to be a junit runs of this type, indicating that a Unit Test environment should be used and not a normal run
+        environmentVariables 'key1': 'value1', 'key2': 'value2' //This will set the environment variables of the runs of this type
+        systemProperties 'key1': 'value1', 'key2': 'value2' //This will set the system properties of the runs of this type
+        classPath.from project.configurations.runtimeClasspath //This will add an element to just the classpath of this runs of this type
+    }
+}
+```
+
+##### <a id="common-runs-configuration-types" /> Types of runs
+The common plugin manages the existence of runs, but it on its own does not create or configure a run.
+It just ensures that when you create a run tasks, and IDE runs, are created for it, based on the configuration of the run itself.
+
+To configure a run based on a given template, run types exist.
+And if you use the userdev plugin for example then it will load the run types from the SDKs you depend on and allow you to configure runs based on those types.
+
+###### <a id="common-runs-configuration-types-disable-by-name" /> Configuring runs by name
+First and foremost by default the common plugin will configure any run that is named identical to a run type with that run type. You can disable that for a run by setting:
+```groovy
+runs {
+    someRun {
+        configureFromTypeWithName false
+    }
+}
+```
+
+###### <a id="common-runs-configuration-types-configure-by-type" /> Configuring run using types
+If you want to configure a run based on a run type, you can do so by setting:
+```groovy
+runs {
+    someRun {
+        runType 'client' //In case you want to configure the run type based on its name
+        configure runTypes.client //In case you want to configure the run type based on the run type object, this might not always be possible, due to the way gradle works
+        
+        //The following method is deprecated and will be removed in a future release
+        configure 'client'
+    }
+}
+```
+Both of these will throw an exception if the run type could not be found during realization of the run to a task or ide run.
+
 ##### <a id="common-runs-configuration-runs" /> Configuration of runs
 When a run is added the common plugin will also inspect it and figure out if any SDK or MDK was added to any of its sourcesets,
 if so, it gives that SDK/MDK a chance to add its own settings to the run.
 This allows provides like NeoForge to preconfigure runs for you.
 
-However if you setup the run as follows:
+However, if you set up the run as follows:
 ```groovy
 runs {
     someRun {
@@ -171,6 +250,89 @@ runs {
     }
 }
 ```
+
+###### <a id="common-runs-configuration-types-configure-by-run" /> Configuring run using another run
+Additionally, you can also clone a run into another run:
+```groovy
+runs {
+    someRun {
+        run 'client' //In case you want to clone the client run into the someRun
+        configure runTypes.client //In case you want to clone the client run type into the someRun
+    }
+}
+```
+
+##### Using DevLogin in runs
+The DevLogin tool is a tool that allows you to log in to a Minecraft account without having to use the Minecraft launcher, during development.
+During first start it will show you a link to log in to your Minecraft account, and then you can use the tool to log in to your account.
+The credentials are cached on your local machine, and then reused for future logins, so that re-logging is only needed when the tokens expire.
+This tool is used by the runs subsystem to enable logged in plays on all client runs.
+The tool can be configured using the following properties:
+```properties
+neogradle.subsystems.devLogin.enabled=<true/false>
+```
+By default, the subsystem is enabled, and it will prepare everything for you to log in to a Minecraft account, however you will still need to enable it on the runs you want.
+If you want to disable this you can set the property to false, and then you will not be asked to log in, but use a random non-signed in dev account.
+
+###### <a id="common-runs-devlogin-configuration" /> Per run configuration
+If you want to configure the dev login tool per run, you can do so by setting the following properties in your run configuration:
+```groovy
+runs {
+    someRun {
+        devLogin {
+            enabled true
+        }
+    }
+}
+```
+This will enable the dev login tool for this run.
+By default, the dev login tool is disabled, and can only be enabled for client runs.
+
+> [!WARNING]
+> If you enable the dev login tool for a non-client run, you will get an error message.
+
+Additionally, it is possible to use a different user profile for the dev login tool, by setting the following property in your run configuration:
+```groovy
+runs {
+    someRun {
+        devLogin {
+            profile '<profile>'
+        }
+    }
+}
+```
+If it is not set then the default profile will be used. See the DevLogin documentation for more information on profiles: [DevLogin by Covers1624](https://github.com/covers1624/DevLogin/blob/main/README.md#multiple-accounts)
+
+###### Configurations
+To add the dev login tool to your run we create a custom configuration to which we add the dev login tool.
+This configuration is created for the first source-set you register with the run as a mod source set.
+The suffix for the configuration can be configured to your personal preference, by setting the following property in your gradle.properties:
+```properties
+neogradle.subsystems.devLogin.configurationSuffix=<suffix>
+```
+By default, the suffix is set to "DevLoginLocalOnly".
+We use this approach to create a runtime only configuration, that does not leak to other consumers of your project.
+
+##### Using RenderDoc in runs
+The RenderDoc tool is a tool that allows you to capture frames from your game, and inspect them in its frame debugger.
+Our connector implementation can be optionally injected to start RenderDoc with your game.
+
+###### <a id="common-runs-renderdoc-configuration" /> Per run configuration
+If you want to configure the render doc tool per run, you can do so by setting the following properties in your run configuration:
+```groovy
+runs {
+    someRun {
+        renderDoc {
+            enabled true
+        }
+    }
+}
+```
+This will enable the render doc tool for this run.
+By default, the render doc tool is disabled, and can only be enabled for client runs.
+
+> [!WARNING]
+> If you enable the render doc tool for a non-client run, you will get an error message.
 
 ##### Resource processing
 Gradle supports resource processing out of the box, using the `processResources` task (or equivalent for none main sourcesets).
@@ -199,6 +361,34 @@ idea {
 
 If you want to disable this feature, you can disable the relevant conventions, see [Disabling conventions](#disabling-conventions).
 
+#### <a id="common-dep-sourceset-management" /> SourceSet Management
+The common plugin provides a way to manage sourcesets in your project a bit easier.
+In particular, it allows you to easily depend on a different sourceset, or inherit its dependencies.
+
+> [!WARNING]  
+> However, it is important to know that you can only do this for sourcesets from the same project.
+> NeoGradle will throw an exception if you try to depend on a sourceset from another project.
+
+##### <a id="common-dep-sourceset-management-inherit" /> Inheriting dependencies
+If you want to inherit the dependencies of another sourceset, you can do so by adding the following to your build.gradle:
+```groovy
+sourceSets {
+    someSourceSet {
+        inherit.from sourceSets.someOtherSourceSet
+    }
+}
+```
+
+##### <a id="common-dep-sourceset-management-depend" /> Depending on another sourceset
+If you want to depend on another sourceset, you can do so by adding the following to your build.gradle:
+```groovy
+sourceSets {
+    someSourceSet {
+        depends.on sourceSets.someOtherSourceSet
+    }
+}
+```
+
 ### NeoForm Runtime Plugin
 This plugin enables use of the NeoForm runtime and allows projects to depend directly on deobfuscated but otherwise
 unmodified Minecraft artifacts.
@@ -221,19 +411,6 @@ dependencies {
   implementation "net.minecraft:neoform_server:<neoform-version>"
 }
 ```
-
-### Userdev Runtime Plugin
-This plugin enables you to develop mods for Modding APIs that use the Platform module to publish their SDKs, Installers and other components.
-Most notably this is currently NeoForge.
-
-This will generally be the plugin you add to your project to develop mods for NeoForge.
-```gradle
-plugins {
-  id 'net.neoforged.gradle.userdev' version '<neogradle_version>'
-}
-```
-
-
 
 ## Apply Parchment Mappings
 
@@ -451,7 +628,6 @@ If you want to disable this, you can set the following property in your gradle.p
 neogradle.subsystems.conventions.sourcesets.automatic-inclusion=false
 ```
 
-
 If you want to disable this, you can set the following property in your gradle.properties:
 ```properties
 neogradle.subsystems.conventions.sourcesets.automatic-inclusion=false
@@ -547,6 +723,21 @@ If you want to disable this, you can set the following property in your gradle.p
 neogradle.subsystems.conventions.runs.create-default-run-per-type=false
 ```
 
+#### DevLogin Conventions
+If you want to enable the dev login tool for all client runs, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.runs.devlogin.conventionForRun=true
+```
+This will enable the dev login tool for all client runs, unless explicitly disabled.
+
+#### RenderDoc Conventions
+If you want to enable the render doc tool for all client runs, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.runs.renderdoc.conventionForRun=true
+```
+This will enable the render doc tool for all client runs, unless explicitly disabled.
+
+
 ## Tool overrides
 To configure tools used by different subsystems of NG, the subsystems dsl and properties can be used to configure the following tools:
 ### JST
@@ -556,69 +747,21 @@ The following properties can be used to configure the JST tool:
 neogradle.subsystems.tools.jst=<artifact coordinate for jst cli tool>
 ```
 ### DevLogin
-This tool is used by the runs subsystem to enable Minecraft authentication in client runs.
+This tool is used by the dev login subsystem in runs to enable Minecraft authentication in client runs.
 The following properties can be used to configure the DevLogin tool:
 ```properties
 neogradle.subsystems.tools.devLogin=<artifact coordinate for devlogin cli tool>
 ```
 More information on the relevant tool, its released version and documentation can be found here: [DevLogin by Covers1624](https://github.com/covers1624/DevLogin)
-
-## DevLogin
-The DevLogin tool is a tool that allows you to log in to a Minecraft account without having to use the Minecraft launcher, during development.
-During first start it will show you a link to log in to your Minecraft account, and then you can use the tool to log in to your account.
-The credentials are cached on your local machine, and then reused for future logins, so that re-logging is only needed when the tokens expire.
-This tool is used by the runs subsystem to enable logged in plays on all client runs.
-The tool can be configured using the following properties:
+### RenderDoc
+This tool is used by the RenderDoc subsystem in runs to allow capturing frames from the game in client runs.
+The following properties can be used to configure the RenderDoc tool:
 ```properties
-neogradle.subsystems.devLogin.enabled=<true/false>
+neogradle.subsystems.tools.renderDoc.path=<path to the RenderDoc download and installation directory>
+neogradle.subsystems.tools.renderDoc.version=<version of RenderDoc to use>
+neogradle.subsystems.tools.renderDoc.renderNurse=<artifact coordinate for rendernurse agent tool>
 ```
-By default, the subsystem is enabled, and it will prepare everything for you to log in to a Minecraft account, however you will still need to enable it on the runs you want.
-If you want to disable this you can set the property to false, and then you will not be asked to log in, but use a random non-signed in dev account.
-
-### Per run configuration
-If you want to configure the dev login tool per run, you can do so by setting the following properties in your run configuration:
-```groovy
-runs {
-    someRun {
-        devLogin {
-            enabled true
-        }
-    }
-}
-```
-This will enable the dev login tool for this run. 
-By default, the dev login tool is disabled, and can only be enabled for client runs.
-
-> [!WARNING]
-> If you enable the dev login tool for a non-client run, you will get an error message.
-
-If you want to enable the dev login tool for all client runs, you can set the following property in your gradle.properties:
-```properties
-neogradle.subsystems.devLogin.conventionForRun=true
-```
-This will enable the dev login tool for all client runs, unless explicitly disabled.
-
-Additionally, it is possible to use a different user profile for the dev login tool, by setting the following property in your run configuration:
-```groovy
-runs {
-    someRun {
-        devLogin {
-            profile '<profile>'
-        }
-    }
-}
-```
-If it is not set then the default profile will be used. See the DevLogin documentation for more information on profiles: [DevLogin by Covers1624](https://github.com/covers1624/DevLogin/blob/main/README.md#multiple-accounts)
-
-### Configurations
-To add the dev login tool to your run we create a custom configuration to which we add the dev login tool.
-This configuration is created for the first source-set you register with the run as a mod source set.
-The suffix for the configuration can be configured to your personal preference, by setting the following property in your gradle.properties:
-```properties
-neogradle.subsystems.devLogin.configurationSuffix=<suffix>
-```
-By default, the suffix is set to "DevLoginLocalOnly".
-We use this approach to create a runtime only configuration, that does not leak to other consumers of your project.
+More information on the relevant tool, its released version and documentation can be found here: [RenderDoc](https://renderdoc.org/) and [RenderNurse](https://github.com/neoforged/RenderNurse)
 
 ## Centralized Cache
 NeoGradle has a centralized cache that can be used to store the decompiled Minecraft sources, the recompiled Minecraft sources, and other task outputs of complex tasks.

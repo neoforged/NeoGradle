@@ -61,6 +61,10 @@ public final class FileDownloadingUtils {
     private static boolean copyURLToFileIfNewer(URL url, Path target) throws IOException {
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 
+        urlConnection.setUseCaches(true);
+        urlConnection.setInstanceFollowRedirects(true);
+        urlConnection.setRequestProperty("User-Agent", "NeoGradle: %s".formatted(NeoGradleUtils.getNeogradleVersion()));
+
         try {
             // Do a Conditional If-Modified-Since request
             if (Files.isRegularFile(target)) {

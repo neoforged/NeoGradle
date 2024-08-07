@@ -1,30 +1,40 @@
 package net.neoforged.gradle.common.extensions;
 
 
+import net.neoforged.gradle.common.util.NeoGradleUtils;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.problems.ProblemReporter;
 import org.gradle.api.problems.ProblemSpec;
 import org.gradle.api.problems.Severity;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-
 public class NeoGradleProblemReporter {
 
-    private final Project project;
     private final ProblemReporter delegate;
 
-    public NeoGradleProblemReporter(Project project, ProblemReporter delegate) {
-        this.project = project;
+    public NeoGradleProblemReporter(ProblemReporter delegate) {
         this.delegate = delegate;
     }
 
-    public void reporting(Action<ProblemSpec> spec) {
-        delegate.reporting(spec);
+    public void reporting(Action<NeoGradleProblemSpec> spec, Logger logger) {
+        delegate.reporting(problemSpec -> {
+            final NeoGradleProblemSpec neoGradleProblemSpec = new NeoGradleProblemSpec();
+            spec.execute(neoGradleProblemSpec);
+
+            final String url = readMeUrl(neoGradleProblemSpec.section);
+
+            problemSpec.id(neoGradleProblemSpec.category, neoGradleProblemSpec.id)
+                    .contextualLabel(neoGradleProblemSpec.contextualLabel)
+                    .solution(neoGradleProblemSpec.solution)
+                    .details(neoGradleProblemSpec.details)
+                    .severity(Severity.WARNING)
+                    .documentedAt(url);
+
+            neoGradleProblemSpec.log(logger);
+        });
+
+
     }
 
     public RuntimeException throwing(Action<NeoGradleProblemSpec> spec) {
@@ -49,14 +59,8 @@ public class NeoGradleProblemReporter {
         });
     }
 
-    private String readMeUrl(String section) {
-        final String neogradleVersion;
-        try(final InputStream stream = Objects.requireNonNull(getClass().getClassLoader().getResource("version.neogradle")).openStream()) {
-            neogradleVersion = new String(stream.readAllBytes());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read NeoGradle version", e);
-        }
-
+    private static String readMeUrl(String section) {
+        final String neogradleVersion = NeoGradleUtils.getNeogradleVersion();
         final String branchMajorVersion = neogradleVersion.split("\\.")[0];
         final String branchMinorVersion = neogradleVersion.split("\\.")[1];
         final String branch = "NG_%s.%s".formatted(branchMajorVersion, branchMinorVersion);
@@ -96,6 +100,15 @@ public class NeoGradleProblemReporter {
         public NeoGradleProblemSpec section(String section) {
             this.section = section;
             return this;
+        }
+
+        private void log(Logger logger) {
+            logger.warn("-------------------------------------");
+            logger.warn("NeoGradle detected a problem with your project: %s".formatted(contextualLabel));
+            logger.warn("Details: %s".formatted(details));
+            logger.warn("Potential Solution: %s".formatted(solution));
+            logger.warn("More information: %s".formatted(readMeUrl(section)));
+            logger.warn("-------------------------------------");
         }
     }
 }

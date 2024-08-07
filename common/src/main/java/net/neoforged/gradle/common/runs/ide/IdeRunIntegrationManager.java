@@ -26,6 +26,7 @@ import net.neoforged.vsclc.attribute.PathLike;
 import net.neoforged.vsclc.attribute.ShortCmdBehaviour;
 import net.neoforged.vsclc.writer.WritingMode;
 import org.apache.commons.lang3.StringUtils;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.ExtensionAware;
@@ -143,7 +144,7 @@ public class IdeRunIntegrationManager {
 
                 final RunConfigurationContainer ideaRuns = ((ExtensionAware) ideaExtension).getExtensions().getByType(RunConfigurationContainer.class);
 
-                ideaRuns.registerFactory(JUnitWithBeforeRun.class, ideaTaskName -> project.getObjects().newInstance(JUnitWithBeforeRun.class, project, ideaTaskName));
+                attemptJUnitWithBeforeRunRegistration(project, ideaRuns);
 
                 project.getExtensions().configure(RunManager.class, runs -> runs.all(run -> createIdeaRun(project, run, ideaRuns, false)));
 
@@ -156,7 +157,18 @@ public class IdeRunIntegrationManager {
             });
         }
 
+        private static void attemptJUnitWithBeforeRunRegistration(Project project, RunConfigurationContainer ideaRuns) {
+            try {
+                ideaRuns.registerFactory(JUnitWithBeforeRun.class, ideaTaskName -> project.getObjects().newInstance(JUnitWithBeforeRun.class, project, ideaTaskName));
+            } catch (GradleException ignored) {
+                //Gets thrown when the factory is already registered
+            }
+        }
+
         private void createIdeaRun(Project project, Run run, RunConfigurationContainer ideaRuns, boolean defaultRun) {
+            if (!defaultRun && !run.getShouldExportToIDE().get())
+                return;
+
             final String nameWithoutSpaces = run.getName().replace(" ", "-");
             final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
 
@@ -179,7 +191,7 @@ public class IdeRunIntegrationManager {
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
                     ideaRun.setJvmArgs(RunsUtil.escapeAndJoin(runImpl.realiseJvmArguments()));
                     ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
-                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(runImpl.getProgramArguments().get()));
+                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(runImpl.getArguments().get()));
                     ideaRun.setEnvs(adaptEnvironment(runImpl, multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production)));
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
 
@@ -236,7 +248,10 @@ public class IdeRunIntegrationManager {
             ProjectUtils.afterEvaluate(project, () -> {
                 common(project);
 
-                project.getExtensions().configure(RunManager.class, runs -> runs.configureEach(run -> {
+                project.getExtensions().configure(RunManager.class, runs -> runs.all(run -> {
+                    if (!run.getShouldExportToIDE().get())
+                        return;
+
                     final String name = run.getName();
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
                     
@@ -262,7 +277,7 @@ public class IdeRunIntegrationManager {
                                 JavaApplicationLaunchConfig.builder(eclipse.getProject().getName())
                                         .workingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath())
                                         .vmArgs(RunsUtil.escapeStream(runImpl.realiseJvmArguments()).toArray(String[]::new))
-                                        .args(RunsUtil.escapeStream(runImpl.getProgramArguments().get()).toArray(String[]::new))
+                                        .args(RunsUtil.escapeStream(runImpl.getArguments().get()).toArray(String[]::new))
                                         .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                                         .useArgumentsFile()
                                         .build(runImpl.getMainClass().get());
@@ -297,7 +312,10 @@ public class IdeRunIntegrationManager {
                 common(project);
 
                 final BatchedLaunchWriter launchWriter = new BatchedLaunchWriter(WritingMode.MODIFY_CURRENT);
-                project.getExtensions().configure(RunManager.class, runs -> runs.configureEach(run -> {
+                project.getExtensions().configure(RunManager.class, runs -> runs.all(run -> {
+                    if (!run.getShouldExportToIDE().get())
+                        return;
+
                     final String name = run.getName();
                     final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
 
@@ -305,12 +323,12 @@ public class IdeRunIntegrationManager {
                     final TaskProvider<?> ideBeforeRunTask = getOrCreateIdeBeforeRunTask(project, runImpl);
 
                     final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
-                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(t -> task.dependsOn(t)));
+                    ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
 
                     final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
                         .createLaunchConfiguration()
                         .withAdditionalJvmArgs(runImpl.realiseJvmArguments())
-                        .withArguments(runImpl.getProgramArguments().get())
+                        .withArguments(runImpl.getArguments().get())
                         .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
                         .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                         .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)
@@ -379,7 +397,7 @@ public class IdeRunIntegrationManager {
                 intelliJResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
                     final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
                     task.from(defaultProcessResources.map(ProcessResources::getDestinationDir));
-                    task.into(RunsUtil.getRunWithIdeaResourcesDirectory(sourceSet, RunsUtil.IdeaCompileType.Production));
+                    task.into(RunsUtil.getRunWithIdeaResourcesDirectory(sourceSet));
 
                     task.dependsOn(defaultProcessResources);
                 });

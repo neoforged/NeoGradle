@@ -57,7 +57,7 @@ public class MixinProjectPlugin implements Plugin<Project> {
     }
     
     private void configureRun(Run run) {
-        final ListProperty<String> programArguments = run.getProgramArguments();
+        final ListProperty<String> programArguments = run.getArguments();
         
         for (String config : this.extension.getConfigs().get()) {
             programArguments.addAll("--fml.mixin", config);

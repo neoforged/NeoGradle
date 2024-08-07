@@ -388,6 +388,7 @@ class RunTests extends BuilderBasedTestSpecification {
             runs {
                 junit {
                     modSource project.sourceSets.main
+                    unitTestSource project.sourceSets.test
                 }
             }
             
@@ -425,8 +426,6 @@ class RunTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':test')
-            it.debug()
-            it.stacktrace()
         }
 
         then:
@@ -467,11 +466,73 @@ class RunTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':dependencies')
-            it.stacktrace()
-            it.debug()
+            it.shouldFail()
         }
 
         then:
-        true
+        run.getOutput().contains("(Run: client) The run: client has no source sets configured.")
+    }
+
+    def "runs can inherit from each other"() {
+        given:
+        def project = create("runs_can_inherit_from_each_other", {
+            it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            
+            runs {
+                client {
+                }
+            
+                clientTwo {
+                    configure runs.client
+                }
+                
+                clientThree {
+                    run 'clientTwo'                
+                }
+            }
+            
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':runs')
+            it.stacktrace()
+        }
+
+        then:
+        def lines = run.getOutput().split("\n");
+        def firstRunIndex = lines.findIndexOf { line -> line.startsWith("Run: client")}
+        def secondRunIndex = lines.findIndexOf { line -> line.startsWith("Run: clientTwo")}
+        def thirdRunIndex = lines.findIndexOf { line -> line.startsWith("Run: clientThree")}
+        def endIndex = lines.findIndexOf { line -> line.startsWith("BUILD SUCCESSFUL")}
+
+        def indexes = [firstRunIndex + 1, secondRunIndex + 1, thirdRunIndex + 1, endIndex]
+        indexes.sort()
+
+        def firstSection = lines[indexes[0]..indexes[1] - 2]
+        def secondSection = lines[indexes[1]..indexes[2] - 2]
+        def thirdSection = lines[indexes[2]..indexes[3] - 2]
+
+        //Check if all the runs are the same
+        firstSection == secondSection
+        secondSection == thirdSection
+        thirdSection == firstSection
     }
 }

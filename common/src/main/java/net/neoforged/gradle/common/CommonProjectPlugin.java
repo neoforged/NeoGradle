@@ -6,6 +6,8 @@ import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.replacement.ReplacementLogic;
 import net.neoforged.gradle.common.extensions.repository.IvyRepository;
+import net.neoforged.gradle.common.extensions.sourcesets.SourceSetDependencyExtensionImpl;
+import net.neoforged.gradle.common.extensions.sourcesets.SourceSetInheritanceExtensionImpl;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.rules.LaterAddedReplacedDependencyRule;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
@@ -23,6 +25,9 @@ import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
+import net.neoforged.gradle.dsl.common.extensions.sourceset.RunnableSourceSet;
+import net.neoforged.gradle.dsl.common.extensions.sourceset.SourceSetDependencyExtension;
+import net.neoforged.gradle.dsl.common.extensions.sourceset.SourceSetInheritanceExtension;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
@@ -76,7 +81,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyRepository.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
-        project.getExtensions().create(NeoGradleProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, NeoGradleProblemReporter.class, project, problems.forNamespace(PROBLEM_NAMESPACE));
+        project.getExtensions().create(NeoGradleProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, NeoGradleProblemReporter.class, problems.forNamespace(PROBLEM_NAMESPACE));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
 
         project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
@@ -107,6 +112,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
             sourceSet.getExtensions().create(ProjectHolder.class, ProjectHolderExtension.NAME, ProjectHolderExtension.class, project);
             sourceSet.getExtensions().create(RunnableSourceSet.NAME, RunnableSourceSet.class, project);
+
+            sourceSet.getExtensions().create(SourceSetDependencyExtension.class, "depends", SourceSetDependencyExtensionImpl.class, sourceSet);
+            sourceSet.getExtensions().create(SourceSetInheritanceExtension.class, "inherits", SourceSetInheritanceExtensionImpl.class, sourceSet);
+
             sourceSet.getExtensions().add("runtimeDefinition", project.getObjects().property(CommonRuntimeDefinition.class));
         });
 
@@ -142,7 +151,11 @@ public class CommonProjectPlugin implements Plugin<Project> {
     private void applyAfterEvaluate(final Project project) {
         //We now eagerly get all runs and configure them.
         final RunManager runs = project.getExtensions().getByType(RunManager.class);
-        runs.realizeAll(run -> RunsUtil.configure(project, run));
+        runs.realizeAll(run -> RunsUtil.configure(
+                project,
+                run,
+                !runs.getNames().contains(run.getName()) //Internal runs are not directly registered, so they don't show up in the name list.
+        ));
         IdeRunIntegrationManager.getInstance().apply(project);
     }
 }

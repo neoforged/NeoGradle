@@ -151,39 +151,6 @@ public abstract class IdeManagementExtension {
             //None found -> Create one.
             idePostSyncTask = project.getTasks().register(IDE_POST_SYNC_TASK_NAME, IdePostSyncExecutionTask.class);
 
-            /*
-            final SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-            sourceSets.configureEach(sourceSet -> {
-                final Configuration compileClasspath = project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
-                final Configuration runtimeClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
-
-                final Configuration noneProjectDependentCompileClasspath = project.getConfigurations().maybeCreate(ConfigurationUtils.configurationNameOf(
-                        sourceSet, "noneProjectDependentCompileClasspath"));
-                final Configuration noneProjectDependentRuntimeClasspath = project.getConfigurations().maybeCreate(ConfigurationUtils.configurationNameOf(
-                        sourceSet, "noneProjectDependentRuntimeClasspath"));
-
-                noneProjectDependentCompileClasspath.getDependencies().addAllLater(
-                        project.provider(compileClasspath::getAllDependencies)
-                );
-                noneProjectDependentRuntimeClasspath.getDependencies().addAllLater(
-                        project.provider(runtimeClasspath::getAllDependencies)
-                );
-
-                noneProjectDependentCompileClasspath.withDependencies(dependencies -> {
-                    dependencies.removeIf(dependency -> dependency instanceof ProjectDependency);
-                });
-                noneProjectDependentRuntimeClasspath.withDependencies(dependencies -> {
-                    dependencies.removeIf(dependency -> dependency instanceof ProjectDependency);
-                });
-
-                idePostSyncTask.configure(task -> {
-                    task.getIdePostSyncFiles().from(noneProjectDependentCompileClasspath);
-                    task.getIdePostSyncFiles().from(noneProjectDependentRuntimeClasspath);
-                });
-            });
-
-            */
-
             //Register the task to run after the IDE import is complete
             apply(new IdeImportAction() {
                 @Override

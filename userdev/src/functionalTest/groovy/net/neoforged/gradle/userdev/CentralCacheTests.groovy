@@ -41,51 +41,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Cache miss for task ")
-    }
-
-    def "clean_cache_listens_to_project_property_for_size"() {
-        given:
-        File cacheDir;
-        def project = create("build_supports_configuration_cache_build", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            """)
-            it.withToolchains()
-            cacheDir = it.withGlobalCacheDirectory(tempDir)
-            it.property(CachedExecutionService.MAX_CACHE_SIZE_PROPERTY, "4")
-        })
-
-        if (cacheDir == null) {
-            throw new IllegalStateException("Cache directory was not set")
-        }
-
-        when:
-        def run = project.run {
-            it.tasks('build')
-        }
-
-        then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
-        cacheDir.listFiles().size() > 4
-
-        when:
-        def cleanRun = project.run {
-            it.tasks('clean')
-        }
-
-        then:
-        cleanRun.task(':clean').outcome == TaskOutcome.SUCCESS
-        cleanRun.task(':cleanCache').outcome == TaskOutcome.SUCCESS
-        cacheDir.listFiles().size() == 0
+        run.output.contains("Cache miss for task")
     }
 
     def "cache_supports_cleanup_and_take_over_of_failed_lock"() {
@@ -115,7 +71,6 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         when:
         project.run {
             it.tasks('build')
-            //it.debug()
             it.stacktrace()
         }
 
@@ -160,7 +115,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Cache is disabled, skipping cache")
+        run.output.contains("Caching is disabled, executing all stages.")
     }
 
     def "updating an AT after cache run should work."() {

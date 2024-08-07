@@ -509,7 +509,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         modSourcesSection.get(4) == "    - main"
     }
 
-
     def "multiple projects where one is not neogradle with neoforge dependencies should pull the mod-classes entry from the project name, using the legacy dsl"() {
         given:
         def rootProject = create("multi_neoforge_root_none_ng", {
@@ -834,7 +833,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         modSourcesSection.get(5) == "    - main"
     }
 
-
     def "multiple projects with neoforge dependencies should run when parallel is enabled"() {
         given:
         def rootProject = create("multi_neoforge_root_cached", {
@@ -930,5 +928,105 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             run.task(':main:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
         else if (run.task(':main:neoFormDecompile').outcome == TaskOutcome.SUCCESS)
             run.task(':api:neoFormDecompile').outcome == TaskOutcome.UP_TO_DATE
+    }
+
+    def "multiple projects with with sourceset inheritance should error"() {
+        given:
+        def rootProject = create("multi_neoforge_root_sourceset_inheritance", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withToolchains()
+        })
+
+        def apiProject = create(rootProject, "api", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withToolchains()
+            it.plugin(this.pluginUnderTest)
+        })
+
+        def mainProject = create(rootProject,"main", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            sourceSets.main.inherits.from(project(':api').sourceSets.main)
+            
+            """)
+            it.withToolchains()
+            it.plugin(this.pluginUnderTest)
+        })
+
+        when:
+        def run = rootProject.run {
+            it.tasks(':main:tasks')
+            it.shouldFail()
+        }
+
+        then:
+        run.getOutput().contains("(from(SourceSet)) SourceSet 'main' is not from the same project as the current SourceSet 'main', as such it can not inherit from it.")
+    }
+
+    def "multiple projects with with sourceset dependency should error"() {
+        given:
+        def rootProject = create("multi_neoforge_root_sourceset_dependency", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withToolchains()
+        })
+
+        def apiProject = create(rootProject, "api", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withToolchains()
+            it.plugin(this.pluginUnderTest)
+        })
+
+        def mainProject = create(rootProject,"main", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            sourceSets.main.depends.on(project(':api').sourceSets.main)
+            
+            """)
+            it.withToolchains()
+            it.plugin(this.pluginUnderTest)
+        })
+
+        when:
+        def run = rootProject.run {
+            it.tasks(':main:tasks')
+            it.shouldFail()
+        }
+
+        then:
+        run.getOutput().contains("(on(SourceSet)) SourceSet 'main' is not from the same project as the current SourceSet 'main', as such it can not depend on it.")
     }
 }

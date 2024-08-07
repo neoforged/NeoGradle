@@ -210,7 +210,7 @@ public class ConfigurationUtils {
 
             final Set<Configuration> supers = getAllSuperConfigurations(runtimeClasspath);
             if (supers.contains(runtimeOnly) && supers.contains(configuration)) {
-                final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(getSourceSetName(sourceSet, project.getExtensions().getByType(Subsystems.class).getConventions().getConfigurations().getLocalRuntimeConfigurationPostFix().get()));
+                final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(getSourceSetName(sourceSet, "neoGradleDependencyReplacementTarget%s".formatted(StringUtils.capitalize(configuration.getName()))));
                 runtimeClasspath.extendsFrom(reallyRuntimeOnly);
                 targets.add(reallyRuntimeOnly);
             }
