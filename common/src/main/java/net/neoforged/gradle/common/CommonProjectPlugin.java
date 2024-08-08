@@ -21,6 +21,7 @@ import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigura
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
@@ -118,6 +119,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
             sourceSet.getExtensions().add("runtimeDefinition", project.getObjects().property(CommonRuntimeDefinition.class));
         });
+
+        ConfigurationUtils.ensureReplacementConfigurationExists(project);
 
         //Setup IDE specific unit test handling.
         UnitTestConfigurator.configureIdeUnitTests(project);

@@ -17,13 +17,13 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.internal.GUtil;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 public class ConfigurationUtils {
+
+    private static final String NEOGRADLE_RUNTIME_REPLACEMENT = "neoGradleDependencyReplacementTarget";
+
     private ConfigurationUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: ConfigurationUtils. This is a utility class");
     }
@@ -104,7 +104,34 @@ public class ConfigurationUtils {
         UNHANDLED_CONFIGURATIONS.add(configuration);
 
         if (configuration.getDependencies().isEmpty()) {
-            DefaultGroovyMethods.addAll(configuration.getDependencies(), dependencies);
+            configuration.getDependencies().addAll(Arrays.asList(dependencies));
+            configuration.setCanBeConsumed(false);
+            configuration.setCanBeResolved(true);
+        }
+
+
+        return configuration;
+    }
+
+    /**
+     * Creates a configuration that can be resolved, but not consumed, but on which no dependency replacement is applied.
+     *
+     * @param configurations The configuration handler.
+     * @param context        The context of the configuration
+     * @param dependencies   The dependencies to add to the configuration
+     * @return The detached configuration
+     */
+    public static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final String context, final Provider<? extends Iterable<Dependency>> dependencies) {
+        final String name = "neoGradleInternalUnhandled" + StringGroovyMethods.capitalize(context);
+        if (configurations.findByName(name) != null) {
+            return configurations.getByName(name);
+        }
+
+        final Configuration configuration = configurations.create(name);
+        UNHANDLED_CONFIGURATIONS.add(configuration);
+
+        if (configuration.getDependencies().isEmpty()) {
+            configuration.getDependencies().addAllLater(dependencies);
 
             configuration.setCanBeConsumed(false);
             configuration.setCanBeResolved(true);
@@ -150,7 +177,7 @@ public class ConfigurationUtils {
     }
 
     public static List<Configuration> findReplacementConfigurations(final Project project, final Configuration configuration) {
-        final Set<Configuration> resultContainer = new HashSet<Configuration>();
+        final Set<Configuration> resultContainer = new HashSet<>();
 
         resultContainer.addAll(findCompileOnlyConfigurationForSourceSetReplacement(project, configuration));
         resultContainer.addAll(findRuntimeOnlyConfigurationFromSourceSetReplacement(project, configuration));
@@ -195,7 +222,7 @@ public class ConfigurationUtils {
 
     public static List<Configuration> findRuntimeOnlyConfigurationFromSourceSetReplacement(final Project project, final Configuration configuration) {
         final SourceSetContainer sourceSetContainer = project.getExtensions().getByType(SourceSetContainer.class);
-        final List<Configuration> targets = new ArrayList<Configuration>();
+        final List<Configuration> targets = new ArrayList<>();
 
         sourceSetContainer.forEach(sourceSet -> {
             final Configuration runtimeOnly = project.getConfigurations().findByName(sourceSet.getRuntimeOnlyConfigurationName());
@@ -210,7 +237,7 @@ public class ConfigurationUtils {
 
             final Set<Configuration> supers = getAllSuperConfigurations(runtimeClasspath);
             if (supers.contains(runtimeOnly) && supers.contains(configuration)) {
-                final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(getSourceSetName(sourceSet, "neoGradleDependencyReplacementTarget%s".formatted(StringUtils.capitalize(configuration.getName()))));
+                final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(getSourceSetName(sourceSet, "%s%s".formatted(NEOGRADLE_RUNTIME_REPLACEMENT, StringUtils.capitalize(sourceSet.getName()))));
                 runtimeClasspath.extendsFrom(reallyRuntimeOnly);
                 targets.add(reallyRuntimeOnly);
             }
@@ -278,9 +305,15 @@ public class ConfigurationUtils {
         return configuration;
     }
 
+    public static void ensureReplacementConfigurationExists(Project project) {
+        project.getExtensions().getByType(SourceSetContainer.class)
+                .all(sourceSet -> project.getConfigurations().maybeCreate(getSourceSetName(sourceSet, "%s%s".formatted(NEOGRADLE_RUNTIME_REPLACEMENT, StringUtils.capitalize(sourceSet.getName())))));
+    }
+
     public static String getTaskBaseName(final SourceSet sourceSet) {
         return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "" : GUtil.toCamelCase(sourceSet.getName());
     }
 
     private static Set<Configuration> UNHANDLED_CONFIGURATIONS = new HashSet<Configuration>();
+
 }

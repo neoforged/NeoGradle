@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runs.run.DependencyHandler;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
@@ -108,20 +109,16 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
             final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
-            final Configuration modulesCfg;
-            if (getSpecification().getProject().getConfigurations().getNames().contains(name)) {
-                modulesCfg = getSpecification().getProject().getConfigurations().getByName(name);
-            } else {
-                modulesCfg = getSpecification().getProject().getConfigurations().create(name);
-                modulesCfg.setCanBeResolved(true);
-                modulesCfg.getDependencies().addAllLater(
-                        userdevConfiguration.getModules().map(
-                                modules -> modules.stream().map(
-                                        m -> getSpecification().getProject().getDependencies().create(m)
-                                ).collect(Collectors.toList())
-                        )
-                );
-            }
+            final Configuration modulesCfg = ConfigurationUtils
+                    .temporaryUnhandledConfiguration(
+                            getSpecification().getProject().getConfigurations(),
+                            String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName()),
+                            userdevConfiguration.getModules().map(
+                                    modules -> modules.stream().map(
+                                            m -> getSpecification().getProject().getDependencies().create(m)
+                                    ).collect(Collectors.toList())
+                            )
+                    );
 
             interpolationData.put("modules", modulesCfg.getIncoming().getArtifacts().getResolvedArtifacts().map(artifacts -> artifacts.stream()
                     .map(ResolvedArtifactResult::getFile)
