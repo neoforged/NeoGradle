@@ -373,6 +373,11 @@ class RunTests extends BuilderBasedTestSpecification {
         classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("build", "unit-testing-2")
+    }
+
     def "userdev supports unit testing"() {
         given:
         def project = create("userdev_supports_unit_tests", {
@@ -394,10 +399,22 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             
+            test {
+                useJUnitPlatform()
+            }
+            
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
+                
+                testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+                testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
             }
             """)
+            //We need to add a manifest.mf file to the test source set
+            it.file("src/test/resources/META-INF/MANIFEST.MF", """Manifest-Version: 1.0
+            |FMLModType: GAMELIBRARY
+            |""".stripMargin())
+
             it.file("src/test/java/net/test/TestTest.java",
                     """
                     package net.test;
@@ -427,11 +444,11 @@ class RunTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':test')
+            it.tasks(":testJunit")
         }
 
         then:
-        run.task(':test').outcome == TaskOutcome.SUCCESS
+        run.task(':testJunit').outcome == TaskOutcome.SUCCESS
     }
 
     def "runs with no modsource create problem"() {

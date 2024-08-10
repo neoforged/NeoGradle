@@ -26,9 +26,6 @@ public class UnitTestConfigurator {
 
             ideaDefaultTestRun.getIsJUnit().set(true);
             ideaDefaultTestRun.runType("junit");
-
-            RunManager runManager = project.getExtensions().getByType(RunManager.class);
-            runManager.addInternal(ideaDefaultTestRun);
         });
     }
 }

@@ -152,6 +152,11 @@ public class IdeRunIntegrationManager {
                     final ExtensionAware ideaModelExtensions = (ExtensionAware) idea;
                     final Run ideaDefaultUnitTestRun = ideaModelExtensions.getExtensions().getByType(Run.class);
 
+                    //We finally know that the user wants this to be registered, additionally the IDE integration resolved the lazy dependencies
+                    //here, so we can now with a gentle heart register the run type, and the run configuration conversion.
+                    RunManager runManager = project.getExtensions().getByType(RunManager.class);
+                    runManager.addInternal(ideaDefaultUnitTestRun);
+
                     createIdeaRun(project, ideaDefaultUnitTestRun, ideaRuns, true);
                 }
             });

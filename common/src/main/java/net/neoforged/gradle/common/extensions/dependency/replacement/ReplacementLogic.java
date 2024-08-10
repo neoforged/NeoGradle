@@ -48,10 +48,11 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
     public ReplacementLogic(Project project) {
         this.project = project;
 
-        //Wire up a replacement handler to each configuration for when a dependency is added.
-        this.project.getConfigurations().configureEach(this::handleConfiguration);
         //Collection holder of all custom dependency replacement handlers.
         this.dependencyReplacementHandlers = this.project.getObjects().domainObjectContainer(DependencyReplacementHandler.class, name -> this.project.getObjects().newInstance(Handler.class, this.project, name));
+
+        //Wire up a replacement handler to each configuration for when a dependency is added.
+        this.project.getConfigurations().configureEach(this::handleConfiguration);
     }
 
     @Override

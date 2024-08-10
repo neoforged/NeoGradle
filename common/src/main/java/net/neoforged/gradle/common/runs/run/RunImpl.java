@@ -263,7 +263,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    public void runType(@NotNull String string) {
+    public void runType(@NotNull String name) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
         specifications.addAll(getRunTypesByName(name));
     }

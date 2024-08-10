@@ -64,7 +64,7 @@ public class RunsUtil {
     }
 
     public static void configure(Project project, Run run, boolean isInternal) {
-        RunsUtil.configureModSourceDefaults(project, run, isInternal);
+        RunsUtil.configureModSourceDefaults(project, run);
 
         run.configure();
 
@@ -131,12 +131,7 @@ public class RunsUtil {
         }
     }
 
-    public static void configureModSourceDefaults(Project project, Run run, boolean isInternal) {
-        if (isInternal) {
-            return;
-        }
-
-        // We add default junit sourcesets here because we need to know the type of the run first
+    public static void configureModSourceDefaults(Project project, Run run) {
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
         if (conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
             //We always register main

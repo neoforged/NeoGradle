@@ -489,7 +489,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()
@@ -530,7 +530,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()
