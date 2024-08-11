@@ -22,7 +22,6 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ValueSource;
 import org.gradle.api.provider.ValueSourceParameters;
-import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

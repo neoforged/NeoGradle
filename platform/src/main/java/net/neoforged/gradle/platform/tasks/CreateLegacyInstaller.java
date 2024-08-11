@@ -1,19 +1,13 @@
 package net.neoforged.gradle.platform.tasks;
 
-import com.google.common.collect.ImmutableMap;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
-import org.apache.tools.ant.filters.ReplaceTokens;
-import org.gradle.api.Transformer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DuplicatesStrategy;
-import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.internal.file.copy.CopyAction;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.bundling.Zip;
-import org.gradle.jvm.tasks.Jar;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;

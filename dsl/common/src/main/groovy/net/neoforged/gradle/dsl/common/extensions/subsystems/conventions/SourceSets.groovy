@@ -23,6 +23,12 @@ interface SourceSets extends BaseDSLElement<SourceSets> {
     Property<Boolean> getShouldMainSourceSetBeAutomaticallyAddedToRuns();
 
     /**
+     * Whether or not the test source set should be automatically added to runs.
+     */
+    @DSLProperty
+    Property<Boolean> getShouldTestSourceSetBeAutomaticallyAddedToRuns();
+
+    /**
      * Whether or not the local run runtime configuration should be automatically added to runs.
      * @see net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Configurations#getRunRuntimeConfigurationPostFix()
      */

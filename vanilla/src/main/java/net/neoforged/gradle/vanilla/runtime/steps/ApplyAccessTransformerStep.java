@@ -3,7 +3,6 @@ package net.neoforged.gradle.vanilla.runtime.steps;
 import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
-import net.neoforged.gradle.common.runtime.tasks.SourceAccessTransformer;
 import net.neoforged.gradle.common.runtime.tasks.NoopRuntime;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;

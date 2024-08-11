@@ -5,13 +5,11 @@ import io.codechicken.diffpatch.cli.PatchOperation;
 import io.codechicken.diffpatch.util.Input.MultiInput;
 import io.codechicken.diffpatch.util.Output.MultiOutput;
 import io.codechicken.diffpatch.util.PatchMode;
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import org.gradle.api.file.*;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.jetbrains.annotations.NotNull;
@@ -30,15 +28,18 @@ public abstract class Patch extends DefaultRuntime {
     }
 
 
-    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
-    public abstract Property<CentralCacheService> getCacheService();
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
 
     @TaskAction
     public void run() throws Throwable {
-        getCacheService().get().doCached(this, this::doRun, getOutput());
+        getCacheService().get().cached(
+                this,
+                    ICacheableJob.Default.file(getOutput(), this::doRun)
+                ).execute();
     }
 
-    public File doRun() throws Exception {
+    private void doRun() throws Exception {
         final File input = getInput().get().getAsFile();
         final File output = ensureFileWorkspaceReady(getOutput());
         final File rejects = getRejectsFile().get().getAsFile();
@@ -86,7 +87,6 @@ public abstract class Patch extends DefaultRuntime {
             throw new RuntimeException("Patch failure.");
         }
 
-        return output;
     }
 
     @InputFile

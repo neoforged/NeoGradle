@@ -129,10 +129,22 @@ public abstract class IdeManagementExtension {
         //Configure the idePostSync task to depend on the task to run, causing the past in task to become part of the task-tree that is ran after import.
         idePostSyncTask.configure(task -> task.dependsOn(taskToRun));
     }
+
+
+    /**
+     * Configures the current project to run a task after the IDE import is complete.
+     *
+     * @param taskToRun The task to run
+     */
+    public void registerTaskToRun(Task taskToRun) {
+        final TaskProvider<? extends Task> idePostSyncTask = getOrCreateIdeImportTask();
+        //Configure the idePostSync task to depend on the task to run, causing the past in task to become part of the task-tree that is ran after import.
+        idePostSyncTask.configure(task -> task.dependsOn(taskToRun));
+    }
     
     @NotNull
-    public TaskProvider<? extends Task> getOrCreateIdeImportTask() {
-        final TaskProvider<? extends Task> idePostSyncTask;
+    public TaskProvider<? extends IdePostSyncExecutionTask> getOrCreateIdeImportTask() {
+        final TaskProvider<? extends IdePostSyncExecutionTask> idePostSyncTask;
         //Check for the existence of the idePostSync task, which is created by us as a central entry point for all IDE post-sync tasks
         if (!project.getTasks().getNames().contains(IDE_POST_SYNC_TASK_NAME)) {
 
@@ -142,7 +154,7 @@ public abstract class IdeManagementExtension {
             //Register the task to run after the IDE import is complete
             apply(new IdeImportAction() {
                 @Override
-                public void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension) {
+                public void idea(Project project, Project rootProject, IdeaModel idea, ProjectSettings ideaExtension) {
                     final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
                     final IDE ideConventions = conventions.getIde();
                     final IDEA ideaConventions = ideConventions.getIdea();
@@ -170,7 +182,7 @@ public abstract class IdeManagementExtension {
         }
         else {
             //Found -> Use it.
-            idePostSyncTask = project.getTasks().named(IDE_POST_SYNC_TASK_NAME);
+            idePostSyncTask = project.getTasks().named(IDE_POST_SYNC_TASK_NAME, IdePostSyncExecutionTask.class);
         }
         return idePostSyncTask;
     }
@@ -223,7 +235,7 @@ public abstract class IdeManagementExtension {
             final ProjectSettings ideaExt = ((ExtensionAware) model.getProject()).getExtensions().getByType(ProjectSettings.class);
             
             //Configure the project, passing the model, extension, and the relevant project. Which does not need to be the root, but can be.
-            toPerform.idea(project, model, ideaExt);
+            toPerform.idea(project, rootProject, model, ideaExt);
         });
     }
 
@@ -296,10 +308,11 @@ public abstract class IdeManagementExtension {
          * Configure an IntelliJ project.
          *
          * @param project       the project to configure on import
+         * @param rootProject   the root project to configure
          * @param idea          the basic idea gradle extension
          * @param ideaExtension JetBrain's extensions to the base idea model
          */
-        void idea(Project project, IdeaModel idea, ProjectSettings ideaExtension);
+        void idea(Project project, Project rootProject, IdeaModel idea, ProjectSettings ideaExtension);
     }
     
     /**

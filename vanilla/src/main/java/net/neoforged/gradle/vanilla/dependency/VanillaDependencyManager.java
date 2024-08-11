@@ -50,6 +50,7 @@ public final class VanillaDependencyManager {
                                     project,
                                     runtimeDefinition.getSourceJarTask(),
                                     runtimeDefinition.getRawJarTask(),
+                                    project.getConfigurations().detachedConfiguration(),
                                     runtimeDefinition.getMinecraftDependenciesConfiguration(),
                                     Collections.emptySet()
                             ));

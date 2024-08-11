@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.tasks.Execute;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.provider.ListProperty;
@@ -39,12 +39,16 @@ public abstract class DefaultExecute extends DefaultRuntime implements Execute {
         getLogLevel().convention(LogLevel.ERROR);
     }
 
-    @ServiceReference(CommonProjectPlugin.EXECUTE_SERVICE)
-    public abstract Property<CentralCacheService> getCacheService();
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
 
     @TaskAction
     public void execute() throws Throwable {
-        getCacheService().get().doCached(this, this::doExecute, getOutput());
+        getCacheService().get()
+                        .cached(
+                                this,
+                                ICacheableJob.Default.file(getOutput(), this::doExecute)
+                        ).execute();
     }
 
     @Input

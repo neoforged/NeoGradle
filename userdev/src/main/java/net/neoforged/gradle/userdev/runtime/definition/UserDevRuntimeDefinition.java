@@ -6,10 +6,8 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
-import net.neoforged.gradle.common.util.VersionJson;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
-import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.runs.run.DependencyHandler;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -18,14 +16,12 @@ import net.neoforged.gradle.dsl.userdev.runtime.definition.UserDevDefinition;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
-import org.gradle.api.NamedDomainObjectCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.MapProperty;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,12 +55,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         //Add it as a user dev dependency, this will trigger replacement, which will need to be addressed down-below.
         this.additionalUserDevDependencies.getDependencies().add(
                 clientExtraJar
-        );
-
-        //Add the userdev artifact as a dependency. This makes it discoverable on the classpath, and as such discoverable
-        //by runs and other interested parties.
-        this.additionalUserDevDependencies.getDependencies().add(
-                this.getSpecification().getUserDevArtifact().toDependency(specification.getProject())
         );
 
         this.getAllDependencies().from(neoformRuntimeDefinition.getAllDependencies());
@@ -119,20 +109,16 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
             final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
-            final Configuration modulesCfg;
-            if (getSpecification().getProject().getConfigurations().getNames().contains(name)) {
-                modulesCfg = getSpecification().getProject().getConfigurations().getByName(name);
-            } else {
-                modulesCfg = getSpecification().getProject().getConfigurations().create(name);
-                modulesCfg.setCanBeResolved(true);
-                modulesCfg.getDependencies().addAllLater(
-                        userdevConfiguration.getModules().map(
-                                modules -> modules.stream().map(
-                                        m -> getSpecification().getProject().getDependencies().create(m)
-                                ).collect(Collectors.toList())
-                        )
-                );
-            }
+            final Configuration modulesCfg = ConfigurationUtils
+                    .temporaryUnhandledConfiguration(
+                            getSpecification().getProject().getConfigurations(),
+                            String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName()),
+                            userdevConfiguration.getModules().map(
+                                    modules -> modules.stream().map(
+                                            m -> getSpecification().getProject().getDependencies().create(m)
+                                    ).collect(Collectors.toList())
+                            )
+                    );
 
             interpolationData.put("modules", modulesCfg.getIncoming().getArtifacts().getResolvedArtifacts().map(artifacts -> artifacts.stream()
                     .map(ResolvedArtifactResult::getFile)
@@ -148,13 +134,13 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     task.getInputFiles().from(this.additionalUserDevDependencies);
                     task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
                     task.getInputFiles().from(this.userdevClasspathElementProducer.flatMap(WithOutput::getOutput));
-                    task.getInputFiles().from(run.getDependencies().map(DependencyHandler::getRuntimeConfiguration));
+                    task.getInputFiles().from(run.getDependencies().getRuntimeConfiguration());
                 }
         );
         configureAssociatedTask(minecraftClasspathSerializer);
         interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.flatMap(ClasspathSerializer::getTargetFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
 
-        run.getDependsOn().add(minecraftClasspathSerializer);
+        run.getPostSyncTasks().add(minecraftClasspathSerializer);
     }
 
     @Override

@@ -97,7 +97,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         }) as Provider<List<String>>
     }
 
-    default File doExecute() throws Throwable {
+    default void doExecute() throws Exception {
         final Provider<List<String>> jvmArgs = applyVariableSubstitutions(getJvmArguments())
         final Provider<List<String>> programArgs = applyVariableSubstitutions(getRuntimeProgramArguments())
 
@@ -135,8 +135,6 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 java.setStandardOutput(standard_out)
                 java.setErrorOutput(error_out)
             }).rethrowFailure().assertNormalExitValue()
-
-            return outputFile
         }
     }
 

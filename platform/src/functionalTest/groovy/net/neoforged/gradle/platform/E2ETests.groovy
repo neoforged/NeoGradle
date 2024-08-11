@@ -1,6 +1,6 @@
 package net.neoforged.gradle.platform
 
-import net.neoforged.gradle.common.caching.CentralCacheService
+import net.neoforged.gradle.common.services.caching.CachedExecutionService
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
@@ -32,6 +32,7 @@ class E2ETests extends BuilderBasedTestSpecification {
 
     private PublishingProjectSetup createPublishingProject(String projectId) {
         def rootProject = create(projectId, {
+            it.property(CachedExecutionService.DEBUG_CACHE_PROPERTY, 'true')
             it.settingsPlugin(pluginUnderTest)
             it.settings("""
                 dynamicProjects {

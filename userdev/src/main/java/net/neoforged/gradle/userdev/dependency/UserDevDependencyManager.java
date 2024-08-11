@@ -1,24 +1,20 @@
 package net.neoforged.gradle.userdev.dependency;
 
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
 import net.neoforged.gradle.util.TransformerUtils;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyCollector;
 import org.gradle.api.file.FileSystemLocation;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -39,11 +35,9 @@ public final class UserDevDependencyManager {
         registerUnitTestDependencyMapping(project);
     }
 
-    @SuppressWarnings("unchecked")
     private void registerUnitTestDependencyMapping(Project project) {
-        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
-
-        runs.configureEach(run -> {
+        final RunManager runs = project.getExtensions().getByType(RunManager.class);
+        runs.configureAll(run -> {
             run.getUnitTestSources().whenSourceSetAdded(sourceSet -> {
                 final Configuration implementation = SourceSetUtils.getProject(sourceSet).getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
                 final UserDevAdditionalTestDependenciesParser parser = new UserDevAdditionalTestDependenciesParser(project);
@@ -51,7 +45,7 @@ public final class UserDevDependencyManager {
                 //Parse out all the additional test dependencies of a run
                 implementation.getDependencies().addAllLater(
                         TransformerUtils.ifTrue(run.getIsJUnit(),
-                                run.getCompileClasspathElements()
+                                run.getSdkClasspathElements()
                                         .map(files -> files.stream()
                                                 .map(FileSystemLocation::getAsFile)
                                                 .map(parser::parse).toList())
@@ -101,6 +95,11 @@ public final class UserDevDependencyManager {
                             project,
                             runtimeDefinition.getNeoFormRuntimeDefinition().getSourceJarTask(),
                             runtimeDefinition.getNeoFormRuntimeDefinition().getRawJarTask(),
+                            ConfigurationUtils.temporaryUnhandledConfiguration(
+                                    project.getConfigurations(),
+                                    "NeoForgeUserDevMdkFor" + runtimeDefinition.getSpecification().getIdentifier(),
+                                    runtimeDefinition.getSpecification().getUserDevArtifact().toDependency(project)
+                            ),
                             additionalDependenciesConfiguration,
                             Collections.emptySet(),
                             runtimeDefinition

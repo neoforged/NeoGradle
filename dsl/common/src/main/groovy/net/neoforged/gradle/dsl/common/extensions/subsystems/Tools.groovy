@@ -3,15 +3,17 @@ package net.neoforged.gradle.dsl.common.extensions.subsystems
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 
 /**
  * Allows configuration of Parchment mappings for userdev.
  */
 @CompileStatic
-interface Tools extends ConfigurableDSLElement<Parchment> {
+interface Tools extends ConfigurableDSLElement<Tools> {
 
 
     /**
@@ -31,4 +33,11 @@ interface Tools extends ConfigurableDSLElement<Parchment> {
     @Optional
     @DSLProperty
     Property<String> getDevLogin();
+
+    /**
+     * Tool configuration for RenderDoc and RenderNurse.
+     * @return The RenderDoc tool configuration.
+     */
+    @Nested
+    RenderDocTools getRenderDoc();
 }

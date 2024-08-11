@@ -1,15 +1,11 @@
 package net.neoforged.gradle.userdev
 
-import net.neoforged.gradle.common.caching.CentralCacheService
+import net.neoforged.gradle.common.services.caching.CachedExecutionService
+import net.neoforged.gradle.common.services.caching.locking.IOControlledFileBasedLock
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
-import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
 
 import java.nio.file.Files
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import java.util.function.Supplier
 
 class CentralCacheTests extends BuilderBasedTestSpecification {
 
@@ -34,7 +30,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
+            it.property(CachedExecutionService.LOG_CACHE_HITS_PROPERTY, "true")
             it.withGlobalCacheDirectory(tempDir)
         })
 
@@ -45,51 +41,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Cache miss for task ")
-    }
-
-    def "clean_cache_listens_to_project_property_for_size"() {
-        given:
-        File cacheDir;
-        def project = create("build_supports_configuration_cache_build", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            """)
-            it.withToolchains()
-            cacheDir = it.withGlobalCacheDirectory(tempDir)
-            it.property(CentralCacheService.MAX_CACHE_SIZE_PROPERTY, "4")
-        })
-
-        if (cacheDir == null) {
-            throw new IllegalStateException("Cache directory was not set")
-        }
-
-        when:
-        def run = project.run {
-            it.tasks('build')
-        }
-
-        then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
-        cacheDir.listFiles().size() > 4
-
-        when:
-        def cleanRun = project.run {
-            it.tasks('clean')
-        }
-
-        then:
-        cleanRun.task(':clean').outcome == TaskOutcome.SUCCESS
-        cleanRun.task(':cleanCache').outcome == TaskOutcome.SUCCESS
-        cacheDir.listFiles().size() == 4
+        run.output.contains("Cache miss for task")
     }
 
     def "cache_supports_cleanup_and_take_over_of_failed_lock"() {
@@ -109,7 +61,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             cacheDir = it.withGlobalCacheDirectory(tempDir)
-            it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
+            it.property(CachedExecutionService.LOG_CACHE_HITS_PROPERTY, "true")
         })
 
         if (cacheDir == null) {
@@ -119,11 +71,12 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         when:
         project.run {
             it.tasks('build')
+            it.stacktrace()
         }
 
         //Delete all healthy marker files
         Files.walk(cacheDir.toPath())
-            .filter { (it.getFileName().toString() == CentralCacheService.HEALTHY_FILE_NAME) }
+            .filter { (it.getFileName().toString() == IOControlledFileBasedLock.HEALTHY_FILE_NAME) }
             .forEach { Files.delete(it) }
 
         def targetRun = project.run {
@@ -150,8 +103,8 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             }
             """)
             it.withToolchains()
-            it.property(CentralCacheService.IS_ENABLED_PROPERTY, "false")
-            it.property(CentralCacheService.DEBUG_CACHE_PROPERTY, "true")
+            it.property(CachedExecutionService.IS_ENABLED_PROPERTY, "false")
+            it.property(CachedExecutionService.DEBUG_CACHE_PROPERTY, "true")
             it.withGlobalCacheDirectory(tempDir)
         })
 
@@ -162,7 +115,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':build').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Cache is disabled, skipping cache")
+        run.output.contains("Caching is disabled, executing all stages.")
     }
 
     def "updating an AT after cache run should work."() {
@@ -195,8 +148,8 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
-            it.property(CentralCacheService.LOG_CACHE_HITS_PROPERTY, "true")
-            it.property(CentralCacheService.DEBUG_CACHE_PROPERTY, "true")
+            it.property(CachedExecutionService.LOG_CACHE_HITS_PROPERTY, "true")
+            it.property(CachedExecutionService.DEBUG_CACHE_PROPERTY, "true")
         })
 
         when:

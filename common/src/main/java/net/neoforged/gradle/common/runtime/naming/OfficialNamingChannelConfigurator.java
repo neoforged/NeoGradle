@@ -1,10 +1,5 @@
 package net.neoforged.gradle.common.runtime.naming;
 
-import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToCompiledJar;
-import net.neoforged.gradle.common.runtime.naming.tasks.ApplyOfficialMappingsToSourceJar;
-import net.neoforged.gradle.common.util.MappingUtils;
-import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.runtime.extensions.RuntimesExtension;
 import net.neoforged.gradle.common.runtime.naming.tasks.*;
 import net.neoforged.gradle.common.util.StreamUtils;
@@ -19,10 +14,8 @@ import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.*;
-import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.reflect.TypeOf;

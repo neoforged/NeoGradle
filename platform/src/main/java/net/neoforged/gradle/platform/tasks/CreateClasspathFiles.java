@@ -6,12 +6,9 @@ import net.neoforged.gradle.platform.util.ArtifactPathsCollector;
 import net.neoforged.gradle.platform.util.StringUtils;
 import org.apache.tools.ant.filters.ReplaceTokens;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 
 import java.io.File;

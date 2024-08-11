@@ -3,19 +3,16 @@ package net.neoforged.gradle.userdev.runtime.extension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.SourceAccessTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
-import net.neoforged.gradle.common.util.ProjectUtils;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.TypesUtil;
-import net.neoforged.gradle.dsl.common.extensions.Mappings;
-import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.common.runs.type.RunType;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
+import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -25,11 +22,8 @@ import net.neoforged.gradle.neoform.runtime.tasks.Patch;
 import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.DependencySet;
-import org.gradle.api.artifacts.dsl.DependencyCollector;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
@@ -95,11 +89,16 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             });
         });
 
+        final RunTypeManager runTypes = getProject().getExtensions().getByType(RunTypeManager.class);
+        userDevProfile.getRunTypes().forEach((type) -> {
+            TypesUtil.registerWithPotentialPrefix(runTypes, spec.getIdentifier(), type.getName(), type::copyTo);
+        });
+
         final Conventions conventions = getProject().getExtensions().getByType(Subsystems.class).getConventions();
         if (conventions.getIsEnabled().get()
                 && conventions.getRuns().getIsEnabled().get()
                 && conventions.getRuns().getShouldDefaultRunsBeCreated().get()) {
-            final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) getProject().getExtensions().getByName(RunsConstants.Extensions.RUNS);
+            final RunManager runs = getProject().getExtensions().getByType(RunManager.class);
             userDevProfile.getRunTypes().forEach(runType -> {
                 if (runs.getNames().contains(runType.getName())) {
                     return;

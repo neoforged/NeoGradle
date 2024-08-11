@@ -1,9 +1,9 @@
 package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
-import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.common.util.CacheableIMappingFile;
 import net.minecraftforge.srgutils.IMappingFile;
+import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
+import net.neoforged.gradle.common.util.CacheableIMappingFile;
+import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;

@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.util.List;
 
 @CacheableTask
 public abstract class CreateUserdevJson  extends DefaultRuntime implements WithOutput, WithWorkspace {

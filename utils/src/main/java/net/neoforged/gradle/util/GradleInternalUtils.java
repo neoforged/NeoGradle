@@ -1,8 +1,11 @@
 package net.neoforged.gradle.util;
 
 import groovy.lang.Closure;
+import org.gradle.api.Task;
 import org.gradle.api.internal.GeneratedSubclass;
 import org.gradle.api.internal.plugins.ExtensionContainerInternal;
+import org.gradle.api.internal.tasks.TaskExecutionOutcome;
+import org.gradle.api.internal.tasks.TaskStateInternal;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.util.internal.ConfigureUtil;

@@ -1,12 +1,10 @@
 package net.neoforged.gradle.neoform.dependency;
 
-import com.google.common.collect.Sets;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Context;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
@@ -68,6 +66,10 @@ public final class NeoFormDependencyManager {
                         project,
                         runtime.getSourceJarTask(),
                         runtime.getRawJarTask(),
+                        ConfigurationUtils.temporaryUnhandledConfiguration(
+                                project.getConfigurations(),
+                                "neoform_mdk_" + target.distribution.getName().toLowerCase()
+                        ),
                         runtime.getMinecraftDependenciesConfiguration(),
                         Collections.emptySet()
                 ));

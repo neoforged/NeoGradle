@@ -2,8 +2,8 @@ package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.SerializationUtils;
@@ -52,13 +52,25 @@ public abstract class ListLibraries extends DefaultRuntime {
 
     @Input
     public abstract Property<Boolean> getIsOffline();
-    
-    @ServiceReference(CommonProjectPlugin.LIBRARIES_SERVICE)
-    public abstract Property<CentralCacheService> getLibrariesCache();
+
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
+
     
     @TaskAction
     public void run() throws IOException {
-        final File output = ensureFileWorkspaceReady(getOutput());
+        getCacheService().get()
+                .cached(
+                        this,
+                        ICacheableJob.Initial.directory("collect", getLibrariesDirectory(), this::extractAndCollect)
+                )
+                .withStage(
+                        ICacheableJob.Staged.file("list", getOutput(), this::createList)
+                )
+                .execute();
+    }
+
+    private Set<File> extractAndCollect() throws IOException {
         try (FileSystem bundleFs = !getServerBundleFile().isPresent() ? null : FileSystems.newFileSystem(getServerBundleFile().get().getAsFile().toPath(), this.getClass().getClassLoader())) {
             final Set<File> libraries;
             if (bundleFs == null) {
@@ -66,16 +78,22 @@ public abstract class ListLibraries extends DefaultRuntime {
             } else {
                 libraries = unpackAndListBundleLibraries(bundleFs);
             }
-            
-            // Write the list
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8));
-            Iterator<File> itr = libraries.stream().sorted(Comparator.naturalOrder()).iterator();
-            while (itr.hasNext()) {
-                writer.println("-e=" + itr.next().getAbsolutePath());
-            }
-            writer.flush();
-            writer.close();
+            return libraries;
         }
+    }
+
+    private Void createList(final Set<File> libraries) throws FileNotFoundException {
+        // Write the list
+        final File output = ensureFileWorkspaceReady(getOutput());
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8));
+        Iterator<File> itr = libraries.stream().sorted(Comparator.comparing(File::getAbsolutePath)).iterator();
+        while (itr.hasNext()) {
+            writer.println("-e=" + itr.next().getAbsolutePath());
+        }
+        writer.flush();
+        writer.close();
+
+        return null;
     }
     
     private List<FileList.Entry> listBundleLibraries(FileSystem bundleFs) throws IOException {
@@ -181,8 +199,7 @@ public abstract class ListLibraries extends DefaultRuntime {
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getDownloadedVersionJsonFile();
     
-    @InputDirectory
-    @PathSensitive(PathSensitivity.NONE)
+    @OutputDirectory
     public abstract DirectoryProperty getLibrariesDirectory();
     
     private static class FileList {

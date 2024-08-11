@@ -13,7 +13,6 @@ import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
 

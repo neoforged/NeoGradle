@@ -1,9 +1,9 @@
 package net.neoforged.gradle.common.runs.tasks;
 
 import com.google.common.collect.Multimap;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
+import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import org.gradle.api.NamedDomainObjectContainer;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.diagnostics.AbstractProjectBasedReportTask;
@@ -36,14 +36,14 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
         renderer.completeProject(project);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected @NotNull RunsReport.RunsProjectReport calculateReportModelFor(@NotNull Project project) {
-        final NamedDomainObjectContainer<Run> runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
+        final RunManager runs = project.getExtensions().getByType(RunManager.class);
         final RunsProjectReport report = new RunsProjectReport();
-        runs.forEach(run -> {
-            report.addRun(new RenderableRun(run));
-        });
+
+        runs.stream().toList().forEach(run -> report.addRun(new RenderableRun(run)));
+        //runs.realizeAll(run -> getLogger().debug("Realized run: " + run.getName()));
+
         return report;
     }
 
@@ -68,9 +68,8 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
         private final String name;
         private final Map<String, String> environment;
         private final String mainClass;
-        private final boolean shouldBuildAllProjects;
         private final Map<String, String> properties;
-        private final List<String> programArguments;
+        private final List<String> arguments;
         private final List<String> jvmArguments;
         private final boolean isSingleInstance;
         private final String workingDirectory;
@@ -88,10 +87,9 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
             this.name = run.getName();
             this.environment = run.getEnvironmentVariables().get();
             this.mainClass = run.getMainClass().get();
-            this.shouldBuildAllProjects = run.getShouldBuildAllProjects().get();
             this.properties = run.getSystemProperties().get();
-            this.programArguments = run.getProgramArguments().get();
-            this.jvmArguments = run.getJvmArguments().get();
+            this.arguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getArguments().get().stream()).toList();
+            this.jvmArguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getJvmArguments().get().stream()).toList();
             this.isSingleInstance = run.getIsSingleInstance().get();
             this.workingDirectory = run.getWorkingDirectory().get().getAsFile().getAbsolutePath();
             this.isClient = run.getIsClient().get();
@@ -102,7 +100,7 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
             this.modSources = run.getModSources().all().get();
             this.unitTestSources = run.getUnitTestSources().all().get();
             this.classpath = run.getRuntimeClasspath().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toSet());
-            this.dependencies = run.getDependencies().get().getRuntimeConfiguration().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toSet());
+            this.dependencies = run.getDependencies().getRuntimeConfiguration().getFiles().stream().map(File::getAbsolutePath).collect(Collectors.toSet());
         }
 
         public String getName() {
@@ -117,16 +115,12 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
             return mainClass;
         }
 
-        public boolean isShouldBuildAllProjects() {
-            return shouldBuildAllProjects;
-        }
-
         public Map<String, String> getProperties() {
             return properties;
         }
 
-        public List<String> getProgramArguments() {
-            return programArguments;
+        public List<String> getArguments() {
+            return arguments;
         }
 
         public List<String> getJvmArguments() {
@@ -223,7 +217,6 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
             outputNormal(run.getMainClass());
             outputNewLine();
             outputIdentifier("Should Build All Projects:");
-            outputNormal(String.valueOf(run.isShouldBuildAllProjects()));
             outputNewLine();
             outputIdentifier("Working Directory:");
             outputNormal(run.getWorkingDirectory());
@@ -249,7 +242,7 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
 
             renderEnvironment(run.getEnvironment());
             renderProperties(run.getProperties());
-            renderProgramArguments(run.getProgramArguments());
+            renderProgramArguments(run.getArguments());
             renderJvmArguments(run.getJvmArguments());
             renderModSources(run.getModSources());
             renderUnitTestSources(run.getUnitTestSources());

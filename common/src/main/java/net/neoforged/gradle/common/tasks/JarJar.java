@@ -2,6 +2,7 @@ package net.neoforged.gradle.common.tasks;
 
 import net.neoforged.gradle.common.dependency.JarJarArtifacts;
 import net.neoforged.gradle.common.dependency.ResolvedJarJarArtifact;
+import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import net.neoforged.gradle.common.manifest.DefaultInheritManifest;
 import net.neoforged.gradle.common.manifest.InheritManifest;
 import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
@@ -28,22 +29,28 @@ import java.util.stream.Collectors;
 
 public abstract class JarJar extends Jar {
 
-    @Nested
-    public abstract JarJarArtifacts getJarJarArtifacts();
+    private final CopySpec jarJarCopySpec;
+    private final JarJarArtifacts artifacts;
+
+    public JarJar() {
+        this.artifacts = getProject().getObjects().newInstance(JarJarArtifacts.class,
+            getProject().getExtensions().getByType(NeoGradleProblemReporter.class)
+        );
+        this.jarJarCopySpec = this.getMainSpec().addChild();
+        this.jarJarCopySpec.into("META-INF/jarjar");
+
+        setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //As opposed to shadow, we do not filter out our entries early!, So we need to handle them accordingly.
+        setManifest(new DefaultInheritManifest(getServices().get(FileResolver.class)));
+    }
 
     @Override
     public InheritManifest getManifest() {
         return (InheritManifest) super.getManifest();
     }
 
-    private final CopySpec jarJarCopySpec;
-
-    public JarJar() {
-        this.jarJarCopySpec = this.getMainSpec().addChild();
-        this.jarJarCopySpec.into("META-INF/jarjar");
-
-        setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //As opposed to shadow, we do not filter out our entries early!, So we need to handle them accordingly.
-        setManifest(new DefaultInheritManifest(getServices().get(FileResolver.class)));
+    @Nested
+    public JarJarArtifacts getJarJarArtifacts() {
+        return artifacts;
     }
 
     // Already included in the JarJarArtifacts

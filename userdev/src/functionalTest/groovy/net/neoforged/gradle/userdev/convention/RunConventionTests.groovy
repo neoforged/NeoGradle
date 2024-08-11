@@ -1,6 +1,6 @@
 package net.neoforged.gradle.userdev.convention
 
-import net.neoforged.gradle.common.caching.CentralCacheService
+
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -87,7 +87,8 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Run count: 0")
-        run.output.contains("Runtype count: 0")
+        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: ")
     }
 
     def "disabling automatic registration does not register runs"() {
@@ -125,7 +126,8 @@ class RunConventionTests extends BuilderBasedTestSpecification {
 
         then:
         run.output.contains("Run count: 0")
-        run.output.contains("Runtype count: 0")
+        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: ")
     }
 
     def "enabling automatic registration does not register runs"() {
@@ -165,8 +167,9 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         then:
         run.output.contains("Run count: ")
         !run.output.contains("Run count: 0")
-        run.output.contains("Runtype count: 0")
-        run.output.contains("Equal: false")
+        !run.output.contains("Runtype count: 0")
+        run.output.contains("Runtype count: ")
+        run.output.contains("Equal: true")
     }
 
     def "disabling conventions globally prevents creation of runs configuration run"() {
@@ -236,11 +239,6 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         run.output.contains("Could not find method runs() for arguments [org.jgrapht:jgrapht-core:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.")
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/functionalTest")
-    }
-
     def "using the run convention configuration puts the dependency on the runtime config"() {
         given:
         def project = create("run_can_download_runtime_elements", {
@@ -261,7 +259,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()
@@ -303,7 +301,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             }
             
             afterEvaluate {
-                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.get().runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
+                logger.lifecycle("Run contains cp entry: \${project.runs.client.dependencies.runtimeConfiguration.files.any { it.name.contains 'jgrapht' }}")
             }
             """)
             it.withToolchains()

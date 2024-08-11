@@ -1,8 +1,8 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Maps;
-import net.neoforged.gradle.common.CommonProjectPlugin;
-import net.neoforged.gradle.common.caching.CentralCacheService;
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.util.TransformerUtils;
@@ -12,7 +12,6 @@ import net.neoforged.gradle.common.util.VersionJson;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
-import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -25,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 @SuppressWarnings({"UnstableApiUsage"})
@@ -32,9 +32,12 @@ import java.util.Map;
 public abstract class DownloadAssets extends DefaultTask implements WithWorkspace {
 
     private final Provider<Directory> assetsCache;
+    private final Provider<Directory> assetsObjects;
 
     public DownloadAssets() {
         this.assetsCache = getAssetsDirectory(getProject(), getVersionJson());
+        this.assetsObjects = assetsCache.map(directory -> directory.dir("objects"));
+
         getAssetIndex().convention("asset-index");
         getAssetIndexFileName().convention(getAssetIndex().map(index -> index + ".json"));
         getAssetIndexTargetFile().convention(getRegularFileInAssetsDirectory(getAssetIndexFileName().map(name -> "indexes/" + name)));
@@ -49,23 +52,30 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
     }
 
     protected Provider<File> getFileInAssetsDirectory(final String fileName) {
-        return assetsCache.map(directory -> directory.file(fileName).getAsFile());
+        return assetsObjects.map(directory -> directory.file(fileName).getAsFile());
     }
 
     protected Provider<RegularFile> getRegularFileInAssetsDirectory(final Provider<String> fileName) {
         return assetsCache.flatMap(directory -> fileName.map(directory::file));
     }
 
-    @ServiceReference(CommonProjectPlugin.ASSETS_SERVICE)
-    public abstract Property<CentralCacheService> getAssetsCache();
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCache();
 
     @TaskAction
-    public void run() {
-        downloadAssetIndex();
-        downloadAssets();
+    public void run() throws IOException {
+        getCache().get()
+                .cached(
+                        this,
+                        ICacheableJob.Initial.file("assetIndex", getAssetIndexFile(), this::downloadAssetIndex)
+                )
+                .withStage(
+                        ICacheableJob.Initial.directory("assets", assetsObjects, this::downloadAssets)
+                )
+                .execute();
     }
 
-    private void downloadAssetIndex() {
+    private Void downloadAssetIndex() {
         final VersionJson json = getVersionJson().get();
         final VersionJson.AssetIndex assetIndexData = json.getAssetIndex();
 
@@ -79,15 +89,17 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         });
 
         executor.await();
+
+        return null;
     }
 
-    private void downloadAssets() {
+    private Void downloadAssets() {
         final AssetIndex assetIndex = SerializationUtils.fromJson(getAssetIndexFile().getAsFile().get(), AssetIndex.class);
 
         final WorkQueue executor = getWorkerExecutor().noIsolation();
 
         assetIndex.getObjects().values().stream().distinct().forEach((asset) -> {
-            final Provider<File> assetFile = getFileInAssetsDirectory(String.format("objects%s%s", File.separator, asset.getPath()));
+            final Provider<File> assetFile = getFileInAssetsDirectory(asset.getPath());
             final Provider<String> assetUrl = getAssetRepository()
                     .map(repo -> repo.endsWith("/") ? repo : repo + "/")
                     .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
@@ -102,6 +114,8 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         });
 
         executor.await();
+
+        return null;
     }
 
     @Inject
@@ -117,7 +131,7 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
 
     @Input
     public abstract Property<String> getAssetIndex();
-    
+
     @Input
     public abstract Property<String> getAssetIndexFileName();
 
@@ -132,7 +146,7 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
 
     @Input
     public abstract Property<Boolean> getIsOffline();
-    
+
     private static class AssetIndex {
         private Map<String, Asset> objects = Maps.newHashMap();
 

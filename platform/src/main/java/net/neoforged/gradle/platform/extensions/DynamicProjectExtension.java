@@ -19,23 +19,18 @@ import net.neoforged.gradle.common.tasks.JarJar;
 import net.neoforged.gradle.common.tasks.PotentiallySignJar;
 import net.neoforged.gradle.common.tasks.WriteIMappingsFile;
 import net.neoforged.gradle.common.util.CacheableIMappingFile;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.ToolUtilities;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.runtime.naming.TaskBuildingContext;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
-import net.neoforged.gradle.dsl.common.util.Artifact;
-import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
-import net.neoforged.gradle.dsl.common.util.Constants;
-import net.neoforged.gradle.dsl.common.util.DistributionType;
-import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.dsl.common.util.NamingConstants;
+import net.neoforged.gradle.dsl.common.util.*;
 import net.neoforged.gradle.dsl.platform.model.InstallerProfile;
 import net.neoforged.gradle.dsl.platform.model.LauncherProfile;
 import net.neoforged.gradle.dsl.platform.model.Library;
@@ -55,16 +50,7 @@ import net.neoforged.gradle.platform.runtime.runtime.extension.RuntimeDevRuntime
 import net.neoforged.gradle.platform.runtime.runtime.specification.RuntimeDevRuntimeSpecification;
 import net.neoforged.gradle.platform.runtime.runtime.tasks.GenerateBinaryPatches;
 import net.neoforged.gradle.platform.runtime.runtime.tasks.GenerateSourcePatches;
-import net.neoforged.gradle.platform.tasks.BakePatches;
-import net.neoforged.gradle.platform.tasks.CreateClasspathFiles;
-import net.neoforged.gradle.platform.tasks.CreateLauncherJson;
-import net.neoforged.gradle.platform.tasks.CreateLegacyInstaller;
-import net.neoforged.gradle.platform.tasks.CreateLegacyInstallerJson;
-import net.neoforged.gradle.platform.tasks.CreateUserdevJson;
-import net.neoforged.gradle.platform.tasks.OfficialMappingsJustParameters;
-import net.neoforged.gradle.platform.tasks.SetupProjectFromRuntime;
-import net.neoforged.gradle.platform.tasks.StripBinPatchedClasses;
-import net.neoforged.gradle.platform.tasks.TokenizedTask;
+import net.neoforged.gradle.platform.tasks.*;
 import net.neoforged.gradle.platform.util.ArtifactPathsCollector;
 import net.neoforged.gradle.platform.util.SetupUtils;
 import net.neoforged.gradle.util.TransformerUtils;
@@ -72,7 +58,9 @@ import net.neoforged.gradle.vanilla.VanillaProjectPlugin;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
 import org.apache.commons.lang3.StringUtils;
-import org.gradle.api.*;
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
@@ -96,12 +84,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -266,8 +249,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         project.getConfigurations().getByName(mainSource.getApiConfigurationName()).extendsFrom(gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, installerConfiguration);
         project.getConfigurations().getByName(mainSource.getRuntimeClasspathConfigurationName()).extendsFrom(clientExtraConfiguration);
         
-        project.getExtensions().configure(RunTypeManager.class, (Action<NamedDomainObjectContainer<RunType>>) types -> types.configureEach(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
-        project.getExtensions().configure(RunsConstants.Extensions.RUNS, (Action<NamedDomainObjectContainer<Run>>) runs -> runs.configureEach(run -> configureRun(run, runtimeDefinition)));
+        project.getExtensions().configure(RunTypeManager.class, types -> types.configureEach(type -> configureRunType(project, type, moduleOnlyConfiguration, gameLayerLibraryConfiguration, pluginLayerLibraryConfiguration, runtimeDefinition)));
+        project.getExtensions().configure(RunManager.class,  runs -> runs.configureAll(run -> configureRun(run, runtimeDefinition)));
 
         project.getExtensions().create(net.neoforged.gradle.dsl.common.extensions.JarJar.class, JarJarExtension.EXTENSION_NAME, JarJarExtension.class, project);
 
@@ -927,7 +910,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 TransformerUtils.ifTrue(run.getIsClient(), runtimeDefinition.getAssets(), runtimeDefinition.getNatives())
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsClient(),
                         "--username", "Dev",
                         "--version", project.getName(),
@@ -936,7 +919,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsServer(),
                         "--launchTarget", "forgeserverdev")
         );
@@ -952,7 +935,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                         "neoforge.gameTestServer", "true")
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsDataGenerator(),
                         "--launchTarget", "forgedatadev",
                         "--flat", "--all", "--validate",
@@ -960,7 +943,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         );
 
         mainSourceSet.getResources().getSrcDirs().forEach(file -> {
-            run.getProgramArguments().addAll(
+            run.getArguments().addAll(
                     TransformerUtils.ifTrue(run.getIsDataGenerator(),
                             "--existing", file.getAbsolutePath())
             );
@@ -969,7 +952,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project, runtimeDefinition.getVersionJson()).map(Directory::getAsFile).map(File::getAbsolutePath);
         Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(
                         run.getIsDataGenerator().flatMap(TransformerUtils.or(run.getIsClient(), run.getIsJUnit())),
                         project.provider(() -> "--assetsDir"),
@@ -978,7 +961,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                         assetIndex)
         );
 
-        run.getProgramArguments().addAll(
+        run.getArguments().addAll(
                 TransformerUtils.ifTrue(run.getIsJUnit(),
                         "--launchTarget", "forgejunitdev")
         );

@@ -57,15 +57,14 @@ public abstract class SourceAccessTransformer extends DefaultExecute {
     }
 
     @Override
-    public File doExecute() throws Throwable {
+    public void doExecute() throws Exception {
         //We need a separate check here that skips the execute call if there are no transformers.
         if (getTransformers().isEmpty()) {
             final File output = ensureFileWorkspaceReady(getOutput());
             FileUtils.copyFile(getInputFile().get().getAsFile(), output);
-            return output;
         }
 
-        return super.doExecute();
+        super.doExecute();
     }
 
     @InputFile

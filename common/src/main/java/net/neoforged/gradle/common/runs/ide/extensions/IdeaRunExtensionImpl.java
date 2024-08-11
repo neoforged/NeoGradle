@@ -19,7 +19,9 @@ public abstract class IdeaRunExtensionImpl implements IdeaRunExtension {
         this.run = run;
 
         final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
-        this.getPrimarySourceSet().convention(javaPluginExtension.getSourceSets().getAt("main"));
+        this.getPrimarySourceSet().convention(
+                run.getIsJUnit().map(isJUnit -> isJUnit ? javaPluginExtension.getSourceSets().getByName("test") : javaPluginExtension.getSourceSets().getByName("main"))
+        );
     }
 
     @ProjectGetter

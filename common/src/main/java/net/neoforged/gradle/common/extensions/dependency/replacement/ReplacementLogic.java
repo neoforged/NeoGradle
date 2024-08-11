@@ -13,8 +13,7 @@ import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
-import org.gradle.api.Action;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -49,10 +48,11 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
     public ReplacementLogic(Project project) {
         this.project = project;
 
-        //Wire up a replacement handler to each configuration for when a dependency is added.
-        this.project.getConfigurations().configureEach(this::handleConfiguration);
         //Collection holder of all custom dependency replacement handlers.
         this.dependencyReplacementHandlers = this.project.getObjects().domainObjectContainer(DependencyReplacementHandler.class, name -> this.project.getObjects().newInstance(Handler.class, this.project, name));
+
+        //Wire up a replacement handler to each configuration for when a dependency is added.
+        this.project.getConfigurations().configureEach(this::handleConfiguration);
     }
 
     @Override
@@ -201,7 +201,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         //If so handle the prospective replacement data.
         if (candidate.isPresent()) {
             final ReplacementResult result = candidate.get();
-            handleProspectiveDependencyReplacement(dependency, result);
+            handleProspectiveDependencyReplacement(dependency, result, configuration);
         }
     }
 
@@ -229,12 +229,22 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
      *
      * @param dependency The dependency that is being replaced.
      * @param result The replacement result from one of the handlers.
+     * @param target The target configuration in which the replacement will happen.
      */
-    private void handleProspectiveDependencyReplacement(final ModuleDependency dependency, final ReplacementResult result) {
+    private void handleProspectiveDependencyReplacement(final ModuleDependency dependency, final ReplacementResult result, Configuration target) {
         //Create a new dependency in our dummy repo
         final Entry newRepoEntry = createDummyDependency(dependency, result);
 
+        //We need all tasks tot exist before we can register them.
         registerTasks(dependency, result, newRepoEntry);
+
+        //We create all tasks before we register the sdks, so that the sdks can depend on the tasks.
+        registerSdks(result, target);
+
+        //Additionally we also ensure that we have discovered, and created all configurations that we need as targets
+        //Else we can get into concurrent modification exceptions, when dependencies are replaced and as such replacement
+        //configurations are created during general configuration handling.
+        ConfigurationUtils.findReplacementConfigurations(project, target);
 
         if (result instanceof ReplacementAware replacementAware) {
             replacementAware.onTargetDependencyAdded();
@@ -292,6 +302,21 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
             } catch (Exception exception) {
                 throw new GradleException("Failed to add the replaced dependency to the configuration " + targetConfiguration.getName() + ": " + exception.getMessage(), exception);
             }
+        }
+    }
+
+    /**
+     * Registers the sdks from the replacement result to the sdk configuration neighbors of the target configuration.
+     *
+     * @param result The replacement result.
+     * @param target The target configuration.
+     */
+    private void registerSdks(ReplacementResult result, Configuration target) {
+        final List<Configuration> sdkConfigurations = ConfigurationUtils.findSdkConfigurationForSourceSetReplacement(project, target);
+
+        //Register the SDK to all relevant sourcesets.
+        for (Configuration sdkConfiguration : sdkConfigurations) {
+            sdkConfiguration.getDependencies().addAll(result.getSdk().getAllDependencies());
         }
     }
 

@@ -6,8 +6,6 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
-import java.io.File;
-
 public class ServerLaunchInformation {
 
     public static ServerLaunchInformation from(final TaskProvider<? extends WithOutput> serverFile) {

@@ -2,7 +2,10 @@ package net.neoforged.gradle.dsl.common.extensions.subsystems.conventions
 
 import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.DevLogin
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.RenderDoc
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Nested
 
 /**
  * Allows configuration of the individual conventions related to runs used by NeoGradle.
@@ -27,4 +30,18 @@ interface Runs extends BaseDSLElement<Runs> {
      */
     @DSLProperty
     Property<Boolean> getShouldDefaultTestTaskBeReused();
+
+    /**
+     * The dev login conventions used by runs.
+     */
+    @Nested
+    @DSLProperty
+    DevLogin getDevLogin()
+
+    /**
+     * The render doc conventions used by runs.
+     */
+    @Nested
+    @DSLProperty
+    RenderDoc getRenderDoc()
 }

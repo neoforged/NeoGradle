@@ -1,7 +1,6 @@
 package net.neoforged.gradle.vanilla.runtime.tasks;
 
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
-import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;

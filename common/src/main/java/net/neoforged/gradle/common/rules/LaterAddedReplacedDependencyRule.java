@@ -1,29 +1,19 @@
 package net.neoforged.gradle.common.rules;
 
-import net.neoforged.gradle.common.util.constants.RunsConstants;
-import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
-import org.apache.tools.ant.TaskContainer;
-import org.gradle.api.NamedDomainObjectCollection;
-import org.gradle.api.NamedDomainObjectContainer;
+import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.api.Project;
 import org.gradle.api.Rule;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class LaterAddedReplacedDependencyRule implements Rule {
 
     private final Project project;
-    private final NamedDomainObjectContainer<Run> runs;
+    private final RunManager runs;
 
-    @SuppressWarnings("unchecked")
     public LaterAddedReplacedDependencyRule(Project project) {
-        this.runs = (NamedDomainObjectContainer<Run>) project.getExtensions().getByName(RunsConstants.Extensions.RUNS);
+        this.runs = project.getExtensions().getByType(RunManager.class);
         this.project = project;
     }
 

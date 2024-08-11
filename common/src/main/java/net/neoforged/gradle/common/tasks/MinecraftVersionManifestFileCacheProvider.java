@@ -1,10 +1,11 @@
 package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
-import net.neoforged.gradle.dsl.common.util.MinecraftVersionAndUrl;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.TaskAction;
 
 @CacheableTask
 public abstract class MinecraftVersionManifestFileCacheProvider extends FileCacheProviding {

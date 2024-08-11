@@ -1,13 +1,15 @@
 package net.neoforged.gradle.common.dependency;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import net.neoforged.gradle.common.runtime.tasks.GenerateExtraJar;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
@@ -74,20 +76,33 @@ public abstract class ExtraJarDependencyManager {
 
     private ReplacementResult generateReplacement(final Project project, final Dependency dependency) {
         final String minecraftVersion = dependency.getVersion();
-        if (minecraftVersion == null)
-            throw new IllegalArgumentException("Dependency version is null");
+        if (minecraftVersion == null) {
+            final NeoGradleProblemReporter problemReporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+            throw problemReporter.throwing(spec -> {
+                        spec.id("dependencies.extra-jar", "missingVersion")
+                        .contextualLabel("Client-Extra Jar: Missing Version")
+                        .details("The dependency %s does not have a version specified".formatted(dependency))
+                        .solution("Specify a version for the dependency")
+                        .section("common-dep-management-extra-jar");
+            });
+        }
 
         return replacements.computeIfAbsent(minecraftVersion, (v) -> {
             final MinecraftArtifactCache minecraftArtifactCacheExtension = project.getExtensions().getByType(MinecraftArtifactCache.class);
 
+            Map<GameArtifact, TaskProvider<? extends WithOutput>> tasks = minecraftArtifactCacheExtension.cacheGameVersionTasks(project, minecraftVersion, DistributionType.CLIENT);
+
             final TaskProvider<GenerateExtraJar> extraJarTaskProvider = project.getTasks().register("create" + minecraftVersion + StringUtils.capitalize(dependency.getName()) + "ExtraJar", GenerateExtraJar.class, task -> {
-                task.getOriginalJar().set(minecraftArtifactCacheExtension.cacheVersionArtifact(minecraftVersion, DistributionType.CLIENT));
+                task.getOriginalJar().set(tasks.get(GameArtifact.CLIENT_JAR).flatMap(WithOutput::getOutput));
                 task.getOutput().set(project.getLayout().getBuildDirectory().dir("jars/extra/" + dependency.getName()).map(cacheDir -> cacheDir.dir(Objects.requireNonNull(minecraftVersion)).file( dependency.getName() + "-extra.jar")));
+
+                task.dependsOn(tasks.get(GameArtifact.CLIENT_JAR));
             });
 
             return new ReplacementResult(
                     project,
                     extraJarTaskProvider,
+                    project.getConfigurations().detachedConfiguration(),
                     ConfigurationUtils.temporaryUnhandledConfiguration(
                             project.getConfigurations(),
                             "EmptyExtraJarConfigurationFor" + minecraftVersion.replace(".", "_")

@@ -24,13 +24,10 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.rowset.spi.TransactionalWriter;
 import java.io.File;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecification> implements Definition<S> {
 
@@ -180,7 +177,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         );
 
         run.overrideJvmArguments(interpolate(run.getJvmArguments(), runtimeInterpolationData));
-        run.overrideProgramArguments(interpolate(run.getProgramArguments(), runtimeInterpolationData));
+        run.overrideArguments(interpolate(run.getArguments(), runtimeInterpolationData));
         run.overrideEnvironmentVariables(interpolate(run.getEnvironmentVariables(), runtimeInterpolationData));
         run.overrideSystemProperties(interpolate(run.getSystemProperties(), runtimeInterpolationData));
 

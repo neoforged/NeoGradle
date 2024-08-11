@@ -1,26 +1,19 @@
 plugins {
-    id 'net.neoforged.gradle.userdev' version '7.0.13-next-neo'
+    id 'net.neoforged.gradle.userdev'
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-minecraft {
-    mappings {
-        channel = official()
-        version.put "minecraft", "1.19.3"
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 dependencies {
-    implementation 'net.neoforged:forge:1.20.1-47.1.56'
+    implementation 'net.neoforged:neoforge:+'
 }
 
 runs {
     client {
-        modSources.add(project.getSourceSets().main)
+        // no modsource
     }
 }

@@ -1,6 +1,5 @@
 package net.neoforged.gradle.common.util;
 
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
@@ -10,7 +9,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.*;

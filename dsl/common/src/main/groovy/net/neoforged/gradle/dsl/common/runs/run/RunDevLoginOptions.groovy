@@ -1,6 +1,7 @@
 package net.neoforged.gradle.dsl.common.runs.run
 
 import groovy.transform.CompileStatic
+import net.minecraftforge.gdi.BaseDSLElement
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.provider.Property
@@ -11,7 +12,7 @@ import org.gradle.api.tasks.Optional
  * Defines the object structure for the dev login configuration of a run
  */
 @CompileStatic
-interface RunDevLogin extends ConfigurableDSLElement<RunDevLogin> {
+interface RunDevLoginOptions extends BaseDSLElement<RunDevLoginOptions> {
 
     /**
      * Indicates if the dev login is enabled.

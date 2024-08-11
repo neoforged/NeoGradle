@@ -2,44 +2,50 @@ package net.neoforged.gradle.common.runs.run;
 
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.TaskDependencyUtils;
-import net.neoforged.gradle.common.util.constants.RunsConstants;
 import net.neoforged.gradle.common.util.exceptions.MultipleDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
-import net.neoforged.gradle.dsl.common.runs.run.RunSourceSets;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.DevLogin;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.RenderDoc;
+import net.neoforged.gradle.dsl.common.runs.RunSpecification;
+import net.neoforged.gradle.dsl.common.runs.run.*;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import net.neoforged.gradle.util.TransformerUtils;
-import org.gradle.api.GradleException;
-import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     private final Project project;
     private final String name;
-    private final ListProperty<RunType> runTypes;
+    private final ListProperty<RunSpecification> specifications;
     private final RunSourceSets modSources;
     private final RunSourceSets unitTestSources;
+    private final RunTestScope testScope;
+    private final RunRenderDocOptions renderDocOptions;
+    private final RunDevLoginOptions devLoginOptions;
+    private final DependencyHandler dependencies;
 
     private ListProperty<String> jvmArguments;
     private MapProperty<String, String> environmentVariables;
@@ -53,12 +59,16 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.name = name;
         this.modSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
         this.unitTestSources = project.getObjects().newInstance(RunSourceSetsImpl.class, project);
+        this.testScope = project.getObjects().newInstance(RunTestScopeImpl.class, project);
+        this.renderDocOptions = project.getObjects().newInstance(RunRenderDocOptionsImpl.class, project, this);
+        this.devLoginOptions = project.getObjects().newInstance(RunDevLoginOptionsImpl.class, project, this);
+        this.dependencies = project.getObjects().newInstance(DependencyHandlerImpl.class, project, String.format("RunDependencies%s", StringCapitalizationUtils.capitalize(name)));
 
         this.jvmArguments = this.project.getObjects().listProperty(String.class);
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
         this.programArguments = this.project.getObjects().listProperty(String.class);
         this.systemProperties = this.project.getObjects().mapProperty(String.class, String.class);
-        this.runTypes = this.project.getObjects().listProperty(RunType.class);
+        this.specifications = this.project.getObjects().listProperty(RunSpecification.class);
 
         getIsSingleInstance().convention(true);
         getIsClient().convention(false);
@@ -66,8 +76,6 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         getIsDataGenerator().convention(false);
         getIsGameTest().convention(false);
         getIsJUnit().convention(false);
-        getShouldBuildAllProjects().convention(false);
-        getDependencies().convention(project.getObjects().newInstance(DependencyHandlerImpl.class, project, String.format("RunRuntimeDependencies%s", StringCapitalizationUtils.capitalize(name))));
 
         getConfigureAutomatically().convention(true);
         getConfigureFromTypeWithName().convention(getConfigureAutomatically());
@@ -93,6 +101,16 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                 getUnitTestSources().all().map(Multimap::values)
                         .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getCompileClasspath).toList())
         );
+        getSdkClasspath().from(
+                getModSources().all().map(Multimap::values)
+                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).toList())
+        );
+        getSdkClasspath().from(
+                getUnitTestSources().all().map(Multimap::values)
+                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).toList())
+        );
+
+        getShouldExportToIDE().convention(true);
     }
 
     @Override
@@ -115,10 +133,19 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    public abstract Property<String> getMainClass();
+    public RunRenderDocOptions getRenderDoc() {
+        return renderDocOptions;
+    }
 
     @Override
-    public abstract Property<Boolean> getShouldBuildAllProjects();
+    public RunDevLoginOptions getDevLogin() {
+        return devLoginOptions;
+    }
+
+    @Override
+    public DependencyHandler getDependencies() {
+        return dependencies;
+    }
 
     @Override
     public RunSourceSets getUnitTestSources() {
@@ -161,12 +188,27 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    public ListProperty<String> getProgramArguments() {
+    public ListProperty<String> getArguments() {
         return programArguments;
     }
 
-    public void overrideProgramArguments(ListProperty<String> programArguments) {
-        this.programArguments = programArguments;
+    public void overrideArguments(ListProperty<String> arguments) {
+        this.programArguments = arguments;
+    }
+
+    @Deprecated
+    public ListProperty<String> getProgramArguments() {
+        getProject().getExtensions().getByType(NeoGradleProblemReporter.class)
+                .reporting(problem -> problem
+                                .id("deprecated-method", "Deprecated method")
+                                .contextualLabel("Run.getProgramArguments()")
+                                .details("The method getProgramArguments() is deprecated and will be removed in the future")
+                                .solution("Use getArguments() instead of getProgramArguments()")
+                                .section("common-runs-configuration-types-configure-by-type"),
+                        getProject().getLogger()
+                );
+
+        return programArguments;
     }
 
     @Override
@@ -216,50 +258,189 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     }
 
     @Override
-    public void runType(@NotNull String string) {
-        configure(string);
+    public Provider<Set<FileSystemLocation>> getSdkClasspathElements() {
+        return getLooselyCoupledConfigurableFileCollectionElements(getSdkClasspath());
+    }
+
+    @Override
+    public void runType(@NotNull String name) {
+        getConfigureFromTypeWithName().set(false); // Don't re-configure
+        specifications.addAll(getRunTypesByName(name));
+    }
+
+    @Override
+    public void run(@NotNull String name) {
+        getConfigureFromTypeWithName().set(false); // Don't re-configure
+        specifications.addAll(getRunByName(name));
+    }
+
+    @Override
+    public RunTestScope getTestScope() {
+        return testScope;
     }
 
     @Override
     public final void configure() {
-        if (getConfigureFromTypeWithName().get()) {
-            runTypes.addAll(getRunTypesByName(name));
-        }
+        potentiallyAddRunTypeByName();
+        configureRunSpecification();
+        configureFromSDKs();
+        configureFromRuns();
+    }
 
-        getEnvironmentVariables().putAll(runTypes.flatMap(TransformerUtils.combineAllMaps(
-                getProject(),
-                String.class,
-                String.class,
-                RunType::getEnvironmentVariables
-        )));
-        getMainClass().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getMainClass)));
-        getProgramArguments().addAll(runTypes.flatMap(TransformerUtils.combineAllLists(
-                getProject(),
-                String.class,
-                RunType::getArguments
-        )));
-        getJvmArguments().addAll(runTypes.flatMap(TransformerUtils.combineAllLists(
-                getProject(),
-                String.class,
-                RunType::getJvmArguments
-        )));
-        getIsSingleInstance().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsSingleInstance)));
-        getSystemProperties().putAll(runTypes.flatMap(TransformerUtils.combineAllMaps(
-                getProject(),
-                String.class,
-                String.class,
-                RunType::getSystemProperties
-        )));
-        getIsClient().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsClient)));
-        getIsServer().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsServer)));
-        getIsDataGenerator().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsDataGenerator)));
-        getIsGameTest().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsGameTest)));
-        getIsJUnit().convention(runTypes.flatMap(TransformerUtils.takeLast(getProject(), RunType::getIsJUnit)));
-        getRuntimeClasspath().from(runTypes.map(TransformerUtils.combineFileCollections(
-                getProject(),
-                RunType::getClasspath
-        )));
+    private void configureFromRuns() {
+        Provider<List<Run>> runSpecifications = specifications.map(l -> l.stream().filter(Run.class::isInstance).map(Run.class::cast).toList());
 
+        //Properties of the run
+        getWorkingDirectory().convention(
+                TransformerUtils.defaulted(
+                        runSpecifications.flatMap(
+                                TransformerUtils.takeLast(project, Run::getWorkingDirectory)
+                        ),
+                        project.getLayout().getProjectDirectory().dir("runs").dir(getName())
+                )
+        );
+
+        final RenderDoc renderDoc = project.getExtensions().getByType(Subsystems.class).getConventions().getRuns().getRenderDoc();
+        //Properties of the renderdoc integration
+        getRenderDoc().getEnabled().convention(
+                TransformerUtils.lazyDefaulted(
+                        runSpecifications.flatMap(
+                                TransformerUtils.takeLast(project, run -> run.getRenderDoc().getEnabled())
+                        ),
+                        renderDoc.getConventionForRun().zip(getIsClient(), (conventionForRun, isClient) -> conventionForRun && isClient)
+                )
+        );
+
+        //Properties of the dev login integration
+        final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getConventions().getRuns().getDevLogin();
+        getDevLogin().getIsEnabled().convention(
+                TransformerUtils.lazyDefaulted(
+                        runSpecifications.flatMap(
+                                TransformerUtils.takeLast(project, run -> run.getDevLogin().getIsEnabled())
+                        ),
+                        devLogin.getConventionForRun().zip(getIsClient(), (conventionForRun, isClient) -> conventionForRun && isClient)
+                )
+        );
+        getDevLogin().getProfile().convention(
+                runSpecifications.flatMap(
+                        TransformerUtils.takeLast(project, run -> run.getDevLogin().getProfile())
+                )
+        );
+
+        //ModSources
+        getModSources().addAllLater(
+                runSpecifications.flatMap(
+                        TransformerUtils.combineAllMultiMaps(
+                                project,
+                                String.class,
+                                SourceSet.class,
+                                run -> run.getModSources().all()
+                        )
+                )
+        );
+
+        //UnitTestSources
+        getUnitTestSources().addAllLater(
+                runSpecifications.flatMap(
+                        TransformerUtils.combineAllMultiMaps(
+                                project,
+                                String.class,
+                                SourceSet.class,
+                                run -> run.getUnitTestSources().all()
+                        )
+                )
+        );
+
+        //Properties of the test scope
+        getTestScope().getPackageName().convention(
+                runSpecifications.flatMap(
+                        TransformerUtils.takeLast(project, run -> run.getTestScope().getPackageName())
+                )
+        );
+        getTestScope().getDirectory().convention(
+                runSpecifications.flatMap(
+                        TransformerUtils.takeLast(project, run -> run.getTestScope().getDirectory())
+                )
+        );
+        getTestScope().getPattern().convention(
+                TransformerUtils.lazyDefaulted(
+                        runSpecifications.flatMap(
+                                TransformerUtils.takeLast(project, run -> run.getTestScope().getPattern())
+                        ),
+                        project.provider(() -> {
+                            if (getTestScope().getPackageName().orElse(getTestScope().getDirectory().map(Directory::getAsFile).map(File::getName))
+                                    .orElse(getTestScope().getClassName())
+                                    .orElse(getTestScope().getMethod())
+                                    .orElse(getTestScope().getCategory())
+                                    .getOrNull() == null) {
+                                return RunTestScopeImpl.DEFAULT_PATTERN;
+                            }
+
+                            return null;
+                        })
+                )
+        );
+        getTestScope().getClassName().convention(
+                runSpecifications.flatMap(
+                        TransformerUtils.takeLast(project, run -> run.getTestScope().getClassName())
+                )
+        );
+        getTestScope().getMethod().convention(
+                runSpecifications.flatMap(
+                        TransformerUtils.takeLast(project, run -> run.getTestScope().getMethod())
+                )
+        );
+        getTestScope().getCategory().convention(
+                runSpecifications.flatMap(
+                        TransformerUtils.takeLast(project, run -> run.getTestScope().getCategory())
+                )
+        );
+
+        //Dependencies
+        getDependencies().getRuntime().bundle(
+                runSpecifications.flatMap(
+                        TransformerUtils.combineAllSets(
+                                project,
+                                Dependency.class,
+                                run -> run.getDependencies().getRuntime().getDependencies()
+                        )
+                )
+        );
+
+        //Task dependencies
+        getDependsOn().addAll(
+                runSpecifications.flatMap(
+                        TransformerUtils.combineAllSets(
+                                project,
+                                Task.class,
+                                Run::getDependsOn
+                        )
+                )
+        );
+
+        //Pre-sync tasks
+        getPostSyncTasks().addAll(
+                runSpecifications.flatMap(
+                        TransformerUtils.combineAllSets(
+                                project,
+                                Task.class,
+                                Run::getPostSyncTasks
+                        )
+                )
+        );
+
+        //Exporting to IDEs
+        getShouldExportToIDE().convention(
+                TransformerUtils.defaulted(
+                        runSpecifications.flatMap(
+                                TransformerUtils.takeLast(project, Run::getShouldExportToIDE)
+                        ),
+                        true
+                )
+        );
+    }
+
+    private void configureFromSDKs() {
         final Set<SourceSet> unconfiguredSourceSets = new HashSet<>();
         final Set<CommonRuntimeDefinition<?>> configuredDefinitions = new HashSet<>();
 
@@ -276,7 +457,14 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                     }
                 }, () -> unconfiguredSourceSets.add(sourceSet));
             } catch (MultipleDefinitionsFoundException e) {
-                throw new RuntimeException("Failed to configure run: " + getName() + " there are multiple runtime definitions found for the source set: " + sourceSet.getName(), e);
+                final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+                throw reporter.throwing(problem -> problem
+                        .id("multiple-definitions-found", "Multiple runtime definitions found")
+                        .contextualLabel("Run: " + this.getName())
+                        .solution("Ensure only one SDK definition is present for the source set")
+                        .details("There are multiple runtime definitions found for the source set: " + sourceSet.getName())
+                        .section("common-runs-configuration-runs")
+                );
             }
         });
 
@@ -307,22 +495,105 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         });
     }
 
+    private void potentiallyAddRunTypeByName() {
+        if (getConfigureFromTypeWithName().get()) {
+            specifications.addAll(getRunTypesByName(name));
+        }
+    }
+
+    private void configureRunSpecification() {
+        getEnvironmentVariables().putAll(specifications.flatMap(TransformerUtils.combineAllMaps(
+                getProject(),
+                String.class,
+                String.class,
+                RunSpecification::getEnvironmentVariables
+        )));
+        getMainClass().convention(specifications.flatMap(TransformerUtils.takeLast(getProject(), RunSpecification::getMainClass)));
+        getArguments().addAll(specifications.flatMap(TransformerUtils.combineAllLists(
+                getProject(),
+                String.class,
+                RunSpecification::getArguments
+        )));
+        getJvmArguments().addAll(specifications.flatMap(TransformerUtils.combineAllLists(
+                getProject(),
+                String.class,
+                RunSpecification::getJvmArguments
+        )));
+        getIsSingleInstance().convention(
+                TransformerUtils.defaulted(
+                        specifications.flatMap(TransformerUtils.takeLast(getProject(), RunSpecification::getIsSingleInstance)),
+                        true
+                )
+        );
+        getSystemProperties().putAll(specifications.flatMap(TransformerUtils.combineAllMaps(
+                getProject(),
+                String.class,
+                String.class,
+                RunSpecification::getSystemProperties
+        )));
+        getIsClient().convention(
+                TransformerUtils.defaulted(
+                        specifications.flatMap(TransformerUtils.takeLast(getProject(), RunSpecification::getIsClient)),
+                        false
+                )
+        );
+        getIsServer().convention(
+                TransformerUtils.defaulted(
+                        specifications.flatMap(TransformerUtils.takeLast(getProject(), RunSpecification::getIsServer)),
+                        false
+                )
+        );
+        getIsDataGenerator().convention(
+                TransformerUtils.defaulted(
+                        specifications.flatMap(TransformerUtils.takeLast(getProject(), RunSpecification::getIsDataGenerator)),
+                        false
+                )
+        );
+        getIsGameTest().convention(
+                TransformerUtils.defaulted(
+                        specifications.flatMap(TransformerUtils.takeLast(getProject(), RunSpecification::getIsGameTest)),
+                        false
+                )
+        );
+        getIsJUnit().convention(
+                TransformerUtils.defaulted(
+                        specifications.flatMap(TransformerUtils.takeLast(getProject(), RunSpecification::getIsJUnit)),
+                        false
+                )
+        );
+        getRuntimeClasspath().from(specifications.map(TransformerUtils.combineFileCollections(
+                getProject(),
+                RunSpecification::getClasspath
+        )));
+    }
+
+    @Deprecated
     @Override
     public final void configure(final @NotNull String name) {
+        getProject().getExtensions().getByType(NeoGradleProblemReporter.class)
+                .reporting(problem -> problem
+                                .id("deprecated-method", "Deprecated method")
+                                .contextualLabel("Run.configure(String)")
+                                .details("The method configure(String) is deprecated and will be removed in the future")
+                                .solution("Use Run.runType(String) or Run.run(String) instead of Run.configure(String) to indicate from what the run should be configured")
+                                .section("common-runs-configuration-types-configure-by-type"),
+                        getProject().getLogger()
+                );
+
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        runTypes.addAll(getRunTypesByName(name));
+        specifications.addAll(getRunTypesByName(name));
     }
 
     @Override
-    public final void configure(final @NotNull RunType runType) {
+    public final void configure(final @NotNull RunSpecification runType) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        this.runTypes.add(project.provider(() -> runType));
+        this.specifications.add(project.provider(() -> runType));
     }
 
     @Override
-    public void configure(@NotNull Provider<RunType> typeProvider) {
+    public void configure(@NotNull Provider<? extends RunSpecification> typeProvider) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        this.runTypes.add(typeProvider);
+        this.specifications.add(typeProvider);
     }
 
     @NotNull
@@ -345,25 +616,45 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         RunTypeManager runTypes = project.getExtensions().getByType(RunTypeManager.class);
 
         return project.provider(() -> {
-            if (runTypes.getNames().contains(name)) {
-                return List.of(runTypes.getByName(name));
-            } else {
-                return null;
-            }
-        }).orElse(
-                TransformerUtils.ifTrue(getConfigureFromDependencies(),
-                        getCompileClasspathElements()
-                                .map(files -> files.stream()
-                                        .map(FileSystemLocation::getAsFile)
-                                        .map(runTypes::parse)
-                                        .flatMap(Collection::stream)
-                                        .filter(runType -> runType.getName().equals(name))
-                                        .toList()
-                                ))).map(types -> {
-            if (types.isEmpty()) {
-                throw new GradleException("No run type found with name: " + name);
-            }
-            return types;
-        });
+                    if (runTypes.getNames().contains(name)) {
+                        return List.of(runTypes.getByName(name));
+                    } else {
+                        return null;
+                    }
+                })
+                .orElse(
+                        TransformerUtils.ifTrue(getConfigureFromDependencies(),
+                                getSdkClasspathElements()
+                                        .map(files -> files.stream()
+                                                .map(FileSystemLocation::getAsFile)
+                                                .map(runTypes::parse)
+                                                .flatMap(Collection::stream)
+                                                .filter(runType -> runType.getName().equals(name))
+                                                .toList()
+                                        ))).map(types -> {
+                    if (types.isEmpty()) {
+                        final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+                        throw reporter.throwing(problem -> problem
+                                .id("run-type-not-found", "Run type not found")
+                                .contextualLabel("The run type '%s' was not found".formatted(name))
+                                .solution("Ensure the run type is defined in the run or a dependency")
+                                .section("common-runs-configuration-types-configure-by-type")
+                        );
+                    }
+                    return types;
+                });
+    }
+
+    private Provider<List<Run>> getRunByName(String name) {
+        RunManager runTypes = project.getExtensions().getByType(RunManager.class);
+
+        return project.provider(() -> {
+                    if (runTypes.getNames().contains(name)) {
+                        return List.of(runTypes.getByName(name));
+                    } else {
+                        return null;
+                    }
+                })
+                .orElse(List.of());
     }
 }

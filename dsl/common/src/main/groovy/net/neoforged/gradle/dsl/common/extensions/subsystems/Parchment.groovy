@@ -49,7 +49,7 @@ interface Parchment extends ConfigurableDSLElement<Parchment> {
 
     /**
      * If enabled (the default), the parchment repository will automatically be added to the project,
-     * if {@link #getEnabled()} is true.
+     * if {@link #getIsEnabled()} is true.
      */
     @Internal
     @DSLProperty
@@ -60,6 +60,6 @@ interface Parchment extends ConfigurableDSLElement<Parchment> {
      */
     @Input
     @DSLProperty
-    Property<Boolean> getEnabled();
+    Property<Boolean> getIsEnabled();
 
 }

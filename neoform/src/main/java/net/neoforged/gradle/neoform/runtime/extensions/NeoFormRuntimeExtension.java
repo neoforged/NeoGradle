@@ -7,6 +7,7 @@ import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.common.util.VersionJson;
@@ -502,7 +503,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         Project project = runtimeDefinition.getSpecification().getProject();
         Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
         Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
-        if (!parchment.getEnabled().get()) {
+        if (!parchment.getIsEnabled().get()) {
             return recompileInput;
         }
 

@@ -1,6 +1,5 @@
 package net.neoforged.gradle.common.util;
 
-import net.neoforged.gradle.dsl.common.util.ConfigurationUtils;
 import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;

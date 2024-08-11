@@ -15,38 +15,43 @@ import org.jetbrains.annotations.Nullable
 @CompileStatic
 class ReplacementResult {
 
-    private final Project project;
+    private final Project project
     @Nullable
-    private final TaskProvider<? extends WithOutput> sourcesJar;
-    private final TaskProvider<? extends WithOutput> rawJar;
-    private final Configuration dependencies;
-    private final Set<TaskProvider<? extends Task>> additionalIdePostSyncTasks;
+    private final TaskProvider<? extends WithOutput> sourcesJar
+    private final TaskProvider<? extends WithOutput> rawJar
+    private final Configuration sdk
+    private final Configuration dependencies
+    private final Set<TaskProvider<? extends Task>> additionalIdePostSyncTasks
 
     ReplacementResult(
             Project project,
             @Nullable TaskProvider<? extends WithOutput> sourcesJar,
             TaskProvider<? extends WithOutput> rawJar,
+            Configuration sdk,
             Configuration dependencies,
             Set<TaskProvider<? extends Task>> additionalTasks
     ) {
-        this.project = project;
-        this.sourcesJar = sourcesJar;
-        this.rawJar = rawJar;
-        this.dependencies = dependencies;
-        this.additionalIdePostSyncTasks = additionalTasks;
+        this.project = project
+        this.sourcesJar = sourcesJar
+        this.rawJar = rawJar
+        this.sdk = sdk
+        this.dependencies = dependencies
+        this.additionalIdePostSyncTasks = additionalTasks
     }
 
     ReplacementResult(
             Project project,
             TaskProvider<? extends WithOutput> rawJar,
+            Configuration sdk,
             Configuration dependencies,
             Set<TaskProvider<? extends Task>> additionalTasks
     ) {
-        this.project = project;
-        this.sourcesJar = null;
-        this.rawJar = rawJar;
-        this.dependencies = dependencies;
-        this.additionalIdePostSyncTasks = additionalTasks;
+        this.project = project
+        this.sourcesJar = null
+        this.rawJar = rawJar
+        this.sdk = sdk
+        this.dependencies = dependencies
+        this.additionalIdePostSyncTasks = additionalTasks
     }
 
 
@@ -55,7 +60,7 @@ class ReplacementResult {
      */
     @NotNull
     Project getProject() {
-        return project;
+        return project
     }
 
     /**
@@ -63,7 +68,7 @@ class ReplacementResult {
      */
     @Nullable
     TaskProvider<? extends WithOutput> getSourcesJar() {
-        return sourcesJar;
+        return sourcesJar
     }
 
     /**
@@ -71,7 +76,15 @@ class ReplacementResult {
      */
     @NotNull
     TaskProvider<? extends WithOutput> getRawJar() {
-        return rawJar;
+        return rawJar
+    }
+
+    /**
+     * @returns The configuration in which the SDK is added.
+     */
+    @NotNull
+    Configuration getSdk() {
+        return sdk
     }
 
     /**
@@ -79,7 +92,7 @@ class ReplacementResult {
      */
     @NotNull
     Configuration getDependencies() {
-        return dependencies;
+        return dependencies
     }
 
     /**
@@ -87,6 +100,6 @@ class ReplacementResult {
      */
     @NotNull
     Set<TaskProvider<? extends Task>> getAdditionalIdePostSyncTasks() {
-        return additionalIdePostSyncTasks;
+        return additionalIdePostSyncTasks
     }
 }

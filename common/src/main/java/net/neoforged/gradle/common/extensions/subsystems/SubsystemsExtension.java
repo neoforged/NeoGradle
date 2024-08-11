@@ -1,8 +1,10 @@
 package net.neoforged.gradle.common.extensions.subsystems;
 
 import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gradle.common.extensions.base.WithEnabledProperty;
 import net.neoforged.gradle.common.extensions.base.WithPropertyLookup;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
@@ -18,97 +20,91 @@ import static net.neoforged.gradle.dsl.common.util.Constants.*;
 public abstract class SubsystemsExtension extends WithPropertyLookup implements ConfigurableDSLElement<Subsystems>, Subsystems {
 
     private final Conventions conventions;
+    private final Parchment parchment;
+    private final Tools tools;
+
 
     @Inject
     public SubsystemsExtension(Project project) {
         super(project);
 
         this.conventions = project.getObjects().newInstance(ConventionsExtension.class, project);
+        this.parchment = project.getObjects().newInstance(ParchmentExtensions.class, project);
+        this.tools = project.getObjects().newInstance(ToolsExtension.class, project);
 
         configureDecompilerDefaults();
         configureRecompilerDefaults();
         configureParchmentDefaults();
         configureToolsDefaults();
         configureDevLoginDefaults();
+        configureRenderDocDefaults();
+    }
+
+    private void configureRenderDocDefaults() {
+        RenderDoc devLogin = getRenderDoc();
+        devLogin.getConfigurationSuffix().convention(
+                getStringProperty("renderDoc.configurationSuffix", "RenderDocLocalOnly")
+        );
     }
 
     private void configureDevLoginDefaults() {
         DevLogin devLogin = getDevLogin();
-        devLogin.getEnabled().convention(
-                getBooleanProperty("devLogin.enabled").orElse(true)
-        );
         devLogin.getMainClass().convention(
-                getStringProperty("devLogin.mainClass").orElse(DEVLOGIN_MAIN_CLASS)
+                getStringProperty("devLogin.mainClass", DEVLOGIN_MAIN_CLASS)
         );
         devLogin.getConfigurationSuffix().convention(
-                getStringProperty("devLogin.configurationSuffix").orElse("DevLoginLocalOnly")
-        );
-        devLogin.getConventionForRun().convention(
-                getBooleanProperty("devLogin.conventionForRun").orElse(false)
+                getStringProperty("devLogin.configurationSuffix", "DevLoginLocalOnly")
         );
     }
 
     private void configureToolsDefaults() {
         Tools tools = getTools();
         tools.getJST().convention(
-                getStringProperty("tools.jst").orElse(JST_TOOL_ARTIFACT)
+                getStringProperty("tools.jst", JST_TOOL_ARTIFACT)
         );
         tools.getDevLogin().convention(
-                getStringProperty("tools.devLogin").orElse(DEVLOGIN_TOOL_ARTIFACT)
+                getStringProperty("tools.devLogin", DEVLOGIN_TOOL_ARTIFACT)
+        );
+
+        RenderDocTools renderDocTools = tools.getRenderDoc();
+        renderDocTools.getRenderDocPath().convention(
+                getDirectoryProperty("tools.renderDoc.path", getProject().getLayout().getBuildDirectory().dir("renderdoc"))
+        );
+        renderDocTools.getRenderDocVersion().convention(
+                getStringProperty("tools.renderDoc.version", "1.33")
+        );
+        renderDocTools.getRenderNurse().convention(
+                getStringProperty("tools.renderDoc.renderNurse", RENDERNURSE_TOOL_ARTIFACT)
         );
     }
 
     private void configureDecompilerDefaults() {
         Decompiler decompiler = getDecompiler();
-        decompiler.getMaxMemory().convention(getStringProperty("decompiler.maxMemory"));
-        decompiler.getMaxThreads().convention(getStringProperty("decompiler.maxThreads").map(Integer::parseUnsignedInt));
-        decompiler.getLogLevel().convention(getStringProperty("decompiler.logLevel").map(s -> {
+        decompiler.getMaxMemory().convention(getStringProperty("decompiler.maxMemory", "4g"));
+        decompiler.getMaxThreads().convention(getStringProperty("decompiler.maxThreads", "0").map(Integer::parseUnsignedInt));
+        decompiler.getLogLevel().convention(getStringProperty("decompiler.logLevel", "ERROR").map(s -> {
             try {
                 return DecompilerLogLevel.valueOf(s.toUpperCase(Locale.ROOT));
             } catch (Exception e) {
                 throw new GradleException("Unknown DecompilerLogLevel: " + s + ". Available options: " + Arrays.toString(DecompilerLogLevel.values()));
             }
         }));
-        decompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("decompiler.jvmArgs").orElse(Collections.emptyList()));
+        decompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("decompiler.jvmArgs", Collections.emptyList()));
     }
 
     private void configureRecompilerDefaults() {
         Recompiler recompiler = getRecompiler();
-        recompiler.getArgs().convention(getSpaceSeparatedListProperty("recompiler.args").orElse(Collections.emptyList()));
-        recompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("recompiler.jvmArgs").orElse(Collections.emptyList()));
-        recompiler.getMaxMemory().convention(getStringProperty("recompiler.maxMemory").orElse(DEFAULT_RECOMPILER_MAX_MEMORY));
-        recompiler.getShouldFork().convention(getBooleanProperty("recompiler.shouldFork").orElse(true));
+        recompiler.getArgs().convention(getSpaceSeparatedListProperty("recompiler.args", Collections.emptyList()));
+        recompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("recompiler.jvmArgs", Collections.emptyList()));
+        recompiler.getMaxMemory().convention(getStringProperty("recompiler.maxMemory", DEFAULT_RECOMPILER_MAX_MEMORY));
+        recompiler.getShouldFork().convention(getBooleanProperty("recompiler.shouldFork", true, false));
     }
 
     private void configureParchmentDefaults() {
         Parchment parchment = getParchment();
-        parchment.getParchmentArtifact().convention(
-                getStringProperty("parchment.parchmentArtifact").orElse(
-                        parchment.getMinecraftVersion()
-                                .zip(parchment.getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
-                                    return DEFAULT_PARCHMENT_GROUP
-                                            + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
-                                            + ":" + mappingVersion
-                                            + "@zip";
-                                })
-                )
-        );
-        parchment.getConflictPrefix().convention("p_");
-        parchment.getMinecraftVersion().convention(
-                getStringProperty("parchment.minecraftVersion")
-        );
-        parchment.getMappingsVersion().convention(
-                getStringProperty("parchment.mappingsVersion")
-        );
-        parchment.getAddRepository().convention(
-                getBooleanProperty("parchment.addRepository").orElse(true)
-        );
-        parchment.getEnabled().convention(parchment.getParchmentArtifact()
-                .map(s -> !s.isEmpty()).orElse(getBooleanProperty("parchment.enabled").orElse(false)));
-
         // Add a filtered parchment repository automatically if enabled
         project.afterEvaluate(p -> {
-            if (!parchment.getEnabled().get() || !parchment.getAddRepository().get()) {
+            if (!parchment.getIsEnabled().get() || !parchment.getAddRepository().get()) {
                 return;
             }
             MavenArtifactRepository repo = p.getRepositories().maven(m -> {
@@ -125,5 +121,48 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
     @Override
     public Conventions getConventions() {
         return conventions;
+    }
+
+    @Override
+    public Parchment getParchment() {
+        return parchment;
+    }
+
+    @Override
+    public Tools getTools() {
+        return tools;
+    }
+
+    public static abstract class ParchmentExtensions extends WithEnabledProperty implements Parchment {
+
+        @Inject
+        public ParchmentExtensions(Project project) {
+            super(project, "parchment");
+
+            getParchmentArtifact().convention(
+                    getStringLocalProperty("parchmentArtifact", "").orElse(
+                            getMinecraftVersion()
+                                    .zip(getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
+                                        return DEFAULT_PARCHMENT_GROUP
+                                                + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
+                                                + ":" + mappingVersion
+                                                + "@zip";
+                                    })
+                    )
+            );
+            getConflictPrefix().convention("p_");
+            getMinecraftVersion().convention(
+                    getStringProperty("minecraftVersion", null)
+            );
+            getMappingsVersion().convention(
+                    getStringProperty("mappingsVersion", null)
+            );
+            getAddRepository().convention(
+                    getBooleanProperty("addRepository", true, false)
+            );
+            getIsEnabled().set(getParchmentArtifact()
+                    .map(s -> !s.isEmpty()).orElse(getBooleanLocalProperty("enabled", true))
+            );
+        }
     }
 }

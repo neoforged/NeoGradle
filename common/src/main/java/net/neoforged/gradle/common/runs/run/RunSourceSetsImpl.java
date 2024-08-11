@@ -20,15 +20,14 @@ import java.util.List;
 public abstract class RunSourceSetsImpl implements RunSourceSets {
 
     private final Project project;
-    private final Provider<Multimap<String, SourceSet>> provider;
     private final Multimap<String, SourceSet> sourceSets;
     private final List<Action<SourceSet>> callbacks = new ArrayList<>();
+    private final List<Provider<Multimap<String, SourceSet>>> sourceSetProviders = new ArrayList<>();
 
     @Inject
     public RunSourceSetsImpl(Project project) {
         this.project = project;
         this.sourceSets = HashMultimap.create();
-        this.provider = project.provider(() -> sourceSets);
     }
 
 
@@ -105,6 +104,11 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
         }
     }
 
+    @Override
+    public void addAllLater(Provider<Multimap<String, SourceSet>> sourceSets) {
+        this.sourceSetProviders.add(sourceSets);
+    }
+
     @DSLProperty
     @Input
     @Optional
@@ -113,7 +117,16 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
 
     @Override
     public Provider<Multimap<String, SourceSet>> all() {
-        return this.provider;
+        //Realize all lazy source sets
+        if (!this.sourceSetProviders.isEmpty()) {
+            for (Provider<Multimap<String, SourceSet>> sourceSetProvider : this.sourceSetProviders) {
+                final Multimap<String, SourceSet> sourceSets = sourceSetProvider.get();
+                sourceSets.forEach(this::add);
+            }
+            this.sourceSetProviders.clear();
+        }
+
+        return this.project.provider(() -> this.sourceSets);
     }
 
     @Override
