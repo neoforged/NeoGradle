@@ -46,9 +46,13 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -101,8 +105,8 @@ public class RunsUtil {
 
                 runExec.getMainClass().convention(run.getMainClass());
                 runExec.setWorkingDir(workingDir);
-                runExec.args(run.getArguments().get());
-                runExec.jvmArgs(run.getJvmArguments().get());
+                runExec.args(deduplicateElementsFollowingEachOther(run.getArguments().get().stream()).toList());
+                runExec.jvmArgs(deduplicateElementsFollowingEachOther(run.getJvmArguments().get().stream()).toList());
                 runExec.systemProperties(run.getSystemProperties().get());
                 runExec.environment(run.getEnvironmentVariables().get());
                 run.getModSources().all().get().values().stream()
@@ -356,6 +360,31 @@ public class RunsUtil {
         return Stream.concat(args.stream(), Stream.of(additional)).map(RunsUtil::escape);
     }
 
+    public static Stream<String> deduplicateElementsFollowingEachOther(Stream<String> stream) {
+        return stream.reduce(
+                new ArrayList<>(),
+                (BiFunction<List<String>, String, List<String>>) (strings, s) -> {
+                    if (s.isEmpty()) {
+                        return strings;
+                    }
+
+                    if (strings.isEmpty()) {
+                        strings.add(s);
+                        return strings;
+                    }
+
+                    if (strings.get(strings.size() - 1).equals(s)) {
+                        return strings;
+                    }
+
+                    strings.add(s);
+                    return strings;
+                }, (strings, strings2) -> {
+                    strings.addAll(strings2);
+                    return strings;
+                }).stream();
+    }
+
     /**
      * This expects users to escape quotes in their system arguments on their own, which matches
      * Gradles own behavior when used in JavaExec.
@@ -384,7 +413,7 @@ public class RunsUtil {
             }
         }
         try {
-            final List<String> value = inputs.get();
+            final List<String> value = deduplicateElementsFollowingEachOther(inputs.get().stream()).toList();
             if (output.exists()) {
                 if (Files.readAllLines(output.toPath()).equals(value)) {
                     return output;

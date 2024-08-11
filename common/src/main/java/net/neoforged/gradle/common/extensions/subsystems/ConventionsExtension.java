@@ -148,7 +148,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
 
             getShouldUseCompilerDetection().convention(getBooleanProperty("compiler-detection", true, false));
             getShouldUsePostSyncTask().convention(getBooleanProperty("use-post-sync-task", false, false));
-            getShouldReconfigureTemplatesForTests().convention(getBooleanProperty("reconfigure-unit-test-templates", true, false));
+            getShouldReconfigureTemplatesForTests().convention(getBooleanProperty("reconfigure-unit-test-templates", false, false));
         }
     }
 }

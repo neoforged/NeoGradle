@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.runs.tasks;
 
 import com.google.common.collect.Multimap;
+import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.api.Project;
@@ -87,8 +88,8 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
             this.environment = run.getEnvironmentVariables().get();
             this.mainClass = run.getMainClass().get();
             this.properties = run.getSystemProperties().get();
-            this.arguments = run.getArguments().get();
-            this.jvmArguments = run.getJvmArguments().get();
+            this.arguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getArguments().get().stream()).toList();
+            this.jvmArguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getJvmArguments().get().stream()).toList();
             this.isSingleInstance = run.getIsSingleInstance().get();
             this.workingDirectory = run.getWorkingDirectory().get().getAsFile().getAbsolutePath();
             this.isClient = run.getIsClient().get();

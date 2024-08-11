@@ -194,9 +194,9 @@ public class IdeRunIntegrationManager {
 
                     ideaRun.setMainClass(runImpl.getMainClass().get());
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                    ideaRun.setJvmArgs(RunsUtil.escapeAndJoin(runImpl.realiseJvmArguments()));
+                    ideaRun.setJvmArgs(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.realiseJvmArguments().stream()).toList()));
                     ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
-                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(runImpl.getArguments().get()));
+                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.getArguments().get().stream()).toList()));
                     ideaRun.setEnvs(adaptEnvironment(runImpl, multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production)));
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
 
@@ -281,8 +281,8 @@ public class IdeRunIntegrationManager {
                         final JavaApplicationLaunchConfig debugRun =
                                 JavaApplicationLaunchConfig.builder(eclipse.getProject().getName())
                                         .workingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath())
-                                        .vmArgs(RunsUtil.escapeStream(runImpl.realiseJvmArguments()).toArray(String[]::new))
-                                        .args(RunsUtil.escapeStream(runImpl.getArguments().get()).toArray(String[]::new))
+                                        .vmArgs(RunsUtil.deduplicateElementsFollowingEachOther(RunsUtil.escapeStream(runImpl.realiseJvmArguments())).toArray(String[]::new))
+                                        .args(RunsUtil.deduplicateElementsFollowingEachOther(RunsUtil.escapeStream(runImpl.getArguments().get())).toArray(String[]::new))
                                         .envVar(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                                         .useArgumentsFile()
                                         .build(runImpl.getMainClass().get());
@@ -332,8 +332,8 @@ public class IdeRunIntegrationManager {
 
                     final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
                         .createLaunchConfiguration()
-                        .withAdditionalJvmArgs(runImpl.realiseJvmArguments())
-                        .withArguments(runImpl.getArguments().get())
+                        .withAdditionalJvmArgs(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.realiseJvmArguments().stream()).toList())
+                        .withArguments(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.getArguments().get().stream()).toList())
                         .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
                         .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                         .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)

@@ -704,10 +704,10 @@ neogradle.subsystems.conventions.ide.idea.use-post-sync-task=true
 ```
 
 ##### Reconfiguration of IDEA Unit Test Templates
-By default, the IDEA unit test templates are reconfigured to support running unit tests from the gutter.
-You can disable this behavior by setting the following property in your gradle.properties:
+By default, the IDEA unit test templates are not reconfigured to support running unit tests from the gutter.
+You can enable this behavior by setting the following property in your gradle.properties:
 ```properties
-neogradle.subsystems.conventions.ide.idea.reconfigure-unit-test-templates=false
+neogradle.subsystems.conventions.ide.idea.reconfigure-unit-test-templates=true
 ```
 
 ### Runs
