@@ -16,6 +16,7 @@ import org.gradle.api.tasks.Optional
 
 import javax.inject.Inject
 import java.lang.reflect.Type
+import java.nio.file.Path
 import java.util.function.BiFunction
 
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.*
@@ -41,11 +42,37 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         result.assetIndex.set(right.assetIndex.orElse(left.assetIndex))
         result.assets.set(right.assets.orElse(left.assets))
         result.complianceLevel.set(right.complianceLevel.orElse(left.complianceLevel))
-
-
-
+        result.downloads.set(mergeDownloads(left.downloads, right.downloads))
+        result.javaVersion.set(right.javaVersion.orElse(left.javaVersion))
+        result.libraries.set(mergeLibraries(left.libraries, right.libraries))
+        result.loggingConfiguration.set(right.loggingConfiguration.orElse(left.loggingConfiguration))
 
         return result
+    }
+
+    private static Provider<? extends Map<? extends String, ? extends LibraryDownload>> mergeDownloads(
+            final Provider<Map<String, LibraryDownload>> left,
+            final Provider<Map<String, LibraryDownload>> right
+    ) {
+        return left.orElse(Map.of()).zip(right.orElse(Map.of()), new BiFunction<Map<String, LibraryDownload>, Map<String, LibraryDownload>, Map<String, LibraryDownload>>() {
+            @Override
+            Map<String, LibraryDownload> apply(Map<String, LibraryDownload> l, Map<String, LibraryDownload> r) {
+                final Map<String, LibraryDownload> result = new HashMap<>(l)
+                result.putAll(r)
+                return result
+            }
+        })
+    }
+
+    static Provider<? extends Iterable<Library>> mergeLibraries(ListProperty<Library> left, ListProperty<Library> right) {
+        return left.orElse(List.of()).zip(right.orElse(List.of()), new BiFunction<List<Library>, List<Library>, List<Library>>() {
+            @Override
+            List<Library> apply(List<Library> libraries, List<Library> u) {
+                final List<Library> result = new ArrayList<>(libraries)
+                result.addAll(u)
+                return result
+            }
+        })
     }
 
     @Inject
@@ -54,6 +81,14 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         this.getAssetIndex().set(factory.newInstance(AssetIndex.class))
         this.getJavaVersion().set(factory.newInstance(JavaVersion.class))
         this.getLoggingConfiguration().set(factory.newInstance(LoggingConfiguration.class))
+    }
+
+    static LauncherProfile from(final ObjectFactory factory, Path path) {
+        return from(factory, path.toFile().text)
+    }
+
+    static LauncherProfile from(final ObjectFactory factory, String json) {
+        return createGson(factory).fromJson(json, LauncherProfile.class)
     }
 
     static Gson createGson(ObjectFactory factory) {
@@ -215,16 +250,21 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         static Arguments merge(ObjectFactory objectFactory, Arguments left, Arguments right) {
             final Arguments result = objectFactory.newInstance(Arguments.class)
 
-            result.game.set(left.game.zip(right.game, this::merge))
-            result.JVM.set(left.JVM.zip(right.JVM, this::merge))
+            result.game.set(mergeList(left.game, right.game))
+            result.JVM.set(mergeList(left.JVM, right.JVM))
 
             return result
         }
 
-        static List<Argument> merge(List<Argument> left, List<Argument> right) {
-            final List<Argument> result = new ArrayList<>(left)
-            result.addAll(right)
-            return result
+        private static Provider<? extends Iterable<Argument>> mergeList(final ListProperty<Argument> left, final ListProperty<Argument> right) {
+            return left.orElse(List.of()).zip(right.orElse(List.of()), new BiFunction<List<Argument>, List<Argument>, List<Argument>>() {
+                @Override
+                List<Argument> apply(List<Argument> l, List<Argument> r) {
+                    final List<Argument> result = new ArrayList<>(l)
+                    result.addAll(r)
+                    return result
+                }
+            })
         }
 
         @Inject
@@ -237,14 +277,14 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
 
         Argument game(final String value) {
             final Argument argument = getObjectFactory().newInstance(Argument.class);
-            argument.getValue().set(value);
+            argument.getValue().add(value);
             getGame().add(argument);
             return argument;
         }
 
         Argument game(final Provider<String> value) {
             final Argument argument = getObjectFactory().newInstance(Argument.class);
-            argument.getValue().set(value);
+            argument.getValue().add(value);
             getGame().add(argument);
             return argument;
         }
@@ -256,14 +296,14 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
 
         Argument jvm(final String value) {
             final Argument argument = getObjectFactory().newInstance(Argument.class);
-            argument.getValue().set(value);
+            argument.getValue().add(value);
             getJVM().add(argument);
             return argument;
         }
 
         Argument jvm(final Provider<String> value) {
             final Argument argument = getObjectFactory().newInstance(Argument.class);
-            argument.getValue().set(value);
+            argument.getValue().add(value);
             getJVM().add(argument);
             return argument;
         }
@@ -309,7 +349,7 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
         @Input
         @DSLProperty
         @Optional
-        abstract Property<String> getValue();
+        abstract ListProperty<String> getValue();
 
         @CompileStatic
         static class Serializer extends WithRules.Serializer<Argument> {
@@ -322,13 +362,21 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
             Argument deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
                 if (jsonElement.isJsonPrimitive()) {
                     final Argument argument = factory.newInstance(Argument.class);
-                    argument.getValue().set(jsonElement.getAsString());
+                    argument.getValue().add(jsonElement.getAsString());
                     return argument;
                 }
 
                 def result = super.deserialize(jsonElement, type, jsonDeserializationContext) as Argument
 
-                deserializeString(result.getValue(), jsonElement.getAsJsonObject(), "value")
+                final JsonObject object = jsonElement.getAsJsonObject();
+                if (object.has("value")) {
+                    final JsonElement valueElement = object.get("value");
+                    if (valueElement.isJsonPrimitive()) {
+                        result.getValue().add(valueElement.getAsString());
+                    } else if (valueElement.isJsonArray()) {
+                        deserializeList(result.getValue(), object, "value", String.class, jsonDeserializationContext)
+                    }
+                }
 
                 return result;
             }
@@ -336,12 +384,14 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
             @Override
             JsonElement serialize(Argument argument, Type type, JsonSerializationContext jsonSerializationContext) {
                 if (argument.getRules().isPresent() && argument.getRules().get().isEmpty()) {
-                    return new JsonPrimitive(argument.getValue().get())
+                    if (argument.getValue().get().size() == 1) {
+                        return new JsonPrimitive(argument.getValue().get().get(0))
+                    }
                 }
 
                 def result = super.serialize(argument, type, jsonSerializationContext) as JsonObject
 
-                serializeString(argument.getValue(), result, "value")
+                serializeList(argument.getValue(), result, "value", jsonSerializationContext)
 
                 return result;
             }

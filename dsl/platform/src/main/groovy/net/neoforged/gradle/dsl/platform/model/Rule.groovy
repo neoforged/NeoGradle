@@ -8,6 +8,7 @@ import net.neoforged.gradle.dsl.common.util.PropertyUtils
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -22,6 +23,16 @@ abstract class Rule implements ConfigurableDSLElement<Rule> {
     @DSLProperty
     @Optional
     abstract Property<RuleAction> getAction();
+
+    Provider<Boolean> isActive(Provider<List<String>> enabledFeatures) {
+        def osMatches = getOs().flatMap {os -> os.isActive()}.orElse(true)
+        def featureMatches = features.zip(enabledFeatures, { Map<String, Boolean> f, List<String> ef -> ef.every {feature -> f.getOrDefault(feature, true)} }).orElse(true)
+
+        def combinedMatch = osMatches.zip(featureMatches, { Boolean os, Boolean features -> os && features }).orElse(true)
+        def matchingRuleAction = action.orElse(RuleAction.ALLOWED)
+
+        return combinedMatch.zip(matchingRuleAction, { Boolean match, RuleAction action -> action.isAllowed() == match }).orElse(true)
+    }
 
     @Nested
     @DSLProperty

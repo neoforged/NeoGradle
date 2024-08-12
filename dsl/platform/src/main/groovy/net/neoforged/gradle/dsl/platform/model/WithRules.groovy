@@ -11,20 +11,34 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
+import net.neoforged.gradle.util.TransformerUtils
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 
+import javax.inject.Inject
 import java.lang.reflect.Type
 
 @CompileStatic
 abstract class WithRules<TSelf extends WithRules<TSelf>> implements ConfigurableDSLElement<TSelf> {
 
+    @Inject
+    abstract ObjectFactory getObjectFactory();
+
     @Input
     @Optional
     @DSLProperty
     abstract ListProperty<Rule> getRules();
+
+    Provider<Boolean> isActive() {
+        return isActive(getObjectFactory().listProperty(String.class))
+    }
+
+    Provider<Boolean> isActive(Provider<List<String>> enabledFeatures) {
+        return getRules().map(TransformerUtils.<Rule>allTrue({Rule rule -> rule.isActive(enabledFeatures)}))
+    }
 
     @Override
     int hashCode() {

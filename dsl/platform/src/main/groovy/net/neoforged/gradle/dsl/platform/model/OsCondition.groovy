@@ -13,10 +13,12 @@ import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.util.PropertyUtils
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 
 import java.lang.reflect.Type
+import java.util.regex.Pattern
 
 @CompileStatic
 abstract class OsCondition implements ConfigurableDSLElement<OsCondition> {
@@ -36,6 +38,30 @@ abstract class OsCondition implements ConfigurableDSLElement<OsCondition> {
     @Optional
     abstract Property<String> getVersion();
 
+    Provider<Boolean> isActive() {
+        def nameMatches = name.map { n ->
+            if (n == "windows") {
+                return System.getProperty("os.name").toLowerCase().contains("win")
+            } else if (n == "linux") {
+                return System.getProperty("os.name").toLowerCase().contains("unix") || System.getProperty("os.name").toLowerCase().contains("linux")
+            } else if (n == "osx") {
+                return System.getProperty("os.name").toLowerCase().contains("mac")
+            } else {
+                return false
+            }
+        }.orElse(true)
+
+        def versionMatches = version.map { v -> return Pattern.compile(v).matcher(System.getProperty("os.version")).find()
+        }.orElse(true)
+
+        def archMatches = arch.map { a -> return Pattern.compile(a).matcher(System.getProperty("os.arch")).find()
+        }.orElse(true)
+
+        return nameMatches.zip(versionMatches.zip(archMatches,
+                { v, a -> v && a }),
+                { n, va -> n && va })
+    }
+
     @CompileStatic
     static class Serializer implements JsonSerializer<OsCondition>, JsonDeserializer<OsCondition> {
 
@@ -47,8 +73,7 @@ abstract class OsCondition implements ConfigurableDSLElement<OsCondition> {
 
         @Override
         OsCondition deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-            if (!jsonElement.isJsonObject())
-                throw new JsonParseException("OS condition must be a json object")
+            if (!jsonElement.isJsonObject()) throw new JsonParseException("OS condition must be a json object")
 
             final JsonObject payload = jsonElement.getAsJsonObject();
             final OsCondition instance = factory.newInstance(OsCondition.class);

@@ -2,6 +2,7 @@ package net.neoforged.gradle.util;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import groovy.lang.Closure;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
@@ -451,6 +452,10 @@ public final class TransformerUtils {
 
     public static <T> Provider<T> lazyDefaulted(Provider<T> provider, Provider<T> value) {
         return provider.orElse(value);
+    }
+
+    public static <E> Transformer<Boolean, ? super List<E>> allTrue(Function<E, Boolean> closure) {
+        return (Transformer<Boolean, List<E>>) es -> es.stream().map(closure).reduce(Boolean::logicalAnd).map(b -> b ? Boolean.TRUE : Boolean.FALSE).orElse(true);
     }
 
     /**

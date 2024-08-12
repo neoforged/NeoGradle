@@ -23,6 +23,7 @@ import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
+import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
@@ -260,7 +261,9 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
         final TaskProvider<SetupProjectFromRuntime> setupTask = configureSetupTasks(runtimeDefinition.getSourceJarTask().flatMap(WithOutput::getOutput), mainSource, runtimeDefinition.getMinecraftDependenciesConfiguration());
         setupTask.configure(task -> task.getShouldLockDirectories().set(false));
-        
+
+        final MinecraftArtifactCache artifactCache = project.getExtensions().getByType(MinecraftArtifactCache.class);
+
         project.afterEvaluate(evaledProject -> {
             final EnumMap<DistributionType, TaskProvider<? extends WithOutput>> cleanProviders = new EnumMap<>(DistributionType.class);
             cleanProviders.put(DistributionType.CLIENT, createCleanProvider(runtimeDefinition.getGameArtifactProvidingTasks().get(GameArtifact.CLIENT_JAR), runtimeDefinition, workingDirectory));
@@ -395,6 +398,19 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.getLibraries().from(moduleOnlyConfiguration);
                 task.getRepositoryURLs().set(repoCollection);
                 
+                CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
+            });
+
+            final TaskProvider<CreateLauncherJson> createBinaryCombinedLauncher = project.getTasks().register("createCombinedLauncher", CreateLauncherJson.class, task -> {
+                task.getProfile().set(artifactCache.cacheVersionManifest(runtimeDefinition.getSpecification().getMinecraftVersion()).map(
+                        file -> LauncherProfile.from(project.getObjects(), file.toPath())
+                ).map(vanillaLauncherProfile -> LauncherProfile.merge(project.getObjects(), vanillaLauncherProfile, launcherProfile)));
+                task.getLibraries().from(installerConfiguration);
+                task.getLibraries().from(pluginLayerLibraryConfiguration);
+                task.getLibraries().from(gameLayerLibraryConfiguration);
+                task.getLibraries().from(moduleOnlyConfiguration);
+                task.getRepositoryURLs().set(repoCollection);
+
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
             
