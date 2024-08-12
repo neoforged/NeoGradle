@@ -16,11 +16,37 @@ import org.gradle.api.tasks.Optional
 
 import javax.inject.Inject
 import java.lang.reflect.Type
+import java.util.function.BiFunction
 
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.*
 
 @CompileStatic
 abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile> {
+
+    public static LauncherProfile merge(
+            final ObjectFactory factory,
+            final LauncherProfile left,
+            final LauncherProfile right
+    ) {
+        final LauncherProfile result = factory.newInstance(LauncherProfile.class)
+
+        result.id.set(right.id.orElse(left.id))
+        result.time.set(right.id.orElse(left.time))
+        result.releaseTime.set(right.releaseTime.orElse(left.releaseTime))
+        result.type.set(right.type.orElse(left.type))
+        result.mainClass.set(right.mainClass.orElse(left.mainClass))
+        result.minimumLauncherVersion.set(right.minimumLauncherVersion.orElse(left.minimumLauncherVersion))
+        result.inheritsFrom.set("") //We force this to be empty
+        result.arguments.set(Arguments.merge(factory, left.arguments.get(), right.arguments.get()))
+        result.assetIndex.set(right.assetIndex.orElse(left.assetIndex))
+        result.assets.set(right.assets.orElse(left.assets))
+        result.complianceLevel.set(right.complianceLevel.orElse(left.complianceLevel))
+
+
+
+
+        return result
+    }
 
     @Inject
     public LauncherProfile(ObjectFactory factory) {
@@ -185,6 +211,21 @@ abstract class LauncherProfile implements ConfigurableDSLElement<LauncherProfile
 
     @CompileStatic
     abstract static class Arguments implements ConfigurableDSLElement<Arguments> {
+
+        static Arguments merge(ObjectFactory objectFactory, Arguments left, Arguments right) {
+            final Arguments result = objectFactory.newInstance(Arguments.class)
+
+            result.game.set(left.game.zip(right.game, this::merge))
+            result.JVM.set(left.JVM.zip(right.JVM, this::merge))
+
+            return result
+        }
+
+        static List<Argument> merge(List<Argument> left, List<Argument> right) {
+            final List<Argument> result = new ArrayList<>(left)
+            result.addAll(right)
+            return result
+        }
 
         @Inject
         abstract ObjectFactory getObjectFactory();
