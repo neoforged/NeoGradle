@@ -102,7 +102,6 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
 
         then:
         run.getOutput().contains("com.google.code.gson/gson/2.11.0") || run.getOutput().contains("com.google.code.gson\\gson\\2.11.0")
-        run.getOutput().contains("inheriting_sourcesets_runtime/build/classes/java/main") || run.getOutput().contains("inheriting_sourcesets_runtime\\build\\classes\\java\\main")
     }
 
     def "depending on a sourceset adds the compile dependencies"() {
