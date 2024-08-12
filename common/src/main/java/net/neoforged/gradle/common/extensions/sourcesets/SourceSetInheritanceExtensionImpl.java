@@ -39,15 +39,11 @@ public abstract class SourceSetInheritanceExtensionImpl implements SourceSetInhe
             );
         }
 
-        target.setCompileClasspath(
-                target.getCompileClasspath().plus(
-                        sourceSet.getCompileClasspath()
-                )
+        project.getConfigurations().getByName(target.getCompileClasspathConfigurationName()).extendsFrom(
+                project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName())
         );
-        target.setRuntimeClasspath(
-                target.getRuntimeClasspath().plus(
-                        sourceSet.getRuntimeClasspath()
-                )
+        project.getConfigurations().getByName(target.getRuntimeClasspathConfigurationName()).extendsFrom(
+                project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName())
         );
     }
 }
