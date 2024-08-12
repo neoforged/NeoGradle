@@ -43,15 +43,9 @@ public abstract class SourceSetDependencyExtensionImpl implements SourceSetDepen
         final SourceSetInheritanceExtension sourceSetInheritanceExtension = target.getExtensions().getByType(SourceSetInheritanceExtension.class);
         sourceSetInheritanceExtension.from(sourceSet);
 
-        target.setCompileClasspath(
-                target.getCompileClasspath().plus(
-                        sourceSet.getOutput()
-                )
-        );
-        target.setRuntimeClasspath(
-                target.getRuntimeClasspath().plus(
-                        sourceSet.getOutput()
-                )
+        project.getDependencies().add(
+                target.getImplementationConfigurationName(),
+                sourceSet.getOutput()
         );
     }
 }
