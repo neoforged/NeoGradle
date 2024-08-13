@@ -19,8 +19,11 @@ public abstract class WithPropertyLookup {
     }
 
     protected Provider<String> getStringProperty(String propertyName, String defaultValue) {
-        return this.project.getProviders().gradleProperty(SUBSYSTEM_PROPERTY_PREFIX + propertyName)
-                .orElse(defaultValue);
+        final Provider<String> property = this.project.getProviders().gradleProperty(SUBSYSTEM_PROPERTY_PREFIX + propertyName);
+        if (defaultValue == null)
+            return property;
+
+        return property.orElse(defaultValue);
     }
 
     protected Provider<Directory> getDirectoryProperty(String propertyName, Provider<Directory> defaultValue) {
