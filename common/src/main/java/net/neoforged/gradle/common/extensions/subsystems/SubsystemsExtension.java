@@ -147,7 +147,7 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
                                                 + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
                                                 + ":" + mappingVersion
                                                 + "@zip";
-                                    })
+                                    }).orElse("")
                     )
             );
             getConflictPrefix().convention("p_");
