@@ -140,25 +140,25 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
             super(project, "parchment");
 
             getParchmentArtifact().convention(
-                    getStringLocalProperty("parchmentArtifact", "").orElse(
+                    getStringLocalProperty("parchmentArtifact", null).orElse(
                             getMinecraftVersion()
                                     .zip(getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
                                         return DEFAULT_PARCHMENT_GROUP
                                                 + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
                                                 + ":" + mappingVersion
                                                 + "@zip";
-                                    })
+                                    }).orElse("")
                     )
             );
             getConflictPrefix().convention("p_");
             getMinecraftVersion().convention(
-                    getStringProperty("minecraftVersion", null)
+                    getStringLocalProperty("minecraftVersion", null)
             );
             getMappingsVersion().convention(
-                    getStringProperty("mappingsVersion", null)
+                    getStringLocalProperty("mappingsVersion", null)
             );
             getAddRepository().convention(
-                    getBooleanProperty("addRepository", true, false)
+                    getBooleanLocalProperty("addRepository", true)
             );
             getIsEnabled().set(getParchmentArtifact()
                     .map(s -> !s.isEmpty()).orElse(getBooleanLocalProperty("enabled", true))
