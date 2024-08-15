@@ -949,7 +949,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             );
         });
 
-        Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project, runtimeDefinition.getVersionJson()).map(Directory::getAsFile).map(File::getAbsolutePath);
+        Provider<String> assetsDir = DownloadAssets.getAssetsDirectory(project).map(Directory::getAsFile).map(File::getAbsolutePath);
         Provider<String> assetIndex = runtimeDefinition.getAssets().flatMap(DownloadAssets::getAssetIndex);
 
         run.getArguments().addAll(
