@@ -1,14 +1,14 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Maps;
+import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.util.FileCacheUtils;
-import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
-import net.neoforged.gradle.util.TransformerUtils;
-import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.common.util.VersionJson;
+import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
@@ -35,7 +35,7 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
     private final Provider<Directory> assetsObjects;
 
     public DownloadAssets() {
-        this.assetsCache = getAssetsDirectory(getProject(), getVersionJson());
+        this.assetsCache = getAssetsDirectory(getProject());
         this.assetsObjects = assetsCache.map(directory -> directory.dir("objects"));
 
         getAssetIndex().convention("asset-index");
@@ -47,8 +47,13 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
     }
 
+    public static @NotNull Provider<Directory> getAssetsDirectory(final Project project) {
+        return FileCacheUtils.getAssetsCacheDirectory(project).map(TransformerUtils.ensureExists());
+    }
+
+    @Deprecated
     public static @NotNull Provider<Directory> getAssetsDirectory(final Project project, final Provider<VersionJson> versionJsonProvider) {
-        return FileCacheUtils.getAssetsCacheDirectory(project).flatMap(assetsDir -> assetsDir.dir(versionJsonProvider.map(VersionJson::getId))).map(TransformerUtils.ensureExists());
+        return getAssetsDirectory(project);
     }
 
     protected Provider<File> getFileInAssetsDirectory(final String fileName) {

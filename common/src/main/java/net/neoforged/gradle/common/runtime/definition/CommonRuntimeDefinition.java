@@ -193,7 +193,7 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     protected void buildRunInterpolationData(RunImpl run, @NotNull MapProperty<String, String> interpolationData) {
         interpolationData.put("runtime_name", specification.getVersionedName());
         interpolationData.put("mc_version", specification.getMinecraftVersion());
-        interpolationData.put("assets_root", DownloadAssets.getAssetsDirectory(specification.getProject(), this.getVersionJson())
+        interpolationData.put("assets_root", DownloadAssets.getAssetsDirectory(specification.getProject())
                 .map(Directory::getAsFile)
                 .map(File::getAbsolutePath));
 
