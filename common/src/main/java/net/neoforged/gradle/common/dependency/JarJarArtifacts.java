@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.dependency;
 
 import net.neoforged.gradle.common.extensions.JarJarExtension;
-import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
 import net.neoforged.gradle.dsl.common.dependency.DependencyManagementObject;
 import net.neoforged.gradle.dsl.common.dependency.DependencyVersionInformationHandler;
@@ -42,7 +42,7 @@ public abstract class JarJarArtifacts {
     private transient final SetProperty<ResolvedComponentResult> includedRootComponents;
     private transient final SetProperty<ResolvedArtifactResult> includedArtifacts;
 
-    private final NeoGradleProblemReporter reporter;
+    private final IProblemReporter reporter;
     private final DependencyFilter dependencyFilter;
     private final DependencyVersionInformationHandler dependencyVersionInformationHandler;
 
@@ -74,7 +74,7 @@ public abstract class JarJarArtifacts {
     }
 
     @Inject
-    public JarJarArtifacts(NeoGradleProblemReporter reporter) {
+    public JarJarArtifacts(IProblemReporter reporter) {
         this.reporter = reporter;
         dependencyFilter = getObjectFactory().newInstance(DefaultDependencyFilter.class);
         dependencyVersionInformationHandler = getObjectFactory().newInstance(DefaultDependencyVersionInformationHandler.class);

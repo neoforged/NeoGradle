@@ -3,7 +3,7 @@ package net.neoforged.gradle.common.util.run;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
-import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.RenderDocDownloaderTask;
 import net.neoforged.gradle.common.util.ClasspathUtils;
@@ -162,7 +162,7 @@ public class RunsUtil {
 
         //Warn the user if no source sets are configured
         if (run.getModSources().all().get().isEmpty()) {
-            final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+            final IProblemReporter reporter = project.getExtensions().getByType(IProblemReporter.class);
 
             throw reporter.throwing(problemSpec -> problemSpec.id("runs", "noSourceSetsConfigured")
                     .contextualLabel("Run: " + run.getName())
@@ -203,7 +203,7 @@ public class RunsUtil {
             //Set the main class to the dev login tool
             run.getMainClass().set(devLogin.getMainClass());
         } else if (!run.getIsClient().get() && runsDevLogin.getIsEnabled().get()) {
-            final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+            final IProblemReporter reporter = project.getExtensions().getByType(IProblemReporter.class);
             throw reporter.throwing(spec -> spec
                     .id("runs", "dev-login-not-supported")
                     .contextualLabel("Run: " + run.getName())

@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.tasks;
 
 import net.neoforged.gradle.common.dependency.JarJarArtifacts;
 import net.neoforged.gradle.common.dependency.ResolvedJarJarArtifact;
-import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.manifest.DefaultInheritManifest;
 import net.neoforged.gradle.common.manifest.InheritManifest;
 import net.neoforged.gradle.dsl.common.dependency.DependencyFilter;
@@ -34,7 +34,7 @@ public abstract class JarJar extends Jar {
 
     public JarJar() {
         this.artifacts = getProject().getObjects().newInstance(JarJarArtifacts.class,
-            getProject().getExtensions().getByType(NeoGradleProblemReporter.class)
+            getProject().getExtensions().getByType(IProblemReporter.class)
         );
         this.jarJarCopySpec = this.getMainSpec().addChild();
         this.jarJarCopySpec.into("META-INF/jarjar");

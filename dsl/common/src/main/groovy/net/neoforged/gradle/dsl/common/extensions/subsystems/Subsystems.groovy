@@ -13,6 +13,11 @@ import org.gradle.api.tasks.Nested
 interface Subsystems extends BaseDSLElement<Subsystems> {
 
     /**
+     * @return settings for the integration subsystem
+     */
+    Integration getIntegration();
+
+    /**
      * @return settings for the decompiler subsystem
      */
     @Nested

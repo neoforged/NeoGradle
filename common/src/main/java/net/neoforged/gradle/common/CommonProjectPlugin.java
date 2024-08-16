@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.conventions.ConventionConfigurator;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.replacement.ReplacementLogic;
+import net.neoforged.gradle.common.extensions.problems.ProblemReportingConfigurator;
 import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.sourcesets.SourceSetDependencyExtensionImpl;
 import net.neoforged.gradle.common.extensions.sourcesets.SourceSetInheritanceExtensionImpl;
@@ -49,8 +50,6 @@ import javax.inject.Inject;
 
 public class CommonProjectPlugin implements Plugin<Project> {
 
-    public static final String PROBLEM_NAMESPACE = "neoforged.gradle";
-    public static final String PROBLEM_REPORTER_EXTENSION_NAME = "neogradleProblems";
 
     private final Problems problems;
 
@@ -82,7 +81,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyRepository.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
-        project.getExtensions().create(NeoGradleProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, NeoGradleProblemReporter.class, problems.forNamespace(PROBLEM_NAMESPACE));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
 
         project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
@@ -90,6 +88,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(RunTypeManager.class, "runTypeManager", RunTypeManagerImpl.class, project);
         project.getExtensions().create(ExtraJarDependencyManager.class, "clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
         project.getExtensions().create(RunManager.class, "runManager", RunManagerImpl.class, project);
+
+        ProblemReportingConfigurator.configureProblemReporting(project, problems);
 
         final ConfigurationData configurationData = project.getExtensions().create(ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
