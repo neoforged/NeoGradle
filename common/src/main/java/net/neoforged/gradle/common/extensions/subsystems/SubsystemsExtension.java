@@ -22,12 +22,14 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
     private final Conventions conventions;
     private final Parchment parchment;
     private final Tools tools;
+    private final Integration integration;
 
 
     @Inject
     public SubsystemsExtension(Project project) {
         super(project);
 
+        this.integration = project.getObjects().newInstance(IntegrationExtensions.class, project);
         this.conventions = project.getObjects().newInstance(ConventionsExtension.class, project);
         this.parchment = project.getObjects().newInstance(ParchmentExtensions.class, project);
         this.tools = project.getObjects().newInstance(ToolsExtension.class, project);
@@ -116,6 +118,11 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
             p.getRepositories().remove(repo);
             p.getRepositories().addFirst(repo);
         });
+    }
+
+    @Override
+    public Integration getIntegration() {
+        return integration;
     }
 
     @Override

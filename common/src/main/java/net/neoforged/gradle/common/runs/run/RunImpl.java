@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.runs.run;
 
 import com.google.common.collect.Multimap;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
-import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
@@ -202,7 +202,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     @Deprecated
     public ListProperty<String> getProgramArguments() {
-        getProject().getExtensions().getByType(NeoGradleProblemReporter.class)
+        getProject().getExtensions().getByType(IProblemReporter.class)
                 .reporting(problem -> problem
                                 .id("deprecated-method", "Deprecated method")
                                 .contextualLabel("Run.getProgramArguments()")
@@ -471,7 +471,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                     }
                 }, () -> unconfiguredSourceSets.add(sourceSet));
             } catch (MultipleDefinitionsFoundException e) {
-                final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+                final IProblemReporter reporter = project.getExtensions().getByType(IProblemReporter.class);
                 throw reporter.throwing(problem -> problem
                         .id("multiple-definitions-found", "Multiple runtime definitions found")
                         .contextualLabel("Run: " + this.getName())
@@ -584,7 +584,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Deprecated
     @Override
     public final void configure(final @NotNull String name) {
-        getProject().getExtensions().getByType(NeoGradleProblemReporter.class)
+        getProject().getExtensions().getByType(IProblemReporter.class)
                 .reporting(problem -> problem
                                 .id("deprecated-method", "Deprecated method")
                                 .contextualLabel("Run.configure(String)")
@@ -647,7 +647,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                                                 .toList()
                                         ))).map(types -> {
                     if (types.isEmpty()) {
-                        final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+                        final IProblemReporter reporter = project.getExtensions().getByType(IProblemReporter.class);
                         throw reporter.throwing(problem -> problem
                                 .id("run-type-not-found", "Run type not found")
                                 .contextualLabel("The run type '%s' was not found".formatted(name))

@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.extensions.sourcesets;
 
-import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.extensions.sourceset.SourceSetDependencyExtension;
 import net.neoforged.gradle.dsl.common.extensions.sourceset.SourceSetInheritanceExtension;
@@ -30,7 +30,7 @@ public abstract class SourceSetDependencyExtensionImpl implements SourceSetDepen
         final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
         if (sourceSetProject != project) {
-            final NeoGradleProblemReporter reporter = project.getExtensions().getByType(NeoGradleProblemReporter.class);
+            final IProblemReporter reporter = project.getExtensions().getByType(IProblemReporter.class);
             throw reporter.throwing(spec -> spec
                     .id("source-set-dependencies", "wrong-project")
                     .contextualLabel("on(SourceSet)")
