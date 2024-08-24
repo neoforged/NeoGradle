@@ -41,6 +41,39 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         run.task(':neoFormApplyOfficialMappings').outcome == TaskOutcome.SUCCESS
     }
 
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("build/functionalTest")
+    }
+
+    def "a mod with neoform server as dependency can run the apply official mappings task"() {
+        given:
+        def project = create "neoform-has-runnable-patch-task", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.minecraft:neoform_server:${NEOFORM_VERSION}'
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        }
+
+        when:
+        def run = project.run {
+            it.tasks(':neoFormApplyOfficialMappings')
+            it.stacktrace()
+        }
+
+        then:
+        run.task(':neoFormApplyOfficialMappings').outcome == TaskOutcome.SUCCESS
+    }
+
     def "a mod with neoform as dependency can run clean and build in the same execution"() {
         given:
         def project = create "neoform-can-run-clean-build", {

@@ -152,6 +152,10 @@ public abstract class ListLibraries extends DefaultRuntime {
                        .map(entry -> {
                            final String path = String.format("META-INF/libraries/%s", entry.path);
                            final File output = new File(outputDir, path);
+                           final File parent = output.getParentFile();
+                           if (!parent.exists() && !parent.mkdirs()) {
+                               throw new RuntimeException("Failed to create parent directory for " + output);
+                           }
                            try {
                                if (!output.exists() || !HashFunction.SHA1.hash(output).equalsIgnoreCase(entry.hash)) {
                                    Files.copy(bundleFs.getPath(path), output.toPath());
