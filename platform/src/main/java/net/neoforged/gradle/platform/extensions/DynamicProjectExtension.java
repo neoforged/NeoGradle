@@ -386,10 +386,17 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 launcherProfile.getArguments().set(arguments);
             });
 
+            final Configuration installerRuntimeLibrariesConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
+                    project.getConfigurations(),
+                    "InstallerRuntimeLibraries"
+            );
+            installerRuntimeLibrariesConfiguration.extendsFrom(installerConfiguration);
+            installerRuntimeLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
+            
             final ListProperty<URI> repoCollection = new RepositoryCollection(project.getProviders(), project.getObjects(), project.getRepositories()).getURLs();
             final TaskProvider<CreateLauncherJson> createLauncherJson = project.getTasks().register("createLauncherJson", CreateLauncherJson.class, task -> {
                 task.getProfile().set(launcherProfile);
-                task.getLibraries().from(installerConfiguration);
+                task.getLibraries().from(installerRuntimeLibrariesConfiguration);
                 task.getLibraries().from(pluginLayerLibraryConfiguration);
                 task.getLibraries().from(gameLayerLibraryConfiguration);
                 task.getLibraries().from(moduleOnlyConfiguration);
@@ -540,7 +547,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             final TaskProvider<CreateClasspathFiles> createWindowsServerArgsFile = project.getTasks().register("createWindowsServerArgsFile", CreateClasspathFiles.class, task -> {
                 task.getModulePath().from(moduleOnlyConfiguration);
-                task.getClasspath().from(installerConfiguration);
+                task.getClasspath().from(installerRuntimeLibrariesConfiguration);
                 task.getClasspath().from(gameLayerLibraryConfiguration);
                 task.getClasspath().from(pluginLayerLibraryConfiguration);
                 task.getPathSeparator().set(";");
@@ -554,7 +561,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             
             final TaskProvider<CreateClasspathFiles> createUnixServerArgsFile = project.getTasks().register("createUnixServerArgsFile", CreateClasspathFiles.class, task -> {
                 task.getModulePath().from(moduleOnlyConfiguration);
-                task.getClasspath().from(installerConfiguration);
+                task.getClasspath().from(installerRuntimeLibrariesConfiguration);
                 task.getClasspath().from(gameLayerLibraryConfiguration);
                 task.getClasspath().from(pluginLayerLibraryConfiguration);
                 task.getPathSeparator().set(":");
