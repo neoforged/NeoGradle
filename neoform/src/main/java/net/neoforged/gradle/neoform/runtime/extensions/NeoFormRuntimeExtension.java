@@ -34,6 +34,7 @@ import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
@@ -191,18 +192,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
     }
 
     private static String getDecompilerLogLevelArg(DecompilerLogLevel logLevel, String version) {
-        switch (logLevel) {
-            case TRACE:
-                return "trace";
-            case INFO:
-                return "info";
-            case WARN:
-                return "warn";
-            case ERROR:
-                return "error";
-            default:
-                throw new GradleException("LogLevel " + logLevel + " not supported by " + version);
-        }
+        return switch (logLevel) {
+            case TRACE -> "trace";
+            case INFO -> "info";
+            case WARN -> "warn";
+            case ERROR -> "error";
+        };
     }
 
     private TaskProvider<? extends Runtime> createExecute(final NeoFormRuntimeSpecification spec, final NeoFormConfigConfigurationSpecV1.Step step, final NeoFormConfigConfigurationSpecV1.Function function) {
@@ -282,7 +277,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         neoFormConfig.getLibraries(spec.getDistribution().getName()).forEach(library -> minecraftDependenciesConfiguration.getDependencies().add(
                 spec.getProject().getDependencies().create(library)
         ));
-
 
         final Map<String, String> symbolicDataSources = buildDataFilesMap(neoFormConfig, spec.getDistribution());
 
@@ -441,11 +435,24 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 context.getLibrariesTask().flatMap(WithOutput::getOutput)
         );
 
+        if (spec.noCommonElements()) {
+            if (!spec.getDistribution().isClient()) {
+                throw new InvalidUserDataException("Common elements can only be stripped from the client or joined distribution");
+            }
+
+            TaskProvider<? extends WithOutput> distInjectionInput = recompileInput;
+            recompileInput = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "injectDistMarkers"), DistOnlyInjector.class, task -> {
+                task.getInputFile().set(distInjectionInput.flatMap(WithOutput::getOutput));
+                configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task);
+            });
+        }
+
         final FileCollection recompileDependencies = spec.getAdditionalRecompileDependencies().plus(spec.getProject().files(definition.getMinecraftDependenciesConfiguration()));
 
+        TaskProvider<? extends WithOutput> unpackSourcesInput = recompileInput;
         final TaskProvider<UnpackZip> unpackSources = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "unzipSources"), UnpackZip.class, task -> {
             task.getInput().from(
-                    recompileInput.flatMap(WithOutput::getOutput)
+                    unpackSourcesInput.flatMap(WithOutput::getOutput)
                             .map(sourceJar -> task.getArchiveOperations().zipTree(sourceJar).matching(sp -> sp.include("**/*.java")).getAsFileTree())
             );
         });
@@ -476,21 +483,58 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
+        TaskProvider<? extends WithOutput> packTaskInput = recompileInput;
         final TaskProvider<PackJar> packTask = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "packRecomp"), PackJar.class, task -> {
-                    task.getInputFiles().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
+                    task.getInputFiles().from(packTaskInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
                     task.getInputFiles().from(recompileTask.flatMap(AbstractCompile::getDestinationDirectory));
                 });
         packTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
         taskOutputs.put(recompileTask.getName(), packTask);
 
+        //When we are running in split sourceset mode then we need to strip the common elements from the source and raw jars
+        //This is indicated by the noCommonElements flag in the spec, however we can only do this for the client, any other
+        //Configuration is invalid.
+        final TaskProvider<? extends WithOutput> rawSource;
+        final TaskProvider<? extends WithOutput> sourceSource;
+        if (spec.noCommonElements()) {
+            if (!spec.getDistribution().isClient()) {
+                throw new InvalidUserDataException("Common elements can only be stripped from the client or joined distribution");
+            }
+
+            //Reuse existing split tasks, in blacklist mode.
+            rawSource = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "removeCommonRaw"), StripJar.class, task -> {
+                task.getInput().set(packTask.flatMap(WithOutput::getOutput));
+                task.getIsWhitelistMode().set(false);
+                task.getMappingsFiles().setFrom(definition.getGameArtifactProvidingTasks().get(GameArtifact.SERVER_MAPPINGS));
+                task.getFileExtension().set("class");
+                task.convertNamesToPaths();
+
+                configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task);
+            });
+
+            TaskProvider<? extends WithOutput> sourceSourceInput = recompileInput;
+            sourceSource = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "removeCommonSource"), StripJar.class, task -> {
+                task.getInput().set(sourceSourceInput.flatMap(WithOutput::getOutput));
+                task.getIsWhitelistMode().set(false);
+                task.getMappingsFiles().setFrom(definition.getGameArtifactProvidingTasks().get(GameArtifact.SERVER_MAPPINGS));
+                task.getFileExtension().set("java");
+                task.convertNamesToPaths();
+
+                configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task);
+            });
+        } else {
+            rawSource = packTask;
+            sourceSource = recompileInput;
+        }
+
         definition.getSourceJarTask().configure(task -> {
-            task.getInputFiles().from(recompileInput);
+            task.getInputFiles().from(sourceSource.flatMap(WithOutput::getOutput));
             task.dependsOn(remapTask);
         });
         definition.getRawJarTask().configure(task -> {
-            task.getInputFiles().from(packTask.flatMap(WithOutput::getOutput));
+            task.getInputFiles().from(rawSource.flatMap(WithOutput::getOutput));
             task.dependsOn(packTask);
         });
     }

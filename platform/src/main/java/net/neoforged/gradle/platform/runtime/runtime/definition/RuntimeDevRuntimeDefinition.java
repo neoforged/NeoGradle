@@ -21,43 +21,43 @@ import java.util.Map;
  */
 //TODO: Create DSL for runtime
 public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<RuntimeDevRuntimeSpecification> implements IDelegatingRuntimeDefinition<RuntimeDevRuntimeSpecification> {
-    private final NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition;
+    private final NeoFormRuntimeDefinition neoFormRuntimeDefinition;
     private final TaskProvider<? extends WithOutput> patchBase;
 
-    public RuntimeDevRuntimeDefinition(@NotNull RuntimeDevRuntimeSpecification specification, NeoFormRuntimeDefinition joinedNeoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider, TaskProvider<? extends WithOutput> patchBase) {
-        super(specification, joinedNeoFormRuntimeDefinition.getTasks(), sourcesProvider, joinedNeoFormRuntimeDefinition.getRawJarTask(), joinedNeoFormRuntimeDefinition.getGameArtifactProvidingTasks(), joinedNeoFormRuntimeDefinition.getMinecraftDependenciesConfiguration(), joinedNeoFormRuntimeDefinition::configureAssociatedTask, joinedNeoFormRuntimeDefinition.getVersionJson());
-        this.joinedNeoFormRuntimeDefinition = joinedNeoFormRuntimeDefinition;
+    public RuntimeDevRuntimeDefinition(@NotNull RuntimeDevRuntimeSpecification specification, NeoFormRuntimeDefinition neoFormRuntimeDefinition, TaskProvider<? extends ArtifactProvider> sourcesProvider, TaskProvider<? extends WithOutput> patchBase) {
+        super(specification, neoFormRuntimeDefinition.getTasks(), sourcesProvider, neoFormRuntimeDefinition.getRawJarTask(), neoFormRuntimeDefinition.getGameArtifactProvidingTasks(), neoFormRuntimeDefinition.getMinecraftDependenciesConfiguration(), neoFormRuntimeDefinition::configureAssociatedTask, neoFormRuntimeDefinition.getVersionJson());
+        this.neoFormRuntimeDefinition = neoFormRuntimeDefinition;
         this.patchBase = patchBase;
     }
     
-    public NeoFormRuntimeDefinition getJoinedNeoFormRuntimeDefinition() {
-        return joinedNeoFormRuntimeDefinition;
+    public NeoFormRuntimeDefinition getNeoFormRuntimeDefinition() {
+        return neoFormRuntimeDefinition;
     }
 
     @Override
     public @NotNull TaskProvider<DownloadAssets> getAssets() {
-        return joinedNeoFormRuntimeDefinition.getAssets();
+        return neoFormRuntimeDefinition.getAssets();
     }
 
     @Override
     public @NotNull TaskProvider<ExtractNatives> getNatives() {
-        return joinedNeoFormRuntimeDefinition.getNatives();
+        return neoFormRuntimeDefinition.getNatives();
     }
 
     @Override
     public @NotNull Map<String, String> getMappingVersionData() {
-        return joinedNeoFormRuntimeDefinition.getMappingVersionData();
+        return neoFormRuntimeDefinition.getMappingVersionData();
     }
 
     @NotNull
     @Override
     public TaskProvider<? extends WithOutput> getListLibrariesTaskProvider() {
-        return joinedNeoFormRuntimeDefinition.getListLibrariesTaskProvider();
+        return neoFormRuntimeDefinition.getListLibrariesTaskProvider();
     }
 
     @Override
     protected void buildRunInterpolationData(RunImpl run, MapProperty<String, String> interpolationData) {
-        joinedNeoFormRuntimeDefinition.buildRunInterpolationData(run, interpolationData);
+        neoFormRuntimeDefinition.buildRunInterpolationData(run, interpolationData);
     }
 
     public TaskProvider<? extends WithOutput> getPatchBase() {
@@ -66,6 +66,6 @@ public final class RuntimeDevRuntimeDefinition extends CommonRuntimeDefinition<R
 
     @Override
     public Definition<?> getDelegate() {
-        return joinedNeoFormRuntimeDefinition;
+        return neoFormRuntimeDefinition;
     }
 }

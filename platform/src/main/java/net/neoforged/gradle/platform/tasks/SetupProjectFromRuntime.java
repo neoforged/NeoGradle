@@ -19,18 +19,6 @@ public abstract class SetupProjectFromRuntime extends DefaultTask implements Wit
         super();
         
         setGroup("setup");
-        
-        final File defaultSourceTarget = SetupUtils.getSetupSourceTarget(getProject());
-        final File defaultResourceTarget = SetupUtils.getSetupResourcesTarget(getProject());
-        
-        getSourcesDirectory().convention(
-                getProject().getLayout().dir(getProviderFactory().provider(() -> defaultSourceTarget))
-        );
-        
-        getResourcesDirectory().convention(
-                getProject().getLayout().dir(getProviderFactory().provider(() -> defaultResourceTarget))
-        );
-        
         getShouldLockDirectories().convention(true);
     }
     

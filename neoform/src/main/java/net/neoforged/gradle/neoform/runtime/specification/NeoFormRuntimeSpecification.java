@@ -38,6 +38,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
     private final Provider<File> neoFormArchive;
     private final NeoFormConfigConfigurationSpecV2 config;
     private final FileCollection additionalRecompileDependencies;
+    private final boolean noCommonElements;
 
     private NeoFormRuntimeSpecification(Project project,
                                         String version,
@@ -47,11 +48,12 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
                                         Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
                                         Multimap<String, TaskTreeAdapter> postTypeAdapters,
                                         Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
-                                        FileCollection additionalRecompileDependencies) {
+                                        FileCollection additionalRecompileDependencies, boolean noCommonElements) {
         super(project, "neoForm", version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, NeoFormRuntimeExtension.class);
         this.neoFormArchive = neoFormArchive;
         this.config = config;
         this.additionalRecompileDependencies = additionalRecompileDependencies;
+        this.noCommonElements = noCommonElements;
     }
 
     public NeoFormConfigConfigurationSpecV2 getConfig() {
@@ -80,6 +82,10 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
         return additionalRecompileDependencies;
     }
 
+    public boolean noCommonElements() {
+        return noCommonElements;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -104,6 +110,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
 
         private Dependency neoFormDependency;
         private FileCollection additionalDependencies;
+        private boolean noCommonElements = false;
 
         private Builder(Project project) {
             super(project);
@@ -140,6 +147,13 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
             return getThis();
         }
 
+        @NotNull
+        @Override
+        public Builder removeCommonElements() {
+            this.noCommonElements = true;
+            return getThis();
+        }
+
         public @NotNull NeoFormRuntimeSpecification build() {
             ResolvedArtifact artifact = ToolUtilities.resolveToolArtifact(project, neoFormDependency);
             File archive = artifact.getFile();
@@ -151,6 +165,10 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
                 config = FileUtils.processFileFromZip(archive, "config.json", NeoFormConfigConfigurationSpecV2::get);
             } catch (IOException e) {
                 throw new GradleException("Failed to read NeoForm config file from version " + effectiveVersion);
+            }
+
+            if (noCommonElements && !distributionType.get().isClient()) {
+                throw new GradleException("Cannot remove common elements from a none client distribution");
             }
 
             return new NeoFormRuntimeSpecification(
@@ -167,8 +185,8 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
                     preTaskAdapters,
                     postTaskAdapters,
                     taskCustomizers,
-                    additionalDependencies
-            );
+                    additionalDependencies,
+                    noCommonElements);
         }
     }
 

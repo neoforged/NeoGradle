@@ -1,5 +1,6 @@
 package net.neoforged.gradle.neoform.runtime.tasks;
 
+import groovy.cli.Option;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
@@ -27,22 +28,36 @@ public abstract class StripJar extends DefaultRuntime {
     public StripJar() {
         super();
 
+        getFileExtension().convention("class");
         getMappingsFiles().from(getRuntimeData().map(data -> data.get("mappings")));
         getIsWhitelistMode().convention(true);
         getFilters().convention(
-                getProject().provider(() -> {
-                    if (getMappingsFiles().isEmpty()) {
-                        return null;
-                    }
+                getSeparatorReplacements().flatMap(replacements ->
+                        getFileExtension().map(extension -> {
+                            if (getMappingsFiles().isEmpty()) {
+                                return null;
+                            }
 
-                    return getMappingsFiles().getFiles()
-                            .stream()
-                            .flatMap(file -> FileUtils.readAllLines(file.toPath()))
-                            .filter(l -> !l.startsWith("\t"))
-                            .map(s -> s.split(" ")[0] + ".class")
-                            .distinct()
-                            .collect(Collectors.toList());
-                })
+                            return getMappingsFiles().getFiles()
+                                    .stream()
+                                    .flatMap(file -> FileUtils.readAllLines(file.toPath()))
+                                    .filter(l -> !l.startsWith("\t")) //Filter all field and method mappings
+                                    .filter(l -> !l.startsWith("#")) //Filter out comments
+                                    .map(s -> s.split(" ")[0])
+                                    .map(s -> {
+                                        if (replacements.isEmpty())
+                                            return s;
+
+                                        for (SeparatorReplacement replacement : replacements) {
+                                            s = s.replace(replacement.source(), replacement.replacement());
+                                        }
+
+                                        return s;
+                                    })
+                                    .map(s -> s + "." + extension)
+                                    .distinct()
+                                    .collect(Collectors.toList());
+                        }))
         );
 
         getIsWhitelistMode().finalizeValueOnRead();
@@ -111,5 +126,32 @@ public abstract class StripJar extends DefaultRuntime {
     public abstract ListProperty<String> getFilters();
 
     @Input
+    @Optional
+    public abstract Property<String> getFileExtension();
+
+    @Input
     public abstract Property<Boolean> getIsWhitelistMode();
+
+    @Nested
+    @Optional
+    public abstract ListProperty<SeparatorReplacement> getSeparatorReplacements();
+
+    public void convertNamesToPaths() {
+        getSeparatorReplacements().add(SeparatorReplacement.NAME_TO_PATH);
+    }
+
+    public record SeparatorReplacement(String source, String replacement) {
+
+        public static final SeparatorReplacement NAME_TO_PATH = new SeparatorReplacement(".", "/");
+
+        @Override
+        public String source() {
+            return source;
+        }
+
+        @Override
+        public String replacement() {
+            return replacement;
+        }
+    }
 }

@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.neoform.runtime.specification
 
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification
+import net.neoforged.gradle.dsl.common.util.DistributionType
 import org.gradle.api.file.FileCollection
 import org.jetbrains.annotations.NotNull;
 
@@ -62,5 +63,15 @@ interface NeoFormSpecification extends Specification {
          */
         @NotNull
         B withAdditionalDependencies(@NotNull final FileCollection files);
+
+        /**
+         * Removes all common elements from the output of this runtime.
+         * This means that code shared between the client and server distribution types will be removed.
+         *
+         * @return The builder.
+         * @implNote If this is activated yet {@link DistributionType#CLIENT} is not used as the distribution type, then an exception will be thrown on spec construction.
+         */
+        @NotNull
+        B removeCommonElements()
     }
 }
