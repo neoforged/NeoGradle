@@ -158,8 +158,7 @@ public abstract class IdeManagementExtension {
                     final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
                     final IDE ideConventions = conventions.getIde();
                     final IDEA ideaConventions = ideConventions.getIdea();
-                    if (!ideaConventions.getShouldUsePostSyncTask().get() &&
-                            ideaConventions.getIsEnabled().get())
+                    if (!ideaConventions.getShouldUsePostSyncTask().get())
                         return;
 
                     //Register the task to run after the IDEA import is complete, via its custom extension.

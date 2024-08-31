@@ -282,9 +282,20 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     public final void configure() {
         potentiallyAddRunTypeByName();
+        potentiallyAddRunTemplateFromType();
         configureRunSpecification();
         configureFromSDKs();
         configureFromRuns();
+    }
+
+    private void potentiallyAddRunTemplateFromType() {
+        List<RunType> runTypes = specifications.map(l -> l.stream().filter(RunType.class::isInstance).map(RunType.class::cast).toList()).get();
+
+        specifications.addAll(
+                runTypes.stream()
+                        .map(RunType::getRunTemplate)
+                        .filter(Objects::nonNull)
+                        .toList());
     }
 
     private void configureFromRuns() {

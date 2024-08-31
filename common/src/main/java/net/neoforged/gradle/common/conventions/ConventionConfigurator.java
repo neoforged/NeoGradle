@@ -26,9 +26,6 @@ public class ConventionConfigurator {
 
     public static void configureConventions(Project project) {
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
-        if (!conventions.getIsEnabled().get())
-            return;
-
         configureRunConventions(project, conventions);
         configureSourceSetConventions(project, conventions);
         configureIDEConventions(project, conventions);
@@ -74,24 +71,15 @@ public class ConventionConfigurator {
 
     private static void configureIDEConventions(Project project, Conventions conventions) {
         final IDE ideConventions = conventions.getIde();
-        if (!ideConventions.getIsEnabled().get())
-            return;
-
         configureIDEAIDEConventions(project, ideConventions);
     }
 
     private static void configureIDEAIDEConventions(Project project, IDE ideConventions) {
         final IDEA ideaConventions = ideConventions.getIdea();
-        if (!ideaConventions.getIsEnabled().get())
-            return;
-
         //We need to configure the tasks to run during sync.
         final IdeManagementExtension ideManagementExtension = project.getExtensions().getByType(IdeManagementExtension.class);
         ideManagementExtension
                 .onIdea((innerProject, rootProject, idea, ideaExtension) -> {
-                    if (!ideaConventions.getIsEnabled().get())
-                        return;
-
                     if (ideaConventions.getShouldUsePostSyncTask().get())
                         return;
 
