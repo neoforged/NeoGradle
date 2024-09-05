@@ -4,9 +4,15 @@ import com.google.gson.*
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.NamedDSLElement
+import net.minecraftforge.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runs.RunSpecification
+import net.neoforged.gradle.dsl.common.runs.run.Run
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
+import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.lang.reflect.Type
@@ -23,6 +29,8 @@ import static net.neoforged.gradle.dsl.common.util.PropertyUtils.*
 abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLElement, Named, RunSpecification {
 
     private final String name
+
+    private Run runTemplate;
 
     @Inject
     RunType(String name) {
@@ -43,6 +51,35 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
     @Override
     String getName() {
         return name
+    }
+
+    /**
+     * A run template provides an ability for common projects that define their own run to define a template
+     *
+     * @return The run template
+     */
+    @Internal
+    @DSLProperty
+    Run getRunTemplate() {
+        return runTemplate
+    }
+
+    void setRunTemplate(Run runTemplate) {
+        this.runTemplate = runTemplate
+
+        if (this.runTemplate != null) {
+            runTemplate.getConfigureAutomatically().set(false)
+            runTemplate.getConfigureFromDependencies().set(false)
+            runTemplate.getConfigureFromTypeWithName().set(false)
+
+            runTemplate.configure(this);
+
+            runTemplate.isClient.set(isClient)
+            runTemplate.isServer.set(isServer)
+            runTemplate.isDataGenerator.set(isDataGenerator)
+            runTemplate.isGameTest.set(isGameTest)
+            runTemplate.isJUnit.set(isJUnit)
+        }
     }
 
     /**

@@ -39,6 +39,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     private final Project project;
     private final String name;
+    private final ListProperty<RunSpecification> rawSpecifications;
     private final ListProperty<RunSpecification> specifications;
     private final RunSourceSets modSources;
     private final RunSourceSets unitTestSources;
@@ -68,7 +69,10 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         this.environmentVariables = this.project.getObjects().mapProperty(String.class, String.class);
         this.programArguments = this.project.getObjects().listProperty(String.class);
         this.systemProperties = this.project.getObjects().mapProperty(String.class, String.class);
+
+        this.rawSpecifications = this.project.getObjects().listProperty(RunSpecification.class);
         this.specifications = this.project.getObjects().listProperty(RunSpecification.class);
+        this.specifications.addAll(rawSpecifications);
 
         getIsSingleInstance().convention(true);
         getIsClient().convention(false);
@@ -265,13 +269,13 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     public void runType(@NotNull String name) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        specifications.addAll(getRunTypesByName(name));
+        rawSpecifications.addAll(getRunTypesByName(name));
     }
 
     @Override
     public void run(@NotNull String name) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        specifications.addAll(getRunByName(name));
+        rawSpecifications.addAll(getRunByName(name));
     }
 
     @Override
@@ -282,9 +286,19 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
     @Override
     public final void configure() {
         potentiallyAddRunTypeByName();
+        potentiallyAddRunTemplateFromType();
         configureRunSpecification();
         configureFromSDKs();
         configureFromRuns();
+    }
+
+    private void potentiallyAddRunTemplateFromType() {
+        specifications.addAll(
+                rawSpecifications.map(l -> l.stream().filter(RunType.class::isInstance).map(RunType.class::cast)
+                                .map(RunType::getRunTemplate)
+                                .filter(Objects::nonNull)
+                                .toList())
+        );
     }
 
     private void configureFromRuns() {
@@ -497,7 +511,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
     private void potentiallyAddRunTypeByName() {
         if (getConfigureFromTypeWithName().get()) {
-            specifications.addAll(getRunTypesByName(name));
+            rawSpecifications.addAll(getRunTypesByName(name));
         }
     }
 
@@ -581,19 +595,19 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                 );
 
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        specifications.addAll(getRunTypesByName(name));
+        rawSpecifications.addAll(getRunTypesByName(name));
     }
 
     @Override
     public final void configure(final @NotNull RunSpecification runType) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        this.specifications.add(project.provider(() -> runType));
+        this.rawSpecifications.add(project.provider(() -> runType));
     }
 
     @Override
     public void configure(@NotNull Provider<? extends RunSpecification> typeProvider) {
         getConfigureFromTypeWithName().set(false); // Don't re-configure
-        this.specifications.add(typeProvider);
+        this.rawSpecifications.add(typeProvider);
     }
 
     @NotNull

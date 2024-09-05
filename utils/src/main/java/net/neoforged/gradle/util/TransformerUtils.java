@@ -308,7 +308,7 @@ public final class TransformerUtils {
         Provider<? extends List<V>> zippedArray = whenTrue[0].zip(predicate, (v, p) -> p ? List.of(v) : List.of());
         for (int i = 1; i < whenTrue.length; i++) {
             zippedArray = zippedArray.zip(
-                    whenTrue[1].zip(predicate, (v, p) -> p ? List.of(v) : List.of()),
+                    whenTrue[i].zip(predicate, (v, p) -> p ? List.of(v) : List.of()),
                     (BiFunction<List<V>, List<V>, List<V>>) (vs, objects) -> {
                         final ArrayList<V> ret = new ArrayList<>(vs);
                         ret.addAll(objects);
