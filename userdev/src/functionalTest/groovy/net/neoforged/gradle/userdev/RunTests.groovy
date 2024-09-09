@@ -613,8 +613,8 @@ class RunTests extends BuilderBasedTestSpecification {
         def secondSection = lines[indexes[1]..indexes[2] - 2]
         def thirdSection = lines[indexes[2]..indexes[3] - 2]
 
-        firstSection.find { it.contains("Working Directory:") }.toString().split(":")[1].trim().endsWith("runs_have_configurable_working_directories_with_default/runs/aClient")
-        secondSection.find { it.contains("Working Directory:") }.toString().split(":")[1].trim().endsWith("runs_have_configurable_working_directories_with_default/runs/bClient")
-        thirdSection.find { it.contains("Working Directory:") }.toString().split(":")[1].trim().endsWith("runs_have_configurable_working_directories_with_default/clientThree")
+        firstSection.find { it.contains("Working Directory:") }.toString().split(":")[1].trim().endsWith("runs_have_configurable_working_directories_with_default/runs/aClient".replace("/", File.separator))
+        secondSection.find { it.contains("Working Directory:") }.toString().split(":")[1].trim().endsWith("runs_have_configurable_working_directories_with_default/runs/bClient".replace("/", File.separator))
+        thirdSection.find { it.contains("Working Directory:") }.toString().split(":")[1].trim().endsWith("runs_have_configurable_working_directories_with_default/clientThree".replace("/", File.separator))
     }
 }
