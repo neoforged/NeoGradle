@@ -100,6 +100,12 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
         other.getEnvironmentVariables().set(getEnvironmentVariables())
         other.getSystemProperties().set(getSystemProperties())
         other.getClasspath().from(getClasspath())
+
+        if (runTemplate != null && other.getRunTemplate() != null) {
+            other.getRunTemplate().configure(runTemplate)
+        } else if (runTemplate == null) {
+            other.setRunTemplate(null)
+        }
     }
 
     /**
