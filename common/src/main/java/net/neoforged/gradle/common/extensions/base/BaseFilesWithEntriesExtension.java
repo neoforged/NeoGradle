@@ -9,7 +9,7 @@ import java.util.Collections;
 /**
  * Represents part of an extension which combines a set of files with entries as well as raw addable entries.
  */
-public abstract class BaseFilesWithEntriesExtension<TSelf extends BaseDSLElementWithFilesAndEntries<TSelf>> implements BaseDSLElementWithFilesAndEntries<TSelf> {
+public abstract class BaseFilesWithEntriesExtension<TSelf extends BaseDSLElementWithFilesAndEntries<TSelf, TEntry>, TEntry> implements BaseDSLElementWithFilesAndEntries<TSelf, TEntry> {
 
     private final Project project;
 

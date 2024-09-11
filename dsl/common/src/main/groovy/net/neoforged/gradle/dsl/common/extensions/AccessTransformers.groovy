@@ -12,7 +12,7 @@ import org.gradle.api.artifacts.dsl.DependencyCollector
  * Defines a DSL extension which allows for the specification of access transformers.
  */
 @CompileStatic
-interface AccessTransformers extends BaseDSLElementWithFilesAndEntries<AccessTransformers>, Dependencies {
+interface AccessTransformers extends BaseDSLElementWithFilesAndEntries<AccessTransformers, String>, Dependencies {
     /**
      * {@return access transformers to add as dependencies}
      */

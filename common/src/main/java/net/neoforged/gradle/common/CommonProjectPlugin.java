@@ -9,6 +9,7 @@ import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.sourcesets.SourceSetDependencyExtensionImpl;
 import net.neoforged.gradle.common.extensions.sourcesets.SourceSetInheritanceExtensionImpl;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
+import net.neoforged.gradle.common.interfaceinjection.InterfaceInjectionPublishing;
 import net.neoforged.gradle.common.rules.LaterAddedReplacedDependencyRule;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunManagerImpl;
@@ -84,6 +85,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
         project.getExtensions().create(NeoGradleProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, NeoGradleProblemReporter.class, problems.forNamespace(PROBLEM_NAMESPACE));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
+        project.getExtensions().create(InterfaceInjections.class, "interfaceInjections", InterfaceInjectionsExtension.class, project);
 
         project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
         project.getExtensions().create(Mappings.class,"mappings", MappingsExtension.class, project);
@@ -130,6 +132,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         //Set up publishing for access transformer elements
         AccessTransformerPublishing.setup(project);
+
+        //Set up publishing for interface injection elements
+        InterfaceInjectionPublishing.setup(project);
 
         //Set up the IDE run integration manager
         IdeRunIntegrationManager.getInstance().setup(project);

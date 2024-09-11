@@ -13,7 +13,7 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 
 import javax.inject.Inject;
 
-public abstract class AccessTransformersExtension extends BaseFilesWithEntriesExtension<AccessTransformers> implements AccessTransformers {
+public abstract class AccessTransformersExtension extends BaseFilesWithEntriesExtension<AccessTransformers, String> implements AccessTransformers {
     private transient final DependencyHandler projectDependencies;
     private transient final ArtifactHandler projectArtifacts;
 
