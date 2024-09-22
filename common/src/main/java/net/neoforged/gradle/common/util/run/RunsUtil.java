@@ -50,9 +50,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,8 +61,8 @@ public class RunsUtil {
         throw new IllegalStateException("Tried to create utility class!");
     }
 
-    public static String createTaskName(final String prefix, final Run run) {
-        return createTaskName(prefix, run.getName());
+    public static String createNameFor(final String prefix, final Run run) {
+        return createNameFor(prefix, run.getName());
     }
 
     public static void configure(Project project, Run run, boolean isInternal) {
@@ -91,7 +89,7 @@ public class RunsUtil {
     public static void createTasks(Project project, Run run) {
         if (!run.getIsJUnit().get()) {
             //Create run exec tasks for all non-unit test runs
-            project.getTasks().register(createTaskName(run.getName()), JavaExec.class, runExec -> {
+            project.getTasks().register(createNameFor(run.getName()), JavaExec.class, runExec -> {
                 runExec.setDescription("Runs the " + run.getName() + " run.");
                 runExec.setGroup("NeoGradle/Runs");
 
@@ -220,7 +218,7 @@ public class RunsUtil {
                 throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
 
             final RenderDocTools renderDocTools = project.getExtensions().getByType(Subsystems.class).getTools().getRenderDoc();
-            final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createTaskName("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
+            final TaskProvider<RenderDocDownloaderTask> setupRenderDoc = project.getTasks().register(RunsUtil.createNameFor("setupRenderDoc", run), RenderDocDownloaderTask.class, renderDoc -> {
                 renderDoc.getRenderDocVersion().set(renderDocTools.getRenderDocVersion());
                 renderDoc.getRenderDocOutputDirectory().set(renderDocTools.getRenderDocPath().dir("download"));
                 renderDoc.getRenderDocInstallationDirectory().set(renderDocTools.getRenderDocPath().dir("installation"));
@@ -347,7 +345,7 @@ public class RunsUtil {
 
     private static void createNewTestTask(Project project, String name, Run run) {
         //Create a test task for unit tests
-        TaskProvider<Test> newTestTask = project.getTasks().register(createTaskName("test", name), Test.class);
+        TaskProvider<Test> newTestTask = project.getTasks().register(createNameFor("test", name), Test.class);
         configureTestTask(project, newTestTask, run);
         project.getTasks().named("check", check -> check.dependsOn(newTestTask));
     }
@@ -663,11 +661,11 @@ public class RunsUtil {
                 .collect(Collectors.joining(File.pathSeparator)));
     }
 
-    private static String createTaskName(final String runName) {
-        return createTaskName("run", runName);
+    private static String createNameFor(final String runName) {
+        return createNameFor("run", runName);
     }
 
-    private static String createTaskName(final String prefix, final String runName) {
+    private static String createNameFor(final String prefix, final String runName) {
         final String conventionTaskName = runName.replaceAll("[^a-zA-Z0-9\\-_]", "");
         if (conventionTaskName.startsWith("run")) {
             return conventionTaskName;
