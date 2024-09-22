@@ -8,7 +8,6 @@ import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
-import net.neoforged.gradle.dsl.common.runs.run.DependencyHandler;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
@@ -127,14 +126,26 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         }
 
         final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer = getSpecification().getProject().getTasks().register(
-                RunsUtil.createTaskName("writeMinecraftClasspath", run),
+                RunsUtil.createNameFor("writeMinecraftClasspath", run),
                 ClasspathSerializer.class,
                 task -> {
-                    this.additionalUserDevDependencies.getExtendsFrom().forEach(task.getInputFiles()::from);
-                    task.getInputFiles().from(this.additionalUserDevDependencies);
-                    task.getInputFiles().from(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
+                    final Configuration lcpConfiguration = ConfigurationUtils.temporaryConfiguration(getSpecification().getProject(),
+                            RunsUtil.createNameFor("lcp", run));
+
+                    lcpConfiguration.extendsFrom(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
+                    lcpConfiguration.extendsFrom(this.additionalUserDevDependencies);
+                    lcpConfiguration.extendsFrom(run.getDependencies().getRuntimeConfiguration());
+
+                    //We depend on the configuration, this ensures that if we have dependencies with different versions in the
+                    //dependency tree they are resolved to one version and are not added with different versions to the ConfigurableFileCollection
+                    //on the input files.
+                    //Additionally, we need to directly depend on the output file of the userdevClasspathElementProducer, we can not convert
+                    //this to a dependency because it would be a transform of a configurable file collection that holds the output of the task
+                    //which requires running that task, which would be a cyclic dependency.
+                    //This is a workaround to ensure that the path to the userdev classpath element is resolved correctly.
+                    //And added to the LCP, as we are now not transforming the CFC created from the output (we are not even creating a CFC)
+                    task.getInputFiles().from(lcpConfiguration);
                     task.getInputFiles().from(this.userdevClasspathElementProducer.flatMap(WithOutput::getOutput));
-                    task.getInputFiles().from(run.getDependencies().getRuntimeConfiguration());
                 }
         );
         configureAssociatedTask(minecraftClasspathSerializer);
