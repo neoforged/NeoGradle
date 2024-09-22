@@ -552,4 +552,71 @@ class RunTests extends BuilderBasedTestSpecification {
         secondSection == thirdSection
         thirdSection == firstSection
     }
+
+    def "runs use a working directory named after them by default"() {
+        given:
+        def project = create("runs_have_configurable_working_directories_with_default", {
+            it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            
+            runs {
+                aClient {
+                    runType 'client'
+                }
+            
+                bClient {
+                    runType 'client'
+                }
+                
+                cClient {
+                    runType 'client'
+                    
+                    workingDirectory project.file("clientThree")                
+                }
+            }
+            
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':runs')
+            it.stacktrace()
+        }
+
+        then:
+        def lines = run.getOutput().split("\n");
+        def firstRunIndex = lines.findIndexOf { line -> line.startsWith("Run: aClient")}
+        def secondRunIndex = lines.findIndexOf { line -> line.startsWith("Run: bClient")}
+        def thirdRunIndex = lines.findIndexOf { line -> line.startsWith("Run: cClient")}
+        def endIndex = lines.findIndexOf { line -> line.startsWith("BUILD SUCCESSFUL")}
+
+        def indexes = [firstRunIndex + 1, secondRunIndex + 1, thirdRunIndex + 1, endIndex]
+        indexes.sort()
+
+        def firstSection = lines[indexes[0]..indexes[1] - 2]
+        def secondSection = lines[indexes[1]..indexes[2] - 2]
+        def thirdSection = lines[indexes[2]..indexes[3] - 2]
+
+        def prefix = "Working Directory:"
+
+        firstSection.find { it.contains(prefix) }.toString().replace(prefix, "").trim().endsWith("runs_have_configurable_working_directories_with_default/runs/aClient".replace("/", File.separator))
+        secondSection.find { it.contains(prefix) }.toString().replace(prefix, "").trim().endsWith("runs_have_configurable_working_directories_with_default/runs/bClient".replace("/", File.separator))
+        thirdSection.find { it.contains(prefix) }.toString().replace(prefix, "").trim().endsWith("runs_have_configurable_working_directories_with_default/clientThree".replace("/", File.separator))
+    }
 }
