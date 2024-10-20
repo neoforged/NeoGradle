@@ -1,8 +1,6 @@
 package net.neoforged.gradle.common.extensions;
 
-import net.neoforged.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
 import net.neoforged.gradle.common.interfaceinjection.InterfaceInjectionPublishing;
-import net.neoforged.gradle.dsl.common.extensions.InjectedInterfaceData;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -12,17 +10,17 @@ import org.gradle.api.artifacts.dsl.ArtifactHandler;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 
 import javax.inject.Inject;
-import java.util.Collection;
-import java.util.List;
 
-public abstract class InterfaceInjectionsExtension extends BaseFilesWithEntriesExtension<InterfaceInjections, InjectedInterfaceData> implements InterfaceInjections {
+public abstract class InterfaceInjectionsExtension implements InterfaceInjections {
     private transient final DependencyHandler projectDependencies;
     private transient final ArtifactHandler projectArtifacts;
+
+    private final Project project;
 
     @SuppressWarnings("UnstableApiUsage")
     @Inject
     public InterfaceInjectionsExtension(Project project) {
-        super(project);
+        this.project = project;
 
         this.projectDependencies = project.getDependencies();
         this.projectArtifacts = project.getArtifacts();
@@ -35,8 +33,13 @@ public abstract class InterfaceInjectionsExtension extends BaseFilesWithEntriesE
     }
 
     @Override
+    public Project getProject() {
+        return project;
+    }
+
+    @Override
     public void expose(Object path, Action<ConfigurablePublishArtifact> action) {
-        file(path);
+        getFiles().from(path);
         projectArtifacts.add(InterfaceInjectionPublishing.INTERFACE_INJECTION_ELEMENTS_CONFIGURATION, path, action);
     }
 
@@ -49,25 +52,5 @@ public abstract class InterfaceInjectionsExtension extends BaseFilesWithEntriesE
     @Override
     public void expose(Dependency dependency) {
         projectDependencies.add(InterfaceInjectionPublishing.INTERFACE_INJECTION_API_CONFIGURATION, dependency);
-    }
-
-    @Override
-    public void inject(String type, String interfaceName) {
-        inject(type, List.of(interfaceName));
-    }
-
-    @Override
-    public void inject(String type, String... interfaceNames) {
-        inject(type, List.of(interfaceNames));
-    }
-
-    @Override
-    public void inject(String type, Collection<String> interfaceNames) {
-        final InjectedInterfaceData data = getProject().getObjects().newInstance(InjectedInterfaceData.class);
-
-        data.getTarget().set(type);
-        data.getInterfaces().addAll(interfaceNames);
-
-        entry(data);
     }
 }

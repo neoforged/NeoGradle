@@ -13,24 +13,30 @@ import java.io.File;
 import java.util.List;
 
 @CacheableTask
-public abstract class SourceAccessTransformer extends DefaultExecute {
+public abstract class SourceInterfaceInjection extends DefaultExecute {
 
-    public SourceAccessTransformer() {
+    public SourceInterfaceInjection()  {
         super();
 
-        setDescription("Runs the access transformer on the decompiled sources.");
+        setDescription("Runs the interface injection on the decompiled sources.");
+
+        getStubs().convention(getOutputDirectory().map(dir -> dir.file("stubs.jar")));
 
         getExecutingJar().set(ToolUtilities.resolveTool(getProject(), getProject().getExtensions().getByType(Subsystems.class).getTools().getJST().get()));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();
                             final File outputFile = ensureFileWorkspaceReady(getOutput());
+                            final File stubsFile = ensureFileWorkspaceReady(getStubs());
 
-                            args.add("--enable-accesstransformers");
+                            args.add("--enable-interface-injection");
                             getTransformers().forEach(f -> {
-                                args.add("--access-transformer");
+                                args.add("--interface-injection-data");
                                 args.add(f.getAbsolutePath());
                             });
+
+                            args.add("--interface-injection-stubs");
+                            args.add(stubsFile.getAbsolutePath());
 
                             args.add("--libraries-list=" + getLibraries().get().getAsFile().getAbsolutePath());
 
@@ -83,4 +89,7 @@ public abstract class SourceAccessTransformer extends DefaultExecute {
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getTransformers();
+
+    @OutputFile
+    public abstract RegularFileProperty getStubs();
 }

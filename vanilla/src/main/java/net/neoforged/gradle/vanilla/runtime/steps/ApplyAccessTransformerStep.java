@@ -3,7 +3,6 @@ package net.neoforged.gradle.vanilla.runtime.steps;
 import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
-import net.neoforged.gradle.common.runtime.tasks.NoopRuntime;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
@@ -25,20 +24,11 @@ public class ApplyAccessTransformerStep implements IStep {
         final Minecraft minecraftExtension = definition.getSpecification().getProject().getExtensions().getByType(Minecraft.class);
         final AccessTransformers accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
-        if (accessTransformerFiles.getFiles().isEmpty() && (!accessTransformerFiles.getEntries().isPresent() || accessTransformerFiles.getEntries().get().isEmpty())) {
-            return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize("user"))), NoopRuntime.class, task -> {
-                task.getInput().set(inputProvidingTask.flatMap(WithOutput::getOutput));
-                task.dependsOn(inputProvidingTask);
-            });
-        }
-
         final TaskProvider<? extends BinaryAccessTransformer> task = CommonRuntimeTaskUtils.createBinaryAccessTransformer(
                 definition,
                 "user",
                 workingDirectory,
-                additionalTaskConfigurator,
-                accessTransformerFiles.getFiles().getAsFileTree(),
-                accessTransformerFiles.getEntries().get()
+                accessTransformerFiles.getFiles().getAsFileTree()
         );
 
         task.configure(t -> {

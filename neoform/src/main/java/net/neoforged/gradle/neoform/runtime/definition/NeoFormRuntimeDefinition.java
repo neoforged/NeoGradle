@@ -47,7 +47,7 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
         this.assetsTaskProvider = assetsTaskProvider;
         this.nativesTaskProvider = nativesTaskProvider;
 
-        this.getAllDependencies().from(getSpecification().getAdditionalRecompileDependencies());
+        this.additionalRecompileDependencies(specification.getAdditionalRecompileDependencies());
     }
 
     @Override

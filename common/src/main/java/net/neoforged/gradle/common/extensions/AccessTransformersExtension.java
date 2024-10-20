@@ -1,8 +1,6 @@
 package net.neoforged.gradle.common.extensions;
 
-import net.neoforged.gradle.common.CommonProjectPlugin;
 import net.neoforged.gradle.common.accesstransformers.AccessTransformerPublishing;
-import net.neoforged.gradle.common.extensions.base.BaseFilesWithEntriesExtension;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -13,14 +11,16 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 
 import javax.inject.Inject;
 
-public abstract class AccessTransformersExtension extends BaseFilesWithEntriesExtension<AccessTransformers, String> implements AccessTransformers {
+public abstract class AccessTransformersExtension implements AccessTransformers {
     private transient final DependencyHandler projectDependencies;
     private transient final ArtifactHandler projectArtifacts;
+
+    private final Project project;
 
     @SuppressWarnings("UnstableApiUsage")
     @Inject
     public AccessTransformersExtension(Project project) {
-        super(project);
+        this.project = project;
 
         this.projectDependencies = project.getDependencies();
         this.projectArtifacts = project.getArtifacts();
@@ -33,8 +33,13 @@ public abstract class AccessTransformersExtension extends BaseFilesWithEntriesEx
     }
 
     @Override
+    public Project getProject() {
+        return project;
+    }
+
+    @Override
     public void expose(Object path, Action<ConfigurablePublishArtifact> action) {
-        file(path);
+        getFiles().from(path);
         projectArtifacts.add(AccessTransformerPublishing.ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION, path, action);
     }
 

@@ -12,7 +12,6 @@ import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.runtime.tasks.AccessTransformerFileGenerator;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.tasks.JarJar;
@@ -726,10 +725,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
 
-            final TaskProvider<AccessTransformerFileGenerator> generateAts = project.getTasks().register("generateAccessTransformers", AccessTransformerFileGenerator.class, task -> {
-                CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
-            });
-
             final TaskProvider<PackJar> packPatches = project.getTasks().register("packPatches", PackJar.class, task -> {
                 task.getInputFiles().from(project.fileTree(patches).matching(filterable -> {
                     filterable.include("**/*.patch");
@@ -784,9 +779,6 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 final FileTree bakedPatches = project.zipTree(bakePatches.get().getOutput().get().getAsFile());
                 task.from(createUserdevJson.flatMap(WithOutput::getOutput), spec -> {
                     spec.rename(name -> "config.json");
-                });
-                task.from(generateAts.flatMap(WithOutput::getOutput), spec -> {
-                    spec.into("ats/");
                 });
                 task.from(accessTransformers.getFiles(), spec -> {
                     spec.into("ats/");

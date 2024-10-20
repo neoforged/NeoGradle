@@ -2,17 +2,27 @@ package net.neoforged.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElementWithFilesAndEntries
+import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ConfigurablePublishArtifact
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.dsl.Dependencies
 import org.gradle.api.artifacts.dsl.DependencyCollector
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.InputFiles
 
 /**
  * Defines a DSL extension which allows for the specification of access transformers.
  */
 @CompileStatic
-interface AccessTransformers extends BaseDSLElementWithFilesAndEntries<AccessTransformers, String>, Dependencies {
+interface AccessTransformers extends Dependencies {
+
+    /**
+     * {@return access transformer files}
+     */
+    @DSLProperty
+    ConfigurableFileCollection getFiles();
+
     /**
      * {@return access transformers to add as dependencies}
      */

@@ -22,6 +22,7 @@ import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigura
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
+import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
@@ -41,7 +42,9 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.problems.Problems;
 import org.gradle.api.tasks.Delete;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.jvm.tasks.Jar;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;

@@ -2,17 +2,26 @@ package net.neoforged.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.BaseDSLElementWithFilesAndEntries
+import net.minecraftforge.gdi.annotations.DSLProperty
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ConfigurablePublishArtifact
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.dsl.Dependencies
 import org.gradle.api.artifacts.dsl.DependencyCollector
+import org.gradle.api.file.ConfigurableFileCollection
 
 /**
  * Defines a DSL extension which allows for the specification of interface injections.
  */
 @CompileStatic
-interface InterfaceInjections extends BaseDSLElementWithFilesAndEntries<InterfaceInjections, InjectedInterfaceData>, Dependencies {
+interface InterfaceInjections extends Dependencies {
+
+    /**
+     * {@return interface injection files}
+     */
+    @DSLProperty
+    ConfigurableFileCollection getFiles()
+
     /**
      * {@return interface injections to add as dependencies}
      */
@@ -43,28 +52,4 @@ interface InterfaceInjections extends BaseDSLElementWithFilesAndEntries<Interfac
      * @param action configures the published artifact
      */
     void expose(Object path, Action<ConfigurablePublishArtifact> action)
-
-    /**
-     * Injects the given interface into the target class.
-     *
-     * @param type The binary representation of the target class to inject the interfaces into.
-     * @param interfaceName The binary representation of the interface to inject.
-     */
-    void inject(String type, String interfaceName)
-
-    /**
-     * Injects the given interfaces into the target class.
-     *
-     * @param type The binary representation of the target class to inject the interfaces into.
-     * @param interfaceNames The binary representation of the interfaces to inject.
-     */
-    void inject(String type, String... interfaceNames)
-
-    /**
-     * Injects the given interfaces into the target class.
-     *
-     * @param type The binary representation of the target class to inject the interfaces into.
-     * @param interfaceNames The binary representation of the interfaces to inject.
-     */
-    void inject(String type, Collection<String> interfaceNames)
 }

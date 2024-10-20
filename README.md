@@ -28,6 +28,25 @@ dependencies {
 }
 ```
 
+#### <a id="userdev-access-transformer" /> Access Transformers
+The userdev plugin provides a way to configure access transformers for your mod.
+There are two ways to configure access transformers, either by using the DSL or by using a file.
+
+##### DSL
+By using the `entry` method on the `accessTransformers` object, you can add an access transformer entry to your mod.
+The system will write and generate the relevant files for you, however you will still need to add them to the file 
+```groovy
+minecraft {
+    accessTransformers {
+        entry 'public-f net.neoforged.example.ExampleClass'
+    }
+}
+```
+
+
+
+
+
 #### Dependency management by the userdev plugin
 When this plugin detects a dependency on NeoForge, it will spring into action and create the necessary NeoForm runtime tasks to build a usable Minecraft JAR-file that contains the requested NeoForge version.
 It additionally (if configured to do so via conventions, which is the default) will create runs for your project, and add the necessary dependencies to the classpath of the run.

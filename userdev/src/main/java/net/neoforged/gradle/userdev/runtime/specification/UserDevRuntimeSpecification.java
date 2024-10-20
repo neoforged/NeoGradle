@@ -51,7 +51,14 @@ public final class UserDevRuntimeSpecification extends CommonRuntimeSpecificatio
                                        String forgeName,
                                        String forgeVersion,
                                        Artifact artifact) {
-        super(project, "neoForge", version, distribution, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, UserDevRuntimeExtension.class);
+        super(project,
+                "neoForge",
+                version,
+                distribution,
+                preTaskTypeAdapters,
+                postTypeAdapters,
+                taskCustomizers,
+                UserDevRuntimeExtension.class);
         this.userDevArchive = userDevArchive;
         this.profile = profile;
         this.forgeGroup = forgeGroup;

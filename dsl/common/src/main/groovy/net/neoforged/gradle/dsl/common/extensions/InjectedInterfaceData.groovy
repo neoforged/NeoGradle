@@ -31,7 +31,7 @@ abstract class InjectedInterfaceData implements ConfigurableDSLElement<InjectedI
      *
      * @return The interfaces to inject.
      */
-    @Nested
+    @Input
     @DSLProperty
     abstract ListProperty<String> getInterfaces();
 }
