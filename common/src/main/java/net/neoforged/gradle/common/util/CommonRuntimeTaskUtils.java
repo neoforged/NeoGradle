@@ -9,8 +9,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.TaskProvider;
 
-import java.io.File;
-
 public final class CommonRuntimeTaskUtils {
 
     private CommonRuntimeTaskUtils() {
@@ -35,7 +33,7 @@ public final class CommonRuntimeTaskUtils {
         });
     }
 
-    public static TaskProvider<? extends BinaryAccessTransformer> createBinaryAccessTransformer(Definition<?> definition, String namePreFix, File workspaceDirectory, FileTree files) {
+    public static TaskProvider<? extends BinaryAccessTransformer> createBinaryAccessTransformer(Definition<?> definition, String namePreFix, FileTree files) {
         return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize(namePreFix))), BinaryAccessTransformer.class, task -> {
             task.getTransformers().from(files);
         });

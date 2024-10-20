@@ -24,10 +24,13 @@ public class ApplyAccessTransformerStep implements IStep {
         final Minecraft minecraftExtension = definition.getSpecification().getProject().getExtensions().getByType(Minecraft.class);
         final AccessTransformers accessTransformerFiles = minecraftExtension.getAccessTransformers();
 
+        if (accessTransformerFiles.getFiles().isEmpty()) {
+            return null;
+        }
+
         final TaskProvider<? extends BinaryAccessTransformer> task = CommonRuntimeTaskUtils.createBinaryAccessTransformer(
                 definition,
                 "user",
-                workingDirectory,
                 accessTransformerFiles.getFiles().getAsFileTree()
         );
 
