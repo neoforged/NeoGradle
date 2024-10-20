@@ -138,6 +138,11 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 userDev.matching(filter -> filter.include(accessTransformerDirectory + "/**"));
 
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
+            if (accessTransformerFiles.isEmpty()) {
+                // No access transformers found, so we don't need to do anything
+                return null;
+            }
+
             final TaskProvider<? extends SourceAccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "Forges", accessTransformerFiles, definition.getListLibrariesTaskProvider(), definition.getAllDependencies());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));

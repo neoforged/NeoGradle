@@ -1,6 +1,5 @@
 package net.neoforged.gradle.common.util;
 
-import net.neoforged.gradle.common.extensions.NeoGradleProblemReporter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
