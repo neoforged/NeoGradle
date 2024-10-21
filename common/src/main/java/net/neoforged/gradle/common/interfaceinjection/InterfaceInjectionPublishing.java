@@ -13,7 +13,7 @@ public class InterfaceInjectionPublishing {
     public static final String INTERFACE_INJECTION_ELEMENTS_CONFIGURATION = "InterfaceInjectionElements";
     public static final String INTERFACE_INJECTION_API_CONFIGURATION = "InterfaceInjectionApi";
     public static final String INTERFACE_INJECTION_CONFIGURATION = "InterfaceInjection";
-    public static final String INTERFACE_INJECTION_CATEGORY = "InterfaceInjection";
+    public static final String INTERFACE_INJECTION_CATEGORY = "interfaceInjection";
 
     public static void setup(Project project) {
         InterfaceInjections InterfaceInjectionsExtension = project.getExtensions().getByType(InterfaceInjections.class);
