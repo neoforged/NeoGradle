@@ -23,11 +23,13 @@ package net.neoforged.gradle.common.extensions;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.naming.NamingChannelProvider;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
@@ -35,12 +37,14 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
 
     private final Project project;
     private final AccessTransformers accessTransformers;
+    private final InterfaceInjections interfaceInjections;
     private final NamedDomainObjectContainer<NamingChannel> namingChannelProviders;
 
     @Inject
     public MinecraftExtension(final Project project) {
         this.project = project;
         this.accessTransformers = project.getExtensions().getByType(AccessTransformers.class);
+        this.interfaceInjections = project.getExtensions().getByType(InterfaceInjections.class);
         this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannel.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
         
         final String baseName = project.getName().replace(":", "_");
@@ -52,23 +56,33 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
         }));
     }
 
+    @NotNull
     @Override
     public Project getProject() {
         return project;
     }
 
+    @NotNull
     @Override
     public NamedDomainObjectContainer<NamingChannel> getNamingChannels() {
         return namingChannelProviders;
     }
 
+    @NotNull
     @Override
     public Mappings getMappings() {
         return project.getExtensions().getByType(Mappings.class);
     }
 
+    @NotNull
     @Override
     public AccessTransformers getAccessTransformers() {
         return this.accessTransformers;
+    }
+
+    @NotNull
+    @Override
+    public InterfaceInjections getInterfaceInjections() {
+        return interfaceInjections;
     }
 }

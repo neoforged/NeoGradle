@@ -19,7 +19,7 @@ import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import net.neoforged.gradle.neoform.runtime.tasks.InjectZipContent;
 import net.neoforged.gradle.neoform.runtime.tasks.Patch;
-import net.neoforged.gradle.neoform.util.NeoFormAccessTransformerUtils;
+import net.neoforged.gradle.neoform.util.NeoFormAccessTaskAdapterUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import org.gradle.api.Project;
@@ -31,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collections;
 
 public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<UserDevRuntimeSpecification, UserDevRuntimeSpecification.Builder, UserDevRuntimeDefinition> {
     
@@ -65,10 +64,12 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
 
-            final TaskTreeAdapter atAdapter = createAccessTransformerAdapter(userDevProfile.getAccessTransformerDirectory().get(), userDevJar)
-                                                            .andThen(NeoFormAccessTransformerUtils.createAccessTransformerAdapter(getProject()));
+            final TaskTreeAdapter atAndIISAdapter = createAccessTransformerAdapter(userDevProfile.getAccessTransformerDirectory().get(), userDevJar)
+                                                            .andThen(NeoFormAccessTaskAdapterUtils.createAccessTransformerAdapter(getProject()));
             
-            builder.withPostTaskAdapter("decompile", atAdapter);
+            builder.withPostTaskAdapter("decompile", atAndIISAdapter);
+
+            builder.withPreTaskAdapter("recompile", NeoFormAccessTaskAdapterUtils.createInterfaceInjectionAdapter(getProject()));
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
@@ -137,7 +138,12 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 userDev.matching(filter -> filter.include(accessTransformerDirectory + "/**"));
 
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            final TaskProvider<? extends SourceAccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "Forges", runtimeWorkspace, dependentTaskConfigurationHandler, accessTransformerFiles, Collections.emptyList(), definition.getListLibrariesTaskProvider(), definition.getAllDependencies());
+            if (accessTransformerFiles.isEmpty()) {
+                // No access transformers found, so we don't need to do anything
+                return null;
+            }
+
+            final TaskProvider<? extends SourceAccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "Forges", accessTransformerFiles, definition.getListLibrariesTaskProvider(), definition.getAllDependencies());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

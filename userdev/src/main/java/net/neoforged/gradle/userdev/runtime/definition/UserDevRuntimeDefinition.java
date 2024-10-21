@@ -18,6 +18,7 @@ import net.neoforged.gradle.userdev.runtime.tasks.ClasspathSerializer;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.MapProperty;
@@ -103,11 +104,15 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     }
 
     @Override
+    public @NotNull FileCollection getAdditionalRecompileDependencies() {
+        return neoformRuntimeDefinition.getAdditionalRecompileDependencies();
+    }
+
+    @Override
     protected void buildRunInterpolationData(RunImpl run, @NotNull MapProperty<String, String> interpolationData) {
         neoformRuntimeDefinition.buildRunInterpolationData(run, interpolationData);
 
         if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
-            final String name = String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName());
             final Configuration modulesCfg = ConfigurationUtils
                     .temporaryUnhandledConfiguration(
                             getSpecification().getProject().getConfigurations(),

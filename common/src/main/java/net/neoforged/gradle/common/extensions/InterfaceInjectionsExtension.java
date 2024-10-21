@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.extensions;
 
-import net.neoforged.gradle.common.accesstransformers.AccessTransformerPublishing;
-import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.common.interfaceinjection.InterfaceInjectionPublishing;
+import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ConfigurablePublishArtifact;
@@ -11,7 +11,7 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 
 import javax.inject.Inject;
 
-public abstract class AccessTransformersExtension implements AccessTransformers {
+public abstract class InterfaceInjectionsExtension implements InterfaceInjections {
     private transient final DependencyHandler projectDependencies;
     private transient final ArtifactHandler projectArtifacts;
 
@@ -19,7 +19,7 @@ public abstract class AccessTransformersExtension implements AccessTransformers 
 
     @SuppressWarnings("UnstableApiUsage")
     @Inject
-    public AccessTransformersExtension(Project project) {
+    public InterfaceInjectionsExtension(Project project) {
         this.project = project;
 
         this.projectDependencies = project.getDependencies();
@@ -27,8 +27,8 @@ public abstract class AccessTransformersExtension implements AccessTransformers 
 
         // We have to add these after project evaluation because of dependency replacement making configurations non-lazy; adding them earlier would prevent further addition of dependencies
         project.afterEvaluate(p -> {
-            p.getConfigurations().maybeCreate(AccessTransformerPublishing.ACCESS_TRANSFORMER_CONFIGURATION).fromDependencyCollector(getConsume());
-            p.getConfigurations().maybeCreate(AccessTransformerPublishing.ACCESS_TRANSFORMER_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());
+            p.getConfigurations().maybeCreate(InterfaceInjectionPublishing.INTERFACE_INJECTION_CONFIGURATION).fromDependencyCollector(getConsume());
+            p.getConfigurations().maybeCreate(InterfaceInjectionPublishing.INTERFACE_INJECTION_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());
         });
     }
 
@@ -40,16 +40,17 @@ public abstract class AccessTransformersExtension implements AccessTransformers 
     @Override
     public void expose(Object path, Action<ConfigurablePublishArtifact> action) {
         getFiles().from(path);
-        projectArtifacts.add(AccessTransformerPublishing.ACCESS_TRANSFORMER_ELEMENTS_CONFIGURATION, path, action);
+        projectArtifacts.add(InterfaceInjectionPublishing.INTERFACE_INJECTION_ELEMENTS_CONFIGURATION, path, action);
     }
 
     @Override
     public void expose(Object path) {
-        expose(path, artifacts -> {});
+        expose(path, artifacts -> {
+        });
     }
 
     @Override
     public void expose(Dependency dependency) {
-        projectDependencies.add(AccessTransformerPublishing.ACCESS_TRANSFORMER_API_CONFIGURATION, dependency);
+        projectDependencies.add(InterfaceInjectionPublishing.INTERFACE_INJECTION_API_CONFIGURATION, dependency);
     }
 }

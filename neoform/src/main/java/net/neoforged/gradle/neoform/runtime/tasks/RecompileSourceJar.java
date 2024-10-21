@@ -9,16 +9,14 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.services.ServiceReference;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -133,6 +131,10 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @ServiceReference(CachedExecutionService.NAME)
     public abstract Property<CachedExecutionService> getCacheService();
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract ConfigurableFileCollection getAdditionalInputFiles();
+
     @Override
     protected void compile(InputChanges inputs) {
         try {
@@ -142,12 +144,39 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
                             ICacheableJob.Default.directory(
                                     getDestinationDirectory(),
                                     () -> {
-                                        super.compile(inputs);
+                                        doCachedCompile(inputs);
                                     }
                             )
                     ).execute();
         } catch (IOException e) {
             throw new GradleException("Failed to recompile!", e);
         }
+    }
+
+    private void doCachedCompile(InputChanges inputs) {
+        super.compile(inputs);
+
+        final FileTree outputTree = getDestinationDirectory().get().getAsFileTree();
+        outputTree.matching(pattern -> pattern.include(fileTreeElement -> {
+            final String relativePath = fileTreeElement.getRelativePath().getPathString();
+            if (!relativePath.endsWith(".class")) {
+                return false;
+            }
+
+            final String sourceFilePath;
+            if (!relativePath.contains("$")) {
+                sourceFilePath = relativePath.substring(0, relativePath.length() - ".class".length()) + ".java";
+            } else {
+                sourceFilePath = relativePath.substring(0, relativePath.indexOf('$')) + ".java";
+            }
+
+            return !getAdditionalInputFiles()
+                    .getAsFileTree()
+                    .matching(sp1 -> sp1.include(sourceFilePath))
+                    .getFiles().isEmpty();
+        })).forEach(file -> {
+            getLogger().debug("Removing additional source file: {}", file);
+            file.delete();
+        });
     }
 }

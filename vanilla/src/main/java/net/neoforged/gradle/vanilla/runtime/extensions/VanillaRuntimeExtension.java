@@ -165,26 +165,28 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
                     )
             );
 
-            task.configure((Runtime mcpRuntimeTask) -> configureCommonRuntimeTaskParameters(mcpRuntimeTask, step.getName(), spec, runtimeWorkingDirectory));
+            if (task != null) {
+                task.configure((Runtime mcpRuntimeTask) -> configureCommonRuntimeTaskParameters(mcpRuntimeTask, step.getName(), spec, runtimeWorkingDirectory));
 
-            if (!spec.getPostTypeAdapters().containsKey(step.getName())) {
-                definition.getTasks().put(task.getName(), task);
-            } else {
-                int taskPostAdapterIndex = 0;
-                for (TaskTreeAdapter taskTreeAdapter : spec.getPostTypeAdapters().get(step.getName())) {
-                    final AtomicInteger additionalPostAdapterTasks = new AtomicInteger(0);
-                    final int currentPostAdapterIndex = taskPostAdapterIndex++;
-                    final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(definition, task, vanillaDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), dependentTaskProvider -> dependentTaskProvider.configure(additionalTask -> configureCommonRuntimeTaskParameters(additionalTask, step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory)));
-                    if (taskProvider != null) {
-                        taskProvider.configure(adaptedTask -> configureCommonRuntimeTaskParameters(adaptedTask, step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory));
-                        task = taskProvider;
+                if (!spec.getPostTypeAdapters().containsKey(step.getName())) {
+                    definition.getTasks().put(task.getName(), task);
+                } else {
+                    int taskPostAdapterIndex = 0;
+                    for (TaskTreeAdapter taskTreeAdapter : spec.getPostTypeAdapters().get(step.getName())) {
+                        final AtomicInteger additionalPostAdapterTasks = new AtomicInteger(0);
+                        final int currentPostAdapterIndex = taskPostAdapterIndex++;
+                        final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(definition, task, vanillaDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), dependentTaskProvider -> dependentTaskProvider.configure(additionalTask -> configureCommonRuntimeTaskParameters(additionalTask, step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory)));
+                        if (taskProvider != null) {
+                            taskProvider.configure(adaptedTask -> configureCommonRuntimeTaskParameters(adaptedTask, step.getName() + "PostAdapter" + currentPostAdapterIndex + "-" + additionalPostAdapterTasks.getAndIncrement(), spec, runtimeWorkingDirectory));
+                            task = taskProvider;
+                        }
                     }
+
+                    definition.getTasks().put(task.getName(), task);
                 }
 
-                definition.getTasks().put(task.getName(), task);
+                currentInput = task;
             }
-
-            currentInput = task;
         }
 
         final TaskProvider<? extends WithOutput> sourcesTask = Iterators.getLast(definition.getTasks().values().iterator());

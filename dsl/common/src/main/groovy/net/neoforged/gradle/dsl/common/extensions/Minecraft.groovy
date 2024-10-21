@@ -47,4 +47,13 @@ interface Minecraft extends BaseDSLElement<Minecraft> {
     @NotNull
     @DSLProperty
     AccessTransformers getAccessTransformers();
+
+    /**
+     * Gives access to the interface injections configuration extension.
+     *
+     * @return The interface injections configuration extension.
+     */
+    @NotNull
+    @DSLProperty
+    InterfaceInjections getInterfaceInjections();
 }

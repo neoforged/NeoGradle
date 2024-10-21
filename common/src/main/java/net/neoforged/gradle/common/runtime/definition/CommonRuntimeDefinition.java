@@ -17,6 +17,7 @@ import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -61,6 +62,12 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @NotNull
     private final Provider<VersionJson> versionJson;
 
+    @NotNull
+    private FileCollection additionalRecompileDependencies;
+
+    @NotNull
+    private FileCollection additionalSources;
+
     protected CommonRuntimeDefinition(
             @NotNull final S specification,
             @NotNull final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
@@ -79,8 +86,12 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         this.associatedTaskConsumer = associatedTaskConsumer;
         this.versionJson = versionJson;
 
+        this.additionalRecompileDependencies = specification.getProject().files();
+        this.additionalSources = specification.getProject().files();
+
         this.allDependencies = specification.getProject().files();
         this.allDependencies.from(getMinecraftDependenciesConfiguration());
+        this.allDependencies.from(this.additionalRecompileDependencies);
     }
 
     @Override
@@ -161,6 +172,40 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @Override
     public final ConfigurableFileCollection getAllDependencies() {
         return allDependencies;
+    }
+
+    @NotNull
+    @Override
+    public FileCollection getAdditionalRecompileDependencies() {
+        return additionalRecompileDependencies;
+    }
+
+    @Override
+    public void additionalRecompileDependency(Provider<RegularFile> dependency) {
+        final FileCollection files = specification.getProject().files(dependency);
+        this.additionalRecompileDependencies = this.additionalRecompileDependencies.plus(files);
+    }
+
+    @Override
+    public void additionalRecompileDependencies(FileCollection dependencies) {
+        this.additionalRecompileDependencies = this.additionalRecompileDependencies.plus(dependencies);
+    }
+
+    @NotNull
+    @Override
+    public FileCollection getAdditionalCompileSources() {
+        return additionalSources;
+    }
+
+    @Override
+    public void additionalCompileSource(Provider<RegularFile> source) {
+        final FileCollection files = specification.getProject().files(source);
+        this.additionalSources = this.additionalSources.plus(files);
+    }
+
+    @Override
+    public void additionalCompileSources(FileCollection sources) {
+        this.additionalSources = this.additionalSources.plus(sources);
     }
 
     public void configureRun(RunImpl run) {

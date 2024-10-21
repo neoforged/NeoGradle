@@ -23,21 +23,6 @@ public final class NeoFormRuntimeUtils {
         throw new IllegalStateException("Can not instantiate an instance of: NeoFormRuntimeUtils. This is a utility class");
     }
 
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, final String defaultInputTask, final Optional<TaskProvider<? extends WithOutput>> adaptedInput, Task task) {
-        if (adaptedInput.isPresent()) {
-            task.dependsOn(adaptedInput);
-            return adaptedInput.get().flatMap(t -> t.getOutput().getAsFile());
-        }
-
-        final String inputValue = step.getValue("input");
-        if (inputValue == null) {
-            return getInputForTaskFrom(spec, "{" + defaultInputTask + "Output}", tasks, task);
-        }
-
-        return getInputForTaskFrom(spec, inputValue, tasks, task);
-    }
-
     public static Provider<File> getTaskInputFor(final NeoFormRuntimeSpecification spec, final Map<String, TaskProvider<? extends WithOutput>> tasks, NeoFormConfigConfigurationSpecV1.Step step, Task task) {
         final String inputValue = step.getValue("input");
         if (inputValue == null) {
@@ -128,6 +113,7 @@ public final class NeoFormRuntimeUtils {
     }
     
     public static void configureDefaultRuntimeSpecBuilder(Project project, NeoFormRuntimeSpecification.Builder builder) {
-        builder.withPostTaskAdapter("decompile", NeoFormAccessTransformerUtils.createAccessTransformerAdapter(project));
+        builder.withPostTaskAdapter("decompile", NeoFormAccessTaskAdapterUtils.createAccessTransformerAdapter(project));
+        builder.withPreTaskAdapter("recompile", NeoFormAccessTaskAdapterUtils.createInterfaceInjectionAdapter(project));
     }
 }

@@ -5,10 +5,12 @@ import net.neoforged.gradle.common.conventions.ConventionConfigurator;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.replacement.ReplacementLogic;
+import net.neoforged.gradle.common.extensions.problems.ProblemReportingConfigurator;
 import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.sourcesets.SourceSetDependencyExtensionImpl;
 import net.neoforged.gradle.common.extensions.sourcesets.SourceSetInheritanceExtensionImpl;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
+import net.neoforged.gradle.common.interfaceinjection.InterfaceInjectionPublishing;
 import net.neoforged.gradle.common.rules.LaterAddedReplacedDependencyRule;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
 import net.neoforged.gradle.common.runs.run.RunManagerImpl;
@@ -21,6 +23,7 @@ import net.neoforged.gradle.common.runtime.naming.OfficialNamingChannelConfigura
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
+import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
@@ -40,7 +43,9 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.problems.Problems;
 import org.gradle.api.tasks.Delete;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.jvm.tasks.Jar;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
@@ -49,8 +54,6 @@ import javax.inject.Inject;
 
 public class CommonProjectPlugin implements Plugin<Project> {
 
-    public static final String PROBLEM_NAMESPACE = "neoforged.gradle";
-    public static final String PROBLEM_REPORTER_EXTENSION_NAME = "neogradleProblems";
 
     private final Problems problems;
 
@@ -82,14 +85,16 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(Repository.class, "ivyDummyRepository", IvyRepository.class, project);
         project.getExtensions().create(MinecraftArtifactCache.class, "minecraftArtifactCache", MinecraftArtifactCacheExtension.class, project);
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
-        project.getExtensions().create(NeoGradleProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, NeoGradleProblemReporter.class, problems.forNamespace(PROBLEM_NAMESPACE));
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
+        project.getExtensions().create(InterfaceInjections.class, "interfaceInjections", InterfaceInjectionsExtension.class, project);
 
         project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
         project.getExtensions().create(Mappings.class,"mappings", MappingsExtension.class, project);
         project.getExtensions().create(RunTypeManager.class, "runTypeManager", RunTypeManagerImpl.class, project);
         project.getExtensions().create(ExtraJarDependencyManager.class, "clientExtraJarDependencyManager", ExtraJarDependencyManager.class, project);
         project.getExtensions().create(RunManager.class, "runManager", RunManagerImpl.class, project);
+
+        ProblemReportingConfigurator.configureProblemReporting(project, problems);
 
         final ConfigurationData configurationData = project.getExtensions().create(ConfigurationData.class, "configurationData", ConfigurationDataExtension.class, project);
 
@@ -130,6 +135,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         //Set up publishing for access transformer elements
         AccessTransformerPublishing.setup(project);
+
+        //Set up publishing for interface injection elements
+        InterfaceInjectionPublishing.setup(project);
 
         //Set up the IDE run integration manager
         IdeRunIntegrationManager.getInstance().setup(project);

@@ -9,32 +9,31 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.dsl.Dependencies
 import org.gradle.api.artifacts.dsl.DependencyCollector
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.tasks.InputFiles
 
 /**
- * Defines a DSL extension which allows for the specification of access transformers.
+ * Defines a DSL extension which allows for the specification of interface injections.
  */
 @CompileStatic
-interface AccessTransformers extends Dependencies {
+interface InterfaceInjections extends Dependencies {
 
     /**
-     * {@return access transformer files}
+     * {@return interface injection files}
      */
     @DSLProperty
-    ConfigurableFileCollection getFiles();
+    ConfigurableFileCollection getFiles()
 
     /**
-     * {@return access transformers to add as dependencies}
+     * {@return interface injections to add as dependencies}
      */
     DependencyCollector getConsume()
 
     /**
-     * {@return access transformers to add as dependencies and also expose to consumers}
+     * {@return interface injections to add as dependencies and also expose to consumers}
      */
     DependencyCollector getConsumeApi()
 
     /**
-     * Publishes a transitive dependency on the given access transformer in the published access transformers of this component.
+     * Publishes a transitive dependency on the given access transformer in the published interface injections of this component.
      *
      * @param dependency to expose to consumers
      */
