@@ -10,6 +10,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.StartParameter;
 import org.gradle.TaskExecutionRequest;
@@ -62,11 +63,23 @@ public class ConventionConfigurator {
         final Configuration runRuntimeConfiguration = project.getConfigurations().maybeCreate(configurations.getRunRuntimeConfigurationName().get());
 
         project.getExtensions().configure(RunManager.class, runContainer -> runContainer.configureAll(run -> {
+            run.getDependencies().getRuntime().add(runRuntimeConfiguration);
+        }));
+
+        final RunManager runManager = project.getExtensions().getByType(RunManager.class);
+        project.getConfigurations().addRule("Create run specific runtime configuration", configurationName -> {
+            if (!configurationName.endsWith(configurations.getPerRunRuntimeConfigurationPostFix().get()))
+                return;
+
+            final String runName = configurationName.substring(0, configurationName.length() - configurations.getPerRunRuntimeConfigurationPostFix().get().length());
+            if (runManager.findByName(runName) == null)
+                return;
+
+            final Run run = runManager.getByName(runName);
             final Configuration runSpecificRuntimeConfiguration = project.getConfigurations().maybeCreate(ConfigurationUtils.getRunName(run, configurations.getPerRunRuntimeConfigurationPostFix().get()));
 
-            run.getDependencies().getRuntime().add(runRuntimeConfiguration);
             run.getDependencies().getRuntime().add(runSpecificRuntimeConfiguration);
-        }));
+        });
     }
 
     private static void configureIDEConventions(Project project, Conventions conventions) {

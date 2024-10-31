@@ -85,8 +85,8 @@ public final class UserDevDependencyManager {
                     "NeoForgeUserDevAdditionalReplacementDependenciesFor" + runtimeDefinition.getSpecification().getIdentifier(),
                     configuration -> {
                         configuration.setDescription("Additional dependencies for the NeoForge UserDev replacement for " + runtimeDefinition.getSpecification().getIdentifier());
-                        configuration.extendsFrom(runtimeDefinition.getNeoFormRuntimeDefinition().getMinecraftDependenciesConfiguration());
-                        configuration.extendsFrom(runtimeDefinition.getAdditionalUserDevDependencies());
+                        ConfigurationUtils.extendsFrom(project, configuration, runtimeDefinition.getNeoFormRuntimeDefinition().getMinecraftDependenciesConfiguration());
+                        ConfigurationUtils.extendsFrom(project, configuration, runtimeDefinition.getAdditionalUserDevDependencies());
                     }
             );
 

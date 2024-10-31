@@ -407,4 +407,78 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         run.task(':clean').outcome == TaskOutcome.SUCCESS
         run.task(':build').outcome == TaskOutcome.SUCCESS
     }
+
+    def "a mod with userdev does not expose the userdev artifact to consumers"() {
+        given:
+        def project = create("gradle_multi_sourceset", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                api 'net.neoforged:neoforge:+'
+            }
+
+            publishing {
+                repositories {
+                    maven {
+                        // change to point to your repo, e.g. http://my.org/repo
+                        url = layout.buildDirectory.dir('repo')
+                    }
+                }
+            
+                publications {
+                    maven(MavenPublication) {
+                        groupId = 'org.gradle.sample'
+                        artifactId = 'library'
+                        version = '1.1'
+            
+                        from components.java
+                    }
+                }
+            }
+
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin("java-library")
+            it.plugin("maven-publish")
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('clean', 'build', 'publish')
+            it.stacktrace()
+        }
+
+        then:
+        run.task(':clean').outcome == TaskOutcome.SUCCESS
+        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':publish').outcome == TaskOutcome.SUCCESS
+
+        and:
+        def repo = run.file("build/repo/org/gradle/sample/library/1.1")
+        def moduleFile = new File(repo, "library-1.1.module")
+        def pomFile = new File(repo, "library-1.1.pom")
+
+        then:
+        moduleFile.exists()
+        pomFile.exists()
+        !moduleFile.text.contains("neoforged")
+        !pomFile.text.contains("neoforged")
+    }
 }

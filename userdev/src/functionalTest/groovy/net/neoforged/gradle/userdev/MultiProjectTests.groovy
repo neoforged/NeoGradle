@@ -105,6 +105,102 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:")
     }
 
+    def "multiple projects with neoforge dependencies from version catalogs should be able to build"() {
+        given:
+        def rootProject = create("multi_neoforge_root", {
+            it.file("gradle/libs.versions.toml",
+                    """
+                    [versions]
+                    # Neoforge Settings
+                    neoforge = "+"
+                    
+                    [libraries]
+                    neoforge = { group = "net.neoforged", name = "neoforge", version.ref = "neoforge" }
+                    """.trim())
+
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        def apiProject = create(rootProject, "api", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                api(libs.neoforge)
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
+                package net.neoforged.gradle.apitest;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin(this.pluginUnderTest)
+            it.plugin("java-library")
+        })
+
+        def mainProject = create(rootProject,"main", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation project(':api')
+                //We still need a neoforge dependency here, because neoforge is not exposed from the api project. Compile would faile.
+                implementation libs.neoforge
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/main/ApiTests.java", """
+                package net.neoforged.gradle.main;
+                
+                import net.minecraft.client.Minecraft;
+                import net.neoforged.gradle.apitest.FunctionalTests;
+                
+                public class ApiTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                        FunctionalTests.main(args);
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.plugin(this.pluginUnderTest)
+        })
+
+        when:
+        def run = rootProject.run {
+            it.tasks(':main:build')
+            it.stacktrace()
+            it.debug()
+        }
+
+        then:
+        run.task(':main:build').outcome == TaskOutcome.SUCCESS
+    }
+
     def "multiple projects with neoforge dependencies should be able to run the game when renderDoc is enabled"() {
         given:
         def rootProject = create("multi_neoforge_root_renderdoc", {

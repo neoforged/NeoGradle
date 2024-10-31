@@ -1,10 +1,8 @@
 package net.neoforged.gradle.common.util;
 
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
-import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -17,7 +15,10 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.internal.GUtil;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 public class ConfigurationUtils {
@@ -29,6 +30,21 @@ public class ConfigurationUtils {
     }
 
     /**
+     * Extends the dependencies and dependency constraints of the target configuration with the dependencies and dependency constraints of the given configurations.
+     *
+     * @param project The project to create the configuration for
+     * @param target The configuration to extend
+     * @param configurations The configurations to extend from
+     */
+    public static void extendsFrom(final Project project, final Configuration target, final Configuration... configurations) {
+        for (Configuration configuration : configurations) {
+            //We treat each configuration as a dependency collector in and of it-self, and copy the dependencies and dependency constraints to the target configuration.
+            target.getDependencies().addAllLater(project.provider(configuration::getDependencies));
+            target.getDependencyConstraints().addAllLater(project.provider(configuration::getDependencyConstraints));
+        }
+    }
+
+    /**
      * Creates a configuration that can be resolved, but not consumed.
      *
      * @param project      The project to create the configuration for
@@ -37,18 +53,10 @@ public class ConfigurationUtils {
      * @return The detached configuration
      */
     public static Configuration temporaryConfiguration(final Project project, final String context, final Dependency... dependencies) {
-        final Configuration configuration = project.getConfigurations().maybeCreate("neoGradleInternal" + StringGroovyMethods.capitalize(context));
+        final Configuration configuration = project.getConfigurations().detachedConfiguration(dependencies);
 
-        if (configuration.getDependencies().isEmpty()) {
-            DefaultGroovyMethods.addAll(configuration.getDependencies(), dependencies);
-
-            configuration.setCanBeConsumed(false);
-            configuration.setCanBeResolved(true);
-
-            final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class);
-            dependencyReplacement.handleConfiguration(configuration);
-        }
-
+        final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class);
+        dependencyReplacement.handleConfiguration(configuration);
 
         return configuration;
     }
@@ -62,23 +70,13 @@ public class ConfigurationUtils {
      * @return The detached configuration
      */
     public static Configuration temporaryConfiguration(final Project project, final String context, final Action<Configuration> processor) {
-        final String name = "neoGradleInternal" + StringGroovyMethods.capitalize(context);
-        final boolean exists = project.getConfigurations().getNames().contains(name);
+        final Configuration config = project.getConfigurations().detachedConfiguration();
+        processor.execute(config);
 
-        final Configuration configuration = project.getConfigurations().maybeCreate("neoGradleInternal" + StringGroovyMethods.capitalize(context));
+        final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class);
+        dependencyReplacement.handleConfiguration(config);
 
-        if (!exists) {
-            processor.execute(configuration);
-
-            configuration.setCanBeConsumed(false);
-            configuration.setCanBeResolved(true);
-
-            final DependencyReplacement dependencyReplacement = project.getExtensions().getByType(DependencyReplacement.class);
-            dependencyReplacement.handleConfiguration(configuration);
-        }
-
-
-        return configuration;
+        return config;
     }
 
     /**
@@ -100,17 +98,9 @@ public class ConfigurationUtils {
      * @return The detached configuration
      */
     public static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final String context, final Dependency... dependencies) {
-        final Configuration configuration = configurations.maybeCreate("neoGradleInternalUnhandled" + StringGroovyMethods.capitalize(context));
-        UNHANDLED_CONFIGURATIONS.add(configuration);
-
-        if (configuration.getDependencies().isEmpty()) {
-            configuration.getDependencies().addAll(Arrays.asList(dependencies));
-            configuration.setCanBeConsumed(false);
-            configuration.setCanBeResolved(true);
-        }
-
-
-        return configuration;
+        final Configuration config = configurations.detachedConfiguration(dependencies);
+        UNHANDLED_CONFIGURATIONS.add(config);
+        return config;
     }
 
     /**
@@ -122,23 +112,10 @@ public class ConfigurationUtils {
      * @return The detached configuration
      */
     public static Configuration temporaryUnhandledConfiguration(final ConfigurationContainer configurations, final String context, final Provider<? extends Iterable<Dependency>> dependencies) {
-        final String name = "neoGradleInternalUnhandled" + StringGroovyMethods.capitalize(context);
-        if (configurations.findByName(name) != null) {
-            return configurations.getByName(name);
-        }
-
-        final Configuration configuration = configurations.create(name);
-        UNHANDLED_CONFIGURATIONS.add(configuration);
-
-        if (configuration.getDependencies().isEmpty()) {
-            configuration.getDependencies().addAllLater(dependencies);
-
-            configuration.setCanBeConsumed(false);
-            configuration.setCanBeResolved(true);
-        }
-
-
-        return configuration;
+        final Configuration config = configurations.detachedConfiguration();
+        config.getDependencies().addAllLater(dependencies);
+        UNHANDLED_CONFIGURATIONS.add(config);
+        return config;
     }
 
     /**
@@ -150,25 +127,16 @@ public class ConfigurationUtils {
      * @return The detached configuration
      */
     public static Configuration temporaryUnhandledNotTransitiveConfiguration(final ConfigurationContainer configurations, final String context, final Dependency... dependencies) {
-        final Configuration configuration = configurations.maybeCreate("neoGradleInternalUnhandled" + StringGroovyMethods.capitalize(context));
-        UNHANDLED_CONFIGURATIONS.add(configuration);
-
-        if (configuration.getDependencies().isEmpty()) {
-            DefaultGroovyMethods.addAll(configuration.getDependencies(), dependencies);
-
-            configuration.setCanBeConsumed(false);
-            configuration.setCanBeResolved(true);
-            configuration.setTransitive(false);
-        }
-
-
-        return configuration;
+        final Configuration config = configurations.detachedConfiguration(dependencies);
+        config.setTransitive(false);
+        UNHANDLED_CONFIGURATIONS.add(config);
+        return config;
     }
 
     /**
      * Creates a provider that will resolve a temporary configuration containing the given dependency.
      */
-    public static Provider<File> getArtifactProvider(Project project, String context, Provider<? extends Object> dependencyNotationProvider) {
+    public static Provider<File> getArtifactProvider(Project project, String context, Provider<?> dependencyNotationProvider) {
         return dependencyNotationProvider.flatMap(dependencyNotation -> {
             Configuration configuration = temporaryUnhandledNotTransitiveConfiguration(project.getConfigurations(), context, project.getDependencies().create(dependencyNotation));
             return configuration.getElements().map(files -> files.iterator().next().getAsFile());
@@ -185,7 +153,6 @@ public class ConfigurationUtils {
         if (resultContainer.isEmpty()) {
             resultContainer.add(configuration);
         }
-
 
         return new ArrayList<>(resultContainer);
     }
@@ -237,9 +204,11 @@ public class ConfigurationUtils {
 
             final Set<Configuration> supers = getAllSuperConfigurations(runtimeClasspath);
             if (supers.contains(runtimeOnly) && supers.contains(configuration)) {
-                final Configuration reallyRuntimeOnly = project.getConfigurations().maybeCreate(getSourceSetName(sourceSet, "%s%s".formatted(NEOGRADLE_RUNTIME_REPLACEMENT, StringUtils.capitalize(sourceSet.getName()))));
-                runtimeClasspath.extendsFrom(reallyRuntimeOnly);
-                targets.add(reallyRuntimeOnly);
+                final Configuration detachedRuntimeOnly = project.getConfigurations().detachedConfiguration();
+
+                extendsFrom(project, runtimeClasspath, detachedRuntimeOnly);
+
+                targets.add(detachedRuntimeOnly);
             }
         });
 
@@ -314,6 +283,5 @@ public class ConfigurationUtils {
         return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "" : GUtil.toCamelCase(sourceSet.getName());
     }
 
-    private static Set<Configuration> UNHANDLED_CONFIGURATIONS = new HashSet<Configuration>();
-
+    private static final Set<Configuration> UNHANDLED_CONFIGURATIONS = new HashSet<Configuration>();
 }

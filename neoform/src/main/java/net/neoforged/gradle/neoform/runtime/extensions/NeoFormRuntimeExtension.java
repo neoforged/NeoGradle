@@ -43,6 +43,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.ForkOptions;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
+import org.gradle.process.CommandLineArgumentProvider;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -455,7 +456,13 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     ForkOptions forkOptions = task.getOptions().getForkOptions();
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
-                    task.getOptions().getCompilerArgumentProviders().add(settings.getArgs()::get);
+                    //noinspection Convert2Lambda -> May not be a lambda as this causes issues: In plugin 'net.neoforged.gradle.neoform.NeoFormProjectPlugin' property 'options.compilerArgumentProviders.$0' was implemented by the Java lambda 'net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension$$Lambda$2667/0x000000010105ab98'.
+                    task.getOptions().getCompilerArgumentProviders().add(new CommandLineArgumentProvider() {
+                        @Override
+                        public Iterable<String> asArguments() {
+                            return settings.getArgs().get();
+                        }
+                    });
 
                     task.getJavaVersion().set(
                             definition.getVersionJson()

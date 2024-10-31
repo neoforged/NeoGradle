@@ -237,7 +237,7 @@ public final class TaskDependencyUtils {
             //Grab the original dependencies if we have a replacement extension
             final DependencyReplacement replacement = project.getExtensions().findByType(DependencyReplacement.class);
             final Set<Dependency> operatingSet = replacement == null ? dependencies : dependencies.stream()
-                    .map(dependency -> replacement.optionallyConvertBackToOriginal(dependency, configuration))
+                    .map(replacement::optionallyConvertBackToOriginal)
                     .collect(Collectors.toSet());
 
             this.runtimes.stream()

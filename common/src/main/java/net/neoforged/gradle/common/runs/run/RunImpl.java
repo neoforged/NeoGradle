@@ -483,7 +483,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         });
 
         final DependencyReplacement replacementLogic = project.getExtensions().getByType(DependencyReplacement.class);
-        replacementLogic.whenDependencyReplaced((virtualDependency, targetConfiguration, originalDependency) -> {
+        replacementLogic.whenDependencyReplaced((virtualDependency, originalDependency) -> {
             if (unconfiguredSourceSets.isEmpty()) {
                 return;
             }

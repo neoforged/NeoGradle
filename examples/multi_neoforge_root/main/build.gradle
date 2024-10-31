@@ -1,0 +1,15 @@
+plugins {
+   id 'net.neoforged.gradle.userdev'
+} 
+
+
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation project(':api')
+            }
+            

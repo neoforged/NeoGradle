@@ -153,6 +153,10 @@ public class CommonProjectPlugin implements Plugin<Project> {
         //Set up reporting tasks
         project.getTasks().register("runs", RunsReport.class);
 
+        //Configure sdk configurations
+        final SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        sourceSets.all(ConfigurationUtils::getSdkConfiguration);
+
         //Needs to be before after evaluate
         ConventionConfigurator.configureConventions(project);
 

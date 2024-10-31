@@ -137,9 +137,9 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     final Configuration lcpConfiguration = ConfigurationUtils.temporaryConfiguration(getSpecification().getProject(),
                             RunsUtil.createNameFor("lcp", run));
 
-                    lcpConfiguration.extendsFrom(neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
-                    lcpConfiguration.extendsFrom(this.additionalUserDevDependencies);
-                    lcpConfiguration.extendsFrom(run.getDependencies().getRuntimeConfiguration());
+                    ConfigurationUtils.extendsFrom(run.getProject(), lcpConfiguration, neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
+                    ConfigurationUtils.extendsFrom(run.getProject(), lcpConfiguration, this.additionalUserDevDependencies);
+                    ConfigurationUtils.extendsFrom(run.getProject(), lcpConfiguration, run.getDependencies().getRuntimeConfiguration());
 
                     //We depend on the configuration, this ensures that if we have dependencies with different versions in the
                     //dependency tree they are resolved to one version and are not added with different versions to the ConfigurableFileCollection

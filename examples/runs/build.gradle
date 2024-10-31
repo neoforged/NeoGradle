@@ -1,5 +1,5 @@
 plugins {
-    id 'net.neoforged.gradle.userdev'
+//    id 'net.neoforged.gradle.userdev'
 }
 
 java {
@@ -9,11 +9,13 @@ java {
 }
 
 dependencies {
-    implementation 'net.neoforged:neoforge:+'
+    //implementation 'net.neoforged:neoforge:+'
 }
 
+/*
 runs {
     client {
         // no modsource
     }
 }
+*/

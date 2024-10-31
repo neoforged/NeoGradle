@@ -5,6 +5,7 @@ import com.google.common.collect.Table;
 import net.minecraftforge.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementAware;
@@ -13,7 +14,6 @@ import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -27,6 +27,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Defines the implementation of the @{link DependencyReplacement} extension.
@@ -39,7 +40,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
 
     private final Table<Dependency, Configuration, Optional<ReplacementResult>> dependencyReplacementInformation = HashBasedTable.create();
     private final Table<Dependency, ReplacementResult, Entry> repositoryEntries = HashBasedTable.create();
-    private final Table<Dependency, Configuration, Dependency> originalDependencyLookup = HashBasedTable.create();
+    private final Map<Dependency, Dependency> originalDependencyLookup = new ConcurrentHashMap<>();
     private final NamedDomainObjectContainer<DependencyReplacementHandler> dependencyReplacementHandlers;
 
     private final List<DependencyReplacedCallback> whenDependencyReplaced = new ArrayList<>();
@@ -59,9 +60,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
     public void whenDependencyReplaced(DependencyReplacedCallback dependencyAction) {
         this.whenDependencyReplaced.add(dependencyAction);
 
-        for (Table.Cell<Dependency, Configuration, Dependency> dependencyConfigurationDependencyCell : this.originalDependencyLookup.cellSet()) {
-            dependencyAction.apply(dependencyConfigurationDependencyCell.getRowKey(), dependencyConfigurationDependencyCell.getColumnKey(), dependencyConfigurationDependencyCell.getValue());
-        }
+        this.originalDependencyLookup.forEach(dependencyAction::apply);
     }
 
     @Override
@@ -113,18 +112,9 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
 
     @NotNull
     @Override
-    public Dependency optionallyConvertBackToOriginal(@NotNull final Dependency dependency, Configuration configuration) {
-        final Dependency originalDependency = originalDependencyLookup.get(dependency, configuration);
-        if (originalDependency == null && !configuration.getExtendsFrom().isEmpty()) {
-            //Check if we have a parent configuration that might have the original dependency.
-            for (Configuration parentConfiguration : configuration.getExtendsFrom()) {
-                return optionallyConvertBackToOriginal(dependency, parentConfiguration);
-            }
-        } else if (originalDependency != null) {
-            return originalDependency;
-        }
-
-        return dependency;
+    public Dependency optionallyConvertBackToOriginal(@NotNull final Dependency dependency) {
+        final Dependency originalDependency = originalDependencyLookup.get(dependency);
+        return Objects.requireNonNullElse(originalDependency, dependency);
     }
 
     /**
@@ -273,35 +263,33 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         //Find the configurations that the dependency should be replaced in.
         final List<Configuration> targetConfigurations = ConfigurationUtils.findReplacementConfigurations(project, configuration);
 
+        //Create a dependency from the tasks that copies the raw jar to the repository.
+        //The sources jar is not needed here.
+        final ConfigurableFileCollection replacedFiles = createDependencyFromTask(rawTask);
+        final Dependency replacedDependency = project.getDependencies().create(replacedFiles);
+        final Dependency localRepoDependency = newRepoEntry.getDependency();
+
         //For each configuration that we target we now need to add the new dependencies to.
         for (Configuration targetConfiguration : targetConfigurations) {
             try {
-                //Create a dependency from the tasks that copies the raw jar to the repository.
-                //The sources jar is not needed here.
-                final Provider<ConfigurableFileCollection> replacedFiles = createDependencyFromTask(rawTask);
-
                 //Add the new dependency to the target configuration.
                 final DependencySet targetDependencies = targetConfiguration == configuration ?
                         configuredSet :
                         targetConfiguration.getDependencies();
 
-                final Provider<Dependency> replacedDependencies = replacedFiles
-                        .map(files -> project.getDependencies().create(files));
-                final Provider<Dependency> newRepoDependency = project.provider(newRepoEntry::getDependency);
-
                 //Add the new dependency to the target configuration.
-                targetDependencies.addLater(replacedDependencies);
-                targetDependencies.addLater(newRepoDependency);
-
-                //Keep track of the original dependency, so we can convert back if needed.
-                originalDependencyLookup.put(newRepoEntry.getDependency(), targetConfiguration, dependency);
-
-                for (DependencyReplacedCallback dependencyReplacedCallback : this.whenDependencyReplaced) {
-                    dependencyReplacedCallback.apply(newRepoEntry.getDependency(), targetConfiguration, dependency);
-                }
+                targetDependencies.add(replacedDependency);
+                targetDependencies.add(localRepoDependency);
             } catch (Exception exception) {
                 throw new GradleException("Failed to add the replaced dependency to the configuration " + targetConfiguration.getName() + ": " + exception.getMessage(), exception);
             }
+        }
+
+        //Keep track of the original dependency, so we can convert back if needed.
+        originalDependencyLookup.put(localRepoDependency, dependency);
+
+        for (DependencyReplacedCallback dependencyReplacedCallback : this.whenDependencyReplaced) {
+            dependencyReplacedCallback.apply(localRepoDependency, dependency);
         }
     }
 
@@ -475,7 +463,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
         return entry;
     }
 
-    public Provider<ConfigurableFileCollection> createDependencyFromTask(TaskProvider<? extends WithOutput> task) {
-        return task.map(taskWithOutput -> project.files(taskWithOutput.getOutput()));
+    public ConfigurableFileCollection createDependencyFromTask(TaskProvider<? extends WithOutput> task) {
+        return project.files(task.flatMap(WithOutput::getOutput));
     }
 }
