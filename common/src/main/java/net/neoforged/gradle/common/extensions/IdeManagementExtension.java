@@ -13,6 +13,7 @@ import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.gradle.ext.IdeaExtPlugin;
 import org.jetbrains.gradle.ext.ProjectSettings;
 import org.jetbrains.gradle.ext.TaskTriggersConfig;
@@ -261,22 +262,30 @@ public abstract class IdeManagementExtension {
             if (!isEclipseImport()) {
                 return;
             }
-            
-            //Grab the eclipse model so we can extend it. -> Done on the root project so that the model is available to all subprojects.
-            //And so that post sync tasks are only ran once for all subprojects.
-            EclipseModel model = project.getExtensions().findByType(EclipseModel.class);
-            if (model == null) {
-                model = rootProject.getExtensions().findByType(EclipseModel.class);
-                if (model == null) {
-                    return;
-                }
-            }
-            
+
+            EclipseModel model = getEclipseModel();
+            if (model == null) return;
+
             //Configure the project, passing the model and the relevant project. Which does not need to be the root, but can be.
             toPerform.accept(project, model);
         });
     }
-    
+
+    /**
+     * Get the eclipse model from the extensions project.
+     *
+     * @return the eclipse model, or {@code null} if not found
+     */
+    public @Nullable EclipseModel getEclipseModel() {
+        //Grab the eclipse model so we can extend it. -> Done on the root project so that the model is available to all subprojects.
+        //And so that post sync tasks are only ran once for all subprojects.
+        EclipseModel model = project.getExtensions().findByType(EclipseModel.class);
+        if (model == null) {
+            model = project.getRootProject().getExtensions().findByType(EclipseModel.class);
+        }
+        return model;
+    }
+
     /**
      * Applies the specified configuration action to configure gradle run projects only.
      *

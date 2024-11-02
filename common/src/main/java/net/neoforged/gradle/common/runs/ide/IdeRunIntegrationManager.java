@@ -267,7 +267,7 @@ public class IdeRunIntegrationManager {
                         return;
 
                     final TaskProvider<?> ideBeforeRunTask = getOrCreateIdeBeforeRunTask(project, runImpl);
-                    final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
+                    final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(run);
                     ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
                     
                     try {
@@ -327,7 +327,7 @@ public class IdeRunIntegrationManager {
                     final RunImpl runImpl = (RunImpl) run;
                     final TaskProvider<?> ideBeforeRunTask = getOrCreateIdeBeforeRunTask(project, runImpl);
 
-                    final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(eclipse, run);
+                    final List<TaskProvider<?>> copyProcessResourcesTasks = createEclipseCopyResourcesTasks(run);
                     ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
 
                     final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
@@ -410,7 +410,7 @@ public class IdeRunIntegrationManager {
             return intelliJResourcesTask;
         }
 
-        private List<TaskProvider<?>> createEclipseCopyResourcesTasks(EclipseModel eclipse, Run run) {
+        private List<TaskProvider<?>> createEclipseCopyResourcesTasks(Run run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().all().get().values()) {
                 final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
@@ -425,7 +425,7 @@ public class IdeRunIntegrationManager {
                     eclipseResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
                         final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
                         task.from(defaultProcessResources.map(ProcessResources::getDestinationDir));
-                        Path outputDir = eclipse.getClasspath().getDefaultOutputDir().toPath();
+                        Path outputDir = sourceSetProject.getExtensions().getByType(IdeManagementExtension.class).getEclipseModel().getClasspath().getDefaultOutputDir().toPath();
                         if (outputDir.endsWith("default")) {
                             // sometimes it has default value from org.gradle.plugins.ide.eclipse.internal.EclipsePluginConstants#DEFAULT_PROJECT_OUTPUT_PATH
                             // which has /default on end that is not present in the final outputDir in eclipse/buildship
