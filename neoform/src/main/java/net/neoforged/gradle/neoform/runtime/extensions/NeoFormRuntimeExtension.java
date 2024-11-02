@@ -23,7 +23,10 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.specifications.OutputSpecification;
-import net.neoforged.gradle.dsl.common.util.*;
+import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
+import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -36,9 +39,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.*;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.ForkOptions;
@@ -456,13 +459,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     ForkOptions forkOptions = task.getOptions().getForkOptions();
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
-                    //noinspection Convert2Lambda -> May not be a lambda as this causes issues: In plugin 'net.neoforged.gradle.neoform.NeoFormProjectPlugin' property 'options.compilerArgumentProviders.$0' was implemented by the Java lambda 'net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension$$Lambda$2667/0x000000010105ab98'.
-                    task.getOptions().getCompilerArgumentProviders().add(new CommandLineArgumentProvider() {
-                        @Override
-                        public Iterable<String> asArguments() {
-                            return settings.getArgs().get();
-                        }
-                    });
+                    task.getOptions().getCompilerArgumentProviders().add(new CustomCompilerArgsProvider(settings.getArgs()));
 
                     task.getJavaVersion().set(
                             definition.getVersionJson()
@@ -567,5 +564,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
             configureCommonRuntimeTaskParameters(task, symbolicDataSources, "applyParchment", runtimeDefinition.getSpecification(), neoFormDirectory);
         });
+    }
+
+    public record CustomCompilerArgsProvider(Provider<List<String>> args) implements CommandLineArgumentProvider {
+        @Override
+        public Iterable<String> asArguments() {
+            return args.get();
+        }
     }
 }
