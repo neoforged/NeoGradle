@@ -12,6 +12,9 @@ import groovy.transform.CompileStatic
 import net.minecraftforge.gdi.ConfigurableDSLElement
 import net.minecraftforge.gdi.annotations.ClosureEquivalent
 import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools
+import net.neoforged.gradle.dsl.platform.extensions.LibraryManager
 import net.neoforged.gradle.dsl.platform.util.LibraryCollector
 import net.neoforged.gradle.util.ModuleDependencyUtils
 import org.apache.commons.io.FilenameUtils
@@ -36,6 +39,7 @@ import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.lang.reflect.Type
+import java.util.function.Function
 import java.util.stream.Collectors
 
 import static net.neoforged.gradle.dsl.common.util.PropertyUtils.deserializeBool
@@ -142,7 +146,7 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     /**
      * Track which tools were already added to avoid re-resolving the download URLs for the same tool over and over.
      */
-    private final Set<String> toolLibrariesAdded = new HashSet<>();
+    private final Set<String> toolLibrariesAdded = new HashSet<>()
 
     void data(String key, @Nullable String client, @Nullable String server) {
         getData().put(key, getObjectFactory().newInstance(DataFile.class).configure { DataFile it ->
@@ -167,86 +171,32 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     @Optional
     abstract ListProperty<Processor> getProcessors();
 
-    private NamedDomainObjectProvider<Configuration> getOrCreateConfigurationForTool(Project project, String tool) {
-        var configName = "neoForgeInstallerTool" + ModuleDependencyUtils.toConfigurationName(tool)
-        try {
-            return project.configurations.named(configName)
-        } catch (UnknownDomainObjectException ignored) {
-            return project.configurations.register(configName, (Configuration spec) -> {
-                spec.canBeConsumed = false
-                spec.canBeResolved = true
-                spec.dependencies.add(project.getDependencies().create(tool))
-            })
-        }
-    }
-
-    private static Provider<Set<Library>> gatherLibrariesFromConfiguration(Project project, Provider<Configuration> configurationProvider) {
-        var repositoryUrls = project.getRepositories()
-                .withType(MavenArtifactRepository).stream().map { it.url }.collect(Collectors.toList())
-        var logger = project.logger
-
-        var objectFactory = project.objects
-
-        // We use a property because it is *not* re-evaluated when queried, while a normal provider is
-        var property = project.objects.setProperty(Library.class)
-        property.set(configurationProvider.flatMap { config ->
-            logger.info("Finding download URLs for configuration ${config.name}")
-            config.incoming.artifacts.resolvedArtifacts.map { artifacts ->
-                var libraryCollector = new LibraryCollector(objectFactory, repositoryUrls, logger)
-
-                for (ResolvedArtifactResult resolvedArtifact in artifacts) {
-                    libraryCollector.visit(resolvedArtifact)
-                }
-
-                libraryCollector.getLibraries()
-            }
-        })
-        property.finalizeValueOnRead()
-        property.disallowChanges()
-        return property
-    }
-
-    private static Provider<Set<String>> gatherLibraryIdsFromConfiguration(Project project, Provider<Configuration> configurationProvider) {
-        // We use a property because it is *not* re-evaluated when queried, while a normal provider is
-        var property = project.objects.setProperty(String.class)
-        def logger = project.logger
-        property.set(configurationProvider.flatMap { config ->
-            config.incoming.artifacts.resolvedArtifacts.map { artifacts ->
-                artifacts.collect {
-                    def componentId = it.id.componentIdentifier
-                    if (componentId instanceof ModuleComponentIdentifier) {
-                        var group = componentId.getGroup()
-                        var module = componentId.getModule()
-                        var version = componentId.getVersion()
-                        var classifier = LibraryCollector.guessMavenClassifier(it.file, componentId)
-                        var extension = FilenameUtils.getExtension(it.file.name)
-                        if (classifier != "") {
-                            version += ":" + classifier
-                        }
-                        return "$group:$module:$version@$extension".toString()
-                    } else {
-                        logger.warn("Cannot handle component: " + componentId)
-                        return null
-                    }
-                }
-            }
-        })
-        property.finalizeValueOnRead()
-        property.disallowChanges()
-        return property
-    }
-
     @ClosureEquivalent
     void processor(Project project, String tool, Action<Processor> configurator) {
-        var processor = getObjectFactory().newInstance(Processor.class).configure(configurator);
+        var processor = getObjectFactory().newInstance(Processor.class).configure(configurator)
         processor.jar.set(tool)
         getProcessors().add(processor)
 
-        var toolConfiguration = getOrCreateConfigurationForTool(project, tool)
-        processor.classpath.set(gatherLibraryIdsFromConfiguration(project, toolConfiguration))
-        if (toolLibrariesAdded.add(tool)) {
-            getLibraries().addAll gatherLibrariesFromConfiguration(project, toolConfiguration)
-        }
+        var libraryManager = project.getExtensions().getByType(LibraryManager.class)
+        processor.classpath.set(libraryManager.getClasspathOf(tool))
+        getLibraries().addAll(libraryManager.getLibrariesOf(tool))
+    }
+
+    @ClosureEquivalent
+    void processor(Project project, Provider<String> tool, Action<Processor> configurator) {
+        var processor = getObjectFactory().newInstance(Processor.class).configure(configurator)
+        processor.jar.set(tool)
+        getProcessors().add(processor)
+
+        var libraryManager = project.getExtensions().getByType(LibraryManager.class)
+        processor.classpath.set(libraryManager.getClasspathOf(tool))
+        getLibraries().addAll(libraryManager.getLibrariesOf(tool))
+    }
+
+    @ClosureEquivalent
+    void processor(Project project, Function<Tools, Provider<String>> toolSelector, Action<Processor> configurator) {
+        var tool = toolSelector.apply(project.getExtensions().getByType(Subsystems).getTools())
+        processor(project, tool, configurator);
     }
 
     @Nested

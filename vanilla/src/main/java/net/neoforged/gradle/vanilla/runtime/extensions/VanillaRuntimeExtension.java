@@ -43,10 +43,6 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     @javax.inject.Inject
     public VanillaRuntimeExtension(Project project) {
         super(project);
-
-        getVineFlowerVersion().convention(Constants.VINEFLOWER_VERSION);
-        getFartVersion().convention(Constants.FART_VERSION);
-        getAccessTransformerApplierVersion().convention(Constants.ACCESSTRANSFORMER_VERSION);
     }
 
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
@@ -223,12 +219,6 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
     public abstract Property<DistributionType> getDefaultDistributionType();
 
     public abstract Property<String> getVersion();
-
-    public abstract Property<String> getFartVersion();
-
-    public abstract Property<String> getVineFlowerVersion();
-
-    public abstract Property<String> getAccessTransformerApplierVersion();
 
     private static final class StepData {
         private final List<IStep> steps;

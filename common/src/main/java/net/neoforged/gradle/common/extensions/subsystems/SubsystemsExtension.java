@@ -67,6 +67,21 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         tools.getDevLogin().convention(
                 getStringProperty("tools.devLogin", DEVLOGIN_TOOL_ARTIFACT)
         );
+        tools.getBinaryPatcher().convention(
+                getStringProperty("tools.binaryPatcher", BINPARCHER_TOOL_ARTIFACT)
+        );
+        tools.getAccessTransformer().convention(
+                getStringProperty("tools.accessTransformer", ACCESSTRANSFORMER_TOOL_ARTIFACT)
+        );
+        tools.getAutoRenamingTool().convention(
+                getStringProperty("tools.autoRenamingTool", FART_TOOL_ARTIFACT)
+        );
+        tools.getInstallerTools().convention(
+                getStringProperty("tools.installerTools", INSTALLERTOOLS_TOOL_ARTIFACT)
+        );
+        tools.getJarSplitter().convention(
+                getStringProperty("tools.jarSplitter", JARSPLITTER_TOOL_ARTIFACT)
+        );
 
         RenderDocTools renderDocTools = tools.getRenderDoc();
         renderDocTools.getRenderDocPath().convention(

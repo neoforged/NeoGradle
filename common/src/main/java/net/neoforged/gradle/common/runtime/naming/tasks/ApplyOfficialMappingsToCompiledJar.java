@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -24,7 +25,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends DefaultExecute 
     public ApplyOfficialMappingsToCompiledJar() {
         super();
 
-        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.FART));
+        getExecutingJar().fileProvider(ToolUtilities.resolveTool(getProject(), Tools::getAutoRenamingTool));
         getProgramArguments().set(getShouldReverseMappings().map(shouldReverse -> {
             final List<String> result = Lists.newArrayList(RenameConstants.DEFAULT_PROGRAMM_ARGS);
             if (shouldReverse) {

@@ -22,6 +22,8 @@ import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
@@ -125,7 +127,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
         final SourceSet mainSource = javaPluginExtension.getSourceSets().getByName("main");
 
         final VanillaRuntimeExtension vanillaRuntimeExtension = project.getExtensions().getByType(VanillaRuntimeExtension.class);
-        final VanillaRuntimeDefinition runtimeDefinition = vanillaRuntimeExtension.create(builder -> builder.withMinecraftVersion(minecraftVersion).withDistributionType(DistributionType.CLIENT).withFartVersion(vanillaRuntimeExtension.getFartVersion()).withForgeFlowerVersion(vanillaRuntimeExtension.getVineFlowerVersion()).withAccessTransformerApplierVersion(vanillaRuntimeExtension.getAccessTransformerApplierVersion()));
+        final VanillaRuntimeDefinition runtimeDefinition = vanillaRuntimeExtension.create(builder -> builder.withMinecraftVersion(minecraftVersion).withDistributionType(DistributionType.CLIENT));
 
         project.getTasks().named(mainSource.getCompileJavaTaskName()).configure(task -> task.setEnabled(false));
 
@@ -439,6 +441,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 task.dependsOn(universalJar);
             });
 
+            final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
             installerProfile.configure((Consumer<InstallerProfile>) profile -> {
                 profile.getProfile().convention(project.getName());
                 profile.getVersion().set(launcherProfile.getId());
@@ -454,7 +457,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 profile.data("MC_SRG", String.format("[net.minecraft:client:%s:srg]", neoFormVersion), String.format("[net.minecraft:server:%s:srg]", neoFormVersion));
                 profile.data("PATCHED", String.format("[%s:%s:%s:client]", "net.neoforged", "neoforge", project.getVersion()), String.format("[%s:%s:%s:server]", "net.neoforged", "neoforge", project.getVersion()));
                 profile.data("MCP_VERSION", String.format("'%s'", neoFormVersion), String.format("'%s'", neoFormVersion));
-                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
+                profile.processor(project, Tools::getInstallerTools, processor -> {
                     processor.server();
                     processor.getArguments().addAll("--task", "EXTRACT_FILES", "--archive", "{INSTALLER}",
 
@@ -468,35 +471,35 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
                             "--from", "data/unix_args.txt", "--to", String.format("{ROOT}/libraries/%s/%s/%s/unix_args.txt", project.getGroup().toString().replaceAll("\\.", "/"), project.getName(), project.getVersion()));
                 });
-                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
+                profile.processor(project, Tools::getInstallerTools, processor -> {
                     processor.server();
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{ROOT}/libraries/", "--libraries");
                 });
-                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
+                profile.processor(project, Tools::getInstallerTools, processor -> {
                     processor.server();
                     processor.getArguments().addAll("--task", "BUNDLER_EXTRACT", "--input", "{MINECRAFT_JAR}", "--output", "{MC_UNPACKED}", "--jar-only");
                 });
-                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
+                profile.processor(project, Tools::getInstallerTools, processor -> {
                     processor.getArguments().addAll("--task", "MCP_DATA", "--input", String.format("[%s]", neoformDependency), "--output", "{MAPPINGS}", "--key", "mappings");
                 });
-                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
+                profile.processor(project, Tools::getInstallerTools, processor -> {
                     processor.getArguments().addAll("--task", "DOWNLOAD_MOJMAPS", "--version", runtimeDefinition.getSpecification().getMinecraftVersion(), "--side", "{SIDE}", "--output", "{MOJMAPS}");
                 });
-                profile.processor(project, Constants.INSTALLERTOOLS, processor -> {
+                profile.processor(project, Tools::getInstallerTools, processor -> {
                     processor.getArguments().addAll("--task", "MERGE_MAPPING", "--left", "{MAPPINGS}", "--right", "{MOJMAPS}", "--output", "{MERGED_MAPPINGS}", "--classes", "--fields", "--methods", "--reverse-right");
                 });
-                profile.processor(project, Constants.JARSPLITTER, processor -> {
+                profile.processor(project, Tools::getJarSplitter, processor -> {
                     processor.client();
                     processor.getArguments().addAll("--input", "{MINECRAFT_JAR}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
-                profile.processor(project, Constants.JARSPLITTER, processor -> {
+                profile.processor(project, Tools::getJarSplitter, processor -> {
                     processor.server();
                     processor.getArguments().addAll("--input", "{MC_UNPACKED}", "--slim", "{MC_SLIM}", "--extra", "{MC_EXTRA}", "--srg", "{MERGED_MAPPINGS}");
                 });
-                profile.processor(project, Constants.FART, processor -> {
+                profile.processor(project, tools.getAutoRenamingTool(), processor -> {
                     processor.getArguments().addAll("--input", "{MC_SLIM}", "--output", "{MC_SRG}", "--names", "{MERGED_MAPPINGS}", "--ann-fix", "--ids-fix", "--src-fix", "--record-fix");
                 });
-                profile.processor(project, Constants.BINARYPATCHER, processor -> {
+                profile.processor(project, tools.getBinaryPatcher(), processor -> {
                     processor.getArguments().addAll("--clean", "{MC_SRG}", "--output", "{PATCHED}", "--apply", "{BINPATCH}");
                 });
 
@@ -682,7 +685,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             userdevProfile.getAccessTransformerDirectory().set("ats/");
             userdevProfile.getBinaryPatchFile().set("joined.lzma");
             userdevProfile.getBinaryPatcher().set(project.getObjects().newInstance(UserdevProfile.ToolExecution.class).configure((Action<UserdevProfile.ToolExecution>) tool -> {
-                tool.getTool().set(Constants.BINPATCHER);
+                tool.getTool().set(project.getExtensions().getByType(Subsystems.class).getTools().getBinaryPatcher());
                 tool.getArguments().addAll("--clean", "{clean}", "--output", "{output}", "--apply", "{patch}");
             }));
             userdevProfile.getSourcesJarArtifactCoordinate().set(createCoordinate(project, "sources"));
@@ -1011,7 +1014,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
             task.getArguments().putRegularFile("mappings", mappingsFile.flatMap(WithOutput::getOutput));
             task.getArguments().putRegularFile("input", inputFile);
 
-            task.getExecutingJar().set(ToolUtilities.resolveTool(project, Constants.FART));
+            task.getExecutingJar().fileProvider(ToolUtilities.resolveTool(project, Tools::getAutoRenamingTool));
             task.getProgramArguments().addAll("--names", "{mappings}");
             task.getProgramArguments().addAll("--input", "{input}");
             task.getProgramArguments().addAll("--output", "{output}");

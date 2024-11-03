@@ -2,6 +2,8 @@ package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.util.ToolUtilities;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.util.Constants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
@@ -22,7 +24,7 @@ public abstract class BinaryAccessTransformer extends DefaultExecute {
 
         setDescription("Runs the access transformer on the decompiled sources.");
 
-        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.ACCESSTRANSFORMER));
+        getExecutingJar().fileProvider(ToolUtilities.resolveTool(getProject(), Tools::getAccessTransformer));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();

@@ -4,26 +4,6 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 class Constants {
-
-    public static final String BINPATCHER_VERSION =  "1.1.1";
-    public static final String BINPATCHER_VERSION_INTERPOLATION = "net.minecraftforge:binarypatcher:%s:fatjar";
-    public static final String BINPATCHER = String.format(BINPATCHER_VERSION_INTERPOLATION, BINPATCHER_VERSION);
-    public static final String ACCESSTRANSFORMER_VERSION = "10.0.+";
-    public static final String ACCESSTRANSFORMER_VERSION_INTERPOLATION = "net.neoforged.accesstransformers:at-cli:%s:fatjar";
-    public static final String ACCESSTRANSFORMER = String.format(ACCESSTRANSFORMER_VERSION_INTERPOLATION, ACCESSTRANSFORMER_VERSION);
-    public static final String SPECIALSOURCE = "net.md-5:SpecialSource:1.11.0:shaded";
-    public static final String FART_VERSION = "2.0.3";
-    public static final String FART_ARTIFACT_INTERPOLATION = "net.neoforged:AutoRenamingTool:%s:all";
-    public static final String FART = String.format(FART_ARTIFACT_INTERPOLATION, FART_VERSION);
-    public static final String INSTALLERTOOLS_VERSION = '2.1.2'
-    public static final String INSTALLERTOOLS = "net.neoforged.installertools:installertools:${INSTALLERTOOLS_VERSION}"
-    public static final String JARSPLITTER = "net.neoforged.installertools:jarsplitter:${INSTALLERTOOLS_VERSION}"
-    public static final String BINARYPATCHER = "net.neoforged.installertools:binarypatcher:${INSTALLERTOOLS_VERSION}"
-
-    public static final String VINEFLOWER_VERSION = "1.9.3";
-    public static final String VINEFLOWER_ARTIFACT_INTERPOLATION = "org.vineflower:vineflower:%s";
-    public static final String VINEFLOWER = String.format(VINEFLOWER_ARTIFACT_INTERPOLATION, VINEFLOWER_VERSION);
-
     public static final String DEFAULT_PARCHMENT_GROUP = "org.parchmentmc.data"
     public static final String DEFAULT_PARCHMENT_ARTIFACT_PREFIX = "parchment-"
     public static final String DEFAULT_PARCHMENT_MAVEN_URL = "https://maven.parchmentmc.org/"
@@ -31,6 +11,11 @@ class Constants {
     public static final String DEVLOGIN_TOOL_ARTIFACT = "net.covers1624:DevLogin:0.1.0.4"
     public static final String RENDERNURSE_TOOL_ARTIFACT = "net.neoforged:render-nurse:0.0.12";
     public static final String DEVLOGIN_MAIN_CLASS = "net.covers1624.devlogin.DevLogin"
+    public static final String BINPARCHER_TOOL_ARTIFACT = "net.neoforged.installertools:binarypatcher:2.1.7:fatjar"
+    public static final String ACCESSTRANSFORMER_TOOL_ARTIFACT = "net.neoforged.accesstransformers:at-cli:11.0.1:fatjar"
+    public static final String FART_TOOL_ARTIFACT = "net.neoforged:AutoRenamingTool:2.0.4:all"
+    public static final String INSTALLERTOOLS_TOOL_ARTIFACT = "net.neoforged.installertools:installertools:2.1.7"
+    public static final String JARSPLITTER_TOOL_ARTIFACT = "net.neoforged.installertools:jarsplitter:2.1.7"
 
     public static final String DEFAULT_RECOMPILER_MAX_MEMORY = "1g"
 

@@ -5,7 +5,9 @@ import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
+import net.neoforged.gradle.dsl.platform.extensions.LibraryManager;
 import net.neoforged.gradle.platform.extensions.DynamicProjectExtension;
+import net.neoforged.gradle.platform.extensions.LibraryManagerImpl;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -18,7 +20,8 @@ public class PlatformProjectPlugin implements Plugin<Project> {
     public void apply(@NotNull Project target) {
         target.getPlugins().apply(CommonPlugin.class);
         target.getExtensions().create("dynamicProject", DynamicProjectExtension.class, target);
-        
+        target.getExtensions().create(LibraryManager.class, "libraryManager", LibraryManagerImpl.class, target);
+
         target.getExtensions().configure(RunManager.class, runs -> runs.configureAll(run -> configureRun(target, run)));
     }
     

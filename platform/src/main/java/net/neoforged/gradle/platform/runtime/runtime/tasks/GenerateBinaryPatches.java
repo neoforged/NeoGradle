@@ -7,6 +7,8 @@ package net.neoforged.gradle.platform.runtime.runtime.tasks;
 
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.util.ToolUtilities;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.dsl.common.util.Constants;
@@ -18,7 +20,7 @@ import org.gradle.api.tasks.*;
 
 public abstract class GenerateBinaryPatches extends DefaultExecute implements WithOutput, WithWorkspace {
     public GenerateBinaryPatches() {
-        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), Constants.BINPATCHER));
+        getExecutingJar().fileProvider(ToolUtilities.resolveTool(getProject(), Tools::getBinaryPatcher));
         getProgramArguments().addAll("--clean", "{clean}", "--create", "{dirty}", "--output", "{output}",
                 "--patches", "{patches}", "--srg", "{srg}");
         

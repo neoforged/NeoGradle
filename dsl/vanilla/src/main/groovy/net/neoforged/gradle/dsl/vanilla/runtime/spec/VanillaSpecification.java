@@ -9,28 +9,4 @@ import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
  */
 @CompileStatic
 public interface VanillaSpecification extends Specification {
-
-    /**
-     * Gets the version of FART to use.
-     *
-     * @return The version of FART to use.
-     */
-    @NotNull
-    String getFartVersion();
-
-    /**
-     * Gets the version of ForgeFlower to use.
-     *
-     * @return The version of ForgeFlower to use.
-     */
-    @NotNull
-    String getForgeFlowerVersion();
-
-    /**
-     * Gets the version of AccessTransformerApplier to use.
-     *
-     * @return The version of AccessTransformerApplier to use.
-     */
-    @NotNull
-    String getAccessTransformerApplierVersion();
 }

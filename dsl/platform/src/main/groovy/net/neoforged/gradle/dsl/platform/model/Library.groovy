@@ -64,8 +64,8 @@ abstract class Library extends WithRules<Library> {
     @Override
     int hashCode() {
         def result = super.hashCode()
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0)
-        result = 31 * result + (getDownload() != null ? getDownload().hashCode() : 0)
+        result = 31 * result + (getName().get() != null ? getName().get().hashCode() : 0)
+        result = 31 * result + (getDownload().get() != null ? getDownload().get().hashCode() : 0)
         return result
     }
 
@@ -75,8 +75,8 @@ abstract class Library extends WithRules<Library> {
         if (!(obj instanceof Library)) return false;
         final Library other = (Library) obj;
         return super.equals(obj) &&
-                (getName() != null ? getName() == other.getName() : other.getName() == null) &&
-                (getDownload() != null ? getDownload() == other.getDownload() : other.getDownload() == null);
+                (getName().get() != null ? getName().get() == other.getName().get() : other.getName().get() == null) &&
+                (getDownload().get() != null ? getDownload().get() == other.getDownload().get() : other.getDownload().get() == null);
     }
 
     @CompileStatic

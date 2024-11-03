@@ -12,6 +12,7 @@ import org.gradle.api.Task;
 import org.gradle.api.provider.Provider;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -19,9 +20,6 @@ import java.util.Optional;
  */
 public final class VanillaRuntimeSpecification extends CommonRuntimeSpecification implements VanillaSpecification {
     private final String minecraftVersion;
-    private final String fartVersion;
-    private final String forgeFlowerVersion;
-    private final String accessTransformerApplierVersion;
 
     public VanillaRuntimeSpecification(Project project,
                                        String name,
@@ -30,15 +28,9 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
                                        Multimap<String, TaskTreeAdapter> preTaskTypeAdapters,
                                        Multimap<String, TaskTreeAdapter> postTypeAdapters,
                                        Multimap<String, TaskCustomizer<? extends Task>> taskCustomizers,
-                                       String minecraftVersion,
-                                       String fartVersion,
-                                       String forgeFlowerVersion,
-                                       String accessTransformerApplierVersion) {
+                                       String minecraftVersion) {
         super(project, name, version, side, preTaskTypeAdapters, postTypeAdapters, taskCustomizers, VanillaRuntimeExtension.class);
         this.minecraftVersion = minecraftVersion;
-        this.fartVersion = fartVersion;
-        this.forgeFlowerVersion = forgeFlowerVersion;
-        this.accessTransformerApplierVersion = accessTransformerApplierVersion;
     }
 
     public String getMinecraftVersion() {
@@ -46,51 +38,22 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
     }
 
     @Override
-    public String getFartVersion() {
-        return fartVersion;
-    }
-
-    @Override
-    public String getForgeFlowerVersion() {
-        return forgeFlowerVersion;
-    }
-
-    @Override
-    public String getAccessTransformerApplierVersion() {
-        return accessTransformerApplierVersion;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof VanillaRuntimeSpecification)) return false;
+        if (!(o instanceof VanillaRuntimeSpecification that)) return false;
         if (!super.equals(o)) return false;
-
-        VanillaRuntimeSpecification that = (VanillaRuntimeSpecification) o;
-
-        if (!minecraftVersion.equals(that.minecraftVersion)) return false;
-        if (!fartVersion.equals(that.fartVersion)) return false;
-        if (!forgeFlowerVersion.equals(that.forgeFlowerVersion)) return false;
-        return accessTransformerApplierVersion.equals(that.accessTransformerApplierVersion);
+        return Objects.equals(getMinecraftVersion(), that.getMinecraftVersion());
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + minecraftVersion.hashCode();
-        result = 31 * result + fartVersion.hashCode();
-        result = 31 * result + forgeFlowerVersion.hashCode();
-        result = 31 * result + accessTransformerApplierVersion.hashCode();
-        return result;
+        return Objects.hash(super.hashCode(), getMinecraftVersion());
     }
 
     @Override
     public String toString() {
-        return "VanillaRuntimeSpec{" +
+        return "VanillaRuntimeSpecification{" +
                 "minecraftVersion='" + minecraftVersion + '\'' +
-                ", fartVersion='" + fartVersion + '\'' +
-                ", forgeFlowerVersion='" + forgeFlowerVersion + '\'' +
-                ", accessTransformerApplierVersion='" + accessTransformerApplierVersion + '\'' +
                 '}';
     }
 
@@ -99,15 +62,6 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
         private Provider<String> minecraftArtifact;
         
         private Provider<String> minecraftVersion;
-
-        private Provider<String> fartVersion;
-        private boolean hasConfiguredFartVersion = false;
-
-        private Provider<String> forgeFlowerVersion;
-        private boolean hasConfiguredForgeFlowerVersion = false;
-
-        private Provider<String> accessTransformerApplierVersion;
-        private boolean hasConfiguredAccessTransformerApplierVersion = false;
 
         public static Builder from(Project project) {
             return new Builder(project);
@@ -125,23 +79,6 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
             return this;
         }
 
-        @Override
-        protected void configureBuilder() {
-            super.configureBuilder();
-            final VanillaRuntimeExtension runtimeExtension = this.getProject().getExtensions().getByType(VanillaRuntimeExtension.class);
-
-            if (!this.hasConfiguredFartVersion) {
-                this.fartVersion = runtimeExtension.getFartVersion();
-            }
-
-            if (!this.hasConfiguredForgeFlowerVersion) {
-                this.forgeFlowerVersion = runtimeExtension.getVineFlowerVersion();
-            }
-
-            if (!this.hasConfiguredAccessTransformerApplierVersion) {
-                this.accessTransformerApplierVersion = runtimeExtension.getAccessTransformerApplierVersion();
-            }
-        }
 
         public Builder withMinecraftArtifact(final Provider<String> minecraftArtifact) {
             this.minecraftArtifact = minecraftArtifact;
@@ -167,45 +104,6 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
             return withMinecraftVersion(project.provider(() -> minecraftVersion));
         }
 
-        public Builder withFartVersion(final Provider<String> fartVersion) {
-            this.fartVersion = fartVersion;
-            this.hasConfiguredFartVersion = true;
-            return getThis();
-        }
-
-        public Builder withFartVersion(final String fartVersion) {
-            if (fartVersion == null) // Additional null check for convenient loading of sides from dependencies.
-                return getThis();
-
-            return withFartVersion(project.provider(() -> fartVersion));
-        }
-
-        public Builder withForgeFlowerVersion(final Provider<String> forgeFlowerVersion) {
-            this.forgeFlowerVersion = forgeFlowerVersion;
-            this.hasConfiguredForgeFlowerVersion = true;
-            return getThis();
-        }
-
-        public Builder withForgeFlowerVersion(final String forgeFlowerVersion) {
-            if (forgeFlowerVersion == null) // Additional null check for convenient loading of sides from dependencies.
-                return getThis();
-
-            return withForgeFlowerVersion(project.provider(() -> forgeFlowerVersion));
-        }
-
-        public Builder withAccessTransformerApplierVersion(final Provider<String> accessTransformerApplierVersion) {
-            this.accessTransformerApplierVersion = accessTransformerApplierVersion;
-            this.hasConfiguredAccessTransformerApplierVersion = true;
-            return getThis();
-        }
-
-        public Builder withAccessTransformerApplierVersion(final String accessTransformerApplierVersion) {
-            if (accessTransformerApplierVersion == null) // Additional null check for convenient loading of sides from dependencies.
-                return getThis();
-
-            return withAccessTransformerApplierVersion(project.provider(() -> accessTransformerApplierVersion));
-        }
-
         @Override
         public @NotNull VanillaRuntimeSpecification build() {
             return new VanillaRuntimeSpecification(
@@ -216,10 +114,8 @@ public final class VanillaRuntimeSpecification extends CommonRuntimeSpecificatio
                     preTaskAdapters,
                     postTaskAdapters,
                     taskCustomizers,
-                    minecraftVersion.get(),
-                    fartVersion.get(),
-                    forgeFlowerVersion.get(),
-                    accessTransformerApplierVersion.get());
+                    minecraftVersion.get()
+            );
         }
     }
 }
