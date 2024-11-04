@@ -143,11 +143,6 @@ abstract class InstallerProfile implements ConfigurableDSLElement<InstallerProfi
     @Optional
     abstract MapProperty<String, DataFile> getData();
 
-    /**
-     * Track which tools were already added to avoid re-resolving the download URLs for the same tool over and over.
-     */
-    private final Set<String> toolLibrariesAdded = new HashSet<>()
-
     void data(String key, @Nullable String client, @Nullable String server) {
         getData().put(key, getObjectFactory().newInstance(DataFile.class).configure { DataFile it ->
             if (client != null)

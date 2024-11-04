@@ -391,7 +391,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     project.getConfigurations(),
                     "InstallerRuntimeLibraries"
             );
-            installerRuntimeLibrariesConfiguration.extendsFrom(installerConfiguration);
+            ConfigurationUtils.extendsFrom(project, installerRuntimeLibrariesConfiguration, installerConfiguration);
             installerRuntimeLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
             
             final ListProperty<URI> repoCollection = new RepositoryCollection(project.getProviders(), project.getObjects(), project.getRepositories()).getURLs();
@@ -525,7 +525,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     project.getConfigurations(),
                     "InstallerJsonInstallerLibraries"
             );
-            installerJsonInstallerLibrariesConfiguration.extendsFrom(installerLibrariesConfiguration);
+            ConfigurationUtils.extendsFrom(project, installerJsonInstallerLibrariesConfiguration, installerLibrariesConfiguration);
             installerJsonInstallerLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
 
             final TaskProvider<CreateLegacyInstallerJson> createLegacyInstallerJson = project.getTasks().register("createLegacyInstallerJson", CreateLegacyInstallerJson.class, task -> {
@@ -695,27 +695,27 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                     project.getConfigurations(),
                     "userdevLibraries"
             );
-            userdevJsonLibrariesConfiguration.extendsFrom(
+            ConfigurationUtils.extendsFrom(project,
+                    userdevJsonLibrariesConfiguration,
                     userdevCompileOnlyConfiguration,
                     installerLibrariesConfiguration,
                     gameLayerLibraryConfiguration,
                     pluginLayerLibraryConfiguration,
-                    moduleOnlyConfiguration
-            );
+                    moduleOnlyConfiguration);
             userdevJsonLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
 
             final Configuration userdevJsonModuleOnlyConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
                     project.getConfigurations(),
                     "userdevModuleOnly"
             );
-            userdevJsonModuleOnlyConfiguration.extendsFrom(moduleOnlyConfiguration);
+            ConfigurationUtils.extendsFrom(project, userdevJsonModuleOnlyConfiguration, moduleOnlyConfiguration);
             userdevJsonLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
 
             final Configuration userdevJsonUserdevTestImplementationConfiguration = ConfigurationUtils.temporaryUnhandledConfiguration(
                     project.getConfigurations(),
                     "userdevJsonUserdevTestImplementation"
             );
-            userdevJsonUserdevTestImplementationConfiguration.extendsFrom(userdevTestImplementationConfiguration);
+            ConfigurationUtils.extendsFrom(project, userdevJsonUserdevTestImplementationConfiguration, userdevTestImplementationConfiguration);
             userdevJsonUserdevTestImplementationConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
 
             final TaskProvider<CreateUserdevJson> createUserdevJson = project.getTasks().register("createUserdevJson", CreateUserdevJson.class, task -> {
