@@ -575,6 +575,7 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
                 CommonRuntimeExtension.configureCommonRuntimeTaskParameters(task, runtimeDefinition, workingDirectory);
             });
 
+            var projectVersion = project.getVersion().toString();
             final TaskProvider<CreateLegacyInstaller> installerJar = project.getTasks().register("legacyInstallerJar", CreateLegacyInstaller.class, task -> {
                 task.getInstallerCore().set(downloadInstaller.flatMap(WithOutput::getOutput));
                 task.getInstallerJson().set(createLegacyInstallerJson.flatMap(WithOutput::getOutput));
@@ -589,8 +590,8 @@ public abstract class DynamicProjectExtension implements BaseDSLElement<DynamicP
 
                 if (project.getProperties().containsKey("neogradle.runtime.platform.installer.debug") && Boolean.parseBoolean(project.getProperties().get("neogradle.runtime.platform.installer.debug").toString())) {
                     task.from(signUniversalJar.flatMap(WithOutput::getOutput), spec -> {
-                        spec.into(String.format("/maven/net/neoforged/neoforge/%s/", project.getVersion()));
-                        spec.rename(name -> String.format("neoforge-%s-universal.jar", project.getVersion()));
+                        spec.into(String.format("/maven/net/neoforged/neoforge/%s/", projectVersion));
+                        spec.rename(name -> String.format("neoforge-%s-universal.jar", projectVersion));
                     });
                 }
             });

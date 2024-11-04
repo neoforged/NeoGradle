@@ -33,6 +33,7 @@ class InstallerProfileTests  extends BuilderBasedTestSpecification {
     private PublishingProjectSetup createPublishingProject(String projectId, String patchedBuildConfiguration) {
         def rootProject = create(projectId, {
             it.property(CachedExecutionService.DEBUG_CACHE_PROPERTY, 'true')
+            it.property("neogradle.runtime.platform.installer.debug", "true")
             it.settingsPlugin(pluginUnderTest)
             it.settings("""
                 dynamicProjects {
@@ -63,6 +64,16 @@ class InstallerProfileTests  extends BuilderBasedTestSpecification {
             """)
             it.file("server_files/args.txt", """
                 Something to Inject into            
+            """)
+            it.file("server_files/run.sh", """
+                #!/bin/bash
+                echo "Test server starter script"
+            """)
+            it.file("server_files/run.bat", """
+                echo "Test server starter script"
+            """)
+            it.file("server_files/user_jvm_args.txt", """
+                -Xmx2G
             """)
             //The following properties are needed as we do not have an abstract layer over the tokens needed.
             it.property("fancy_mod_loader_version", "1.0.0")
@@ -372,6 +383,37 @@ class InstallerProfileTests  extends BuilderBasedTestSpecification {
         jsonFile.exists()
         jsonFile.text.contains("net.neoforged.installertools:binarypatcher:2.1.5:fatjar")
         !jsonFile.text.contains("net.neoforged.installertools:binarypatcher:2.1.7:fatjar")
+    }
+
+    def "a published installer can be invoked to install a server"() {
+        given:
+        def project = createPublishingProject("published-userdev", """
+            tasks.register("installTestServer", JavaExec.class) {
+                classpath(tasks.named("signInstallerJar").flatMap { it.output })
+                args("--installServer", file("build/testserverinstall").absolutePath)
+                dependsOn("signInstallerJar")
+            }
+        """)
+
+        project.rootProject.run { it.tasks ':neoforge:setup' }
+        patch(project)
+        project.rootProject.run { it.tasks ':neoforge:unpackSourcePatches'}
+        project.rootProject.run { it.tasks ':neoforge:assemble' }
+
+        when:
+        def publishingRun = project.rootProject.run {
+            it.tasks ':neoforge:installTestServer'
+        }
+
+        then:
+        publishingRun.task(":neoforge:installTestServer").outcome == TaskOutcome.SUCCESS
+
+        and:
+        def testServerDir = project.patchedProject.file("build/testserverinstall")
+
+        then:
+        testServerDir.exists()
+        testServerDir.listFiles().size() > 0
     }
 }
 
