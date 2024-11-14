@@ -6,10 +6,7 @@ import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.RenderDocDownloaderTask;
-import net.neoforged.gradle.common.util.ClasspathUtils;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
-import net.neoforged.gradle.common.util.SourceSetUtils;
-import net.neoforged.gradle.common.util.VersionJson;
+import net.neoforged.gradle.common.util.*;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools;
@@ -226,24 +223,16 @@ public class RunsUtil {
 
             run.getDependsOn().add(setupRenderDoc);
 
-            Configuration renderNurse = null;
-            if (run.getModSources().getPrimary().isPresent()) {
-                renderNurse = addLocalRenderNurse(run.getModSources().getPrimary().get(), run);
-            }
-
-            if (renderNurse == null) {
-                //This happens when no primary source set is set, and the renderNurse configuration is not added to the runtime classpath.
-                renderNurse = registerRenderNurse(run.getProject());
-            }
+            //We need the renderNurse path resolved here, because eclipse resolves the run tasks in a place that is not compatible with late resolve of configurations
+            //Idea has no such issues, but the problem remains that if we don't get the actuall file and delay the configuration resolve untill import time, it will crash.
+            File renderNurse = ToolUtilities.resolveTool(project, renderDocTools.getRenderNurse()).get();
 
             //Add the relevant properties, so that render nurse can be used, see its readme for the required values.
             run.getEnvironmentVariables().put("LD_PRELOAD", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
             run.getSystemProperties().put(
                     "neoforge.rendernurse.renderdoc.library", setupRenderDoc.flatMap(RenderDocDownloaderTask::getRenderDocLibraryFile).map(RegularFile::getAsFile).map(File::getAbsolutePath)
             );
-            run.getJvmArguments().add(renderNurse.getIncoming().getArtifacts().getResolvedArtifacts()
-                    .map(artifactView -> artifactView.iterator().next())
-                    .map(resolvedArtifact -> "-javaagent:%s".formatted(resolvedArtifact.getFile().getAbsolutePath())));
+            run.getJvmArguments().add("-javaagent:%s".formatted(renderNurse.getAbsolutePath()));
             run.getJvmArguments().add("--enable-preview");
             run.getJvmArguments().add("--enable-native-access=ALL-UNNAMED");
         }

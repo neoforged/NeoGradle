@@ -34,8 +34,8 @@ public abstract class RenderDocDownloaderTask extends NeoGradleBase {
         if (outputRoot.exists() && outputRoot.isDirectory()) {
             final File renderDocLibraryFile = getOSSpecificRenderDocLibraryFile(outputRoot);
             if (renderDocLibraryFile.exists() && renderDocLibraryFile.isFile()) {
-                //setDidWork(false);
-                //return;
+                setDidWork(false);
+                return;
             }
         }
 

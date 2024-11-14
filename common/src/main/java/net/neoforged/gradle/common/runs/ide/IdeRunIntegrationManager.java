@@ -303,6 +303,11 @@ public class IdeRunIntegrationManager {
                                                        .mode(LaunchGroup.Mode.DEBUG)
                                                        .action(LaunchGroup.Action.none()))
                                         .build());
+                    } catch (IllegalStateException e) {
+                        final Thread currentThread = Thread.currentThread();
+                        project.getLogger().error("Failed to write launch files: {}", runName, e);
+                        project.getLogger().error("Thread: {} - {}", currentThread.getName(), currentThread.getId());
+                        throw new GradleException("Failed to write launch files: " + runName + ". Current Thread: " + currentThread.getName(), e);
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to write launch files: " + runName, e);
                     }
@@ -425,7 +430,7 @@ public class IdeRunIntegrationManager {
                     eclipseResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
                         final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
                         task.from(defaultProcessResources.map(ProcessResources::getDestinationDir));
-                        Path outputDir = sourceSetProject.getExtensions().getByType(IdeManagementExtension.class).getEclipseModel().getClasspath().getDefaultOutputDir().toPath();
+                        Path outputDir = getEclipseOutputDirectory(sourceSetProject);
                         if (outputDir.endsWith("default")) {
                             // sometimes it has default value from org.gradle.plugins.ide.eclipse.internal.EclipsePluginConstants#DEFAULT_PROJECT_OUTPUT_PATH
                             // which has /default on end that is not present in the final outputDir in eclipse/buildship
@@ -442,6 +447,19 @@ public class IdeRunIntegrationManager {
             }
             return copyProcessResources;
         }
+
+        private static @NotNull Path getEclipseOutputDirectory(Project sourceSetProject) {
+            if (sourceSetProject.getExtensions().findByType(IdeManagementExtension.class) == null) {
+                if (sourceSetProject.getExtensions().findByType(EclipseModel.class) == null) {
+                    throw new IllegalStateException("EclipseModel not found in project: " + sourceSetProject);
+                }
+
+                return sourceSetProject.getExtensions().getByType(EclipseModel.class).getClasspath().getDefaultOutputDir().toPath();
+            }
+
+            return sourceSetProject.getExtensions().getByType(IdeManagementExtension.class).getEclipseModel().getClasspath().getDefaultOutputDir().toPath();
+        }
+
 
         private static void writeLaunchToFile(Project project, String fileName, LaunchConfig config) {
             final File file = project.file(String.format(".eclipse/configurations/%s.launch", fileName));
