@@ -15,10 +15,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.internal.GUtil;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 public class ConfigurationUtils {
@@ -39,8 +36,8 @@ public class ConfigurationUtils {
     public static void extendsFrom(final Project project, final Configuration target, final Configuration... configurations) {
         for (Configuration configuration : configurations) {
             //We treat each configuration as a dependency collector in and of it-self, and copy the dependencies and dependency constraints to the target configuration.
-            target.getDependencies().addAllLater(project.provider(configuration::getDependencies));
-            target.getDependencyConstraints().addAllLater(project.provider(configuration::getDependencyConstraints));
+            target.getDependencies().addAllLater(project.provider(configuration::getAllDependencies));
+            target.getDependencyConstraints().addAllLater(project.provider(configuration::getAllDependencyConstraints));
         }
     }
 
