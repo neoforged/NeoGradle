@@ -8,6 +8,8 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,6 +25,8 @@ import java.util.zip.ZipOutputStream;
  * @see InjectZipContent
  */
 public abstract class InjectFromZipSource extends AbstractInjectSource {
+    private static final Logger LOG = LoggerFactory.getLogger(InjectFromZipSource.class);
+
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getZipFile();
@@ -56,7 +60,7 @@ public abstract class InjectFromZipSource extends AbstractInjectSource {
                             throw e;
                         } else if (!entry.isDirectory()) {
                             // Warn on duplicate files, but ignore duplicate directories
-                            getLogger().warn("Cannot inject duplicate file {}", entry.getName());
+                            LOG.warn("Cannot inject duplicate file {}", entry.getName());
                         }
                     }
                 }
