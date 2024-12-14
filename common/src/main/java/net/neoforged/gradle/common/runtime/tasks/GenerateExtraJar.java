@@ -6,6 +6,7 @@ import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
+import net.neoforged.gradle.util.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
@@ -27,10 +28,10 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 @CacheableTask
 public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutput, WithWorkspace {
@@ -53,7 +54,6 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
     }
 
     private void doRun() throws Exception {
-        final File originalJar = getOriginalJar().get().getAsFile();
         final File outputJar = ensureFileWorkspaceReady(getOutput());
 
         // Official mappings are Named -> Obf and need to be reversed
@@ -72,17 +72,21 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
             addSourceDistEntries(clientFiles, serverFiles, "client", mappings, manifest);
             addSourceDistEntries(serverFiles, clientFiles, "server", mappings, manifest);
 
-            try (var jos = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(outputJar)), manifest)) {
+            try (var zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputJar)))) {
+                zos.putNextEntry(FileUtils.getStableEntry(JarFile.MANIFEST_NAME));
+                manifest.write(zos);
+                zos.closeEntry();
+
                 // Generally ignore directories, manifests and class files
                 var clientEntries = clientZip.entries();
                 while (clientEntries.hasMoreElements()) {
                     var clientEntry = clientEntries.nextElement();
                     if (isResourceEntry(clientEntry)) {
-                        jos.putNextEntry(clientEntry);
+                        zos.putNextEntry(clientEntry);
                         try (var clientIn = clientZip.getInputStream(clientEntry)) {
-                            clientIn.transferTo(jos);
+                            clientIn.transferTo(zos);
                         }
-                        jos.closeEntry();
+                        zos.closeEntry();
                     }
                 }
             }
