@@ -63,7 +63,7 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
 
             var manifest = new Manifest();
             manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-            manifest.getMainAttributes().putValue("NeoForm-Minecraft-Dists", "server client");
+            manifest.getMainAttributes().putValue("Minecraft-Dists", "server client");
 
             addSourceDistEntries(clientFiles, serverFiles, "client", mappings, manifest);
             addSourceDistEntries(serverFiles, clientFiles, "server", mappings, manifest);
@@ -93,7 +93,7 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         for (var file : distFiles) {
             if (!otherDistFiles.contains(file)) {
                 var fileAttr = new Attributes(1);
-                fileAttr.putValue("NeoForm-Minecraft-Dist", dist);
+                fileAttr.putValue("Minecraft-Dist", dist);
 
                 if (mappings != null && file.endsWith(".class")) {
                     file = mappings.remapClass(file.substring(0, file.length() - ".class".length())) + ".class";
