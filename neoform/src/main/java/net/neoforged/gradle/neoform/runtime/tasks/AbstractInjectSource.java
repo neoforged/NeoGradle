@@ -49,9 +49,6 @@ public abstract class AbstractInjectSource {
      */
     public abstract void copyTo(ZipOutputStream out) throws IOException;
 
-    @Inject
-    protected abstract Logger getLogger();
-
     protected final PatternSet createFilter() {
         PatternSet filter = new PatternSet();
         filter.include(getInclusionFilter().get());
