@@ -12,7 +12,7 @@ class Constants {
     public static final String RENDERNURSE_TOOL_ARTIFACT = "net.neoforged:render-nurse:0.0.12";
     public static final String DEVLOGIN_MAIN_CLASS = "net.covers1624.devlogin.DevLogin"
     public static final String BINPARCHER_TOOL_ARTIFACT = "net.neoforged.installertools:binarypatcher:2.1.7:fatjar"
-    public static final String ACCESSTRANSFORMER_TOOL_ARTIFACT = "net.neoforged.accesstransformers:at-cli:11.0.+:fatjar"
+    public static final String ACCESSTRANSFORMER_TOOL_ARTIFACT = "net.neoforged.accesstransformers:at-cli:11.0.2:fatjar"
     public static final String FART_TOOL_ARTIFACT = "net.neoforged:AutoRenamingTool:2.0.4:all"
     public static final String INSTALLERTOOLS_TOOL_ARTIFACT = "net.neoforged.installertools:installertools:2.1.7"
     public static final String JARSPLITTER_TOOL_ARTIFACT = "net.neoforged.installertools:jarsplitter:2.1.7"
