@@ -91,7 +91,7 @@ subprojects.forEach { Project subProject ->
 
         it.group = 'infrastructure'
         it.doLast {
-            subProject.tasks.withType(Test).forEach { Task test ->
+            subProject.tasks.withType(Test).forEach { Test test ->
                 def testSourceSetCandidate = test.extensions.findByName('test-source-set')
                 if (testSourceSetCandidate != null) {
                     SourceSet testSourceSet = testSourceSetCandidate as SourceSet
@@ -128,7 +128,10 @@ subprojects.forEach { Project subProject ->
 
                     tests.addAll(createTestRuns(test, testClasses))
                 } else {
-                    tests.addAll(createTestRuns(test, new ArrayList<String>()))
+                    //This test task is not marked as a filterable test task by our central build.gradle file.
+                    //Check if it has source, if so run it, else skip it. No need to setup gradle to run nothing:
+                    if (!test.getCandidateClassFiles().isEmpty())
+                        tests.addAll(createTestRuns(test, new ArrayList<String>()))
                 }
             }
 

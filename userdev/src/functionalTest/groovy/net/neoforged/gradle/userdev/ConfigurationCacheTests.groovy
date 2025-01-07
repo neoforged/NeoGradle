@@ -116,12 +116,12 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             }
             
             runs {
-                data { }
+                clientData { }
             }
             
             afterEvaluate {
                 //We don't care for the error here, we just want to run the task so that the config cache is created
-                tasks.withType(JavaExec).named('runData') {
+                tasks.withType(JavaExec).named('runClientData') {
                     ignoreExitValue = true
                     group = 'run'
                 }
@@ -145,11 +145,11 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('runData')
+            it.tasks('runClientData')
             
         }
 
         then:
-        run.task(':runData').outcome == TaskOutcome.SUCCESS
+        run.task(':runClientData').outcome == TaskOutcome.SUCCESS
     }
 }

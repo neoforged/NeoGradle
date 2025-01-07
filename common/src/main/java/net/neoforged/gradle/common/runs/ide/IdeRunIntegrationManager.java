@@ -382,22 +382,24 @@ public class IdeRunIntegrationManager {
         private List<TaskProvider<?>> createIntelliJCopyResourcesTasks(Run run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().all().get().values()) {
-                copyProcessResources.add(setupCopyResourcesForIdea(sourceSet));
+                copyProcessResources.add(setupCopyResourcesForIdea(sourceSet, RunsUtil.IdeaCompileType.Production));
             }
 
             if (run.getIsJUnit().get()) {
                 for (SourceSet sourceSet : run.getUnitTestSources().all().get().values()) {
-                    copyProcessResources.add(setupCopyResourcesForIdea(sourceSet));
+                    copyProcessResources.add(setupCopyResourcesForIdea(sourceSet, RunsUtil.IdeaCompileType.Test));
                 }
             }
 
             return copyProcessResources;
         }
 
-        private static @NotNull TaskProvider<?> setupCopyResourcesForIdea(SourceSet sourceSet) {
+        private static @NotNull TaskProvider<?> setupCopyResourcesForIdea(SourceSet sourceSet, RunsUtil.IdeaCompileType compileType) {
             final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
-            final String taskName = CommonRuntimeUtils.buildTaskName("intelliJCopy", sourceSet.getProcessResourcesTaskName());
+            //We need a task per compile type, incase the modder configures the task in one run as a mod source and in the other as a unit test source.
+            final String taskPrefix = CommonRuntimeUtils.buildTaskName("intelliJCopy", compileType.name());
+            final String taskName = CommonRuntimeUtils.buildTaskName(taskPrefix, sourceSet.getProcessResourcesTaskName());
             final TaskProvider<?> intelliJResourcesTask;
 
             if (sourceSetProject.getTasks().findByName(taskName) != null) {
@@ -407,7 +409,7 @@ public class IdeRunIntegrationManager {
                 intelliJResourcesTask = sourceSetProject.getTasks().register(taskName, Copy.class, task -> {
                     final TaskProvider<ProcessResources> defaultProcessResources = sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName(), ProcessResources.class);
                     task.from(defaultProcessResources.map(ProcessResources::getDestinationDir));
-                    task.into(RunsUtil.getRunWithIdeaResourcesDirectory(sourceSet));
+                    task.into(RunsUtil.getRunWithIdeaResourcesDirectory(sourceSet, compileType));
 
                     task.dependsOn(defaultProcessResources);
                 });
