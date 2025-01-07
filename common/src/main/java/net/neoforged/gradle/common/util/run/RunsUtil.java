@@ -607,12 +607,13 @@ public class RunsUtil {
         return getIdeaModuleOutDirectory(sourceSet, compileType).map(dir -> dir.dir(name));
     }
 
-    public static Provider<? extends FileSystemLocation> getRunWithIdeaResourcesDirectory(final SourceSet sourceSet) {
-        //When running with idea we forcefully redirect all sourcesets to a directory in build, to prevent issues
-        //with unit tests started from the gutter -> We can only have a single task, that should run always, regardless of run or sourceset:
-        final Project project = SourceSetUtils.getProject(sourceSet);
-        final ProjectLayout buildLayout = project.getLayout();
-        return buildLayout.getBuildDirectory().map(dir -> dir.dir("idea").dir("resources").dir(sourceSet.getName()));
+    public static Provider<? extends FileSystemLocation> getRunWithIdeaResourcesDirectory(final SourceSet sourceSet, final IdeaCompileType compileType) {
+        //We previously used this:
+        //buildLayout.getBuildDirectory().map(dir -> dir.dir("idea").dir("resources").dir(sourceSet.getName()));
+        //However this has issues at runtime with FML trying to load the old not interpolated mods.toml etc.
+        //It works smoothly if a user has an excluded templates directory configured for his templates in process resources however.
+        //To make it work transparently we switched back to this interpolation mechanic where we write into IDEAs output directory.
+        return getRunWithIdeaDirectory(sourceSet, compileType, "resources");
     }
 
     public static Provider<? extends FileSystemLocation> getRunWithIdeaClassesDirectory(final SourceSet sourceSet, final IdeaCompileType compileType) {
@@ -625,7 +626,7 @@ public class RunsUtil {
         return buildModClasses(compileSourceSets, sourceSet -> {
 
             if (isRunWithIdea(sourceSet)) {
-                final File resourcesDir = getRunWithIdeaResourcesDirectory(sourceSet).get().getAsFile();
+                final File resourcesDir = getRunWithIdeaResourcesDirectory(sourceSet, compileType).get().getAsFile();
                 final File classesDir = getRunWithIdeaClassesDirectory(sourceSet, compileType).get().getAsFile();
                 return Stream.of(resourcesDir, classesDir);
             }

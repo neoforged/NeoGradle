@@ -46,7 +46,7 @@ class RunTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':runData')
+            it.tasks(':runClientData')
             //We are expecting this test to fail, since there is a mod without any files included so it is fine.
             it.shouldFail()
             it.stacktrace()
@@ -54,9 +54,8 @@ class RunTests extends BuilderBasedTestSpecification {
 
         then:
         true
-        run.task(':writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("Caused by: java.io.IOException: Invalid paths argument, contained no existing paths")
+        run.task(':writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
+        run.output.contains("is not a valid mod file")
     }
 
     def "configuring of the configurations after the dependencies block should work"() {
@@ -85,7 +84,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             
             runs {
-                data {
+                clientData {
                     modSource project.sourceSets.main
                 }
             }
@@ -100,15 +99,14 @@ class RunTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks(':runData')
+            it.tasks(':runClientData')
             //We are expecting this test to fail, since there is a mod without any files included so it is fine.
             it.shouldFail()
         }
 
         then:
-        run.task(':writeMinecraftClasspathData').outcome == TaskOutcome.SUCCESS
-        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("Caused by: java.io.IOException: Invalid paths argument, contained no existing paths")
+        run.task(':writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
+        run.output.contains("is not a valid mod file")
     }
 
     def "runs can be declared before the dependencies block"() {
