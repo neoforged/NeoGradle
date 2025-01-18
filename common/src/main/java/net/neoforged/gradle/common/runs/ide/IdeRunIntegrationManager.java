@@ -187,6 +187,15 @@ public class IdeRunIntegrationManager {
                 ideBeforeRunTask.configure(task -> copyProcessResourcesTasks.forEach(task::dependsOn));
             }
 
+            //We can eagerly initialize here, as we are in an afterEvaluate after the run configuration has happened.
+            final List<String> jvmArguments = runImpl.realiseJvmArguments();
+            final List<String> programArguments = runImpl.getArguments().get();
+            final Map<String, String> productionEnvironment = adaptEnvironment(runImpl, multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production));
+            final Map<String, String> testEnvironment = adaptEnvironment(runImpl,
+                    multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production),
+                    multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Test)
+            );
+
             //Do not generate a run configuration for unit tests
             if (!runImpl.getIsJUnit().get()) {
                 ideaRuns.register(runName, Application.class, ideaRun -> {
@@ -194,10 +203,10 @@ public class IdeRunIntegrationManager {
 
                     ideaRun.setMainClass(runImpl.getMainClass().get());
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                    ideaRun.setJvmArgs(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.realiseJvmArguments().stream()).toList()));
+                    ideaRun.setJvmArgs(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(jvmArguments.stream()).toList()));
                     ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
-                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.getArguments().get().stream()).toList()));
-                    ideaRun.setEnvs(adaptEnvironment(runImpl, multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production)));
+                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(programArguments.stream()).toList()));
+                    ideaRun.setEnvs(productionEnvironment);
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
 
                     ideaRun.beforeRun(beforeRuns -> {
@@ -212,7 +221,7 @@ public class IdeRunIntegrationManager {
                 });
             } else {
                 ideaRuns.register(runName, JUnitWithBeforeRun.class, ideaRun -> {
-                    final RunsUtil.PreparedUnitTestEnvironment preparedUnitTestEnvironment = RunsUtil.prepareUnitTestEnvironment(run);
+                    final RunsUtil.PreparedUnitTestEnvironment preparedUnitTestEnvironment = RunsUtil.prepareUnitTestEnvironment(run, jvmArguments, programArguments);
 
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
                     ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
@@ -225,14 +234,11 @@ public class IdeRunIntegrationManager {
                     ideaRun.setCategory(runImpl.getTestScope().getCategory().getOrNull());
 
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                    ideaRun.setVmParameters(RunsUtil.escapeAndJoin(runImpl.realiseJvmArguments(),
+                    ideaRun.setVmParameters(RunsUtil.escapeAndJoin(jvmArguments,
                                     "-Dfml.junit.argsfile=%s".formatted(preparedUnitTestEnvironment.programArgumentsFile().getAbsolutePath()),
                                     "@%s".formatted(preparedUnitTestEnvironment.jvmArgumentsFile().getAbsolutePath())
                     ));
-                    ideaRun.setEnvs(adaptEnvironment(runImpl,
-                            multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Production),
-                            multimapProvider -> RunsUtil.buildRunWithIdeaModClasses(multimapProvider, RunsUtil.IdeaCompileType.Test))
-                    );
+                    ideaRun.setEnvs(testEnvironment);
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
 
                     ideaRun.beforeRun(beforeRuns -> {
