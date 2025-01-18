@@ -36,6 +36,7 @@ import net.neoforged.gradle.neoform.util.NeoFormRuntimeConstants;
 import net.neoforged.gradle.neoform.util.NeoFormRuntimeUtils;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tools.ant.taskdefs.Unpack;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -439,16 +440,18 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     extractionSource.flatMap(WithOutput::getOutput)
                             .map(sourceJar -> task.getArchiveOperations().zipTree(sourceJar).matching(sp -> sp.include("**/*.java")).getAsFileTree())
             );
-            task.getInput().from(
-                    definition.getAdditionalCompileSources()
-            );
         });
         unpackSources.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
+
+        final TaskProvider<UnpackZip> unpackAdditionalSources = spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "unzipAdditionalSources"), UnpackZip.class, task -> {
+            task.getInput().from(definition.getAdditionalCompileSources());
+        });
+        unpackAdditionalSources.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
 
         final TaskProvider<RecompileSourceJar> recompileTask = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, task -> {
                     task.setSource(unpackSources.flatMap(UnpackZip::getUnpackingTarget));
-                    task.getAdditionalInputFiles().from(definition.getAdditionalCompileSources());
+                    task.getAdditionalInputFileRoot().set(unpackAdditionalSources.flatMap(UnpackZip::getUnpackingTarget));
                     task.getCompileClasspath().setFrom(recompileDependencies);
                     task.getStepName().set("recompile");
 

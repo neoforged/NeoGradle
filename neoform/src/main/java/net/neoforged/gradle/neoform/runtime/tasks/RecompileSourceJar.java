@@ -9,7 +9,10 @@ import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.file.FileVisitDetails;
+import org.gradle.api.file.FileVisitor;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
@@ -82,6 +85,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setFork(true);
         getOptions().setIncremental(true);
         getOptions().getIncrementalAfterFailure().set(true);
+        getOptions().setSourcepath(getProject().files(getAdditionalInputFileRoot()));
     }
 
     @Override
@@ -133,7 +137,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
-    public abstract ConfigurableFileCollection getAdditionalInputFiles();
+    public abstract DirectoryProperty getAdditionalInputFileRoot();
 
     @Override
     protected void compile(InputChanges inputs) {
@@ -155,14 +159,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     private void doCachedCompile(InputChanges inputs) {
         super.compile(inputs);
+        final FileTree output = this.getDestinationDirectory().getAsFileTree();
 
-        final FileTree outputTree = getDestinationDirectory().get().getAsFileTree();
-        outputTree.matching(pattern -> pattern.include(fileTreeElement -> {
-            final String relativePath = fileTreeElement.getRelativePath().getPathString();
-            if (!relativePath.endsWith(".class")) {
-                return false;
-            }
+        output.visit(details -> {
+            if (details.isDirectory())
+                return;
 
+            final String relativePath = details.getRelativePath().getPathString();
             final String sourceFilePath;
             if (!relativePath.contains("$")) {
                 sourceFilePath = relativePath.substring(0, relativePath.length() - ".class".length()) + ".java";
@@ -170,13 +173,11 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
                 sourceFilePath = relativePath.substring(0, relativePath.indexOf('$')) + ".java";
             }
 
-            return !getAdditionalInputFiles()
-                    .getAsFileTree()
-                    .matching(sp1 -> sp1.include(sourceFilePath))
-                    .getFiles().isEmpty();
-        })).forEach(file -> {
-            getLogger().debug("Removing additional source file: {}", file);
-            file.delete();
+            if (!getAdditionalInputFileRoot().getAsFileTree().matching(pattern -> pattern.include(sourceFilePath))
+                    .isEmpty()) {
+                getLogger().debug("Deleting additional input file.");
+                details.getFile().delete();
+            }
         });
     }
 }
