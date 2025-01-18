@@ -391,15 +391,16 @@ public class RunsUtil {
     public record PreparedUnitTestEnvironment(File programArgumentsFile, File jvmArgumentsFile) {
     }
 
-    public static PreparedUnitTestEnvironment prepareUnitTestEnvironment(Run run) {
-
+    public static PreparedUnitTestEnvironment prepareUnitTestEnvironment(Run run,
+                                                                         List<String> jvmArguments,
+                                                                         List<String> programArguments) {
         return new PreparedUnitTestEnvironment(
-                createArgsFile(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())), run.getArguments()),
-                createArgsFile(run.getWorkingDirectory().file("%s_jvm_args.txt".formatted(run.getName())), run.getJvmArguments())
+                createArgsFile(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())), jvmArguments),
+                createArgsFile(run.getWorkingDirectory().file("%s_jvm_args.txt".formatted(run.getName())), programArguments)
         );
     }
 
-    private static File createArgsFile(Provider<RegularFile> outputFile, ListProperty<String> inputs) {
+    private static File createArgsFile(Provider<RegularFile> outputFile, List<String> inputs) {
         final File output = outputFile.get().getAsFile();
 
         if (!output.getParentFile().exists()) {
@@ -408,7 +409,7 @@ public class RunsUtil {
             }
         }
         try {
-            final List<String> value = deduplicateElementsFollowingEachOther(inputs.get().stream()).toList();
+            final List<String> value = deduplicateElementsFollowingEachOther(inputs.stream()).toList();
             if (output.exists()) {
                 if (Files.readAllLines(output.toPath()).equals(value)) {
                     return output;
@@ -429,7 +430,11 @@ public class RunsUtil {
 
     private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, Run run) {
         testTaskProvider.configure(testTask -> {
-            PreparedUnitTestEnvironment preparedEnvironment = prepareUnitTestEnvironment(run);
+            PreparedUnitTestEnvironment preparedEnvironment = prepareUnitTestEnvironment(
+                    run,
+                    run.getJvmArguments().get(),
+                    run.getArguments().get()
+            );
 
             addRunSourcesDependenciesToTask(testTask, run, true);
             testTask.getDependsOn().add(run.getDependsOn());
