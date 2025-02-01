@@ -26,6 +26,9 @@ jobs:
           fetch-depth: 1000
           fetch-tags: true
 
+      - name: Fetch tags
+        run: git fetch --tags
+
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
