@@ -39,7 +39,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         super(project);
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec) {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
@@ -90,9 +89,22 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             });
         });
 
+        spec.setMinecraftVersion(neoFormRuntimeDefinition.getSpecification().getMinecraftVersion());
+
+        return new UserDevRuntimeDefinition(
+                spec,
+                neoFormRuntimeDefinition,
+                userDevJar,
+                userDevProfile,
+                userDevAdditionalDependenciesConfiguration
+        );
+    }
+
+    @Override
+    protected void afterRegistration(UserDevRuntimeDefinition runtime) {
         final RunTypeManager runTypes = getProject().getExtensions().getByType(RunTypeManager.class);
-        userDevProfile.getRunTypes().forEach((type) -> {
-            TypesUtil.registerWithPotentialPrefix(runTypes, spec.getIdentifier(), type.getName(), type::copyTo);
+        runtime.getUserdevConfiguration().getRunTypes().forEach((type) -> {
+            TypesUtil.registerWithPotentialPrefix(runTypes, runtime.getSpecification().getIdentifier(), type.getName(), type::copyTo);
         });
 
         final Conventions conventions = getProject().getExtensions().getByType(Subsystems.class).getConventions();
@@ -100,7 +112,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 && conventions.getRuns().getIsEnabled().get()
                 && conventions.getRuns().getShouldDefaultRunsBeCreated().get()) {
             final RunManager runs = getProject().getExtensions().getByType(RunManager.class);
-            userDevProfile.getRunTypes().forEach(runType -> {
+            runtime.getUserdevConfiguration().getRunTypes().forEach(runType -> {
                 if (runs.getNames().contains(runType.getName())) {
                     return;
                 }
@@ -116,16 +128,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
             });
         }
-        
-        spec.setMinecraftVersion(neoFormRuntimeDefinition.getSpecification().getMinecraftVersion());
 
-        return new UserDevRuntimeDefinition(
-                spec,
-                neoFormRuntimeDefinition,
-                userDevJar,
-                userDevProfile,
-                userDevAdditionalDependenciesConfiguration
-        );
     }
 
     @Override
