@@ -235,6 +235,16 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement, RunSpecification {
     abstract Provider<Set<FileSystemLocation>> getSdkClasspathElements()
 
     /**
+     * Defines the name used by the IDE run configuration.
+     *
+     * @return The IDE run name.
+     * @implNote This is only used for IDE run configurations, and defaults to the run name if not set.
+     */
+    @DSLProperty
+    @Optional
+    abstract Property<String> getIDERunName();
+
+    /**
      * Adds a run type to this run using the run type name.
      *
      * @param runType The run type to add.

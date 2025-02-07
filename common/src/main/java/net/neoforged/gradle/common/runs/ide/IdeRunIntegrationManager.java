@@ -174,8 +174,8 @@ public class IdeRunIntegrationManager {
             if (!defaultRun && !run.getShouldExportToIDE().get())
                 return;
 
-            final String nameWithoutSpaces = run.getName().replace(" ", "-");
-            final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(nameWithoutSpaces));
+            final String ideRunName = run.getIDERunName().isPresent() ? run.getIDERunName().get() : run.getName();
+            final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(ideRunName));
 
             final RunImpl runImpl = (RunImpl) run;
 
@@ -295,8 +295,9 @@ public class IdeRunIntegrationManager {
                         
                         final String debugName = "Run " + runName;
                         writeLaunchToFile(project, debugName, debugRun);
-                        
-                        writeLaunchToFile(project, runName,
+
+                        final String launchCombinedName = StringUtils.capitalize(project.getName() + " - " + (run.getIDERunName().isPresent() ? run.getIDERunName().get() : run.getName()));
+                        writeLaunchToFile(project, launchCombinedName,
                                 LaunchGroup.builder()
                                         .entry(LaunchGroup.entry(gradleName)
                                                        .enabled(true)
@@ -332,8 +333,7 @@ public class IdeRunIntegrationManager {
                     if (!run.getShouldExportToIDE().get())
                         return;
 
-                    final String name = run.getName();
-                    final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(name.replace(" ", "-")));
+                    final String runName = StringUtils.capitalize(project.getName() + " - " + StringUtils.capitalize(run.getIDERunName().isPresent() ? run.getIDERunName().get() : run.getName()));
 
                     final RunImpl runImpl = (RunImpl) run;
                     final TaskProvider<?> ideBeforeRunTask = getOrCreateIdeBeforeRunTask(project, runImpl);

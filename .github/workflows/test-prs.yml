@@ -21,10 +21,10 @@ jobs:
       tests-to-run: ${{ steps.test.outputs.tests-to-run }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1000
-          fetch-tags: true
+        uses: neoforged/actions/checkout@main
+
+      - name: Fetch tags
+        run: git fetch --tags
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -48,10 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1000
-          fetch-tags: true
+        uses: neoforged/actions/checkout@main
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -77,10 +74,7 @@ jobs:
         os: [ubuntu, windows, macos]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1000
-          fetch-tags: true
+        uses: neoforged/actions/checkout@main
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -161,7 +155,8 @@ jobs:
     needs: test
     if: always()
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout sources
+        uses: neoforged/actions/checkout@main
 
       - name: Download reports' artifacts
         uses: actions/download-artifact@v4

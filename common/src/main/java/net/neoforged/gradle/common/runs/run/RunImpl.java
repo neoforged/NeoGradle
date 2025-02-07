@@ -115,6 +115,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
         );
 
         getShouldExportToIDE().convention(true);
+        getIDERunName().convention(name);
     }
 
     @Override
