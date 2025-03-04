@@ -1,6 +1,7 @@
 package net.neoforged.gradle.platform.tasks;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.platform.util.ArtifactPathsCollector;
 import net.neoforged.gradle.platform.util.StringUtils;
@@ -63,7 +64,7 @@ public abstract class CreateClasspathFiles extends DefaultRuntime implements Tok
         getFileSystemOperations().copy(copySpec -> {
             copySpec.from(getTemplate().get().getAsFile(), spec -> {
                 spec.rename(name -> getOutputFileName().get());
-                spec.filter(ImmutableMap.of("tokens", tokens), ReplaceTokens.class);
+                spec.filter(Maps.newHashMap(ImmutableMap.of("tokens", tokens)), ReplaceTokens.class);
             });
             copySpec.into(getOutputDirectory().get().getAsFile());
         });

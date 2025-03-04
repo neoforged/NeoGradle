@@ -1,6 +1,7 @@
 package net.neoforged.gradle.util;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import org.gradle.api.Project;
@@ -381,7 +382,7 @@ public final class TransformerUtils {
      * @param <V> The type of the value to return
      */
     public static <K, V> Provider<? extends Map<K, V>> ifTrueMap(Provider<Boolean> predicate, K keyWhenTrue, V valueWhenTrue) {
-        return predicate.map(p -> p ? Map.of(keyWhenTrue, valueWhenTrue) : Map.of());
+        return predicate.map(p -> p ? Maps.newHashMap(Map.of(keyWhenTrue, valueWhenTrue)) : Maps.newHashMap());
     }
 
     @SafeVarargs
