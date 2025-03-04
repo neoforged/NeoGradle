@@ -1,8 +1,8 @@
 package net.neoforged.gradle.util;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -13,6 +13,8 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.internal.impldep.org.testng.collections.Lists;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -298,17 +300,17 @@ public final class TransformerUtils {
     @SafeVarargs
     public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, Provider<? extends V>... whenTrue) {
         if (whenTrue.length == 0) {
-            return predicate.map(p -> List.of());
+            return predicate.map(p -> Lists.newArrayList());
         }
 
         if (whenTrue.length == 1) {
-            return whenTrue[0].zip(predicate, (v, p) -> p ? List.of(v) : List.of());
+            return whenTrue[0].zip(predicate, (v, p) -> p ? Lists.newArrayList(ImmutableList.of(v)) : Lists.newArrayList());
         }
 
-        Provider<? extends List<V>> zippedArray = whenTrue[0].zip(predicate, (v, p) -> p ? List.of(v) : List.of());
+        Provider<? extends List<V>> zippedArray = whenTrue[0].zip(predicate, (v, p) -> p ? Lists.newArrayList(ImmutableList.of(v)) : Lists.newArrayList());
         for (int i = 1; i < whenTrue.length; i++) {
             zippedArray = zippedArray.zip(
-                    whenTrue[i].zip(predicate, (v, p) -> p ? List.of(v) : List.of()),
+                    whenTrue[i].zip(predicate, (v, p) -> p ? Lists.newArrayList(ImmutableList.of(v)) : Lists.newArrayList()),
                     (BiFunction<List<V>, List<V>, List<V>>) (vs, objects) -> {
                         final ArrayList<V> ret = new ArrayList<>(vs);
                         ret.addAll(objects);
@@ -329,7 +331,7 @@ public final class TransformerUtils {
      * @param <V> The type of the value to return
      */
     public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, Provider<? extends Collection<V>> whenTrue) {
-        return predicate.zip(whenTrue, (p, v) -> p ? List.copyOf(v) : List.of());
+        return predicate.zip(whenTrue, (p, v) -> p ? Lists.newArrayList(v) : Lists.newArrayList());
     }
 
     /**
@@ -341,7 +343,7 @@ public final class TransformerUtils {
      * @param <V> The type of the value to return
      */
     public static <V> Provider<? extends List<V>> ifTrue(Boolean predicate, Provider<? extends Collection<V>> whenTrue) {
-        return whenTrue.map(v -> predicate ? List.copyOf(v) : List.of());
+        return whenTrue.map(v -> predicate ? Lists.newArrayList(v) : Lists.newArrayList());
     }
 
     /**
@@ -355,10 +357,17 @@ public final class TransformerUtils {
     @SafeVarargs
     public static <V> Provider<? extends List<V>> ifTrue(Provider<Boolean> predicate, V... whenTrue) {
         if (whenTrue.length == 0) {
-            return predicate.map(p -> List.of());
+            return predicate.map(p -> Lists.newArrayList());
         }
 
-        return predicate.map(p -> p ? List.of(whenTrue) : List.of());
+        return predicate.map(p -> {
+            if (p) {
+                ImmutableList<V> whenTrueList = ImmutableList.copyOf(whenTrue);
+                return Lists.newArrayList(whenTrueList);
+            }
+
+            return Lists.newArrayList();
+        });
     }
 
     /**

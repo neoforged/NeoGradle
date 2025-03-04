@@ -1,5 +1,6 @@
 package net.neoforged.gradle.dsl.platform.util
 
+import com.google.common.collect.Lists
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.platform.model.Artifact
 import net.neoforged.gradle.dsl.platform.model.Library
@@ -27,7 +28,7 @@ class LibraryCollector extends ModuleIdentificationVisitor {
      * Hosts from which we allow the installer to download.
      * We whitelist here to avoid redirecting player download traffic to anyone not affiliated with Mojang or us.
      */
-    private static final String HOST_WHITELIST = List.of(
+    private static final String HOST_WHITELIST = Lists.newArrayList(
             "minecraft.net",
             "neoforged.net",
             "mojang.com"

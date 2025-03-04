@@ -18,6 +18,7 @@ import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import net.neoforged.gradle.util.TransformerUtils;
+import org.apache.commons.compress.utils.Lists;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Dependency;
@@ -632,7 +633,9 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
         return project.provider(() -> {
                     if (runTypes.getNames().contains(name)) {
-                        return List.of(runTypes.getByName(name));
+                        List<RunType> list = new ArrayList<>();
+                        list.add(runTypes.getByName(name));
+                        return list;
                     } else {
                         return null;
                     }
@@ -665,11 +668,13 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
         return project.provider(() -> {
                     if (runTypes.getNames().contains(name)) {
-                        return List.of(runTypes.getByName(name));
+                        final List<Run> list = new ArrayList<>();
+                        list.add(runTypes.getByName(name));
+                        return list;
                     } else {
                         return null;
                     }
                 })
-                .orElse(List.of());
+                .orElse(Lists.newArrayList());
     }
 }

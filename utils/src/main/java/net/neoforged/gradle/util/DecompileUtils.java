@@ -2,6 +2,7 @@ package net.neoforged.gradle.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public final class DecompileUtils {
     /**
      * The default JVM arguments for the decompiler.
      */
-    public static final List<String> DEFAULT_JVM_ARGS = ImmutableList.of("-Xmx4g");
+    public static final List<String> DEFAULT_JVM_ARGS = Lists.newArrayList("-Xmx4g");
 
     /**
      * The default program arguments for the decompiler.

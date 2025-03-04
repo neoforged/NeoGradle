@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev.dependency;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
+import org.apache.commons.compress.utils.Lists;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileTree;
 import org.jetbrains.annotations.NotNull;
@@ -25,12 +26,12 @@ public class UserDevRunTypeParser implements RunTypeManager.Parser {
     @Override
     public Collection<RunType> parse(File file) {
         if (!file.exists())
-            return List.of();
+            return Lists.newArrayList();
 
         try {
             return parseInternal(file);
         } catch (Exception e) {
-            return List.of();
+            return Lists.newArrayList();
         }
     }
 
