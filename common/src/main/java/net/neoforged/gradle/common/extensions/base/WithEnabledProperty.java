@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.extensions.base;
 
+import org.apache.commons.compress.utils.Lists;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.provider.Property;
@@ -75,7 +76,7 @@ public abstract class WithEnabledProperty extends WithPropertyLookup {
     protected Provider<List<String>> getSpaceSeparatedListProperty(String propertyName, List<String> defaultValue) {
         return getIsEnabled().zip(
                 getSpaceSeparatedListLocalProperty(propertyName, defaultValue),
-                (enabled, value) -> enabled ? value : List.of()
+                (enabled, value) -> enabled ? value : Lists.newArrayList()
         );
     }
 }

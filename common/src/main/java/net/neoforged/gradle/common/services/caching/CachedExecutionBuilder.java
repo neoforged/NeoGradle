@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.services.caching;
 
+import com.google.common.collect.ImmutableList;
 import net.neoforged.gradle.common.services.caching.cache.DirectoryCache;
 import net.neoforged.gradle.common.services.caching.cache.FileCache;
 import net.neoforged.gradle.common.services.caching.cache.ICache;
@@ -11,6 +12,7 @@ import net.neoforged.gradle.common.util.hash.HashCode;
 import net.neoforged.gradle.common.util.hash.Hasher;
 import net.neoforged.gradle.common.util.hash.Hashing;
 import net.neoforged.gradle.util.GradleInternalUtils;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
@@ -88,7 +90,7 @@ public class CachedExecutionBuilder<T> {
     private final CacheLogger logger;
 
     public CachedExecutionBuilder(Options options, Task targetTask, ICacheableJob<Void, T> initialJob) {
-        this(options, targetTask, List.of(initialJob));
+        this(options, targetTask, Lists.newArrayList(ImmutableList.of(initialJob).iterator()));
     }
 
     private CachedExecutionBuilder(Options options, Task targetTask, List<ICacheableJob<?, ?>> stages) {

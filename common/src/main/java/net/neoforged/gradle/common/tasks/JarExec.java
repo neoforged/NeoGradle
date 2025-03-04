@@ -20,6 +20,7 @@
 
 package net.neoforged.gradle.common.tasks;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import org.codehaus.groovy.control.io.NullWriter;
@@ -149,7 +150,7 @@ public abstract class JarExec extends DownloadingTask {
     protected List<String> replaceArgsMulti(List<String> args,
                                        @Nullable Map<String, ?> normalReplacements,
                                        @Nullable Multimap<String, ?> multiPrefixedReplacements) {
-        multiPrefixedReplacements = multiPrefixedReplacements != null ? multiPrefixedReplacements : ImmutableMultimap.of();
+        multiPrefixedReplacements = multiPrefixedReplacements != null ? multiPrefixedReplacements : HashMultimap.create();
         return replaceArgs(args, normalReplacements, multiPrefixedReplacements.asMap());
     }
 
