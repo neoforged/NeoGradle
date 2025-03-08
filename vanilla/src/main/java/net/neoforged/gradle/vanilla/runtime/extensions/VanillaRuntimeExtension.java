@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"unused"}) // API Design
 public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<VanillaRuntimeSpecification, VanillaRuntimeSpecification.Builder, VanillaRuntimeDefinition> {
@@ -81,7 +82,7 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), "VanillaMinecraftDependenciesFor" + spec.getIdentifier());
         minecraftDependenciesConfiguration.getDependencies().addAllLater(
-                        versionJson.map(VersionJson::getLibraries).map(libraries -> libraries.stream().map(library -> spec.getProject().getDependencies().create(library.getName())).toList())
+                        versionJson.map(VersionJson::getLibraries).map(libraries -> libraries.stream().map(library -> spec.getProject().getDependencies().create(library.getName())).collect(Collectors.toList()))
         );
 
         stepsMcpDirectory.mkdirs();

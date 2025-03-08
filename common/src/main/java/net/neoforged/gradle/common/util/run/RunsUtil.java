@@ -100,8 +100,8 @@ public class RunsUtil {
 
                 runExec.getMainClass().convention(run.getMainClass());
                 runExec.setWorkingDir(workingDir);
-                runExec.args(deduplicateElementsFollowingEachOther(run.getArguments().get().stream()).toList());
-                runExec.getJvmArguments().set(run.getJvmArguments().map(arguments -> deduplicateElementsFollowingEachOther(arguments.stream())).map(Stream::toList));
+                runExec.args(deduplicateElementsFollowingEachOther(run.getArguments().get().stream()).collect(Collectors.toList()));
+                runExec.getJvmArguments().set(run.getJvmArguments().map(arguments -> deduplicateElementsFollowingEachOther(arguments.stream())).map(s -> s.collect(Collectors.toList())));
                 runExec.systemProperties(run.getSystemProperties().get());
                 runExec.environment(run.getEnvironmentVariables().get());
                 run.getModSources().all().get().values().stream()
@@ -409,7 +409,7 @@ public class RunsUtil {
             }
         }
         try {
-            final List<String> value = deduplicateElementsFollowingEachOther(inputs.stream()).toList();
+            final List<String> value = deduplicateElementsFollowingEachOther(inputs.stream()).collect(Collectors.toList());
             if (output.exists()) {
                 if (Files.readAllLines(output.toPath()).equals(value)) {
                     return output;

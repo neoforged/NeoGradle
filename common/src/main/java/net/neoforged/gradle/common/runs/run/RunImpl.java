@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
@@ -90,29 +91,29 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
 
         getRuntimeClasspath().from(
                 getModSources().all().map(Multimap::values)
-                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getRuntimeClasspath).toList())
+                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getRuntimeClasspath).collect(Collectors.toList()))
         );
         getTestRuntimeClasspath().from(getRuntimeClasspath());
         getTestRuntimeClasspath().from(
                 getUnitTestSources().all().map(Multimap::values)
-                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getRuntimeClasspath).toList())
+                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getRuntimeClasspath).collect(Collectors.toList()))
         );
         getCompileClasspath().from(
                 getModSources().all().map(Multimap::values)
-                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getCompileClasspath).toList())
+                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getCompileClasspath).collect(Collectors.toList()))
         );
         getTestCompileClasspath().from(getCompileClasspath());
         getTestCompileClasspath().from(
                 getUnitTestSources().all().map(Multimap::values)
-                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getCompileClasspath).toList())
+                        .map(sourcesSets -> sourcesSets.stream().map(SourceSet::getCompileClasspath).collect(Collectors.toList()))
         );
         getSdkClasspath().from(
                 getModSources().all().map(Multimap::values)
-                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).toList())
+                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).collect(Collectors.toList()))
         );
         getSdkClasspath().from(
                 getUnitTestSources().all().map(Multimap::values)
-                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).toList())
+                        .map(sourcesSets -> sourcesSets.stream().map(ConfigurationUtils::getSdkConfiguration).collect(Collectors.toList()))
         );
 
         getShouldExportToIDE().convention(true);
@@ -299,12 +300,12 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                 rawSpecifications.map(l -> l.stream().filter(RunType.class::isInstance).map(RunType.class::cast)
                                 .map(RunType::getRunTemplate)
                                 .filter(Objects::nonNull)
-                                .toList())
+                                .collect(Collectors.toList()))
         );
     }
 
     private void configureFromRuns() {
-        Provider<List<Run>> runSpecifications = specifications.map(l -> l.stream().filter(Run.class::isInstance).map(Run.class::cast).toList());
+        Provider<List<Run>> runSpecifications = specifications.map(l -> l.stream().filter(Run.class::isInstance).map(Run.class::cast).collect(Collectors.toList()));
 
         //Properties of the run
         getWorkingDirectory().convention(
@@ -648,7 +649,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run {
                                                 .map(runTypes::parse)
                                                 .flatMap(Collection::stream)
                                                 .filter(runType -> runType.getName().equals(name))
-                                                .toList()
+                                                .collect(Collectors.toList())
                                         ))).map(types -> {
                     if (types.isEmpty()) {
                         final IProblemReporter reporter = project.getExtensions().getByType(IProblemReporter.class);

@@ -88,8 +88,8 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
             this.environment = run.getEnvironmentVariables().get();
             this.mainClass = run.getMainClass().get();
             this.properties = run.getSystemProperties().get();
-            this.arguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getArguments().get().stream()).toList();
-            this.jvmArguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getJvmArguments().get().stream()).toList();
+            this.arguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getArguments().get().stream()).collect(Collectors.toList());
+            this.jvmArguments = RunsUtil.deduplicateElementsFollowingEachOther(run.getJvmArguments().get().stream()).collect(Collectors.toList());
             this.isSingleInstance = run.getIsSingleInstance().get();
             this.workingDirectory = run.getWorkingDirectory().get().getAsFile().getAbsolutePath();
             this.isClient = run.getIsClient().get();

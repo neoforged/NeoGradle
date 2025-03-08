@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UserDevRunTypeParser implements RunTypeManager.Parser {
@@ -43,7 +44,7 @@ public class UserDevRunTypeParser implements RunTypeManager.Parser {
                 .getFiles()
                 .stream()
                 .flatMap(this::parseInternalFile)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private Stream<RunType> parseInternalFile(File file) {

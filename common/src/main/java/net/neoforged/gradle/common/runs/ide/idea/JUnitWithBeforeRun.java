@@ -9,6 +9,7 @@ import org.jetbrains.gradle.ext.*;
 
 import javax.inject.Inject;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JUnitWithBeforeRun extends JUnit {
 
@@ -39,7 +40,7 @@ public class JUnitWithBeforeRun extends JUnit {
     public Map<String, ?> toMap() {
         final Map map = super.toMap();
 
-        map.put("beforeRun", beforeRun.stream().map(BeforeRunTask::toMap).toList());
+        map.put("beforeRun", beforeRun.stream().map(BeforeRunTask::toMap).collect(Collectors.toList()));
 
         return map;
     }

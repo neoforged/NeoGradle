@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Utility class which handles gradles transformers.
@@ -202,7 +203,7 @@ public final class TransformerUtils {
         final ListProperty<Entry<K, V>> map = (ListProperty) project.getObjects().listProperty(Entry.class);
         return guard(t -> {
             for (I i : t) {
-                map.addAll(valueProvider.apply(i).map(m -> m.entries().stream().map(e -> new Entry<>(e.getKey(), e.getValue())).toList()));
+                map.addAll(valueProvider.apply(i).map(m -> m.entries().stream().map(e -> new Entry<>(e.getKey(), e.getValue())).collect(Collectors.toList())));
             }
             return map.map(entries -> {
                 final Multimap<K, V> multimap = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);

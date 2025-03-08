@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Represents a configured and registered runtime for vanilla.
@@ -101,7 +102,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
                             .map(stream -> stream
                                     .filter(VersionJson.RuledObject::isAllowed)
                                     .flatMap(arg -> arg.value.stream())
-                                    .toList()
+                                    .collect(Collectors.toList())
                             )
 
             );
@@ -112,7 +113,7 @@ public final class VanillaRuntimeDefinition extends CommonRuntimeDefinition<Vani
                             .map(stream -> stream
                                     .filter(VersionJson.RuledObject::isAllowed)
                                     .flatMap(arg -> arg.value.stream())
-                                    .toList()
+                                    .collect(Collectors.toList())
                             )
             );
             run.getMainClass().set(getVersionJson().map(VersionJson::getMainClass));

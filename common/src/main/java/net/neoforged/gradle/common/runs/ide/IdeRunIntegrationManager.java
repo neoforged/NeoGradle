@@ -53,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A simple manager which configures runs based on the IDE it is attached to.
@@ -203,9 +204,9 @@ public class IdeRunIntegrationManager {
 
                     ideaRun.setMainClass(runImpl.getMainClass().get());
                     ideaRun.setWorkingDirectory(runImpl.getWorkingDirectory().get().getAsFile().getAbsolutePath());
-                    ideaRun.setJvmArgs(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(jvmArguments.stream()).toList()));
+                    ideaRun.setJvmArgs(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(jvmArguments.stream()).collect(Collectors.toList())));
                     ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
-                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(programArguments.stream()).toList()));
+                    ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(programArguments.stream()).collect(Collectors.toList())));
                     ideaRun.setEnvs(productionEnvironment);
                     ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
 
@@ -343,8 +344,8 @@ public class IdeRunIntegrationManager {
 
                     final LaunchConfiguration cfg = launchWriter.createGroup("NG - " + project.getName(), WritingMode.REMOVE_EXISTING)
                         .createLaunchConfiguration()
-                        .withAdditionalJvmArgs(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.realiseJvmArguments().stream()).toList())
-                        .withArguments(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.getArguments().get().stream()).toList())
+                        .withAdditionalJvmArgs(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.realiseJvmArguments().stream()).collect(Collectors.toList()))
+                        .withArguments(RunsUtil.deduplicateElementsFollowingEachOther(runImpl.getArguments().get().stream()).collect(Collectors.toList()))
                         .withCurrentWorkingDirectory(PathLike.ofNio(runImpl.getWorkingDirectory().get().getAsFile().toPath()))
                         .withEnvironmentVariables(adaptEnvironment(runImpl, RunsUtil::buildRunWithEclipseModClasses))
                         .withShortenCommandLine(ShortCmdBehaviour.ARGUMENT_FILE)
