@@ -267,7 +267,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 versionJson.map(VersionJson::getLibraries)
                         .map(libraries -> libraries.stream()
                                 .map(library -> getProject().getDependencies().create(library.getName()))
-                                .toList()
+                                .collect(Collectors.toList())
                         )
         );
 

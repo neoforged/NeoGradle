@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class UserDevDependencyManager {
     private static final UserDevDependencyManager INSTANCE = new UserDevDependencyManager();
@@ -48,7 +49,7 @@ public final class UserDevDependencyManager {
                                 run.getSdkClasspathElements()
                                         .map(files -> files.stream()
                                                 .map(FileSystemLocation::getAsFile)
-                                                .map(parser::parse).toList())
+                                                .map(parser::parse).collect(Collectors.toList()))
                                         .flatMap(TransformerUtils.combineAllLists(project, String.class, Function.identity()))
                                         .map(dependencyCoordinates -> {
                                             final DependencyCollector collector = project.getObjects().dependencyCollector();

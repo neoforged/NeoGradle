@@ -43,7 +43,7 @@ public class UserDevAdditionalTestDependenciesParser {
                 .map(fls -> fls.stream()
                         .map(FileSystemLocation::getAsFile)
                         .filter(File::isFile)
-                        .toList()
+                        .collect(Collectors.toList())
                 )
                 .map(files -> files.stream()
                         .map(this::parseInternalFile)
