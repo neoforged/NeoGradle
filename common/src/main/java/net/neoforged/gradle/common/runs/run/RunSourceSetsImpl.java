@@ -16,6 +16,8 @@ import org.gradle.api.tasks.SourceSet;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class RunSourceSetsImpl implements RunSourceSets {
 
@@ -119,11 +121,12 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
     public Provider<Multimap<String, SourceSet>> all() {
         //Realize all lazy source sets
         if (!this.sourceSetProviders.isEmpty()) {
-            for (Provider<Multimap<String, SourceSet>> sourceSetProvider : this.sourceSetProviders) {
+            final var providers = new ArrayList<>(this.sourceSetProviders);
+            this.sourceSetProviders.clear();
+            for (Provider<Multimap<String, SourceSet>> sourceSetProvider : providers) {
                 final Multimap<String, SourceSet> sourceSets = sourceSetProvider.get();
                 sourceSets.forEach(this::add);
             }
-            this.sourceSetProviders.clear();
         }
 
         return this.project.provider(() -> this.sourceSets);
