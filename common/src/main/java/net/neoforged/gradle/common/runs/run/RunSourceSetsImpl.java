@@ -106,13 +106,9 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
         }
     }
 
-    private final ReentrantLock sourceSetProvidersLock = new ReentrantLock();
-
     @Override
     public void addAllLater(Provider<Multimap<String, SourceSet>> sourceSets) {
-        sourceSetProvidersLock.lock();
         this.sourceSetProviders.add(sourceSets);
-        sourceSetProvidersLock.unlock();
     }
 
     @DSLProperty
@@ -124,16 +120,14 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
     @Override
     public Provider<Multimap<String, SourceSet>> all() {
         //Realize all lazy source sets
-        sourceSetProvidersLock.lock();
         if (!this.sourceSetProviders.isEmpty()) {
-            for (Provider<Multimap<String, SourceSet>> sourceSetProvider : this.sourceSetProviders) {
+            final var providers = new ArrayList<>(this.sourceSetProviders);
+            this.sourceSetProviders.clear();
+            for (Provider<Multimap<String, SourceSet>> sourceSetProvider : providers) {
                 final Multimap<String, SourceSet> sourceSets = sourceSetProvider.get();
                 sourceSets.forEach(this::add);
             }
-
-            this.sourceSetProviders.clear();
         }
-        sourceSetProvidersLock.unlock();
 
         return this.project.provider(() -> this.sourceSets);
     }
