@@ -44,6 +44,11 @@ public interface ICacheableJob<I, O> {
     boolean createsDirectory();
 
     /**
+     * @return True if it either creates or merges a directory, false when not.
+     */
+    boolean mergesDirectory();
+
+    /**
      * The functional interface for a runnable that throws an exception.
      */
     @FunctionalInterface
@@ -56,9 +61,10 @@ public interface ICacheableJob<I, O> {
      *
      * @param output           The output of the job.
      * @param createsDirectory True if the output is a directory.
+     * @param mergesDirectory  True if the output is merged with the existing content, and not overwritten.
      * @param execute          The code to execute.
      */
-    record Default(File output, boolean createsDirectory, ThrowingRunnable execute) implements ICacheableJob<Void, Void> {
+    record Default(File output, boolean createsDirectory, boolean mergesDirectory, ThrowingRunnable execute) implements ICacheableJob<Void, Void> {
 
         /**
          * Creates a new cacheable job that executes the given code for the file provided by the property.
@@ -69,7 +75,7 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static Default file(RegularFileProperty output, ThrowingRunnable execute) {
-            return new Default(output.get().getAsFile(), false, execute);
+            return new Default(output.get().getAsFile(), false, false, execute);
         }
 
         /**
@@ -81,7 +87,19 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static Default directory(DirectoryProperty output, ThrowingRunnable execute) {
-            return new Default(output.get().getAsFile(), true, execute);
+            return new Default(output.get().getAsFile(), true, false, execute);
+        }
+
+        /**
+         * Creates a new cacheable job that executes the given code for the directory provided by the property, merging the results with what was already there.
+         * Realising the property when this method is called.
+         *
+         * @param output The output of the job.
+         * @param execute The code to execute.
+         * @return The created job.
+         */
+        public static Default merging(DirectoryProperty output, boolean merges, ThrowingRunnable execute) {
+            return new Default(output.get().getAsFile(), true, true, execute);
         }
 
         @Override
@@ -97,10 +115,11 @@ public interface ICacheableJob<I, O> {
      * @param name The name of the job.
      * @param output The output of the job.
      * @param createsDirectory True if the output is a directory.
+     * @param mergesDirectory True if the output is merged.
      * @param execute The code to execute.
      * @param <V> The type of the output of the job.
      */
-    record Initial<V>(String name, File output, boolean createsDirectory, ThrowingSupplier<V> execute) implements ICacheableJob<Void, V> {
+    record Initial<V>(String name, File output, boolean createsDirectory, boolean mergesDirectory, ThrowingSupplier<V> execute) implements ICacheableJob<Void, V> {
 
         /**
          * Creates a new cacheable job that executes the given code for the file provided by the property.
@@ -112,7 +131,7 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static <V> Initial<V> file(String name, RegularFileProperty output, ThrowingSupplier<V> execute) {
-            return new Initial<>(name, output.get().getAsFile(), false, execute);
+            return new Initial<>(name, output.get().getAsFile(), false, false, execute);
         }
 
         /**
@@ -125,7 +144,20 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static <V> Initial<V> directory(String name, Provider<Directory> output, ThrowingSupplier<V> execute) {
-            return new Initial<>(name, output.get().getAsFile(), true, execute);
+            return new Initial<>(name, output.get().getAsFile(), true, false, execute);
+        }
+
+        /**
+         * Creates a new cacheable job that executes the given code for the directory provided by the property, merging the output, without deleting what was already there.
+         * Realising the property when this method is called.
+         *
+         * @param name The name of the job.
+         * @param output The output of the job.
+         * @param execute The code to execute.
+         * @return The created job.
+         */
+        public static <V> Initial<V> merging(String name, Provider<Directory> output, ThrowingSupplier<V> execute) {
+            return new Initial<>(name, output.get().getAsFile(), true, true, execute);
         }
 
         @Override
@@ -139,12 +171,11 @@ public interface ICacheableJob<I, O> {
      *
      * @param name The name of the job.
      * @param output The output of the job.
-     * @param createsDirectory True if the output is a directory.
      * @param job The job to stage.
      * @param <I> The input type of the job.
      * @param <O> The output type of the job.
      */
-    record Staged<I, O>(String name, File output, boolean createsDirectory, ThrowingFunction<I, O> job) implements ICacheableJob<I, O> {
+    record Staged<I, O>(String name, File output, ThrowingFunction<I, O> job) implements ICacheableJob<I, O> {
 
         /**
          * Creates a new cacheable job that executes the given code for the file provided by the property.
@@ -158,12 +189,24 @@ public interface ICacheableJob<I, O> {
          * @param <V> The output type of the job.
          */
         public static <U,V> Staged<U, V> file(String name, RegularFileProperty output, ThrowingFunction<U, V> execute) {
-            return new Staged<>(name, output.get().getAsFile(), false, execute);
+            return new Staged<>(name, output.get().getAsFile(), execute);
         }
 
         @Override
         public O execute(I input) throws Throwable {
             return job.apply(input);
+        }
+
+        @Override
+        public boolean createsDirectory()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean mergesDirectory()
+        {
+            return false;
         }
     }
 }

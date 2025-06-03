@@ -13,9 +13,11 @@ import java.io.IOException;
 public class DirectoryCache implements ICache {
 
     private final File cacheDir;
+    private final boolean merge;
 
-    public DirectoryCache(File cacheDir) {
+    public DirectoryCache(File cacheDir, final boolean merge) {
         this.cacheDir = cacheDir;
+        this.merge = merge;
     }
 
     @Override
@@ -42,10 +44,14 @@ public class DirectoryCache implements ICache {
                 }
             }
 
-            if (file.isDirectory()) {
+            //When we merge we use FileUtils.copyDirectory to merge the results and overwrite anything we don't need.
+            if (file.isDirectory() && !merge) {
                 FileUtils.cleanDirectory(file);
             }
-            file.delete();
+            //When merge is enabled we don't delete the directory, but we do delete it if it is a file.
+            if (file.isFile() || !merge) {
+                file.delete();
+            }
         }
 
         file.mkdirs();

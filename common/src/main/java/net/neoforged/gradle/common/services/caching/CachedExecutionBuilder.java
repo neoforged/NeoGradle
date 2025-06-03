@@ -195,7 +195,7 @@ public class CachedExecutionBuilder<T> {
         final JobHasher jobHasher = new JobHasher(taskHash, job);
         final File cacheDir = new File(options.cache(), jobHasher.hash().toString());
 
-        return job.createsDirectory() ? new DirectoryCache(cacheDir) : new FileCache(cacheDir);
+        return (job.createsDirectory() || job.mergesDirectory()) ? new DirectoryCache(cacheDir, job.mergesDirectory()) : new FileCache(cacheDir);
     }
 
     /**
