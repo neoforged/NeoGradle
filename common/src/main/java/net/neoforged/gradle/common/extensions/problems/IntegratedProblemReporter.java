@@ -3,6 +3,8 @@ package net.neoforged.gradle.common.extensions.problems;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.problems.ProblemGroup;
+import org.gradle.api.problems.ProblemId;
 import org.gradle.api.problems.Severity;
 import org.gradle.api.problems.ProblemReporter;
 
@@ -23,39 +25,51 @@ public class IntegratedProblemReporter implements IProblemReporter {
 
     @Override
     public void reporting(Action<NeoGradleProblemSpec> spec, Logger logger) {
-        delegate.reporting(problemSpec -> {
-            final NeoGradleProblemSpec neoGradleProblemSpec = new NeoGradleProblemSpec();
-            spec.execute(neoGradleProblemSpec);
+        final NeoGradleProblemSpec neoGradleProblemSpec = new NeoGradleProblemSpec();
+        spec.execute(neoGradleProblemSpec);
 
-            problemSpec.id(neoGradleProblemSpec.category(), neoGradleProblemSpec.id())
-                    .contextualLabel(neoGradleProblemSpec.contextualLabel())
-                    .solution(neoGradleProblemSpec.solution())
-                    .details(neoGradleProblemSpec.details())
-                    .severity(Severity.WARNING)
-                    .documentedAt(neoGradleProblemSpec.documentedAt());
+        delegate.report(
+                ProblemId.create(
+                        neoGradleProblemSpec.id(), neoGradleProblemSpec.id(), ProblemGroup.create(neoGradleProblemSpec.category(), neoGradleProblemSpec.category())
+                ),
+                problemSpec -> {
 
-            neoGradleProblemSpec.log(logger);
-        });
+                    problemSpec
+                            .contextualLabel(neoGradleProblemSpec.contextualLabel())
+                            .solution(neoGradleProblemSpec.solution())
+                            .details(neoGradleProblemSpec.details())
+                            .severity(Severity.WARNING)
+                            .documentedAt(neoGradleProblemSpec.documentedAt());
+
+                    neoGradleProblemSpec.log(logger);
+                }
+        );
     }
 
     @Override
     public RuntimeException throwing(Action<NeoGradleProblemSpec> spec) {
-        return delegate.throwing(problemSpec -> {
-            final NeoGradleProblemSpec neoGradleProblemSpec = new NeoGradleProblemSpec();
-            spec.execute(neoGradleProblemSpec);
+        final NeoGradleProblemSpec neoGradleProblemSpec = new NeoGradleProblemSpec();
+        spec.execute(neoGradleProblemSpec);
 
-            problemSpec.id(neoGradleProblemSpec.category(), neoGradleProblemSpec.id())
-                    .contextualLabel(neoGradleProblemSpec.contextualLabel())
-                    .solution(neoGradleProblemSpec.solution())
-                    .details(neoGradleProblemSpec.details())
-                    .severity(Severity.ERROR)
-                    .withException(new InvalidUserDataException( "(%s) %s.\nPotential Solution: %s.\nMore information: %s".formatted(
-                            neoGradleProblemSpec.contextualLabel(),
-                            neoGradleProblemSpec.details(),
-                            neoGradleProblemSpec.solution(),
-                            neoGradleProblemSpec.documentedAt()
-                    )))
-                    .documentedAt(neoGradleProblemSpec.documentedAt());
-        });
+        throw delegate.throwing(
+                new InvalidUserDataException( "(%s) %s.\nPotential Solution: %s.\nMore information: %s".formatted(
+                        neoGradleProblemSpec.contextualLabel(),
+                        neoGradleProblemSpec.details(),
+                        neoGradleProblemSpec.solution(),
+                        neoGradleProblemSpec.documentedAt()
+                )),
+                ProblemId.create(
+                        neoGradleProblemSpec.id(), neoGradleProblemSpec.id(), ProblemGroup.create(neoGradleProblemSpec.category(), neoGradleProblemSpec.category())
+                        ),
+                problemSpec -> {
+
+                    problemSpec
+                            .contextualLabel(neoGradleProblemSpec.contextualLabel())
+                            .solution(neoGradleProblemSpec.solution())
+                            .details(neoGradleProblemSpec.details())
+                            .severity(Severity.ERROR)
+                            .documentedAt(neoGradleProblemSpec.documentedAt());
+                }
+        );
     }
 }

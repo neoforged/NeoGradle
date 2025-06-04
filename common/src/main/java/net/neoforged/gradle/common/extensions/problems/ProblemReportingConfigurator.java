@@ -12,7 +12,7 @@ public class ProblemReportingConfigurator {
     public static void configureProblemReporting(Project project, Problems problems) {
         final boolean enableGradleProblemReporting = project.getExtensions().getByType(Subsystems.class).getIntegration().getUseGradleProblemReporting().get();
         if (enableGradleProblemReporting) {
-            project.getExtensions().create(IProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, IntegratedProblemReporter.class, problems.forNamespace(PROBLEM_NAMESPACE));
+            project.getExtensions().create(IProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, IntegratedProblemReporter.class, problems.getReporter());
         } else {
             project.getExtensions().create(IProblemReporter.class, PROBLEM_REPORTER_EXTENSION_NAME, IsolatedProblemReporter.class);
         }

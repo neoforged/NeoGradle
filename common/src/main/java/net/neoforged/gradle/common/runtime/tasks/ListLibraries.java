@@ -62,7 +62,7 @@ public abstract class ListLibraries extends DefaultRuntime {
         getCacheService().get()
                 .cached(
                         this,
-                        ICacheableJob.Initial.directory("collect", getLibrariesDirectory(), this::extractAndCollect)
+                        ICacheableJob.Initial.merging("collect", getLibrariesDirectory(), this::extractAndCollect)
                 )
                 .withStage(
                         ICacheableJob.Staged.file("list", getOutput(), this::createList)

@@ -36,8 +36,17 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
                 //Force fully check if we have dependencies
                 t.doFirst(task -> {
                     def configuration = project.configurations.getByName("implementation")
-                    if (configuration.hasDependencies()) {
-                        throw new RuntimeException("Still has dependencies")
+
+                    //This line below triggers the resolution of the compile classpath, which in turn resolves the implementation configuration
+                    //Which handles the replacement handling.
+                    println "File count: " + project.configurations.getByName("compileClasspath").incoming.files.size()
+                    if (!configuration.dependencies.isEmpty()) {
+                        def dependenciesString = configuration.dependencies.collect { dep ->
+                            "\${dep.group}:\${dep.name}:\${dep.version}"
+                        }.join(", ")
+                        println "Dependencies in 'implementation': \${dependenciesString}"
+
+                        throw new RuntimeException("Still has dependencies: " + dependenciesString)
                     }
                 })
             })
@@ -60,6 +69,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks('dependencies')
+            it.debug()
         }
 
         then:
