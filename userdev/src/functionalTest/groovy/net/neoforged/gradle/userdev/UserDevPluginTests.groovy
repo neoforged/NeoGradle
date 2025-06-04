@@ -29,7 +29,10 @@ class UserDevPluginTests extends SimpleTestSpecification {
                 id 'net.neoforged.gradle.userdev'
             }
             
-            println project.plugins
+            println "Loaded plugins:"
+            project.plugins.each { plugin ->
+                println " - \${plugin.class.name}"
+            }
         """
 
         when:

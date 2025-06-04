@@ -395,8 +395,8 @@ public class RunsUtil {
                                                                          List<String> jvmArguments,
                                                                          List<String> programArguments) {
         return new PreparedUnitTestEnvironment(
-                createArgsFile(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())), jvmArguments),
-                createArgsFile(run.getWorkingDirectory().file("%s_jvm_args.txt".formatted(run.getName())), programArguments)
+                createArgsFile(run.getWorkingDirectory().file("%s_test_args.txt".formatted(run.getName())), programArguments),
+                createArgsFile(run.getWorkingDirectory().file("%s_jvm_args.txt".formatted(run.getName())), jvmArguments)
         );
     }
 

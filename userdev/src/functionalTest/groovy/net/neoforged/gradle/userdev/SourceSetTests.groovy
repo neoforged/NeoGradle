@@ -82,7 +82,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'com.google.code.gson:gson:+'
+                implementation 'com.google.code.gson:gson:2.11.0'
             }
             
             afterEvaluate {
