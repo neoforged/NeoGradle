@@ -18,6 +18,7 @@ include 'neoform'
 include 'userdev'
 include 'mixin'
 include 'platform'
+include 'eclipse'
 
 subProject 'dsl-common'
 subProject 'dsl-neoform'

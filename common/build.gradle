@@ -16,6 +16,11 @@ sourceSets {
 dependencies {
     api project(':utils')
     api project(':dsl-common')
+    api (project(':eclipse')) {
+        capabilities {
+            requireCapability('net.neoforged.gradle:eclipse-impl')
+        }
+    }
 
     api "commons-io:commons-io:${project.commons_io_version}"
     api "com.google.code.gson:gson:${project.gson_version}"

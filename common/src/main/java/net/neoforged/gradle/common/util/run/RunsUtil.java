@@ -13,6 +13,8 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTool
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
+import net.neoforged.gradle.eclipse.EclipseMetadataReader;
+import net.neoforged.gradle.eclipse.IPropertyDelegate;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -21,7 +23,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.*;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -644,12 +646,12 @@ public class RunsUtil {
     public static Provider<String> buildRunWithEclipseModClasses(final Provider<Multimap<String, SourceSet>> compileSourceSets) {
         return buildModClasses(compileSourceSets, sourceSet -> {
             final Project project = SourceSetUtils.getProject(sourceSet);
-            final EclipseModel eclipseModel = project.getExtensions().getByType(EclipseModel.class);
+            final IPropertyDelegate<File> eclipseBaseSourceOutputDir = EclipseMetadataReader.getBaseSourceOutputDirFor(project);
 
             final File conventionsDir = new File(project.getProjectDir(), "bin");
-            eclipseModel.getClasspath().getBaseSourceOutputDir().convention(project.provider(() -> conventionsDir));
+            eclipseBaseSourceOutputDir.convention(conventionsDir);
 
-            final File parentDir = eclipseModel.getClasspath().getBaseSourceOutputDir().get();
+            final File parentDir = eclipseBaseSourceOutputDir.get();
             final File sourceSetDir = new File(parentDir, sourceSet.getName());
             return Stream.of(sourceSetDir);
         });

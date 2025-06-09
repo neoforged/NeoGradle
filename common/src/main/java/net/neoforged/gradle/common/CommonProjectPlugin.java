@@ -36,6 +36,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
+import net.neoforged.gradle.eclipse.EclipseMetadataReader;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -161,6 +162,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
         ConventionConfigurator.configureConventions(project);
 
         project.afterEvaluate(this::applyAfterEvaluate);
+
+        //EMR Init
+        EclipseMetadataReader.init(project);
     }
 
     private void applyAfterEvaluate(final Project project) {

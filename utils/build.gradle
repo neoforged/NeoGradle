@@ -5,3 +5,7 @@ dependencies {
     api "net.minecraftforge:srgutils:${project.srgutils_version}"
     api "de.siegmar:fastcsv:${project.fastcsv_version}"
 }
+
+dependencies {
+    api gradleApi()
+}
