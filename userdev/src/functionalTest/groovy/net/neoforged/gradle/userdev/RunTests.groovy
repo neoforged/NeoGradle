@@ -56,6 +56,20 @@ class RunTests extends BuilderBasedTestSpecification {
         true
         run.task(':writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
         run.output.contains("is not a valid mod file")
+
+        when:
+        def runG14 = project.run {
+            it.tasks(':runClientData')
+            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
+            it.shouldFail()
+            it.stacktrace()
+            it.gradleVersion("8.14")
+        }
+
+        then:
+        true
+        run.task(':writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
+        run.output.contains("is not a valid mod file")
     }
 
     def "configuring of the configurations after the dependencies block should work"() {
