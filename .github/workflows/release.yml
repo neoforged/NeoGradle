@@ -16,7 +16,6 @@ jobs:
     uses: neoforged/actions/.github/workflows/gradle-publish.yml@main
     with:
       java: 8
-      pre_gradle_tasks: test
       gradle_tasks: publish 
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
