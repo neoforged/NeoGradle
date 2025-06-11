@@ -126,7 +126,8 @@ subprojects.forEach { Project subProject ->
                                 }
                             }
 
-                    tests.addAll(createTestRuns(test, testClasses))
+                    if (testClasses.size() != 0)
+                        tests.addAll(createTestRuns(test, testClasses))
                 } else {
                     //This test task is not marked as a filterable test task by our central build.gradle file.
                     //Check if it has source, if so run it, else skip it. No need to setup gradle to run nothing:
