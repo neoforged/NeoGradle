@@ -92,6 +92,14 @@ subprojects.forEach { Project subProject ->
 
     //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
     subProject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
+    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
+    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-params:${project.junit_version}"
+    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
+    subProject.dependencies.testImplementation "org.junit.platform:junit-platform-engine:${project.junit_platform_version}"
+    subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
+    subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
+    subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
+    subProject.dependencies.testImplementation "net.neoforged.trainingwheels:base:${project.trainingwheels_version}"
 
     //Exclude duplicates.
     subProject.tasks.withType(Jar).configureEach { jarTask ->
@@ -140,14 +148,6 @@ subprojects.forEach { subProject ->
         }
 
         subProject.dependencies.testImplementation subProject.dependencies.gradleTestKit()
-        subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
-        subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-params:${project.junit_version}"
-        subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
-        subProject.dependencies.testImplementation "org.junit.platform:junit-platform-engine:${project.junit_platform_version}"
-        subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
-        subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
-        subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
-        subProject.dependencies.testImplementation "net.neoforged.trainingwheels:base:${project.trainingwheels_version}"
         subProject.dependencies.testImplementation "net.neoforged.trainingwheels:gradle-base:${project.trainingwheels_version}"
         subProject.dependencies.testImplementation "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
 
