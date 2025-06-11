@@ -131,6 +131,11 @@ subprojects.forEach { Project subProject ->
     subProject.test {
         maxParallelForks = Runtime.runtime.availableProcessors() - 1
     }
+
+    //Run task which will run the functional tests.
+    subProject.tasks.named('test').configure { it ->
+        it.extensions.add('test-source-set', subProject.sourceSets.test)
+    }
 }
 
 //Configure all the subprojects that are plugins
