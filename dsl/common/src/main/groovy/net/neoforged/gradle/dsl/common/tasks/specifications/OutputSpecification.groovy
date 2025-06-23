@@ -1,6 +1,6 @@
 package net.neoforged.gradle.dsl.common.tasks.specifications
 
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property

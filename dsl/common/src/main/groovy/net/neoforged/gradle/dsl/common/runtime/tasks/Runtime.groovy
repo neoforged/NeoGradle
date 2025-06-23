@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.runtime.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.tasks.WithJavaVersion
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace

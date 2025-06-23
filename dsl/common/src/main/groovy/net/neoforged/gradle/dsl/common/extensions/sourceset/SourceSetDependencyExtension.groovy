@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.extensions.sourceset
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElement
+import net.neoforged.gdi.BaseDSLElement
 import org.gradle.api.tasks.SourceSet
 
 /**

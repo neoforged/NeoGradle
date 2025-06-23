@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.runs.run;
 
 import com.google.common.collect.Multimap;
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.util.ConfigurationUtils;

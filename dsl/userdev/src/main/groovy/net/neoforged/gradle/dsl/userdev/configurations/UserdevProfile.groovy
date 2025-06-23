@@ -2,9 +2,9 @@ package net.neoforged.gradle.dsl.userdev.configurations
 
 import com.google.gson.*
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.ConfigurableDSLElement
-import net.minecraftforge.gdi.annotations.ClosureEquivalent
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.ConfigurableDSLElement
+import net.neoforged.gdi.annotations.ClosureEquivalent
+import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runs.type.RunType
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectCollection

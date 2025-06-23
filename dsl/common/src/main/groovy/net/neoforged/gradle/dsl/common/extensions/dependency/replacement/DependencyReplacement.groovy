@@ -1,8 +1,8 @@
 package net.neoforged.gradle.dsl.common.extensions.dependency.replacement
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElement
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.BaseDSLElement
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency

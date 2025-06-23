@@ -3,7 +3,7 @@ package net.neoforged.gradle.common.util;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.groovy.runtime.StringGroovyMethods;
+import org.apache.groovy.runtime.StringGroovyMethods;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;

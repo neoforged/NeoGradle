@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.extensions.dependency.replacement;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
 import net.neoforged.gradle.common.util.ConfigurationUtils;

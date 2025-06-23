@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.extensions.dependency.replacement;
 
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacementHandler;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacer;
 import org.gradle.api.Project;

@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.extensions.repository;
 
-import net.minecraftforge.gdi.BaseDSLElement;
+import net.neoforged.gdi.BaseDSLElement;
 import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.util.ModuleDependencyUtils;

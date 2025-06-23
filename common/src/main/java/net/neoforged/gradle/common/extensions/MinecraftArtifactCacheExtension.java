@@ -3,7 +3,7 @@ package net.neoforged.gradle.common.extensions;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvider;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;

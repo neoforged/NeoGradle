@@ -4,8 +4,8 @@ import org.gradle.util.GradleVersion
 plugins {
     id 'eclipse'
     id 'maven-publish'
-    id 'org.cadixdev.licenser' version '0.6.1'
-    id 'net.neoforged.gradleutils' version '3.0.0-alpha.10'
+    id 'net.neoforged.licenser' version '0.7.5'
+    id 'net.neoforged.gradleutils' version '5.0.1'
 }
 
 gradleutils {
@@ -88,7 +88,17 @@ subprojects.forEach { Project subProject ->
         repository.name 'NeoForged'
         repository.url = 'https://maven.neoforged.net/releases'
     }
+    subProject.repositories.mavenCentral()
     subProject.repositories.gradlePluginPortal()
+    subProject.repositories {
+        maven {
+            name = "Maven for PR #4" // https://github.com/neoforged/GroovyDSLImprover/pull/4
+            url = uri("https://prmaven.neoforged.net/GroovyDSLImprover/pr4")
+            content {
+                includeModule("net.neoforged", "groovydslimprover")
+            }
+        }
+    }
 
     //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
     subProject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
@@ -170,7 +180,7 @@ subprojects.forEach { subProject ->
         evalSubProject.dependencies.functionalTestImplementation subProject.dependencies.gradleTestKit()
         evalSubProject.dependencies.functionalTestImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
-            spec.exclude group: 'org.codehaus.groovy'
+            spec.exclude group: 'org.apache.groovy'
         }
         evalSubProject.dependencies.functionalTestImplementation "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
         evalSubProject.dependencies.functionalTestImplementation project(':test-utils')

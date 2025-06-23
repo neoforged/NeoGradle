@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.extensions.subsystems;
 
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.base.WithEnabledProperty;
 import net.neoforged.gradle.common.extensions.base.WithPropertyLookup;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.*;

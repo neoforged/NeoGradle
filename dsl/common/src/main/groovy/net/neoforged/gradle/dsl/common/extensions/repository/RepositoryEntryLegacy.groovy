@@ -2,7 +2,7 @@ package net.neoforged.gradle.dsl.common.extensions.repository
 
 import com.google.common.collect.ImmutableSet
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElement
+import net.neoforged.gdi.BaseDSLElement
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier

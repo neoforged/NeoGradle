@@ -1,6 +1,6 @@
 package net.neoforged.gradle.dsl.common.runs
 
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty

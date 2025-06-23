@@ -20,7 +20,7 @@
 
 package net.neoforged.gradle.common.extensions;
 
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.naming.NamingChannelProvider;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;

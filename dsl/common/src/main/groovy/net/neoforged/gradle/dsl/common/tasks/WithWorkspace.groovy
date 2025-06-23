@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DefaultMethods;
+import net.neoforged.gdi.annotations.DefaultMethods;
 import org.gradle.api.Task
 import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.FileSystemOperations;

@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.tasks
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property

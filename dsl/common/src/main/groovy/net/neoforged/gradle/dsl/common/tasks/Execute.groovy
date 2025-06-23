@@ -2,7 +2,7 @@ package net.neoforged.gradle.dsl.common.tasks
 
 import com.google.common.collect.Lists
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DefaultMethods
+import net.neoforged.gdi.annotations.DefaultMethods
 import net.neoforged.gradle.dsl.common.tasks.specifications.ExecuteSpecification
 import net.neoforged.gradle.dsl.common.util.RegexUtils
 import org.gradle.api.file.FileTree

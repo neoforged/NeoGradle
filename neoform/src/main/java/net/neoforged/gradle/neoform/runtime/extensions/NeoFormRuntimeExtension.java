@@ -3,7 +3,7 @@ package net.neoforged.gradle.neoform.runtime.extensions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;

@@ -1,8 +1,8 @@
 package net.neoforged.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElementWithFilesAndEntries
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.BaseDSLElementWithFilesAndEntries
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ConfigurablePublishArtifact
 import org.gradle.api.artifacts.Dependency

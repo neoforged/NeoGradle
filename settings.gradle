@@ -1,6 +1,7 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
+        maven { url = 'https://maven.neoforged.net/' }
     }
 }
 
@@ -16,16 +17,12 @@ include 'common'
 include 'vanilla'
 include 'neoform'
 include 'userdev'
-include 'mixin'
-include 'platform'
 include 'eclipse'
 
 subProject 'dsl-common'
 subProject 'dsl-neoform'
 subProject 'dsl-vanilla'
 subProject 'dsl-userdev'
-subProject 'dsl-platform'
-subProject 'dsl-mixin'
 
 void subProject(final String name) {
     include name

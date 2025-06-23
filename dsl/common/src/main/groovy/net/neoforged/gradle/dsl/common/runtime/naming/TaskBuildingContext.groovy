@@ -2,7 +2,7 @@
 package net.neoforged.gradle.dsl.common.runtime.naming
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.ProjectGetter
+import net.neoforged.gdi.annotations.ProjectGetter
 import net.neoforged.gradle.dsl.common.extensions.Mappings
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification
