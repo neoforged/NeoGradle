@@ -14,16 +14,17 @@ abstract class IdeaRunsExtension implements BaseDSLElement<IdeaRunsExtension> {
 
     private final Project project;
     private final Property<Boolean> runWithIdea;
-    private final DirectoryProperty outDirectory;
+    private final Property<Boolean> useArgsFile;
 
     @Inject
     IdeaRunsExtension(final Project project) {
-        this.project = project;
+        this.project = project
 
-        this.runWithIdea = project.getObjects().property(Boolean);
-        this.outDirectory = project.getObjects().directoryProperty();
+        this.runWithIdea = project.getObjects().property(Boolean)
+        this.useArgsFile = project.getObjects().property(Boolean)
 
-        getRunWithIdea().convention(false);
+        getRunWithIdea().convention(false)
+        getUseArgsFile().convention(true)
     }
 
     @Override
@@ -34,5 +35,10 @@ abstract class IdeaRunsExtension implements BaseDSLElement<IdeaRunsExtension> {
     @DSLProperty
     Property<Boolean> getRunWithIdea() {
         return runWithIdea;
+    }
+
+    @DSLProperty
+    Property<Boolean> getUseArgsFile() {
+        return useArgsFile;
     }
 }

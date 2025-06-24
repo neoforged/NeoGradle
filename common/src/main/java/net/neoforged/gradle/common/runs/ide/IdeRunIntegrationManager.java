@@ -12,6 +12,7 @@ import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
+import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
@@ -83,8 +84,25 @@ public class IdeRunIntegrationManager {
         final IdeaModel ideaModel = rootProject.getExtensions().getByType(IdeaModel.class);
         final IdeaProject ideaProject = ideaModel.getProject();
         final ExtensionAware extensionAware = (ExtensionAware) ideaProject;
+        final IdeaRunsExtension global;
         if (extensionAware.getExtensions().findByType(IdeaRunsExtension.class) == null && extensionAware.getExtensions().findByName("runs") == null) {
-            extensionAware.getExtensions().create("runs", IdeaRunsExtension.class, project);
+            global = extensionAware.getExtensions().create("runs", IdeaRunsExtension.class, project);
+        }
+        else if (extensionAware.getExtensions().findByType(IdeaRunsExtension.class) != null)
+        {
+            global = extensionAware.getExtensions().findByType(IdeaRunsExtension.class);
+        }
+        else
+        {
+            project.getLogger().warn("Runs extension for idea can not be registered on the Idea project model. Use the one in the minecraft extension.");
+            global = null;
+        }
+
+        final Minecraft minecraft = project.getExtensions().getByType(Minecraft.class);
+        final IdeaRunsExtension projectLocal = minecraft.getExtensions().create("idea", IdeaRunsExtension.class, project);
+        if (global != null) {
+            projectLocal.getUseArgsFile().convention(global.getUseArgsFile());
+            projectLocal.getRunWithIdea().convention(global.getRunWithIdea());
         }
     }
 
@@ -123,6 +141,8 @@ public class IdeRunIntegrationManager {
                             return FileUtils.contains(GradleXml, "<option name=\"delegatedBuild\" value=\"false\" />");
                         })
         );
+
+        runsExtension.getUseArgsFile().convention(ideaConventions.getShouldUseArgsFile());
     }
 
     private static final class RunsImportAction implements IdeManagementExtension.IdeImportAction {
@@ -175,6 +195,9 @@ public class IdeRunIntegrationManager {
             if (!defaultRun && !run.getShouldExportToIDE().get())
                 return;
 
+            final Minecraft minecraft = project.getExtensions().getByType(Minecraft.class);
+            final IdeaRunsExtension ideaRunsExtension = minecraft.getExtensions().getByType(IdeaRunsExtension.class);
+
             final String ideRunName = run.getIDERunName().isPresent() ? run.getIDERunName().get() : run.getName();
             final String runName = StringUtils.capitalize(project.getName() + ": " + StringUtils.capitalize(ideRunName));
 
@@ -208,7 +231,9 @@ public class IdeRunIntegrationManager {
                     ideaRun.setModuleName(RunsUtil.getIntellijModuleName(run.getExtensions().getByType(IdeaRunExtension.class).getPrimarySourceSet().get()));
                     ideaRun.setProgramParameters(RunsUtil.escapeAndJoin(RunsUtil.deduplicateElementsFollowingEachOther(programArguments.stream()).collect(Collectors.toList())));
                     ideaRun.setEnvs(productionEnvironment);
-                    ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
+
+                    if (ideaRunsExtension.getUseArgsFile().get())
+                        ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
 
                     ideaRun.beforeRun(beforeRuns -> {
                         beforeRuns.create("Build", Make.class);
@@ -240,7 +265,9 @@ public class IdeRunIntegrationManager {
                                     "@%s".formatted(preparedUnitTestEnvironment.jvmArgumentsFile().getAbsolutePath())
                     ));
                     ideaRun.setEnvs(testEnvironment);
-                    ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
+
+                    if (ideaRunsExtension.getUseArgsFile().get())
+                        ideaRun.setShortenCommandLine(ShortenCommandLine.ARGS_FILE);
 
                     ideaRun.beforeRun(beforeRuns -> {
                         beforeRuns.create("Build", Make.class);

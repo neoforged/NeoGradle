@@ -33,4 +33,10 @@ interface IDEA extends BaseDSLElement<IDEA> {
      */
     @DSLProperty
     Property<Boolean> getShouldReconfigureTemplatesForTests();
+
+    /**
+     * Whether or not IDEA should run with args files.
+     */
+    @DSLProperty
+    Property<Boolean> getShouldUseArgsFile()
 }
