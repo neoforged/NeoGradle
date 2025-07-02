@@ -23,5 +23,14 @@ public class VanillaProjectPlugin implements Plugin<Project> {
             e.setUrl(UrlConstants.NEO_FORGE_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
         });
+
+        //Add Known repos, -> We need this to resolve the minecraft dependencies to properly get the correct version.
+        project.getRepositories().maven(e -> {
+            e.setUrl(UrlConstants.MINECRAFT_METADATA);
+            e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
+            e.mavenContent(content -> {
+                content.includeModule("net.neoforged", "minecraft-dependencies");
+            });
+        });
     }
 }
