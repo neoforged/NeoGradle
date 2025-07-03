@@ -7,6 +7,7 @@ import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.Depende
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.vanilla.runtime.VanillaRuntimeDefinition;
 import net.neoforged.gradle.vanilla.runtime.extensions.VanillaRuntimeExtension;
+import net.neoforged.gradle.vanilla.util.MinecraftDependencyUtil;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
@@ -95,7 +96,10 @@ public final class VanillaDependencyManager {
         final VanillaRuntimeExtension runtimeExtension = project.getExtensions().getByType(VanillaRuntimeExtension.class);
 
         return runtimeExtension.maybeCreateFor(dependency, builder -> {
-            final String version = dependency.getVersion() == null ? runtimeExtension.getVersion().get() : dependency.getVersion();
+            String version = MinecraftDependencyUtil.resolveMinecraftDependenciesVersion(project, dependency);
+            if (version == null) {
+                version = runtimeExtension.getVersion().get();
+            }
 
             builder.withMinecraftArtifact(StringCapitalizationUtils.deCapitalize(dependency.getName()));
             builder.withDistributionType(DistributionType.valueOf(dependency.getName().toUpperCase(Locale.ROOT)));
