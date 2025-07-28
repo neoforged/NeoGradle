@@ -47,13 +47,14 @@ public final class VanillaDependencyManager {
 
                     final VanillaRuntimeDefinition runtimeDefinition = buildVanillaRuntimeDefinition(project, externalModuleDependency);
                     return Optional.of(
-                            new ReplacementResult(
+                            new VanillaReplacementResult(
                                     project,
                                     runtimeDefinition.getSourceJarTask(),
                                     runtimeDefinition.getRawJarTask(),
                                     project.getConfigurations().detachedConfiguration(),
                                     runtimeDefinition.getMinecraftDependenciesConfiguration(),
-                                    Collections.emptySet()
+                                    Collections.emptySet(),
+                                    runtimeDefinition
                             ));
                 });
             }
