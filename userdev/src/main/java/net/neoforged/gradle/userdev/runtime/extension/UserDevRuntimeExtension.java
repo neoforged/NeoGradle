@@ -1,13 +1,12 @@
 package net.neoforged.gradle.userdev.runtime.extension;
 
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
-import net.neoforged.gradle.common.runtime.tasks.SourceAccessTransformer;
+import net.neoforged.gradle.common.runtime.tasks.JavaSourceTransformer;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
@@ -19,7 +18,7 @@ import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
 import net.neoforged.gradle.neoform.runtime.extensions.NeoFormRuntimeExtension;
 import net.neoforged.gradle.neoform.runtime.tasks.InjectZipContent;
 import net.neoforged.gradle.neoform.runtime.tasks.Patch;
-import net.neoforged.gradle.neoform.util.NeoFormAccessTaskAdapterUtils;
+import net.neoforged.gradle.common.util.JavaSourceTransformAdapterUtils;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
 import org.gradle.api.Project;
@@ -63,12 +62,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     .withDistributionType(DistributionType.JOINED)
                     .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration));
 
-            final TaskTreeAdapter atAndIISAdapter = createAccessTransformerAdapter(userDevProfile.getAccessTransformerDirectory().get(), userDevJar)
-                                                            .andThen(NeoFormAccessTaskAdapterUtils.createAccessTransformerAdapter(getProject()));
-            
-            builder.withPostTaskAdapter("decompile", atAndIISAdapter);
+            final FileTree accessTransformerFiles =
+                userDevJar.matching(filter -> filter.include(userDevProfile.getAccessTransformerDirectory().get() + "/**"));
 
-            builder.withPreTaskAdapter("recompile", NeoFormAccessTaskAdapterUtils.createInterfaceInjectionAdapter(getProject()));
+            builder.withPreTaskAdapter("recompile", JavaSourceTransformAdapterUtils.createCustomizationsAdapter(getProject(), accessTransformerFiles));
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
@@ -143,7 +140,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 return null;
             }
 
-            final TaskProvider<? extends SourceAccessTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "Forges", accessTransformerFiles, definition.getListLibrariesTaskProvider(), definition.getAllDependencies());
+            final TaskProvider<? extends JavaSourceTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "Forges", accessTransformerFiles, definition.getListLibrariesTaskProvider(), definition.getAllDependencies());
             accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
             accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
             return accessTransformerTask;

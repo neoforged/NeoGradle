@@ -8,13 +8,11 @@ import org.gradle.api.provider.Provider;
 
 import java.util.List;
 
-public abstract class WithEnabledProperty extends WithPropertyLookup {
-
-    private final String prefix;
+public abstract class WithEnabledProperty extends WithLocalProperties
+{
 
     public WithEnabledProperty(Project project, String prefix) {
-        super(project);
-        this.prefix = prefix;
+        super(project, prefix);
 
         getIsEnabled().set(
                 getBooleanLocalProperty("enabled", true)
@@ -22,9 +20,8 @@ public abstract class WithEnabledProperty extends WithPropertyLookup {
     };
 
     public WithEnabledProperty(WithEnabledProperty parent, String prefix) {
-        super(parent.project);
+        super(parent, prefix);
 
-        this.prefix = String.format("%s.%s", parent.prefix, prefix);
         getIsEnabled().set(
                 parent.getIsEnabled().zip(getBooleanLocalProperty("enabled", true), (parentEnabled, enabled) -> parentEnabled && enabled)
         );
@@ -32,51 +29,40 @@ public abstract class WithEnabledProperty extends WithPropertyLookup {
 
     public abstract Property<Boolean> getIsEnabled();
 
-    protected Provider<String> getStringLocalProperty(String propertyName, String defaultValue) {
-        return super.getStringProperty(String.format("%s.%s", prefix, propertyName), defaultValue);
-    }
-
-    protected Provider<Directory> getDirectoryLocalProperty(String propertyName, Provider<Directory> defaultValue) {
-        return super.getDirectoryProperty(String.format("%s.%s", prefix, propertyName), defaultValue);
-    }
-
-    protected Provider<Boolean> getBooleanLocalProperty(String propertyName, boolean defaultValue) {
-        return super.getBooleanProperty(String.format("%s.%s", prefix, propertyName), defaultValue, false);
-    }
-
-    protected Provider<List<String>> getSpaceSeparatedListLocalProperty(String propertyName, List<String> defaultValue) {
-        return super.getSpaceSeparatedListProperty(String.format("%s.%s", prefix, propertyName), defaultValue);
-    }
 
     @Override
-    protected Provider<String> getStringProperty(String propertyName, String defaultValue) {
+    protected Provider<String> getStringProperty(String propertyName, String defaultValue)
+    {
         return getIsEnabled().zip(
-                getStringLocalProperty(propertyName, defaultValue),
-                (enabled, value) -> enabled ? value : ""
+            getStringLocalProperty(propertyName, defaultValue),
+            (enabled, value) -> enabled ? value : ""
         );
     }
 
     @Override
-    protected Provider<Directory> getDirectoryProperty(String propertyName, Provider<Directory> defaultValue) {
+    protected Provider<Directory> getDirectoryProperty(String propertyName, Provider<Directory> defaultValue)
+    {
         return getIsEnabled().zip(
-                getDirectoryLocalProperty(propertyName, defaultValue),
-                (enabled, value) -> enabled ? value : null
+            getDirectoryLocalProperty(propertyName, defaultValue),
+            (enabled, value) -> enabled ? value : null
         );
     }
 
     @Override
-    protected Provider<Boolean> getBooleanProperty(String propertyName, boolean defaultValue, boolean disabledValue) {
+    protected Provider<Boolean> getBooleanProperty(String propertyName, boolean defaultValue, boolean disabledValue)
+    {
         return getIsEnabled().zip(
-                getBooleanLocalProperty(propertyName, defaultValue),
-                (enabled, value) -> enabled ? value : disabledValue
+            getBooleanLocalProperty(propertyName, defaultValue),
+            (enabled, value) -> enabled ? value : disabledValue
         );
     }
 
     @Override
-    protected Provider<List<String>> getSpaceSeparatedListProperty(String propertyName, List<String> defaultValue) {
+    protected Provider<List<String>> getSpaceSeparatedListProperty(String propertyName, List<String> defaultValue)
+    {
         return getIsEnabled().zip(
-                getSpaceSeparatedListLocalProperty(propertyName, defaultValue),
-                (enabled, value) -> enabled ? value : Lists.newArrayList()
+            getSpaceSeparatedListLocalProperty(propertyName, defaultValue),
+            (enabled, value) -> enabled ? value : Lists.newArrayList()
         );
     }
 }

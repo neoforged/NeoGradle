@@ -15,8 +15,8 @@ public final class CommonRuntimeTaskUtils {
         throw new IllegalStateException("Can not instantiate an instance of: CommonRuntimeTaskUtils. This is a utility class");
     }
 
-    public static TaskProvider<? extends SourceAccessTransformer> createSourceAccessTransformer(Definition<?> definition, String namePreFix, FileTree files, TaskProvider<? extends WithOutput> listLibs, FileCollection additionalClasspathElements) {
-        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize(namePreFix))), SourceAccessTransformer.class, task -> {
+    public static TaskProvider<? extends JavaSourceTransformer> createSourceAccessTransformer(Definition<?> definition, String namePreFix, FileTree files, TaskProvider<? extends WithOutput> listLibs, FileCollection additionalClasspathElements) {
+        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize(namePreFix))), JavaSourceTransformer.class, task -> {
             task.getTransformers().from(files);
             task.dependsOn(listLibs);
             task.getLibraries().set(listLibs.flatMap(WithOutput::getOutput));
@@ -24,8 +24,8 @@ public final class CommonRuntimeTaskUtils {
         });
     }
 
-    public static TaskProvider<? extends SourceInterfaceInjection> createSourceInterfaceInjection(Definition<?> definition, String namePreFix, FileTree files, TaskProvider<? extends WithOutput> listLibs, FileCollection additionalClasspathElements) {
-        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sInterfaceInjection", StringCapitalizationUtils.capitalize(namePreFix))), SourceInterfaceInjection.class, task -> {
+    public static TaskProvider<? extends JavaSourceTransformer> createSourceInterfaceInjection(Definition<?> definition, String namePreFix, FileTree files, TaskProvider<? extends WithOutput> listLibs, FileCollection additionalClasspathElements) {
+        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sInterfaceInjection", StringCapitalizationUtils.capitalize(namePreFix))), JavaSourceTransformer.class, task -> {
             task.getTransformers().from(files);
             task.dependsOn(listLibs);
             task.getLibraries().set(listLibs.flatMap(WithOutput::getOutput));

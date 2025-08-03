@@ -53,13 +53,12 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
-            it.debug()
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the userdev runtime supports loading iis from a file after the dependencies block"() {
@@ -103,12 +102,12 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the userdev runtime supports loading iis from multiple files"() {
@@ -162,12 +161,12 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the userdev runtime supports loading iis from multiple files named the same in different directories"() {
@@ -221,11 +220,11 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 }

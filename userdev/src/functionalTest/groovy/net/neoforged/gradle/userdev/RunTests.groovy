@@ -356,7 +356,7 @@ class RunTests extends BuilderBasedTestSpecification {
                         runtime libs.jgrapht
                     }
                     
-                    modSource project.sourceSets.main
+                    run.modSource project.sourceSets.main
                 }
             }
             """)
@@ -367,6 +367,7 @@ class RunTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
+            it.stacktrace()
         }
 
         then:

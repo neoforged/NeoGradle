@@ -1,14 +1,17 @@
 package net.neoforged.gradle.common.extensions.subsystems;
 
 import groovy.lang.Closure;
+import groovy.transform.Internal;
 import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.base.WithEnabledProperty;
+import net.neoforged.gradle.common.extensions.base.WithLocalProperties;
 import net.neoforged.gradle.common.extensions.base.WithPropertyLookup;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
+import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -123,11 +126,7 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
 
     private void configureParchmentDefaults() {
         Parchment parchment = getParchment();
-        // Add a filtered parchment repository automatically if enabled
         project.afterEvaluate(p -> {
-            if (!parchment.getIsEnabled().get() || !parchment.getAddRepository().get()) {
-                return;
-            }
             MavenArtifactRepository repo = p.getRepositories().maven(m -> {
                 m.setName("Parchment Data");
                 m.setUrl(URI.create(DEFAULT_PARCHMENT_MAVEN_URL));
@@ -159,22 +158,14 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         return tools;
     }
 
-    public static abstract class ParchmentExtensions extends WithEnabledProperty implements Parchment {
+    public static abstract class ParchmentExtensions extends WithLocalProperties implements Parchment {
 
         @Inject
         public ParchmentExtensions(Project project) {
             super(project, "parchment");
 
             getParchmentArtifact().convention(
-                    getStringLocalProperty("parchmentArtifact", null).orElse(
-                            getMinecraftVersion()
-                                    .zip(getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
-                                        return DEFAULT_PARCHMENT_GROUP
-                                                + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
-                                                + ":" + mappingVersion
-                                                + "@zip";
-                                    }).orElse("")
-                    )
+                    getStringLocalProperty("parchmentArtifact", null)
             );
             getConflictPrefix().convention("p_");
             getMinecraftVersion().convention(
@@ -186,9 +177,17 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
             getAddRepository().convention(
                     getBooleanLocalProperty("addRepository", true)
             );
-            getIsEnabled().set(getParchmentArtifact()
-                    .map(s -> !s.isEmpty()).orElse(getBooleanLocalProperty("enabled", true))
-            );
+        }
+
+        @Internal
+        public Provider<String> getSelectedParchmentArtifact(String artifactMinecraftVersion) {
+            return getParchmentArtifact().orElse(getMinecraftVersion().orElse(artifactMinecraftVersion)
+                .zip(getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
+                    return DEFAULT_PARCHMENT_GROUP
+                        + ":" + DEFAULT_PARCHMENT_ARTIFACT_PREFIX + minecraftVersion
+                        + ":" + mappingVersion
+                        + "@zip";
+                }));
         }
     }
 }

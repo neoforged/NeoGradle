@@ -12,9 +12,9 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    def "assemble_supports_configuration_cache_build"() {
+    def "compile_supports_configuration_cache_build"() {
         given:
-        def project = create("assemble_supports_configuration_cache_build", {
+        def project = create("compile_supports_configuration_cache_build", {
             it.build("""
             java {
                 toolchain {
@@ -35,11 +35,11 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build') 
+            it.tasks('compileJava')
         }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
     }
 
     def "compile_supports_configuration_cache_build"() {
@@ -75,17 +75,17 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         and:
         def secondaryRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         and:
         def thirdRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:

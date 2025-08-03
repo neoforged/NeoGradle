@@ -58,7 +58,7 @@ public final class NeoFormDependencyManager {
         NeoFormRuntimeExtension runtimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
         NeoFormRuntimeDefinition runtime = runtimeExtension.maybeCreateFor(dependency, builder -> {
             builder.withDistributionType(target.distribution).withNeoFormVersion(target.version);
-            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
+            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder, project.files());
         });
 
         return Optional.of(

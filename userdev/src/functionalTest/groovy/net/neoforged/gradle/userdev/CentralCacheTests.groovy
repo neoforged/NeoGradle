@@ -36,11 +36,11 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks(':compileJava')
         }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
         run.output.contains("Cache miss for task")
     }
 
@@ -70,7 +70,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         when:
         project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
             it.stacktrace()
         }
 
@@ -80,11 +80,11 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
             .forEach { Files.delete(it) }
 
         def targetRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
-        targetRun.task(':build').outcome == TaskOutcome.SUCCESS
+        targetRun.task(':compileJava').outcome == TaskOutcome.SUCCESS
         !targetRun.output.contains("Cache hit for task") //We deleted all healthy markers so we should not have any cache hits.
     }
 
@@ -110,11 +110,11 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
         run.output.contains("Caching is disabled, executing all stages.")
     }
 
@@ -154,12 +154,12 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
 
         when:
         File atFile = initialRun.file("src/main/resources/META-INF/accesstransformer.cfg")
@@ -181,11 +181,11 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         """
 
         def secondRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         secondRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        secondRun.task(":build").outcome == TaskOutcome.SUCCESS
+        secondRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 }

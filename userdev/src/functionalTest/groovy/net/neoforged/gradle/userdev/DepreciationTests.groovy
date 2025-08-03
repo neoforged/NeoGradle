@@ -33,12 +33,12 @@ class DepreciationTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
             it.arguments('--warning-mode', 'fail', '--stacktrace')
         }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
     }
 
     def "compile_does_not_use_depreciated_apis"() {

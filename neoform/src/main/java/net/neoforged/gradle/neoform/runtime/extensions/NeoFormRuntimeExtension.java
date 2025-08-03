@@ -415,22 +415,14 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         additionalRuntimeTasks.forEach(taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task)));
         remapTask.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task));
 
-        TaskProvider<? extends WithOutput> recompileInput = maybeApplyParchment(
-                definition,
-                remapTask,
-                symbolicDataSources,
-                neoFormDirectory,
-                Objects.requireNonNull(context.getLibrariesTask()).flatMap(WithOutput::getOutput)
-        );
-
-        recompileInput = adaptPreTaskInput(
+        TaskProvider<? extends WithOutput> recompileInput = adaptPreTaskInput(
                 definition,
                 "recompile",
                 spec,
                 neoFormDirectory,
                 symbolicDataSources,
-                Optional.of(recompileInput),
-                Optional.of(recompileInput)
+                Optional.of(remapTask),
+                Optional.of(remapTask)
         ).orElseThrow(() -> new IllegalStateException("No input for recompile task due to pre-task adapters"));
 
         final FileCollection recompileDependencies = definition.getAdditionalRecompileDependencies().plus(spec.getProject().files(definition.getMinecraftDependenciesConfiguration()));
@@ -504,7 +496,14 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         return adaptPreTaskInput(definition, step.getName(), spec, neoFormDirectory, symbolicDataSources, adaptedInput, inputTask);
     }
 
-    private static Optional<TaskProvider<? extends WithOutput>> adaptPreTaskInput(NeoFormRuntimeDefinition definition, String stepName, NeoFormRuntimeSpecification spec, File neoFormDirectory, Map<String, String> symbolicDataSources, Optional<TaskProvider<? extends WithOutput>> adaptedInput, Optional<TaskProvider<? extends WithOutput>> inputTask) {
+    private static Optional<TaskProvider<? extends WithOutput>> adaptPreTaskInput(
+        NeoFormRuntimeDefinition definition,
+        String stepName,
+        NeoFormRuntimeSpecification spec,
+        File neoFormDirectory,
+        Map<String, String> symbolicDataSources,
+        Optional<TaskProvider<? extends WithOutput>> adaptedInput,
+        Optional<TaskProvider<? extends WithOutput>> inputTask) {
         if (!spec.getPreTaskTypeAdapters().get(stepName).isEmpty() && inputTask.isPresent()) {
             for (TaskTreeAdapter taskTreeAdapter : spec.getPreTaskTypeAdapters().get(stepName)) {
                 final TaskProvider<? extends Runtime> modifiedTree = taskTreeAdapter.adapt(definition, inputTask.get(), neoFormDirectory, definition.getGameArtifactProvidingTasks(), definition.getMappingVersionData(), taskProvider -> taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task)));
@@ -517,56 +516,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             adaptedInput = inputTask;
         }
         return adaptedInput;
-    }
-
-    private static TaskProvider<? extends WithOutput> maybeApplyParchment(NeoFormRuntimeDefinition runtimeDefinition,
-                                                             TaskProvider<? extends WithOutput> recompileInput,
-                                                             Map<String, String> symbolicDataSources,
-                                                             File neoFormDirectory,
-                                                             Provider<RegularFile> listLibrariesOutput) {
-        Project project = runtimeDefinition.getSpecification().getProject();
-        Parchment parchment = project.getExtensions().getByType(Subsystems.class).getParchment();
-        Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
-        if (!parchment.getIsEnabled().get()) {
-            return recompileInput;
-        }
-
-        return project.getTasks().register(CommonRuntimeUtils.buildTaskName(runtimeDefinition, "applyParchment"), DefaultExecute.class, task -> {
-            // Provide the mappings via artifact
-            File mappingFile = ToolUtilities.resolveTool(project, parchment.getParchmentArtifact().get());
-            String conflictPrefix = parchment.getConflictPrefix().get();
-            File toolExecutable = ToolUtilities.resolveTool(project, tools.getJST().get());
-
-            task.getArguments().putFile("mappings", project.provider(() -> mappingFile));
-            task.getArguments().putRegularFile("libraries", listLibrariesOutput);
-            task.getArguments().putRegularFile("input", recompileInput.flatMap(WithOutput::getOutput));
-
-            task.getExecutingJar().set(toolExecutable);
-            task.getProgramArguments().add("--libraries-list");
-            task.getProgramArguments().add("{libraries}");
-            task.getProgramArguments().add("--enable-parchment");
-            task.getProgramArguments().add("--parchment-mappings");
-            task.getProgramArguments().add("{mappings}");
-            task.getProgramArguments().add("--in-format=archive");
-            task.getProgramArguments().add("--out-format=archive");
-            task.getProgramArguments().add("--parchment-conflict-prefix=%s".formatted(conflictPrefix));
-            task.getProgramArguments().add("{input}");
-            task.getProgramArguments().add("{output}");
-
-            final StringBuilder builder = new StringBuilder();
-            runtimeDefinition.getAllDependencies().forEach(f -> {
-                if (!builder.isEmpty()) {
-                    builder.append(File.pathSeparator);
-                }
-                builder.append(f.getAbsolutePath());
-            });
-            task.getProgramArguments().add("--classpath=" + builder);
-
-            task.dependsOn(listLibrariesOutput);
-            task.dependsOn(recompileInput);
-
-            configureCommonRuntimeTaskParameters(task, symbolicDataSources, "applyParchment", runtimeDefinition.getSpecification(), neoFormDirectory);
-        });
     }
 
     public record CustomCompilerArgsProvider(Provider<List<String>> args) implements CommandLineArgumentProvider {

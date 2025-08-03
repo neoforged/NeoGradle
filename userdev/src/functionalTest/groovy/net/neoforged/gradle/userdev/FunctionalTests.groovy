@@ -271,22 +271,22 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
 
         and:
         def secondRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
             it.stacktrace()
         }
 
         then:
         secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the userdev runtime supports restricted repositories"() {
@@ -330,22 +330,22 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
 
         and:
         def secondRun = project.run {
-            it.tasks('build')
+            it.tasks(':compileJava')
             it.stacktrace()
         }
 
         then:
         secondRun.task(":neoFormRecompile").outcome == TaskOutcome.FROM_CACHE
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "a mod with userdev can have multiple sourcesets with neoforge"() {
@@ -399,13 +399,13 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('clean', 'build')
+            it.tasks('clean', 'compileJava')
             it.stacktrace()
         }
 
         then:
         run.task(':clean').outcome == TaskOutcome.SUCCESS
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
     }
 
     def "a mod with userdev does not expose the userdev artifact to consumers"() {
@@ -461,13 +461,13 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('clean', 'build', 'publish')
+            it.tasks('clean', 'publish')
             it.stacktrace()
         }
 
         then:
         run.task(':clean').outcome == TaskOutcome.SUCCESS
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
         run.task(':publish').outcome == TaskOutcome.SUCCESS
 
         and:

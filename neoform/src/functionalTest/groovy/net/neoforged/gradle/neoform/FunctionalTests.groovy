@@ -103,11 +103,11 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
     }
 
     def "neoform re-setup uses a build-cache" () {
@@ -142,16 +142,16 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         }
 
         when:
-        def run = project.run { it.tasks('build') }
+        def run = project.run { it.tasks('compileJava') }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
 
         when:
-        def secondRun = project.run {it.tasks('build')}
+        def secondRun = project.run {it.tasks('compileJava')}
 
         then:
-        secondRun.task(':build').outcome == TaskOutcome.SUCCESS
+        secondRun.task(':compileJava').outcome == TaskOutcome.SUCCESS
         secondRun.task(':neoFormRecompile').outcome == TaskOutcome.FROM_CACHE
     }
 
