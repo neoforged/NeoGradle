@@ -514,8 +514,6 @@ using [Gradle properties](https://docs.gradle.org/current/userguide/project_prop
 This implements run specific dependency management for the classpath of a run.
 In the past this had to happen via a manual modification of the "minecraft_classpath" token, however tokens don't exist anymore as a component that can be configured on a run.
 It was as such not possible to add none FML aware libraries to your classpath of a run.
-This PR enables this feature again.
-
 
 ### Usage:
 #### Direct
@@ -699,27 +697,73 @@ If you have configured your IDEA IDE to run with its own compiler, you can disab
 ```properties
 neogradle.subsystems.conventions.ide.idea.compiler-detection=false
 ```
-This will set the DSL property:
+This auto-detection will set the DSL property, disabling this property while running and compiling with idea means that you need to set this property yourself.
 ```groovy
 idea {
-    runs {
+    project {
+        runs {
+            runWithIdea = true / false
+        }
+    }
+}
+```
+
+> [!NOTE]
+> This API is only available on the root project, since that is where the idea project model resides.
+
+If for what ever reason IDEA does not properly register its model in your root project you can also use:
+```groovy
+minecraft {
+    idea {
         runWithIdea = true / false
     }
 }
 ```
-##### IDEA Compiler output directory
-If you want to change the output directory of the IDEA compiler, you can set the following property in your gradle.properties:
+
+> [!WARNING]
+> This model is project specific, as apposed to the API shown above which is only available on the root project.
+> It should as such be set on all projects at once. We suggest using a convention plugin or a similar Config Cache compatible mechanism.
+
+##### Using Arg Files
+Sometimes IDEA will generate a Config Cache incompatible init script when its command line arguments are shortened using an args file and running with Gradle is enabled (which is the default).
+To prevent gradle from being mad at idea for the incompatible script you can make NG generate a launch configuration that does not shorten the command line.
+
+> [!NOTE]
+> This might not work on all operating systems. Some configurations of paths might prevent you from launching the game because the launch command got too long.
+
+You can either use the following convention:
 ```properties
-neogradle.subsystems.conventions.ide.idea.compiler-output-dir=<path>
+neogradle.subsystems.conventions.ide.idea.use-args-file=false
 ```
-By default, this is set to 'out', and configured in the DSL as:
+
+Or the following model APIs:
+
 ```groovy
 idea {
-    runs {
-        outDirectory = '<path>'
+    project {
+        runs {
+            useArgsFile = true / false
+        }
     }
 }
 ```
+Will configure the system to use your preferred convention.
+
+> [!NOTE]
+> This API is only available on the root project, since that is where the idea project model resides.
+
+If for what ever reason IDEA does not properly register its model in your root project you can also use:
+```groovy
+minecraft {
+    idea {
+        useArgsFile = true / false
+    }
+}
+```
+
+> [!WARNING]
+> This model is project specific, as apposed to the API shown above which is only available on the root project.
+> It should as such be set on all projects at once. We suggest using a convention plugin or a similar Config Cache compatible mechanism.
 
 ##### Post Sync Task Usage
 By default, the import in IDEA is run during the sync task.

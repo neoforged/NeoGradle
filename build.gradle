@@ -51,7 +51,9 @@ subprojects.forEach { Project subProject ->
     subProject.apply plugin: 'eclipse'
     subProject.apply plugin: 'idea'
 
-    gradleutils.setupSigning(project: subProject, signAllPublications: true)
+    //TODO: Figure out why eclipse project signing is fucked with GU
+    if (subProject.name != "eclipse")
+        gradleutils.setupSigning(project: subProject, signAllPublications: true)
 
     //General project metadata. Everything has the same version and group.
     subProject.version = subProject.rootProject.version

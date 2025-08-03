@@ -9,7 +9,7 @@ class Constants {
     public static final String DEFAULT_PARCHMENT_MAVEN_URL = "https://maven.parchmentmc.org/"
     public static final String JST_TOOL_ARTIFACT = "net.neoforged.jst:jst-cli-bundle:1.0.67"
     public static final String DEVLOGIN_TOOL_ARTIFACT = "net.covers1624:DevLogin:0.1.0.4"
-    public static final String RENDERNURSE_TOOL_ARTIFACT = "net.neoforged:render-nurse:0.0.12";
+    public static final String RENDERNURSE_TOOL_ARTIFACT = "net.neoforged:render-nurse:0.0.14";
     public static final String DEVLOGIN_MAIN_CLASS = "net.covers1624.devlogin.DevLogin"
     public static final String BINPARCHER_TOOL_ARTIFACT = "net.neoforged.installertools:binarypatcher:2.1.7:fatjar"
     public static final String ACCESSTRANSFORMER_TOOL_ARTIFACT = "net.neoforged.accesstransformers:at-cli:11.0.2:fatjar"
