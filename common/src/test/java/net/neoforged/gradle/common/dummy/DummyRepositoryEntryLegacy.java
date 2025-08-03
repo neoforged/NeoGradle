@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.dummy;
 
 import com.google.common.collect.ImmutableSet;
+import groovy.lang.Closure;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntryLegacy;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
@@ -255,5 +256,11 @@ public final class DummyRepositoryEntryLegacy implements RepositoryEntryLegacy<D
     @Override
     public ExtensionContainer getExtensions() {
         return mock(ExtensionContainer.class);
+    }
+
+    @Override
+    public DummyRepositoryEntryLegacy configure(final Closure cl)
+    {
+        return this;
     }
 }

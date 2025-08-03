@@ -3,7 +3,6 @@ package net.neoforged.gradle.dsl.userdev.configurations
 import com.google.gson.*
 import groovy.transform.CompileStatic
 import net.neoforged.gdi.ConfigurableDSLElement
-import net.neoforged.gdi.annotations.ClosureEquivalent
 import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runs.type.RunType
 import org.gradle.api.Action
@@ -103,7 +102,6 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @Optional
     abstract NamedDomainObjectCollection<RunType> getRunTypes();
 
-    @ClosureEquivalent
     void runType(final String name, Action<RunType> configurer) {
         final RunType runType = factory.newInstance(RunType.class, name)
         configurer.execute(runType)

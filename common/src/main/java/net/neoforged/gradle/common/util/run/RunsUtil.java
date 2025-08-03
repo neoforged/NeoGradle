@@ -6,15 +6,16 @@ import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.RenderDocDownloaderTask;
-import net.neoforged.gradle.common.util.*;
+import net.neoforged.gradle.common.util.ClasspathUtils;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.SourceSetUtils;
+import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
-import net.neoforged.gradle.eclipse.EclipseMetadataReader;
-import net.neoforged.gradle.eclipse.IPropertyDelegate;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -23,7 +24,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.*;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -646,12 +646,12 @@ public class RunsUtil {
     public static Provider<String> buildRunWithEclipseModClasses(final Provider<Multimap<String, SourceSet>> compileSourceSets) {
         return buildModClasses(compileSourceSets, sourceSet -> {
             final Project project = SourceSetUtils.getProject(sourceSet);
-            final IPropertyDelegate<File> eclipseBaseSourceOutputDir = EclipseMetadataReader.getBaseSourceOutputDirFor(project);
+            final EclipseModel eclipseModel = project.getExtensions().getByType(EclipseModel.class);
 
             final File conventionsDir = new File(project.getProjectDir(), "bin");
-            eclipseBaseSourceOutputDir.convention(conventionsDir);
+            eclipseModel.getClasspath().getBaseSourceOutputDir().fileProvider(project.provider(() -> conventionsDir));
 
-            final File parentDir = eclipseBaseSourceOutputDir.get();
+            final File parentDir = eclipseModel.getClasspath().getBaseSourceOutputDir().getAsFile().get();
             final File sourceSetDir = new File(parentDir, sourceSet.getName());
             return Stream.of(sourceSetDir);
         });

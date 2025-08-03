@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.extensions.subsystems;
 
+import groovy.lang.Closure;
 import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.extensions.base.WithEnabledProperty;
 import net.neoforged.gradle.common.extensions.base.WithPropertyLookup;

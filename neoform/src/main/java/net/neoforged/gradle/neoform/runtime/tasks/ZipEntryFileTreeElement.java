@@ -71,11 +71,6 @@ public class ZipEntryFileTreeElement implements FileTreeElement {
     }
 
     @Override
-    public int getMode() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public FilePermissions getPermissions() {
         throw new UnsupportedOperationException();
     }

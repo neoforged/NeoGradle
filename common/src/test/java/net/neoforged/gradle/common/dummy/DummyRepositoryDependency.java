@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.dummy;
 
+import groovy.lang.Closure;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.ResolvedDependencyUtils;
@@ -152,5 +153,11 @@ public final class DummyRepositoryDependency implements RepositoryReference, Rep
     @Override
     public ExtensionContainer getExtensions() {
         return mock(ExtensionContainer.class);
+    }
+
+    @Override
+    public DummyRepositoryDependency configure(final Closure cl)
+    {
+        return this;
     }
 }

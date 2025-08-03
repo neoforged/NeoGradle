@@ -14,7 +14,7 @@ import org.gradle.api.Project;
 
 import javax.inject.Inject;
 
-public abstract class ConventionsExtension extends WithEnabledProperty implements BaseDSLElement<Conventions>, Conventions {
+public abstract class ConventionsExtension extends WithEnabledProperty implements Conventions {
 
     private final Configurations configurations;
     private final SourceSets sourceSets;

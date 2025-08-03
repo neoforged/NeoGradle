@@ -99,13 +99,24 @@ subprojects.forEach { Project subProject ->
             }
         }
     }
+    subProject.repositories {
+        maven {
+            name = "Maven for PR #4" // https://github.com/neoforged/TrainingWheels/pull/4
+            url = uri("https://prmaven.neoforged.net/TrainingWheels/pr4")
+            content {
+                includeModule("net.neoforged.trainingwheels", "base")
+                includeModule("net.neoforged.trainingwheels", "gradle-base")
+                includeModule("net.neoforged.trainingwheels", "gradle-functional")
+            }
+        }
+    }
 
     //Basic dependencies: Jetbrains Annotations, JUnit and Mockito for now.
     subProject.dependencies.api "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
-    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-params:${project.junit_version}"
     subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
-    subProject.dependencies.testImplementation "org.junit.platform:junit-platform-engine:${project.junit_platform_version}"
+    subProject.dependencies.testRuntimeOnly    "org.junit.platform:junit-platform-launcher"
+    subProject.dependencies.testImplementation "org.junit.jupiter:junit-jupiter-params:${project.junit_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-junit-jupiter:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-core:${project.mockito_version}"
     subProject.dependencies.testImplementation "org.mockito:mockito-inline:${project.mockito_version}"
@@ -139,6 +150,7 @@ subprojects.forEach { Project subProject ->
 
     //Run tests in parallel
     subProject.test {
+        useJUnitPlatform()
         maxParallelForks = Runtime.runtime.availableProcessors() - 1
     }
 
@@ -178,7 +190,9 @@ subprojects.forEach { subProject ->
 
         //All dependencies needed to run the functional tests.
         evalSubProject.dependencies.functionalTestImplementation subProject.dependencies.gradleTestKit()
-        evalSubProject.dependencies.functionalTestImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+        evalSubProject.dependencies.functionalTestImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
+        evalSubProject.dependencies.functionalTestImplementation "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
+        evalSubProject.dependencies.functionalTestRuntimeOnly    "org.junit.platform:junit-platform-launcher"
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.groovy_version}") { spec ->
             spec.exclude group: 'org.apache.groovy'
         }
@@ -223,6 +237,8 @@ subprojects.forEach { subProject ->
 
         //Run task which will run the functional tests.
         evalSubProject.tasks.register('functionalTest', Test) {
+            useJUnitPlatform()
+
             group 'verification'
 
             testClassesDirs = evalSubProject.sourceSets.functionalTest.output.classesDirs
