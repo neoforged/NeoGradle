@@ -154,10 +154,4 @@ public final class DummyRepositoryDependency implements RepositoryReference, Rep
     public ExtensionContainer getExtensions() {
         return mock(ExtensionContainer.class);
     }
-
-    @Override
-    public DummyRepositoryDependency configure(final Closure cl)
-    {
-        return this;
-    }
 }

@@ -257,10 +257,4 @@ public final class DummyRepositoryEntryLegacy implements RepositoryEntryLegacy<D
     public ExtensionContainer getExtensions() {
         return mock(ExtensionContainer.class);
     }
-
-    @Override
-    public DummyRepositoryEntryLegacy configure(final Closure cl)
-    {
-        return this;
-    }
 }

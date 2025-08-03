@@ -173,12 +173,6 @@ public class ReplacementLogicTest {
         public ExtensionContainer getExtensions() {
             return extensionContainer;
         }
-
-        @Override
-        public DependencyReplacement configure(final Closure cl)
-        {
-            return this;
-        }
     }
 
 }
