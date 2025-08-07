@@ -62,6 +62,8 @@ public final class NeoFormRuntimeUtils {
                 case "downloadServerMappings":
                     taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, spec.getMinecraftVersion());
                     break;
+                case "extractServer":
+                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_EXTRACTED_SERVER, spec.getMinecraftVersion());
             }
 
             String finalTaskName = taskName;

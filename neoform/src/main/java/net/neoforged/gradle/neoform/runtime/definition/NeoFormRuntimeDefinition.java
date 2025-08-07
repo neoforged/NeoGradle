@@ -4,6 +4,7 @@ import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
@@ -33,8 +34,8 @@ public class NeoFormRuntimeDefinition extends CommonRuntimeDefinition<NeoFormRun
 
     public NeoFormRuntimeDefinition(@NotNull NeoFormRuntimeSpecification specification,
                                     @NotNull LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
-                                    @NotNull TaskProvider<? extends ArtifactProvider> sourceJarTask,
-                                    @NotNull TaskProvider<? extends ArtifactProvider> rawJarTask,
+                                    @NotNull TaskProvider<? extends ArtifactFromOutput> sourceJarTask,
+                                    @NotNull TaskProvider<? extends ArtifactFromOutput> rawJarTask,
                                     @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
                                     @NotNull Configuration minecraftDependenciesConfiguration,
                                     @NotNull Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,

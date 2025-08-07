@@ -11,12 +11,13 @@ import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
-@CacheableTask
+@DisableCachingByDefault(because = "Uses neogradles cache service")
 public abstract class DefaultExecute extends DefaultRuntime implements Execute {
 
     public DefaultExecute() {

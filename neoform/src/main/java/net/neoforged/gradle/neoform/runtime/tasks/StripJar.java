@@ -9,44 +9,28 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
+import org.gradle.work.DisableCachingByDefault;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
-@CacheableTask
+@DisableCachingByDefault(because = "Uses neogradles cache service")
 public abstract class StripJar extends DefaultRuntime {
 
     public StripJar() {
         super();
 
-        getMappingsFiles().from(getRuntimeData().map(data -> data.get("mappings")));
         getIsWhitelistMode().convention(true);
-        getFilters().convention(
-                getProject().provider(() -> {
-                    if (getMappingsFiles().isEmpty()) {
-                        return null;
-                    }
-
-                    return getMappingsFiles().getFiles()
-                            .stream()
-                            .flatMap(file -> FileUtils.readAllLines(file.toPath()))
-                            .filter(l -> !l.startsWith("\t"))
-                            .map(s -> s.split(" ")[0] + ".class")
-                            .distinct()
-                            .collect(Collectors.toList());
-                })
-        );
-
         getIsWhitelistMode().finalizeValueOnRead();
-        getFilters().finalizeValueOnRead();
     }
 
     @ServiceReference(CachedExecutionService.NAME)
@@ -69,46 +53,34 @@ public abstract class StripJar extends DefaultRuntime {
     }
 
     private void strip(File input, File output, boolean whitelist) throws IOException {
-        try (JarInputStream is = new JarInputStream(new FileInputStream(input));
-             FileOutputStream fout = new FileOutputStream(output);
-             JarOutputStream os = new JarOutputStream(fout)) {
-
-            // Ignore any entry that's not allowed
-            JarEntry entry;
-            while ((entry = is.getNextJarEntry()) != null) {
-                if (!isEntryValid(entry, whitelist)) {
+        try(var jar = new ZipFile(input);
+            var outputStream = new JarOutputStream(
+                new BufferedOutputStream(
+                    new FileOutputStream(output)
+                )
+            )
+        ) {
+            var entries = jar.entries();
+            while(entries.hasMoreElements()) {
+                var entry = entries.nextElement();
+                if (entry.isDirectory())
                     continue;
+
+                if (entry.getName().endsWith(".class") != whitelist)
+                    continue;
+
+                outputStream.putNextEntry(entry);
+                try (var is = jar.getInputStream(entry)) {
+                    is.transferTo(outputStream);
                 }
-                os.putNextEntry(entry);
-                IOUtils.copyLarge(is, os);
-                os.closeEntry();
+                outputStream.closeEntry();
             }
         }
     }
 
-    private boolean isEntryValid(JarEntry entry, boolean whitelist) {
-        if (entry.isDirectory())
-            return false;
-
-        if (getFilters().isPresent()) {
-            return getFilters().get().contains(entry.getName()) == whitelist;
-        }
-
-        return true;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.NONE)
-    @Optional
-    public abstract ConfigurableFileCollection getMappingsFiles();
-
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getInput();
-
-    @Input
-    @Optional
-    public abstract ListProperty<String> getFilters();
 
     @Input
     public abstract Property<Boolean> getIsWhitelistMode();

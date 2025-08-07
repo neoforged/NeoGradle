@@ -20,6 +20,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
+import org.gradle.work.DisableCachingByDefault;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -40,7 +41,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Inject additional files into a Zip (or Jar) file.
  */
-@CacheableTask
+@DisableCachingByDefault(because = "Uses neogradles cache service")
 public abstract class InjectZipContent extends DefaultRuntime {
 
     @ServiceReference(CachedExecutionService.NAME)

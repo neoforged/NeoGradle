@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
@@ -16,6 +17,7 @@ import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -59,6 +61,8 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
 
     public static void configureCommonRuntimeTaskParameters(Runtime runtime, CommonRuntimeDefinition<?> runtimeDefinition, File workingDirectory) {
         configureCommonRuntimeTaskParameters(runtime, runtimeDefinition.getSpecification(), workingDirectory);
+        runtime.getJavaVersion().set(runtimeDefinition.getRequiredJavaVersion());
+
     }
 
     public static void configureCommonRuntimeTaskParameters(Runtime runtime, String stepName, CommonRuntimeSpecification specification, File workingDirectory) {
@@ -73,7 +77,25 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         final MinecraftArtifactCache artifactCache = spec.getProject().getExtensions().getByType(MinecraftArtifactCache.class);
         return artifactCache.cacheGameVersionTasks(spec.getProject(), spec.getMinecraftVersion(), spec.getDistribution());
     }
-    
+
+    public static Configuration extractVersionJsonLibraries(final @NotNull Project project, final String minecraftVersion, final Provider<File> fileProvider)
+    {
+        return ConfigurationUtils.temporaryConfiguration(
+            project,
+            "%sDependencies".formatted(minecraftVersion),
+            files -> files.getDependencies().addAllLater(
+                fileProvider.map(TransformerUtils.guard(VersionJson::get))
+                    .map(VersionJson::getLibraries)
+                    .map(libraries -> libraries.stream().filter(VersionJson.Library::isAllowed).toList())
+                    .map(libraries -> libraries.stream()
+                        .map(VersionJson.Library::getName)
+                        .map(project.getDependencies()::create)
+                        .toList()
+                    )
+            )
+        );
+    }
+
     @Override
     public Project getProject() {
         return project;

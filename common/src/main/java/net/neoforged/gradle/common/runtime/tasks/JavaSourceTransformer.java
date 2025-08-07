@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Lists;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import org.apache.commons.io.FileUtils;
@@ -9,11 +10,14 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
+import java.util.zip.ZipOutputStream;
 
-@CacheableTask
+@DisableCachingByDefault(because = "Uses neogradles cache service")
 public abstract class JavaSourceTransformer extends DefaultExecute {
 
     public JavaSourceTransformer() {
@@ -83,7 +87,6 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
                 )
         );
 
-        getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getTransformers().finalizeValueOnRead();
         getLogLevel().set(LogLevel.DISABLED);
     }
@@ -91,12 +94,25 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
     @Override
     public void doExecute() throws Exception {
         //We need a separate check here that skips the execute call if there are no transformers.
-        if (getTransformers().isEmpty() && getInterfaceInjections().isEmpty()) {
+        if (getTransformers().isEmpty() &&
+            getInterfaceInjections().isEmpty() &&
+            getParchmentMappings().isEmpty()) {
             final File output = ensureFileWorkspaceReady(getOutput());
             FileUtils.copyFile(getInputFile().get().getAsFile(), output);
         }
 
         super.doExecute();
+
+        //Double check if the stubs file exists.
+        final File stubs = getStubs().getAsFile().get();
+        if (!stubs.exists()) {
+            //noinspection EmptyTryBlock
+            try (var stubsOutputStream = new FileOutputStream(stubs);
+                 var ignored = new ZipOutputStream(stubsOutputStream)
+            )
+            {
+            }
+        }
     }
 
     @InputFile

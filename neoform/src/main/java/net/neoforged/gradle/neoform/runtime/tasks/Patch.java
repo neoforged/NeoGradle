@@ -12,11 +12,12 @@ import org.gradle.api.file.*;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
+import org.gradle.work.DisableCachingByDefault;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-@CacheableTask
+@DisableCachingByDefault(because = "Uses neogradles cache service")
 public abstract class Patch extends DefaultRuntime {
 
 

@@ -31,7 +31,15 @@ import java.util.stream.Collectors;
 public class RenameStep implements IStep {
 
     @Override
-    public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull File workingDirectory, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
+    public TaskProvider<? extends Runtime> buildTask(
+        VanillaRuntimeDefinition definition,
+        TaskProvider<? extends WithOutput> inputProvidingTask,
+        @NotNull File minecraftCache,
+        @NotNull File workingDirectory,
+        @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks,
+        @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
+        @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator)
+    {
         final Mappings mappingsExtension = definition.getSpecification().getProject().getExtensions().getByType(Mappings.class);
         final Map<String, String> mappingVersionData = Maps.newHashMap();
         mappingVersionData.put(NamingConstants.Version.VERSION, definition.getSpecification().getMinecraftVersion());

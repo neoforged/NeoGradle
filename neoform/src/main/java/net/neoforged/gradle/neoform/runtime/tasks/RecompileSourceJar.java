@@ -7,6 +7,7 @@ import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
+import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
@@ -24,13 +25,18 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradle.work.InputChanges;
 
 import javax.inject.Inject;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.zip.ZipOutputStream;
 
-@CacheableTask
+@DisableCachingByDefault(because = "Uses neogradles cache service")
 public abstract class RecompileSourceJar extends JavaCompile implements Runtime {
 
     private final Property<JavaLanguageVersion> javaVersion;
@@ -54,8 +60,8 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         //And configure output default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
         getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension)));
+        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.jar").map(d::file)));
 
-        getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
             if (!getJavaVersion().isPresent()) {
                 return toolChain.launcherFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(JavaLanguageVersion.of(Objects.requireNonNull(Jvm.current().getJavaVersion()).getMajorVersion())));
@@ -82,9 +88,9 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setWarnings(false);
         getOptions().setVerbose(false);
         getOptions().setDeprecation(false);
-        getOptions().setFork(true);
         getOptions().setIncremental(true);
         getOptions().getIncrementalAfterFailure().set(true);
+
         getOptions().setSourcepath(getProject().files(getAdditionalInputFileRoot()));
     }
 
@@ -121,7 +127,8 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @Internal
     public abstract ConfigurableFileCollection getAnnotationProcessorPath();
 
-    @Internal
+    @InputFiles
+    @CompileClasspath
     public abstract ConfigurableFileCollection getCompileClasspath();
 
     @Inject
@@ -136,8 +143,9 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     public abstract Property<CachedExecutionService> getCacheService();
 
     @InputFiles
-    @PathSensitive(PathSensitivity.NONE)
-    public abstract DirectoryProperty getAdditionalInputFileRoot();
+    @CompileClasspath
+    @Optional
+    public abstract ConfigurableFileCollection getAdditionalInputFileRoot();
 
     @Override
     protected void compile(InputChanges inputs) {
@@ -157,10 +165,11 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         }
     }
 
-    private void doCachedCompile(InputChanges inputs) {
+    private void doCachedCompile(InputChanges inputs) throws IOException
+    {
         super.compile(inputs);
-        final FileTree output = this.getDestinationDirectory().getAsFileTree();
 
+        final FileTree output = this.getDestinationDirectory().getAsFileTree();
         output.visit(details -> {
             if (details.isDirectory())
                 return;
@@ -179,5 +188,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
                 details.getFile().delete();
             }
         });
+
+        final File outputJar = ensureFileWorkspaceReady(getOutput());
+        try(final var fileStream = new FileOutputStream(outputJar);
+            final var zipStream = new ZipOutputStream(fileStream))
+        {
+            final ZipBuildingFileTreeVisitor visitor = new ZipBuildingFileTreeVisitor(zipStream);
+            output.visit(visitor);
+        }
     }
 }

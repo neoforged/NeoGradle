@@ -7,7 +7,6 @@ import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvider;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
-import net.neoforged.gradle.common.util.MinecraftArtifactType;
 import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -99,10 +98,24 @@ public abstract class MinecraftArtifactCacheExtension implements ConfigurableDSL
             final TaskProvider<MinecraftVersionManifestFileCacheProvider> manifest = FileCacheUtils.createVersionManifestFileCacheProvidingTask(project, resolvedVersion);
             
             GameArtifact.VERSION_MANIFEST.doWhenRequired(side, () -> results.put(GameArtifact.VERSION_MANIFEST, manifest));
-            GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), DistributionType.CLIENT, MinecraftArtifactType.EXECUTABLE, manifest, results.values())));
-            GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), DistributionType.SERVER, MinecraftArtifactType.EXECUTABLE, manifest, results.values())));
-            GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), DistributionType.CLIENT, MinecraftArtifactType.MAPPINGS, manifest, results.values())));
-            GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), DistributionType.SERVER, MinecraftArtifactType.MAPPINGS, manifest, results.values())));
+            GameArtifact.CLIENT_JAR.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), GameArtifact.CLIENT_JAR, manifest)));
+            GameArtifact.SERVER_JAR.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_JAR, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), GameArtifact.SERVER_JAR, manifest)));
+            GameArtifact.CLIENT_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.CLIENT_MAPPINGS, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), GameArtifact.CLIENT_MAPPINGS, manifest)));
+            GameArtifact.SERVER_MAPPINGS.doWhenRequired(side, () -> results.put(GameArtifact.SERVER_MAPPINGS, FileCacheUtils.createArtifactFileCacheProvidingTask(project, resolvedVersion.getVersion(), GameArtifact.SERVER_MAPPINGS, manifest)));
+
+            GameArtifact.EXTRACTED_SERVER_JAR.doWhenRequired(side, () -> {
+                if (!results.containsKey(GameArtifact.SERVER_JAR))
+                    throw new RuntimeException("Invalid configuration, for an extracted server jar, a wrapped server jar is required!");
+
+                final TaskProvider<? extends WithOutput> bundledServerProvider = results.get(GameArtifact.SERVER_JAR);
+
+                results.put(GameArtifact.EXTRACTED_SERVER_JAR, FileCacheUtils.createExtractedServerFileCacheProvidingTask(
+                    project,
+                    gameVersion,
+                    GameArtifact.EXTRACTED_SERVER_JAR,
+                    bundledServerProvider
+                ));
+            });
 
             return results;
         });

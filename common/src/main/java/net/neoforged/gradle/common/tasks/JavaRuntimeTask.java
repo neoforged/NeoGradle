@@ -19,7 +19,6 @@ import java.util.Objects;
 public abstract class JavaRuntimeTask extends DownloadingTask implements WithJavaVersion {
 
     public JavaRuntimeTask() {
-        getJavaVersion().convention(getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
         getJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
             if (!getJavaVersion().isPresent()) {
                 return toolChain.launcherFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(JavaLanguageVersion.of(Objects.requireNonNull(Jvm.current().getJavaVersion()).getMajorVersion())));

@@ -1,19 +1,19 @@
-package net.neoforged.gradle.vanilla.runtime.tasks;
+package net.neoforged.gradle.common.tasks;
 
-import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.*;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-@CacheableTask
-public abstract class ExtractBundledServerTask extends DefaultRuntime {
-
+@DisableCachingByDefault(because = "Uses neogradles cache service")
+public abstract class ExtractBundledServerTask extends FileCacheProviding
+{
     @TaskAction
     public void run() throws Exception {
         final String minecraftVersion = getMinecraftVersion().get().toString();

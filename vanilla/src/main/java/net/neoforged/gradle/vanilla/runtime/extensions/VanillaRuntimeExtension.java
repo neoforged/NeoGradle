@@ -3,6 +3,7 @@ package net.neoforged.gradle.vanilla.runtime.extensions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
 import net.neoforged.gradle.common.tasks.UnpackBundledServer;
 import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
@@ -66,18 +67,6 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final File runtimeWorkingDirectory = new File(vanillaDirectory, "runtime");
         final File stepsMcpDirectory = new File(vanillaDirectory, "steps");
 
-        if (gameArtifactTasks.containsKey(GameArtifact.SERVER_JAR)) {
-            final TaskProvider<? extends WithOutput> serverJarTask = gameArtifactTasks.get(GameArtifact.SERVER_JAR);
-
-            final TaskProvider<? extends WithOutput> extractedBundleTask = project.getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "extractBundle"), UnpackBundledServer.class, task -> {
-                task.getServerJar().set(serverJarTask.flatMap(WithOutput::getOutput));
-                task.getOutput().fileValue(new File(vanillaDirectory, "files/server.jar"));
-            });
-
-            extractedBundleTask.configure(task -> task.dependsOn(serverJarTask));
-            gameArtifactTasks.put(GameArtifact.SERVER_JAR, extractedBundleTask);
-        }
-
         final Provider<VersionJson> versionJson = artifactCache.cacheVersionManifest(spec.getMinecraftVersion()).map(TransformerUtils.guard(VersionJson::get));
 
         final Configuration minecraftDependenciesConfiguration = ConfigurationUtils.temporaryConfiguration(getProject(), "VanillaMinecraftDependenciesFor" + spec.getIdentifier());
@@ -87,10 +76,10 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         stepsMcpDirectory.mkdirs();
 
-        final TaskProvider<? extends ArtifactProvider> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
+        final TaskProvider<? extends ArtifactFromOutput> sourceJarTask = spec.getProject().getTasks().register("supplySourcesFor" + spec.getIdentifier(), ArtifactFromOutput.class, task -> {
             task.getOutput().set(new File(runtimeWorkingDirectory, "sources.jar"));
         });
-        final TaskProvider<? extends ArtifactProvider> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getIdentifier(), ArtifactProvider.class, task -> {
+        final TaskProvider<? extends ArtifactFromOutput> rawJarTask = spec.getProject().getTasks().register("supplyRawJarFor" + spec.getIdentifier(), ArtifactFromOutput.class, task -> {
             task.getOutput().set(new File(runtimeWorkingDirectory, "raw.jar"));
         });
 
@@ -190,11 +179,11 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
         final TaskProvider<? extends WithOutput> rawTask = definition.getTasks().get(stepData.getRawJarStep().getTaskName(definition));
 
         definition.getSourceJarTask().configure(task -> {
-            task.getInputFiles().from(sourcesTask.flatMap(WithOutput::getOutput));
+            task.getInput().set(sourcesTask.flatMap(WithOutput::getOutput));
             task.dependsOn(sourcesTask);
         });
         definition.getRawJarTask().configure(task -> {
-            task.getInputFiles().from(rawTask.flatMap(WithOutput::getOutput));
+            task.getInput().set(rawTask.flatMap(WithOutput::getOutput));
             task.dependsOn(rawTask);
         });
     }
@@ -206,7 +195,6 @@ public abstract class VanillaRuntimeExtension extends CommonRuntimeExtension<Van
 
         final List<IStep> steps = ImmutableList.<IStep>builder()
                 .add(new CollectLibraryInformationStep())
-                .add(new ExtractBundledServerStep())
                 .add(new RenameStep())
                 .add(new ApplyAccessTransformerStep())
                 .add(rawJarStep)

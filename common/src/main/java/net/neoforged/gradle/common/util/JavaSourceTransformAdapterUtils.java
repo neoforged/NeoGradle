@@ -36,11 +36,19 @@ public class JavaSourceTransformAdapterUtils
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
             final FileCollection accessTransformerFiles = systemAccessTransformers.plus(accessTransformers.getFiles());
 
-            return createJavaSourceTransformerTask(accessTransformerFiles,
+            var transformer = createJavaSourceTransformerTask(accessTransformerFiles,
                 interfaceInjections.getFiles(),
                 definition,
                 previousTasksOutput,
                 parchment);
+
+            if (transformer != null)
+            {
+                var stubsTree = project.zipTree(transformer.flatMap(JavaSourceTransformer::getStubs));
+                definition.additionalCompileSources(stubsTree);
+            }
+
+            return transformer;
         };
     }
 

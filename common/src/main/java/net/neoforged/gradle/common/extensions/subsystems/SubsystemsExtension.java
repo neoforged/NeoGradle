@@ -122,6 +122,7 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         recompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("recompiler.jvmArgs", Collections.emptyList()));
         recompiler.getMaxMemory().convention(getStringProperty("recompiler.maxMemory", DEFAULT_RECOMPILER_MAX_MEMORY));
         recompiler.getShouldFork().convention(getBooleanProperty("recompiler.shouldFork", true, false));
+        recompiler.getType().convention(getStringProperty("recompiler.type", RecompilerType.getDefaultCompilerType().name()).map(RecompilerType::valueOf));
     }
 
     private void configureParchmentDefaults() {

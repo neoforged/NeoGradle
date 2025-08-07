@@ -5,12 +5,14 @@ import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
+import net.neoforged.gradle.dsl.common.tasks.specifications.InputFileSpecification;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.util.TransformerUtils;
@@ -23,6 +25,7 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -39,10 +42,10 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     private final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs;
 
     @NotNull
-    private final TaskProvider<? extends ArtifactProvider> sourceJarTask;
+    private final TaskProvider<? extends ArtifactFromOutput> sourceJarTask;
 
     @NotNull
-    private final TaskProvider<? extends ArtifactProvider> rawJarTask;
+    private final TaskProvider<? extends ArtifactFromOutput> rawJarTask;
 
     @NotNull
     private final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks;
@@ -71,8 +74,8 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     protected CommonRuntimeDefinition(
             @NotNull final S specification,
             @NotNull final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs,
-            @NotNull final TaskProvider<? extends ArtifactProvider> sourceJarTask,
-            @NotNull final TaskProvider<? extends ArtifactProvider> rawJarTask,
+            @NotNull final TaskProvider<? extends ArtifactFromOutput> sourceJarTask,
+            @NotNull final TaskProvider<? extends ArtifactFromOutput> rawJarTask,
             @NotNull final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactProvidingTasks,
             @NotNull final Configuration minecraftDependenciesConfiguration,
             @NotNull final Consumer<TaskProvider<? extends Runtime>> associatedTaskConsumer,
@@ -107,8 +110,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
 
     @Override
     @NotNull
-    public final TaskProvider<? extends ArtifactProvider> getRawJarTask() {
-        return rawJarTask;
+    public <T extends WithOutput & InputFileSpecification> TaskProvider<T> getRawJarTask() {
+        //noinspection unchecked
+        return (TaskProvider<T>) rawJarTask;
     }
 
     @Override
@@ -123,10 +127,10 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         return taskOutputs;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
     @NotNull
-    public final TaskProvider<? extends ArtifactProvider> getSourceJarTask() {
-        return sourceJarTask;
+    public <T extends WithOutput & InputFileSpecification> TaskProvider<T> getSourceJarTask() {
+        return (TaskProvider<T>) sourceJarTask;
     }
 
     @Override
@@ -168,6 +172,15 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
         return versionJson;
     }
 
+    @Override
+    public @NotNull Provider<JavaLanguageVersion> getRequiredJavaVersion()
+    {
+        return getVersionJson()
+            .map(VersionJson::getJavaVersion)
+            .map(VersionJson.JavaVersion::getMajorVersion)
+            .map(JavaLanguageVersion::of);
+    }
+
     @NotNull
     @Override
     public final ConfigurableFileCollection getAllDependencies() {
@@ -206,6 +219,14 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
     @Override
     public void additionalCompileSources(FileCollection sources) {
         this.additionalSources = this.additionalSources.plus(sources);
+    }
+
+    @Override
+    public void additionalCompileSources(final Object sources)
+    {
+        additionalCompileSources(
+            getSpecification().getProject().getObjects().fileCollection().from(sources)
+        );
     }
 
     public void configureRun(RunImpl run) {
