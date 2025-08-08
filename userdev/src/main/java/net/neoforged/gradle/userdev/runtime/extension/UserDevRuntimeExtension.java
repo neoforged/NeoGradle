@@ -130,23 +130,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         return UserDevRuntimeSpecification.Builder.from(getProject());
     }
 
-    private TaskTreeAdapter createAccessTransformerAdapter(final String accessTransformerDirectory, final FileTree userDev) {
-        final FileTree accessTransformerFiles =
-                userDev.matching(filter -> filter.include(accessTransformerDirectory + "/**"));
-
-        return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
-            if (accessTransformerFiles.isEmpty()) {
-                // No access transformers found, so we don't need to do anything
-                return null;
-            }
-
-            final TaskProvider<? extends JavaSourceTransformer> accessTransformerTask = CommonRuntimeTaskUtils.createSourceAccessTransformer(definition, "Forges", accessTransformerFiles, definition.getListLibrariesTaskProvider(), definition.getAllDependencies());
-            accessTransformerTask.configure(task -> task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput)));
-            accessTransformerTask.configure(task -> task.dependsOn(previousTasksOutput));
-            return accessTransformerTask;
-        };
-    }
-
     private TaskTreeAdapter createPatchAdapter(FileTree userDevArchive, String patchDirectory) {
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "patchUserDev"), Patch.class, task -> {
             task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));

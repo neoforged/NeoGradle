@@ -17,7 +17,7 @@ import org.gradle.work.DisableCachingByDefault;
 import java.io.File;
 import java.util.List;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class BinaryAccessTransformer extends DefaultExecute {
 
     public BinaryAccessTransformer() {

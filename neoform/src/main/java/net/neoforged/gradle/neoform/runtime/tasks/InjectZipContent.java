@@ -41,7 +41,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Inject additional files into a Zip (or Jar) file.
  */
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class InjectZipContent extends DefaultRuntime {
 
     @ServiceReference(CachedExecutionService.NAME)

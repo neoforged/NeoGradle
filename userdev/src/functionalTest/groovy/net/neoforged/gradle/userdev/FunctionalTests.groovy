@@ -266,12 +266,14 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.enableLocalBuildCache()
+            it.debugBuildCache()
             it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
         def initialRun = project.run {
             it.tasks('compileJava')
+            it.debug()
         }
 
         then:
@@ -282,6 +284,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         def secondRun = project.run {
             it.tasks('compileJava')
             it.stacktrace()
+            it.debug()
         }
 
         then:

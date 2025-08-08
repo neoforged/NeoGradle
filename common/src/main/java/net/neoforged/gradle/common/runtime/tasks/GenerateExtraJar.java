@@ -34,7 +34,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutput, WithWorkspace {
 
     public GenerateExtraJar() {

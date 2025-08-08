@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class DefaultExecute extends DefaultRuntime implements Execute {
 
     public DefaultExecute() {

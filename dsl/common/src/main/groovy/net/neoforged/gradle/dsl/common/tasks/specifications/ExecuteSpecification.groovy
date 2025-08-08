@@ -57,7 +57,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The path to the console log file.
      */
-    @Internal
+    @OutputFile
     @DSLProperty
     RegularFileProperty getConsoleLogFile();
 

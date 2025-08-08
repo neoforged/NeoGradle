@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class StripJar extends DefaultRuntime {
 
     public StripJar() {

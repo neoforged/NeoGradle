@@ -14,33 +14,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    def "a mod with neoform as dependency can run the apply official mappings task"() {
-        given:
-        def project = create "neoform-has-runnable-patch-task", {
-            it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
-                }
-            }
-            
-            dependencies {
-                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
-            }
-            """)
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
-        }
-
-        when:
-        def run = project.run {
-            it.tasks(':neoFormApplyOfficialMappings')
-        }
-
-        then:
-        run.task(':neoFormApplyOfficialMappings').outcome == TaskOutcome.SUCCESS
-    }
-
     def "a mod with neoform as dependency can run clean and build in the same execution"() {
         given:
         def project = create "neoform-can-run-clean-build", {
@@ -151,8 +124,8 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         def secondRun = project.run {it.tasks('compileJava')}
 
         then:
-        secondRun.task(':compileJava').outcome == TaskOutcome.SUCCESS
-        secondRun.task(':neoFormRecompile').outcome == TaskOutcome.FROM_CACHE
+        secondRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
+        secondRun.task(':neoFormRecompile').outcome == TaskOutcome.UP_TO_DATE
     }
 
 

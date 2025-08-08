@@ -17,7 +17,7 @@ import java.io.FileOutputStream;
 import java.util.List;
 import java.util.zip.ZipOutputStream;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class JavaSourceTransformer extends DefaultExecute {
 
     public JavaSourceTransformer() {

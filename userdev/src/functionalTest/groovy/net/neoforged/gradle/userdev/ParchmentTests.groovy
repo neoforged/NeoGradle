@@ -54,6 +54,6 @@ class ParchmentTests extends BuilderBasedTestSpecification {
 
         then:
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
-        run.task(':neoFormApplyParchment').outcome == TaskOutcome.SUCCESS
+        run.task(':neoFormTransformSource').outcome == TaskOutcome.SUCCESS
     }
 }

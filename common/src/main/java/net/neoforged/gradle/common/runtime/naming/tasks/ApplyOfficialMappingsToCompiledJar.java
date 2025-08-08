@@ -20,7 +20,7 @@ import org.gradle.work.DisableCachingByDefault;
 
 import java.util.List;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class ApplyOfficialMappingsToCompiledJar extends DefaultExecute implements WithOutput {
 
     public ApplyOfficialMappingsToCompiledJar() {

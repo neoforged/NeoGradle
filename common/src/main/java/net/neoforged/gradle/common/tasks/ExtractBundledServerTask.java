@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class ExtractBundledServerTask extends FileCacheProviding
 {
     @TaskAction

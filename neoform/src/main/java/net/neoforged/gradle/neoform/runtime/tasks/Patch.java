@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class Patch extends DefaultRuntime {
 
 

@@ -9,7 +9,7 @@ import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.work.DisableCachingByDefault;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class MinecraftArtifactFileCacheProvider extends FileCacheProviding {
     
     public MinecraftArtifactFileCacheProvider() { }

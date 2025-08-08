@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.zip.ZipOutputStream;
 
-@DisableCachingByDefault(because = "Uses neogradles cache service")
+@CacheableTask
 public abstract class RecompileSourceJar extends JavaCompile implements Runtime {
 
     private final Property<JavaLanguageVersion> javaVersion;
