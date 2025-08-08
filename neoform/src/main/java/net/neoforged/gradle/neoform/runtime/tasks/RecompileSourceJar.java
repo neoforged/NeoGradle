@@ -159,7 +159,11 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
                                         doCachedCompile(inputs);
                                     }
                             )
-                    ).execute();
+                    )
+                    .withStage(
+                        ICacheableJob.Staged.file("collect",  (v) -> repackageJar(), getOutput())
+                    )
+                .execute();
         } catch (IOException e) {
             throw new GradleException("Failed to recompile!", e);
         }
@@ -188,7 +192,11 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
                 details.getFile().delete();
             }
         });
+    }
 
+    private File repackageJar() throws IOException
+    {
+        final FileTree output = this.getDestinationDirectory().getAsFileTree();
         final File outputJar = ensureFileWorkspaceReady(getOutput());
         try(final var fileStream = new FileOutputStream(outputJar);
             final var zipStream = new ZipOutputStream(fileStream))
@@ -196,5 +204,6 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
             final ZipBuildingFileTreeVisitor visitor = new ZipBuildingFileTreeVisitor(zipStream);
             output.visit(visitor);
         }
+        return outputJar;
     }
 }

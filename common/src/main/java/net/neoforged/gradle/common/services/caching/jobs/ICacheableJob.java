@@ -8,6 +8,8 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Defines a job that can be cached.
@@ -28,7 +30,7 @@ public interface ICacheableJob<I, O> {
     /**
      * @return The output of the job.
      */
-    File output();
+    List<File> output();
 
     /**
      * Executes the job.
@@ -64,18 +66,30 @@ public interface ICacheableJob<I, O> {
      * @param mergesDirectory  True if the output is merged with the existing content, and not overwritten.
      * @param execute          The code to execute.
      */
-    record Default(File output, boolean createsDirectory, boolean mergesDirectory, ThrowingRunnable execute) implements ICacheableJob<Void, Void> {
+    record Default(List<File> output, boolean createsDirectory, boolean mergesDirectory, ThrowingRunnable execute) implements ICacheableJob<Void, Void> {
 
         /**
          * Creates a new cacheable job that executes the given code for the file provided by the property.
          * Realising the property when this method is called.
          *
-         * @param output The output of the job.
          * @param execute The code to execute.
+         * @param output  The output of the job.
          * @return The created job.
          */
-        public static Default file(RegularFileProperty output, ThrowingRunnable execute) {
-            return new Default(output.get().getAsFile(), false, false, execute);
+        public static Default file(ThrowingRunnable execute, RegularFileProperty... output) {
+            return new Default(Arrays.stream(output).map(RegularFileProperty::getAsFile).map(Provider::get).toList(), false, false, execute);
+        }
+
+        /**
+         * Creates a new cacheable job that executes the given code for the file provided by the property.
+         * Realising the property when this method is called.
+         *
+         * @param execute The code to execute.
+         * @param output  The output of the job.
+         * @return The created job.
+         */
+        public static Default file(ThrowingRunnable execute, List<RegularFileProperty> output) {
+            return new Default(output.stream().map(RegularFileProperty::getAsFile).map(Provider::get).toList(), false, false, execute);
         }
 
         /**
@@ -87,7 +101,7 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static Default directory(DirectoryProperty output, ThrowingRunnable execute) {
-            return new Default(output.get().getAsFile(), true, false, execute);
+            return new Default(List.of(output.get().getAsFile()), true, false, execute);
         }
 
         /**
@@ -99,7 +113,7 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static Default merging(DirectoryProperty output, boolean merges, ThrowingRunnable execute) {
-            return new Default(output.get().getAsFile(), true, true, execute);
+            return new Default(List.of(output.get().getAsFile()), true, true, execute);
         }
 
         @Override
@@ -119,19 +133,19 @@ public interface ICacheableJob<I, O> {
      * @param execute The code to execute.
      * @param <V> The type of the output of the job.
      */
-    record Initial<V>(String name, File output, boolean createsDirectory, boolean mergesDirectory, ThrowingSupplier<V> execute) implements ICacheableJob<Void, V> {
+    record Initial<V>(String name, List<File> output, boolean createsDirectory, boolean mergesDirectory, ThrowingSupplier<V> execute) implements ICacheableJob<Void, V> {
 
         /**
          * Creates a new cacheable job that executes the given code for the file provided by the property.
          * Realising the property when this method is called.
          *
-         * @param name The name of the job.
-         * @param output The output of the job.
+         * @param name    The name of the job.
          * @param execute The code to execute.
+         * @param output  The output of the job.
          * @return The created job.
          */
-        public static <V> Initial<V> file(String name, RegularFileProperty output, ThrowingSupplier<V> execute) {
-            return new Initial<>(name, output.get().getAsFile(), false, false, execute);
+        public static <V> Initial<V> file(String name, ThrowingSupplier<V> execute, RegularFileProperty... output) {
+            return new Initial<>(name, Arrays.stream(output).map(RegularFileProperty::getAsFile).map(Provider::get).toList(), false, false, execute);
         }
 
         /**
@@ -144,7 +158,7 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static <V> Initial<V> directory(String name, Provider<Directory> output, ThrowingSupplier<V> execute) {
-            return new Initial<>(name, output.get().getAsFile(), true, false, execute);
+            return new Initial<>(name, List.of(output.get().getAsFile()), true, false, execute);
         }
 
         /**
@@ -157,7 +171,7 @@ public interface ICacheableJob<I, O> {
          * @return The created job.
          */
         public static <V> Initial<V> merging(String name, Provider<Directory> output, ThrowingSupplier<V> execute) {
-            return new Initial<>(name, output.get().getAsFile(), true, true, execute);
+            return new Initial<>(name, List.of(output.get().getAsFile()), true, true, execute);
         }
 
         @Override
@@ -175,21 +189,21 @@ public interface ICacheableJob<I, O> {
      * @param <I> The input type of the job.
      * @param <O> The output type of the job.
      */
-    record Staged<I, O>(String name, File output, ThrowingFunction<I, O> job) implements ICacheableJob<I, O> {
+    record Staged<I, O>(String name, List<File> output, ThrowingFunction<I, O> job) implements ICacheableJob<I, O> {
 
         /**
          * Creates a new cacheable job that executes the given code for the file provided by the property.
          * Realising the property when this method is called.
          *
-         * @param name The name of the stage.
-         * @param output The output of the job.
+         * @param <U>     The input type of the job.
+         * @param <V>     The output type of the job.
+         * @param name    The name of the stage.
          * @param execute The code to execute.
+         * @param output  The output of the job.
          * @return The created job.
-         * @param <U> The input type of the job.
-         * @param <V> The output type of the job.
          */
-        public static <U,V> Staged<U, V> file(String name, RegularFileProperty output, ThrowingFunction<U, V> execute) {
-            return new Staged<>(name, output.get().getAsFile(), execute);
+        public static <U,V> Staged<U, V> file(String name, ThrowingFunction<U, V> execute, RegularFileProperty... output) {
+            return new Staged<>(name, Arrays.stream(output).map(RegularFileProperty::getAsFile).map(Provider::get).toList(), execute);
         }
 
         @Override

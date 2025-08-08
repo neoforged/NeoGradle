@@ -4,15 +4,19 @@ import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.tasks.Execute;
 import net.neoforged.gradle.util.TransformerUtils;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -48,8 +52,13 @@ public abstract class DefaultExecute extends DefaultRuntime implements Execute {
         getCacheService().get()
                         .cached(
                                 this,
-                                ICacheableJob.Default.file(getOutput(), this::doExecute)
+                                ICacheableJob.Default.file(this::doExecute, getCacheableOutputs())
                         ).execute();
+    }
+
+    @Internal
+    protected List<RegularFileProperty> getCacheableOutputs() {
+        return new ArrayList<>(List.of(getOutput(), getConsoleLogFile(), getLogFile()));
     }
 
     @Input

@@ -92,6 +92,14 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
     }
 
     @Override
+    protected List<RegularFileProperty> getCacheableOutputs()
+    {
+        final var superCaches = super.getCacheableOutputs();
+        superCaches.add(getStubs());
+        return superCaches;
+    }
+
+    @Override
     public void doExecute() throws Exception {
         //We need a separate check here that skips the execute call if there are no transformers.
         if (getTransformers().isEmpty() &&

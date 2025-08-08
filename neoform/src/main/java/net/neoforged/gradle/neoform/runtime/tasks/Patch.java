@@ -12,7 +12,6 @@ import org.gradle.api.file.*;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
-import org.gradle.work.DisableCachingByDefault;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -36,7 +35,7 @@ public abstract class Patch extends DefaultRuntime {
     public void run() throws Throwable {
         getCacheService().get().cached(
                 this,
-                    ICacheableJob.Default.file(getOutput(), this::doRun)
+                    ICacheableJob.Default.file(this::doRun, getOutput())
                 ).execute();
     }
 

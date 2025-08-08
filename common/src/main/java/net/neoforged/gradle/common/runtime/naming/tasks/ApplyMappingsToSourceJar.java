@@ -54,7 +54,7 @@ public abstract class ApplyMappingsToSourceJar extends DefaultRuntime {
         getCacheService().get()
                         .cached(
                                 this,
-                                ICacheableJob.Default.file(getOutput(), this::apply)
+                                ICacheableJob.Default.file(this::apply, getOutput())
                         ).execute();
     }
 

@@ -53,8 +53,7 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                 .cached(
                     this,
                     ICacheableJob.Default.file(
-                        getOutput(),
-                        this::doCompile
+                        this::doCompile, getOutput()
                     )
                 ).execute();
         } catch (IOException e) {

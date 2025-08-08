@@ -1,0 +1,16 @@
+--launchTarget
+neoforgejunitdev
+--version
+21.8.29
+--assetIndex
+asset-index
+--assetsDir
+/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/minecraft/assets
+--fml.fmlVersion
+9.0.16
+--fml.mcVersion
+1.21.8
+--fml.neoForgeVersion
+21.8.29
+--fml.neoFormVersion
+20250717.133445

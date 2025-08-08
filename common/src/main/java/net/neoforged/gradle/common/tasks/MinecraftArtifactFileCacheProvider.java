@@ -7,7 +7,6 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
-import org.gradle.work.DisableCachingByDefault;
 
 @CacheableTask
 public abstract class MinecraftArtifactFileCacheProvider extends FileCacheProviding {
@@ -21,11 +20,11 @@ public abstract class MinecraftArtifactFileCacheProvider extends FileCacheProvid
         getCentralCacheService().get()
                         .cached(
                                 this,
-                                ICacheableJob.Default.file(getOutput(), () -> doDownloadVersionDownloadToCache(
+                                ICacheableJob.Default.file(() -> doDownloadVersionDownloadToCache(
                                         artifact.getMinecraftArtifact().createIdentifier(artifact.getDistribution()),
                                         String.format("Failed to download game artifact %s for %s", getArtifactType().get(), artifact.getDistribution()),
                                         getManifest().get().getAsFile()
-                                ))
+                                ), getOutput())
                         ).execute();
     }
 

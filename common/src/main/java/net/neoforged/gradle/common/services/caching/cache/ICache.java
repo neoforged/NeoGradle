@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.services.caching.logging.CacheLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Represents a cache that can be loaded from and restored to a file or directory.
@@ -16,7 +17,7 @@ public interface ICache {
      *
      * @param file The file to load the cache from.
      */
-    void loadFrom(File file) throws IOException;
+    void loadFrom(List<File> file) throws IOException;
 
     /**
      * Restores the cache to the given file or directory.
@@ -24,7 +25,7 @@ public interface ICache {
      * @param file The file to restore the cache to.
      * @return True if the cache was restored, false if the cache was not restored and considered equal.
      */
-    boolean restoreTo(File file) throws IOException;
+    boolean restoreTo(List<File> file) throws IOException;
 
     /**
      * Creates a lock for the cache.

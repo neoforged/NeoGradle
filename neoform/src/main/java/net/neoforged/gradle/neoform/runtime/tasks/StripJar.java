@@ -3,24 +3,13 @@ package net.neoforged.gradle.neoform.runtime.tasks;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
-import net.neoforged.gradle.util.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.SetProperty;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
-import org.gradle.work.DisableCachingByDefault;
 
 import java.io.*;
-import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @CacheableTask
@@ -40,7 +29,7 @@ public abstract class StripJar extends DefaultRuntime {
     protected void run() throws Throwable {
         getCacheService().get().cached(
                 this,
-                ICacheableJob.Default.file(getOutput(), this::doRun)
+                ICacheableJob.Default.file(this::doRun, getOutput())
         ).execute();
     }
 

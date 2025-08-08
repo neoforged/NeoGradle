@@ -9,6 +9,7 @@ import org.gradle.api.GradleException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class FileCache implements ICache {
 
@@ -19,8 +20,16 @@ public class FileCache implements ICache {
     }
 
     @Override
+    public void loadFrom(final List<File> file) throws IOException
+    {
+        for (final File file1 : file)
+        {
+            loadFrom(file1);
+        }
+    }
+
     public void loadFrom(File file) throws IOException {
-        final File cacheFile = new File(cacheDir, "output");
+        final File cacheFile = new File(cacheDir, file.getName());
         if (cacheFile.exists()) {
             cacheFile.delete();
         }
@@ -34,8 +43,19 @@ public class FileCache implements ICache {
     }
 
     @Override
+    public boolean restoreTo(final List<File> file) throws IOException
+    {
+        boolean restored = false;
+        for (final File file1 : file)
+        {
+            restored = restoreTo(file1);
+        }
+
+        return restored;
+    }
+
     public boolean restoreTo(File file) throws IOException {
-        final File cacheFile = new File(cacheDir, "output");
+        final File cacheFile = new File(cacheDir, file.getName());
 
         if (file.exists()) {
             if (file.isFile() && cacheFile.exists()) {

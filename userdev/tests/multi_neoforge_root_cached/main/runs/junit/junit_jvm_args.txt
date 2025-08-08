@@ -1,0 +1,12 @@
+-p
+/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged.fancymodloader/bootstraplauncher/9.0.16/703417f9ccbdb2c69ba9b25b04458b0803987a0b/bootstraplauncher-9.0.16.jar:/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged.fancymodloader/securejarhandler/9.0.16/ae0b47dfdb029eb38243aae5d8980015f1274c59/securejarhandler-9.0.16.jar:/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged/JarJarFileSystems/0.4.1/78f59f89defcd032ed788b151ca6a0d40ace796a/JarJarFileSystems-0.4.1.jar
+--add-modules
+ALL-MODULE-PATH
+--add-opens
+java.base/java.util.jar=cpw.mods.securejarhandler
+--add-opens
+java.base/java.lang.invoke=cpw.mods.securejarhandler
+--add-exports
+java.base/sun.security.util=cpw.mods.securejarhandler
+--add-exports
+jdk.naming.dns/com.sun.jndi.dns=java.naming

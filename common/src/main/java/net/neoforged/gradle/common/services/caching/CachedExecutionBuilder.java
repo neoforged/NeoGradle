@@ -208,11 +208,25 @@ public class CachedExecutionBuilder<T> {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     private Object executeStage(ICacheableJob job, Object input) throws Throwable {
-        final File intendedOutput = job.output();
+        final List<File> intendedOutput = job.output();
 
         prepareWorkspace(intendedOutput, job.createsDirectory());
 
         return job.execute(input);
+    }
+
+    /**
+     * Prepares the workspace for the given output.
+     *
+     * @param output The output to prepare the workspace for.
+     * @param isDirectory Whether the output is a directory.
+     * @throws IOException If an error occurs while preparing the workspace.
+     */
+    private void prepareWorkspace(final List<File> output, final boolean isDirectory) throws IOException {
+        for (final File file : output)
+        {
+            prepareWorkspace(file, isDirectory);
+        }
     }
 
     /**

@@ -20,7 +20,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
-import org.gradle.work.DisableCachingByDefault;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -53,13 +52,12 @@ public abstract class InjectZipContent extends DefaultRuntime {
                 .cached(
                         this,
                         ICacheableJob.Default.file(
-                                getOutput(),
-                                () -> {
-                                    final Provider<RegularFile> inputZipFile = getInjectionSource();
-                                    final File outputFile = ensureFileWorkspaceReady(getOutput());
+                            () -> {
+                                final Provider<RegularFile> inputZipFile = getInjectionSource();
+                                final File outputFile = ensureFileWorkspaceReady(getOutput());
 
-                                    injectCode(inputZipFile.get().getAsFile(), outputFile);
-                                }
+                                injectCode(inputZipFile.get().getAsFile(), outputFile);
+                            }, getOutput()
                         )
                 ).execute();
     }

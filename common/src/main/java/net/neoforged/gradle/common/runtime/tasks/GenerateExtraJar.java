@@ -15,15 +15,10 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -50,7 +45,7 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         getCacheService().get()
                 .cached(
                         this,
-                        ICacheableJob.Default.file(getOutput(), this::doRun)
+                        ICacheableJob.Default.file(this::doRun, getOutput())
                 ).execute();
     }
 

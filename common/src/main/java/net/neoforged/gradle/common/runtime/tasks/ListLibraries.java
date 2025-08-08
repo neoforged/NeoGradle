@@ -1,18 +1,10 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import groovy.cli.Option;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
-import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
-import net.neoforged.gradle.common.tasks.MinecraftVersionManifestFileCacheProvider;
 import net.neoforged.gradle.common.util.FileCacheUtils;
-import net.neoforged.gradle.common.util.SerializationUtils;
-import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.util.HashFunction;
 import net.neoforged.gradle.util.TransformerUtils;
-import org.gradle.api.artifacts.dsl.DependencyFactory;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
@@ -20,10 +12,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
-import org.gradle.workers.WorkQueue;
-import org.gradle.workers.WorkerExecutor;
 
-import javax.inject.Inject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
@@ -61,7 +50,6 @@ public abstract class ListLibraries extends DefaultRuntime {
     @ServiceReference(CachedExecutionService.NAME)
     public abstract Property<CachedExecutionService> getCacheService();
 
-    
     @TaskAction
     public void run() throws IOException {
         getCacheService().get()
@@ -70,7 +58,7 @@ public abstract class ListLibraries extends DefaultRuntime {
                         ICacheableJob.Initial.merging("collect", getLibrariesDirectory(), this::extractAndCollect)
                 )
                 .withStage(
-                        ICacheableJob.Staged.file("list", getOutput(), this::createList)
+                        ICacheableJob.Staged.file("list", this::createList, getOutput())
                 )
                 .execute();
     }
