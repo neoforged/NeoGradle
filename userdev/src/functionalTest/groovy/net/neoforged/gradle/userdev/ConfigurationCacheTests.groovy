@@ -96,11 +96,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         thirdRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/test-temp")
-    }
-
     def "run_tasks_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {

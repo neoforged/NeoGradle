@@ -930,11 +930,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         modSourcesSection.get(5) == "    - main"
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("./tests")
-    }
-
     def "multiple projects with neoforge dependencies should run when parallel is enabled"() {
         given:
         def rootProject = create("multi_neoforge_root_cached", {
@@ -947,8 +942,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             """)
             it.withGlobalCacheDirectory(tempDir)
             it.withToolchains()
-            it.enableLocalBuildCache()
-            it.debugBuildCache()
             it.enableGradleParallelRunning()
         })
 
@@ -977,8 +970,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
-            it.enableLocalBuildCache()
-            it.debugBuildCache()
             it.plugin(this.pluginUnderTest)
         })
 
@@ -1016,8 +1007,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
-            it.enableLocalBuildCache()
-            it.debugBuildCache()
             it.plugin(this.pluginUnderTest)
         })
 
@@ -1025,7 +1014,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         def run = rootProject.run {
             it.tasks(':main:build')
             it.stacktrace()
-            it.log(Runtime.LogLevel.INFO)
         }
 
         then:

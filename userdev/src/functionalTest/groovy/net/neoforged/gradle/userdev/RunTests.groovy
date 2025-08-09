@@ -384,11 +384,6 @@ class RunTests extends BuilderBasedTestSpecification {
         classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build", "unit-testing-2")
-    }
-
     def "userdev supports unit testing"() {
         given:
         def project = create("userdev_supports_unit_tests", {
