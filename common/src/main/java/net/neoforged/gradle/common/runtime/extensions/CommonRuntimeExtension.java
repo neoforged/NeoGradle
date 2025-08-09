@@ -78,13 +78,13 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         return artifactCache.cacheGameVersionTasks(spec.getProject(), spec.getMinecraftVersion(), spec.getDistribution());
     }
 
-    public static Configuration extractVersionJsonLibraries(final @NotNull Project project, final String minecraftVersion, final Provider<File> fileProvider)
+    public static Configuration extractVersionJsonLibraries(final @NotNull Project project, final String minecraftVersion, final CommonRuntimeDefinition<?> definition)
     {
         return ConfigurationUtils.temporaryConfiguration(
             project,
             "%sDependencies".formatted(minecraftVersion),
             files -> files.getDependencies().addAllLater(
-                fileProvider.map(TransformerUtils.guard(VersionJson::get))
+                definition.getVersionJson()
                     .map(VersionJson::getLibraries)
                     .map(libraries -> libraries.stream().filter(VersionJson.Library::isAllowed).toList())
                     .map(libraries -> libraries.stream()

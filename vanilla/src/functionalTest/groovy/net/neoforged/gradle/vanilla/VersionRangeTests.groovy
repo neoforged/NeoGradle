@@ -75,7 +75,7 @@ class VersionRangeTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        initialRun.task("assemble").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":assemble").outcome == TaskOutcome.SUCCESS
         initialRun.task(":cacheVersionManifest1.21.6").outcome == TaskOutcome.SUCCESS
     }
 }

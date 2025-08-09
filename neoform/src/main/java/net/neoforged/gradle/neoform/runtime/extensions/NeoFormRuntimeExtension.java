@@ -74,6 +74,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @Nullable
     private static TaskProvider<? extends WithOutput> createBuiltIn(final NeoFormRuntimeSpecification spec,
+                                                                    final NeoFormRuntimeDefinition definition,
                                                                     NeoFormConfigConfigurationSpecV2 neoFormConfigV2,
                                                                     NeoFormConfigConfigurationSpecV1.Step step,
                                                                     final Map<String, TaskProvider<? extends WithOutput>> tasks,
@@ -98,7 +99,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     task.getDownloadedVersionJsonFile()
                             .fileProvider(cache.cacheVersionManifest(spec.getMinecraftVersion()));
                     task.getVersionJsonLibraries().from(
-                        extractVersionJsonLibraries(spec.getProject(), spec.getMinecraftVersion(), cache.cacheVersionManifest(spec.getMinecraftVersion()))
+                        extractVersionJsonLibraries(spec.getProject(), spec.getMinecraftVersion(), definition)
                     );
                 });
             case "inject":
@@ -359,6 +360,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
             TaskProvider<? extends WithOutput> neoFormRuntimeTaskProvider = createBuiltIn(
                     spec,
+                    definition,
                     neoFormConfig,
                     step,
                     taskOutputs,

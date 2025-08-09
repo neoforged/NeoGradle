@@ -24,9 +24,10 @@ public class CollectLibraryInformationStep implements IStep {
                 CommonRuntimeExtension.extractVersionJsonLibraries(
                     definition.getSpecification().getProject(),
                     definition.getSpecification().getMinecraftVersion(),
-                    gameArtifactTasks.get(GameArtifact.VERSION_MANIFEST).flatMap(WithOutput::getOutput).map(RegularFile::getAsFile)
+                    definition
                 )
             );
+            task.dependsOn(gameArtifactTasks.get(GameArtifact.VERSION_MANIFEST));
         });
     }
 
