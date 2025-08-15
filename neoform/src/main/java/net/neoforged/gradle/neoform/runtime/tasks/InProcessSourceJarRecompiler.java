@@ -3,6 +3,8 @@ package net.neoforged.gradle.neoform.runtime.tasks;
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
+import net.neoforged.gradle.util.CopyingFileTreeVisitor;
+import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
@@ -42,6 +44,11 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
     @Optional
     @Override
     public abstract Property<JavaLanguageVersion> getJavaVersion();
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    @Optional
+    public abstract ConfigurableFileCollection getResources();
 
     @ServiceReference(CachedExecutionService.NAME)
     public abstract Property<CachedExecutionService> getCacheService();
@@ -93,7 +100,7 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                 });
             }
 
-            getLogger().error(" Compiling {} source files", sourcePaths.size());
+            getLogger().debug(" Compiling {} source files", sourcePaths.size());
 
             var diagnostics = new DiagnosticListener<JavaFileObject>() {
                 @Override
@@ -103,12 +110,12 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                     }
 
                     var location = d.getSource() != null ? d.getSource().getName() : "<unknown>";
-                    getLogger().error(" {} Line: {}, {} in {}", d.getKind(), d.getLineNumber(), d.getMessage(null), location);
+                    getLogger().debug(" {} Line: {}, {} in {}", d.getKind(), d.getLineNumber(), d.getMessage(null), location);
                 }
             };
 
             long prepare = System.currentTimeMillis();
-            getLogger().error("Complete compile prepare in: {}ms.", prepare - start);
+            getLogger().debug("Complete compile prepare in: {}ms.", prepare - start);
 
             var outputPath = getOutput().get().getAsFile().toPath();
             try (var outputFs = FileSystems.newFileSystem(URI.create("jar:" + outputPath.toUri()), Map.of("create", true))) {
@@ -127,7 +134,7 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                 }
 
                 long compiled = System.currentTimeMillis();
-                getLogger().error("Completed compile in: {}ms.", compiled - prepare);
+                getLogger().debug("Completed compile in: {}ms.", compiled - prepare);
 
                 // Copy over all non-java files as well
                 for (var nonSourcePath : nonSourcePaths) {
@@ -136,8 +143,16 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                     Files.createDirectories(destination.getParent());
                     Files.copy(nonSourcePath, destination);
                 }
-                getLogger().error("Copied {} resource files", nonSourcePaths.size());
-                getLogger().error("Complete compile: {}ms.", System.currentTimeMillis() - compiled);
+                getLogger().debug("Copied {} none source files", nonSourcePaths.size());
+
+                long noneSourceFiles = System.currentTimeMillis();
+                getLogger().debug("Completed none source processing: {}ms.", noneSourceFiles - compiled);
+
+                final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(outputRoot);
+                getResources().getAsFileTree().visit(visitor);
+                getLogger().debug("Copied {} resource files", getResources().getFiles().size());
+
+                getLogger().debug("Complete compile: {}ms.", System.currentTimeMillis() - start);
             }
         }
     }

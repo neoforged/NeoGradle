@@ -466,6 +466,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 task.getSourceToCompile().set(recompileInput.flatMap(WithOutput::getOutput));
                 task.getClasspath().from(recompileDependencies);
                 task.getAdditionalSources().from(definition.getAdditionalCompileSources());
+                task.getResources().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
             });
     }
 
@@ -494,6 +495,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     forkOptions.setMemoryMaximumSize(maxMemory);
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(new CustomCompilerArgsProvider(settings.getArgs()));
+
+                    task.getResources().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
                 });
     }
 

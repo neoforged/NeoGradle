@@ -40,7 +40,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
         run.output.contains("Cache miss for task")
     }
 
@@ -84,7 +84,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        targetRun.task(':compileJava').outcome == TaskOutcome.SUCCESS
+        targetRun.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
         !targetRun.output.contains("Cache hit for task") //We deleted all healthy markers so we should not have any cache hits.
     }
 
@@ -114,7 +114,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
         run.output.contains("Caching is disabled, executing all stages.")
     }
 

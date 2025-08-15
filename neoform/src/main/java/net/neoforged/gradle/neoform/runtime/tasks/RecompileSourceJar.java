@@ -147,6 +147,11 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @Optional
     public abstract ConfigurableFileCollection getAdditionalInputFileRoot();
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    @Optional
+    public abstract ConfigurableFileCollection getResources();
+
     @Override
     protected void compile(InputChanges inputs) {
         try {
@@ -203,6 +208,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         {
             final ZipBuildingFileTreeVisitor visitor = new ZipBuildingFileTreeVisitor(zipStream);
             output.visit(visitor);
+            getResources().getAsFileTree().visit(visitor);
         }
         return outputJar;
     }

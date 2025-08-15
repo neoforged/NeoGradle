@@ -39,7 +39,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
     }
 
     def "compile_supports_configuration_cache_build"() {

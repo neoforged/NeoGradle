@@ -16,9 +16,11 @@ enum RecompilerType {
             (d) -> true
     ),
     NATIVE(
-            () -> Runtime.getRuntime().totalMemory() / 1024 * 1024 * 1024 > 2,
+            () -> false,
+            //() -> Runtime.getRuntime().totalMemory() / 1024 * 1024 * 1024 > 2,
             0,
-            (Definition<? extends Specification> d) -> d.getRequiredJavaVersion().get().asInt() == JavaLanguageVersion.current().asInt()
+            (Definition<? extends Specification> d) -> false
+            //(Definition<? extends Specification> d) -> d.getRequiredJavaVersion().get().asInt() == JavaLanguageVersion.current().asInt()
     );
 
     private final BooleanSupplier canWork

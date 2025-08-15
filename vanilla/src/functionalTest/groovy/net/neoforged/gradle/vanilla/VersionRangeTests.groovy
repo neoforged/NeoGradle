@@ -41,7 +41,7 @@ class VersionRangeTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        initialRun.task("assemble").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":assemble").outcome == TaskOutcome.SUCCESS
     }
 
     def "the_vanilla_runtime_supports_loading_a_range_with_a_preferred_option_chosen"() {
