@@ -5,11 +5,9 @@ import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.tasks.WithJavaVersion
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace
-import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion
 import net.neoforged.gradle.dsl.common.util.DistributionType
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileTree
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -103,21 +101,4 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
     @Nested
     @DSLProperty
     abstract RuntimeMultiArguments getMultiArguments();
-
-    /**
-     * The name of the output file name for this step.
-     *
-     * @return The name of the output file.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<String> getOutputFileName();
-
-    /**
-     * The output directory for this step, also doubles as working directory for this step.
-     *
-     * @return The output and working directory for this step.
-     */
-    @Internal
-    abstract DirectoryProperty getOutputDirectory();
 }

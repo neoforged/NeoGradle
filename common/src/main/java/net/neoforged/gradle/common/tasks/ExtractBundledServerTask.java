@@ -1,10 +1,11 @@
 package net.neoforged.gradle.common.tasks;
 
 import org.apache.commons.io.FileUtils;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
-import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
 import java.io.InputStream;
@@ -38,4 +39,10 @@ public abstract class ExtractBundledServerTask extends FileCacheProviding
 
     @Input
     public abstract Property<String> getMinecraftVersion();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getArchiveOperations().zipTree(it));
+    }
 }

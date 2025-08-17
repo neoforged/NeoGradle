@@ -3,8 +3,10 @@ package net.neoforged.gradle.common.tasks;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 
@@ -37,4 +39,10 @@ public abstract class MinecraftArtifactFileCacheProvider extends FileCacheProvid
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getManifest();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getArchiveOperations().zipTree(it));
+    }
 }

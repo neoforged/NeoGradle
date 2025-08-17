@@ -4,16 +4,22 @@ import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
+import net.neoforged.gradle.util.CopyingFileTreeVisitor;
+import net.neoforged.gradle.util.DirectoryTreeBuildingFileTreeVisitor;
+import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
-import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.zip.ZipOutputStream;
 
@@ -29,10 +35,19 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
         getParchmentConflictPrefix().convention("p_");
 
         getExecutingJar().set(ToolUtilities.resolveTool(getProject(), getProject().getExtensions().getByType(Subsystems.class).getTools().getJST().get()));
+
+        getTransformed().convention(getOutputDirectory().map(output -> output.dir("transformed")));
+
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();
-                            final File outputFile = ensureFileWorkspaceReady(getOutput());
+
+                            final File outputFile = getTransformed().get().getAsFile();
+                            if (outputFile.isFile())
+                                outputFile.delete();
+
+                            if (!outputFile.exists())
+                                outputFile.mkdirs();
 
                             if (!getTransformers().isEmpty()) {
                                 args.add("--enable-accesstransformers");
@@ -77,7 +92,7 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
                             args.add("--classpath=" + builder);
 
                             args.add("--in-format=archive");
-                            args.add("--out-format=archive");
+                            args.add("--out-format=folder");
 
                             args.add(inputFile.getAsFile().getAbsolutePath());
                             args.add(outputFile.getAbsolutePath());
@@ -89,6 +104,23 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
 
         getTransformers().finalizeValueOnRead();
         getLogLevel().set(LogLevel.DISABLED);
+    }
+
+    @Override
+    public void execute() throws Throwable
+    {
+        getCacheService().get()
+            .cached(
+                this,
+                ICacheableJob.Default.directory(getTransformed(), this::doExecute)
+            )
+            .withStage(
+                ICacheableJob.Staged.file("pack", this::pack, getOutput())
+            )
+            .withStage(
+                ICacheableJob.Staged.file("stubs", this::validateStubs, getStubs())
+            )
+            .execute();
     }
 
     @Override
@@ -105,12 +137,23 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
         if (getTransformers().isEmpty() &&
             getInterfaceInjections().isEmpty() &&
             getParchmentMappings().isEmpty()) {
-            final File output = ensureFileWorkspaceReady(getOutput());
-            FileUtils.copyFile(getInputFile().get().getAsFile(), output);
+
+            //Unpack the input zip into the output:
+            final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(getTransformed().get().getAsFile().toPath());
+            getArchiveOperations().zipTree(getInputFile())
+                    .visit(visitor);
+            return;
         }
 
-        super.doExecute();
+        final DirectoryTreeBuildingFileTreeVisitor visitor = new DirectoryTreeBuildingFileTreeVisitor(getTransformed().get().getAsFile().toPath());
+        getArchiveOperations().zipTree(getInputFile())
+            .visit(visitor);
 
+        super.doExecute();
+    }
+
+    private void validateStubs() throws IOException
+    {
         //Double check if the stubs file exists.
         final File stubs = getStubs().getAsFile().get();
         if (!stubs.exists()) {
@@ -120,6 +163,16 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
             )
             {
             }
+        }
+    }
+
+    private void pack() throws IOException
+    {
+        final FileTree outputTree = getObjectFactory().fileTree().from(getTransformed().get());
+        try(final FileOutputStream fos = new FileOutputStream(ensureFileWorkspaceReady(getOutput()));
+            final ZipOutputStream zos = new ZipOutputStream(fos)) {
+            final ZipBuildingFileTreeVisitor visitor = new ZipBuildingFileTreeVisitor(zos);
+            outputTree.visit(visitor);
         }
     }
 
@@ -157,4 +210,14 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
 
     @OutputFile
     public abstract RegularFileProperty getStubs();
+
+    @OutputDirectory
+    public abstract DirectoryProperty getTransformed();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        final ObjectFactory factory = getObjectFactory();
+        return getTransformed().map(it -> factory.fileTree().from(it));
+    }
 }

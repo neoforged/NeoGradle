@@ -88,4 +88,22 @@ public class FileCache implements ICache {
     public FileBasedLock createLock(CacheLogger logger) {
         return LockManager.createLock(cacheDir, logger);
     }
+
+    @Override
+    public boolean canRestore(final List<File> output)
+    {
+        boolean restoreable = true;
+        for (final File file : output)
+        {
+            if (!canRestore(file))
+                restoreable = false;
+        }
+        return restoreable;
+    }
+
+    public boolean canRestore(final File file)
+    {
+        final File cacheFile = new File(cacheDir, file.getName());
+        return cacheFile.exists() && cacheFile.isFile();
+    }
 }

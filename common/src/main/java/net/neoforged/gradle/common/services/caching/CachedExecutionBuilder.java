@@ -150,8 +150,8 @@ public class CachedExecutionBuilder<T> {
 
             try {
                 //A cached execution is only healthy if the healthy file exists
-                if (lock.hasPreviousFailure()) {
-                    logger.debug("Previous failure detected for stage: %s".formatted(stage));
+                if (lock.hasPreviousFailure() || !cache.canRestore(stage.output())) {
+                    logger.debug("Previous failure detected for stage or restore impossible: %s".formatted(stage));
                     return CacheStatus.runWithLock(lock, cache);
                 }
 

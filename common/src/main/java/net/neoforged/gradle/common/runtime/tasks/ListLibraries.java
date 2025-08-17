@@ -7,8 +7,10 @@ import net.neoforged.gradle.util.HashFunction;
 import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
@@ -148,6 +150,12 @@ public abstract class ListLibraries extends DefaultRuntime {
     @Optional
     @CompileClasspath
     public abstract ConfigurableFileCollection getVersionJsonLibraries();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getObjectFactory().fileTree().from(it));
+    }
     
     @OutputDirectory
     public abstract DirectoryProperty getLibrariesDirectory();

@@ -33,4 +33,11 @@ public interface ICache {
      * @return The lock for the cache.
      */
     FileBasedLock createLock(CacheLogger logger);
+
+    /**
+     * Indicates whether the restore is even possible.
+     *
+     * @return True when all data is available in the cache and the restore is possible, false otherwise.
+     */
+    boolean canRestore(final List<File> output);
 }

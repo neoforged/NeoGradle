@@ -100,7 +100,7 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                 });
             }
 
-            getLogger().debug(" Compiling {} source files", sourcePaths.size());
+            getLogger().error(" Compiling {} source files", sourcePaths.size());
 
             var diagnostics = new DiagnosticListener<JavaFileObject>() {
                 @Override
@@ -110,12 +110,12 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                     }
 
                     var location = d.getSource() != null ? d.getSource().getName() : "<unknown>";
-                    getLogger().debug(" {} Line: {}, {} in {}", d.getKind(), d.getLineNumber(), d.getMessage(null), location);
+                    getLogger().error(" {} Line: {}, {} in {}", d.getKind(), d.getLineNumber(), d.getMessage(null), location);
                 }
             };
 
             long prepare = System.currentTimeMillis();
-            getLogger().debug("Complete compile prepare in: {}ms.", prepare - start);
+            getLogger().error("Complete compile prepare in: {}ms.", prepare - start);
 
             var outputPath = getOutput().get().getAsFile().toPath();
             try (var outputFs = FileSystems.newFileSystem(URI.create("jar:" + outputPath.toUri()), Map.of("create", true))) {
@@ -134,7 +134,7 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                 }
 
                 long compiled = System.currentTimeMillis();
-                getLogger().debug("Completed compile in: {}ms.", compiled - prepare);
+                getLogger().error("Completed compile in: {}ms.", compiled - prepare);
 
                 // Copy over all non-java files as well
                 for (var nonSourcePath : nonSourcePaths) {
@@ -143,16 +143,16 @@ public abstract class InProcessSourceJarRecompiler extends DefaultRuntime
                     Files.createDirectories(destination.getParent());
                     Files.copy(nonSourcePath, destination);
                 }
-                getLogger().debug("Copied {} none source files", nonSourcePaths.size());
+                getLogger().error("Copied {} none source files", nonSourcePaths.size());
 
                 long noneSourceFiles = System.currentTimeMillis();
-                getLogger().debug("Completed none source processing: {}ms.", noneSourceFiles - compiled);
+                getLogger().error("Completed none source processing: {}ms.", noneSourceFiles - compiled);
 
-                final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(outputRoot);
+                final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(outputRoot, true, false);
                 getResources().getAsFileTree().visit(visitor);
-                getLogger().debug("Copied {} resource files", getResources().getFiles().size());
+                getLogger().error("Copied {} resource files", getResources().getFiles().size());
 
-                getLogger().debug("Complete compile: {}ms.", System.currentTimeMillis() - start);
+                getLogger().error("Complete compile: {}ms.", System.currentTimeMillis() - start);
             }
         }
     }

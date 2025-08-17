@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.services.caching.jobs;
 
 import com.machinezoo.noexception.throwing.ThrowingFunction;
+import com.machinezoo.noexception.throwing.ThrowingRunnable;
 import com.machinezoo.noexception.throwing.ThrowingSupplier;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
@@ -204,6 +205,39 @@ public interface ICacheableJob<I, O> {
          */
         public static <U,V> Staged<U, V> file(String name, ThrowingFunction<U, V> execute, RegularFileProperty... output) {
             return new Staged<>(name, Arrays.stream(output).map(RegularFileProperty::getAsFile).map(Provider::get).toList(), execute);
+        }
+
+        /**
+         * Creates a new cacheable job that executes the given code for the file provided by the property.
+         * Realising the property when this method is called.
+         *
+         * @param <U>     The input type of the job.
+         * @param <V>     The output type of the job.
+         * @param name    The name of the stage.
+         * @param execute The code to execute.
+         * @param output  The output of the job.
+         * @return The created job.
+         */
+        public static <U,V> Staged<U, V> file(String name, ThrowingSupplier<V> execute, RegularFileProperty... output) {
+            return new Staged<>(name, Arrays.stream(output).map(RegularFileProperty::getAsFile).map(Provider::get).toList(), u -> execute.get());
+        }
+
+        /**
+         * Creates a new cacheable job that executes the given code for the file provided by the property.
+         * Realising the property when this method is called.
+         *
+         * @param <U>     The input type of the job.
+         * @param <V>     The output type of the job.
+         * @param name    The name of the stage.
+         * @param execute The code to execute.
+         * @param output  The output of the job.
+         * @return The created job.
+         */
+        public static <U,V> Staged<U, V> file(String name, ThrowingRunnable execute, RegularFileProperty... output) {
+            return new Staged<>(name, Arrays.stream(output).map(RegularFileProperty::getAsFile).map(Provider::get).toList(), u -> {
+                execute.run();
+                return null;
+            });
         }
 
         @Override

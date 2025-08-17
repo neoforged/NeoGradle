@@ -4,16 +4,16 @@ import net.neoforged.gradle.common.runtime.tasks.RuntimeArgumentsImpl;
 import net.neoforged.gradle.common.runtime.tasks.RuntimeMultiArgumentsImpl;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
+import net.neoforged.gradle.common.util.ReflectionUtils;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.file.FileVisitDetails;
-import org.gradle.api.file.FileVisitor;
+import org.gradle.api.internal.tasks.compile.CompilerForkUtils;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
@@ -21,16 +21,18 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.internal.instrumentation.api.annotations.ToBeReplacedByLazyProperty;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
-import org.gradle.work.DisableCachingByDefault;
+import org.gradle.work.Incremental;
 import org.gradle.work.InputChanges;
+import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Objects;
@@ -46,6 +48,10 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
     public RecompileSourceJar() {
         super();
+
+        //We use a custom instance here that marks the sourcepath as an incremental field, allowing us to provide the compiler
+        //with all required elements directly while keeping incremental compile support for II.
+        ReflectionUtils.setFinalFieldUnchecked(this, "compileOptions", getObjectFactory().newInstance(RecompileOptions.class));
 
         arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
@@ -72,7 +78,6 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         setDescription("Recompiles an already existing decompiled java jar.");
 
-        setClasspath(getCompileClasspath());
         getOptions().setAnnotationProcessorPath(getAnnotationProcessorPath());
 
         getOptions().getGeneratedSourceOutputDirectory().convention(getOutputDirectory().map(directory -> directory.dir("generated/sources/annotationProcessor")));
@@ -91,7 +96,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setIncremental(true);
         getOptions().getIncrementalAfterFailure().set(true);
 
-        getOptions().setSourcepath(getProject().files(getAdditionalInputFileRoot()));
+        setSource(getCompileFileRoot());
+
+        final ConfigurableFileCollection sourcePaths = getProject().files(
+            getAdditionalInputFileRoot()
+        );
+
+        getOptions().setSourcepath(sourcePaths);
     }
 
     @Override
@@ -127,10 +138,6 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @Internal
     public abstract ConfigurableFileCollection getAnnotationProcessorPath();
 
-    @InputFiles
-    @CompileClasspath
-    public abstract ConfigurableFileCollection getCompileClasspath();
-
     @Inject
     @Override
     public abstract ObjectFactory getObjectFactory();
@@ -142,11 +149,19 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     @ServiceReference(CachedExecutionService.NAME)
     public abstract Property<CachedExecutionService> getCacheService();
 
+    @Incremental
     @InputFiles
     @CompileClasspath
     @Optional
     public abstract ConfigurableFileCollection getAdditionalInputFileRoot();
 
+    @Incremental
+    @InputFiles
+    @CompileClasspath
+    @Optional
+    public abstract ConfigurableFileCollection getCompileFileRoot();
+
+    @Incremental
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     @Optional
@@ -211,5 +226,32 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
             getResources().getAsFileTree().visit(visitor);
         }
         return outputJar;
+    }
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getArchiveOperations().zipTree(it));
+    }
+
+    public static abstract class RecompileOptions extends CompileOptions {
+
+        @Inject
+        public RecompileOptions(final ObjectFactory objectFactory)
+        {
+            super(objectFactory);
+        }
+
+        @Incremental
+        @Optional
+        @IgnoreEmptyDirectories
+        @PathSensitive(PathSensitivity.RELATIVE)
+        @InputFiles
+        @ToBeReplacedByLazyProperty
+        @Override
+        public @Nullable FileCollection getSourcepath()
+        {
+            return super.getSourcepath();
+        }
     }
 }

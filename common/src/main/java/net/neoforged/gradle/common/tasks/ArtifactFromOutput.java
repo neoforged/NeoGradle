@@ -4,7 +4,9 @@ import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.specifications.InputFileSpecification;
 import org.apache.commons.io.FileUtils;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 import org.gradle.work.DisableCachingByDefault;
 
@@ -28,4 +30,10 @@ public abstract class ArtifactFromOutput extends NeoGradleBase implements WithOu
 
     @OutputFile
     public abstract RegularFileProperty getOutput();
+
+    @Override
+    public Provider<? extends FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getObjectFactory().fileTree().from(it));
+    }
 }

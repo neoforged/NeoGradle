@@ -44,8 +44,7 @@ public class JavaSourceTransformAdapterUtils
 
             if (transformer != null)
             {
-                var stubsTree = project.zipTree(transformer.flatMap(JavaSourceTransformer::getStubs));
-                definition.additionalCompileSources(stubsTree);
+                definition.additionalCompileSources(transformer.flatMap(JavaSourceTransformer::getStubs));
             }
 
             return transformer;

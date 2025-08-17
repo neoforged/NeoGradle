@@ -45,10 +45,11 @@ public class DirectoryCache implements ICache {
     @Override
     public boolean restoreTo(final List<File> file) throws IOException
     {
-        boolean restored = false;
+        boolean restored = true;
         for (final File file1 : file)
         {
-            restored = restoreTo(file1);
+            if (!restoreTo(file1))
+                restored = false;
         }
 
         return restored;
@@ -90,5 +91,23 @@ public class DirectoryCache implements ICache {
     @Override
     public FileBasedLock createLock(CacheLogger logger) {
         return LockManager.createLock(cacheDir, logger);
+    }
+
+    @Override
+    public boolean canRestore(final List<File> output)
+    {
+        boolean restoreable = true;
+        for (final File file : output)
+        {
+            if (!canRestore(file))
+                restoreable = false;
+        }
+        return restoreable;
+    }
+
+    public boolean canRestore(final File file)
+    {
+        final File output = new File(cacheDir, file.getName());
+        return output.exists() && output.isDirectory();
     }
 }

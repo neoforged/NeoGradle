@@ -13,11 +13,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         injectIntoRootProject = true
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("./tests")
-    }
-
     def "multiple projects with neoforge dependencies should be able to run the game"() {
         given:
         def rootProject = create("multi_neoforge_root", {

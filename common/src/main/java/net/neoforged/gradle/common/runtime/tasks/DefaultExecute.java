@@ -58,7 +58,7 @@ public abstract class DefaultExecute extends DefaultRuntime implements Execute {
 
     @Internal
     protected List<RegularFileProperty> getCacheableOutputs() {
-        return new ArrayList<>(List.of(getOutput(), getConsoleLogFile(), getLogFile()));
+        return new ArrayList<>(List.of(getOutput()));
     }
 
     @Input

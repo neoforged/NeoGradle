@@ -3,7 +3,6 @@ package net.neoforged.gradle.dsl.common.extensions.subsystems
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification
-import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 import java.util.function.BooleanSupplier
 import java.util.function.Predicate
@@ -15,6 +14,11 @@ enum RecompilerType {
             1000,
             (d) -> true
     ),
+
+
+    /*
+
+    //For now disable the native compiler.
     NATIVE(
             () -> false,
             //() -> Runtime.getRuntime().totalMemory() / 1024 * 1024 * 1024 > 2,
@@ -22,6 +26,8 @@ enum RecompilerType {
             (Definition<? extends Specification> d) -> false
             //(Definition<? extends Specification> d) -> d.getRequiredJavaVersion().get().asInt() == JavaLanguageVersion.current().asInt()
     );
+
+    */
 
     private final BooleanSupplier canWork
     private final int priority

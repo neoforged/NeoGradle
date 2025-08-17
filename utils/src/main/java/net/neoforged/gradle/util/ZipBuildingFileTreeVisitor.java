@@ -49,6 +49,6 @@ public class ZipBuildingFileTreeVisitor implements FileVisitor {
     }
 
     protected ZipEntry createFile(FileVisitDetails fileVisitDetails) {
-        return new ZipEntry(fileVisitDetails.getRelativePath().getPathString());
+        return FileUtils.getStableEntry(fileVisitDetails.getRelativePath().getPathString());
     }
 }

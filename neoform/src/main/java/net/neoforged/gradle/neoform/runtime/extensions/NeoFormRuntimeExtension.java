@@ -34,6 +34,7 @@ import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
@@ -46,6 +47,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"}) // API Design
@@ -423,9 +425,9 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final FileCollection recompileDependencies = definition.getAdditionalRecompileDependencies().plus(spec.getProject().files(definition.getMinecraftDependenciesConfiguration()));
 
         final TaskProvider<? extends Runtime> recompileTask =
-            createRecompileTask(definition, recompileInput, spec, recompileDependencies);
-
-        recompileTask.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
+            createRecompileTask(definition, recompileInput, spec, recompileDependencies, task -> {
+                task.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
+            });
 
         taskOutputs.put(recompileTask.getName(), recompileTask);
 
@@ -441,50 +443,50 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final NeoFormRuntimeDefinition definition,
         final TaskProvider<? extends WithOutput> recompileInput,
         final NeoFormRuntimeSpecification spec,
-        final FileCollection recompileDependencies)
+        final FileCollection recompileDependencies,
+        final Consumer<TaskProvider<? extends Runtime>> configure)
     {
         Recompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getRecompiler();
-        if (
-            RecompilerType.getCompatibleRecompilerType(
-                settings.getType().get(),
-                definition
-            ) == RecompilerType.NATIVE
-        )
-            return createNativeRecompileTask(definition, recompileInput, spec, recompileDependencies);
 
-        return createGradleRecompileTask(definition, recompileInput, spec, recompileDependencies);
+        return createGradleRecompileTask(definition, recompileInput, spec, recompileDependencies, configure);
     }
 
     private @NotNull TaskProvider<InProcessSourceJarRecompiler> createNativeRecompileTask(
         final NeoFormRuntimeDefinition definition,
         final TaskProvider<? extends WithOutput> recompileInput,
         final NeoFormRuntimeSpecification spec,
-        final FileCollection recompileDependencies)
+        final FileCollection recompileDependencies,
+        final Consumer<TaskProvider<? extends Runtime>> configure)
     {
-        return spec.getProject()
+        final TaskProvider<InProcessSourceJarRecompiler> compiler = spec.getProject()
             .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), InProcessSourceJarRecompiler.class, task -> {
                 task.getSourceToCompile().set(recompileInput.flatMap(WithOutput::getOutput));
                 task.getClasspath().from(recompileDependencies);
                 task.getAdditionalSources().from(definition.getAdditionalCompileSources());
                 task.getResources().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
             });
+
+        configure.accept(compiler);
+
+        return compiler;
     }
 
     private @NotNull TaskProvider<RecompileSourceJar> createGradleRecompileTask(
         final NeoFormRuntimeDefinition definition,
         final TaskProvider<? extends WithOutput> recompileInput,
         final NeoFormRuntimeSpecification spec,
-        final FileCollection recompileDependencies)
+        final FileCollection recompileDependencies,
+        final Consumer<TaskProvider<? extends Runtime>> configure)
     {
-        final FileTree recompileSourceFileTree =
-            getProject().zipTree(recompileInput.flatMap(WithOutput::getOutput));
+        final Provider<? extends FileTree> recompileSourceFileTree = recompileInput.flatMap(WithOutput::getOutputAsTree);
 
         // Consider user-settings
-        return spec.getProject()
+        final TaskProvider<RecompileSourceJar> recompileSourceJar = spec.getProject()
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, task -> {
-                    task.setSource(recompileSourceFileTree);
+                    task.getCompileFileRoot().from(recompileSourceFileTree);
                     task.getAdditionalInputFileRoot().from(definition.getAdditionalCompileSources());
-                    task.getCompileClasspath().setFrom(recompileDependencies);
+                    task.getAdditionalInputFileRoot().from(getProject().file(recompileInput.flatMap(WithOutput::getOutput)));
+                    task.setClasspath(recompileDependencies);
                     task.getStepName().set("recompile");
 
                     // Consider user-settings
@@ -496,8 +498,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     forkOptions.setJvmArgs(settings.getJvmArgs().get());
                     task.getOptions().getCompilerArgumentProviders().add(new CustomCompilerArgsProvider(settings.getArgs()));
 
-                    task.getResources().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
+                    task.getResources().from(recompileInput.flatMap(WithOutput::getOutputAsTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
                 });
+
+        configure.accept(recompileSourceJar);
+
+        return recompileSourceJar;
     }
 
     private static Optional<TaskProvider<? extends WithOutput>> adaptPreTaskInput(NeoFormRuntimeDefinition definition, NeoFormConfigConfigurationSpecV1.Step step, NeoFormRuntimeSpecification spec, LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs, File neoFormDirectory, Map<String, String> symbolicDataSources, Optional<TaskProvider<? extends WithOutput>> adaptedInput) {

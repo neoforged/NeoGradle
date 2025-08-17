@@ -1,7 +1,9 @@
 package net.neoforged.gradle.common.tasks;
 
 import net.neoforged.gradle.dsl.common.util.CacheFileSelector;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
@@ -29,5 +31,11 @@ public abstract class MinecraftVersionManifestFileCacheProvider extends FileCach
 
     private void downloadVersionManifestToCache() {
         downloadJsonTo(getDownloadUrl().get());
+    }
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getObjectFactory().fileTree().from(it));
     }
 }
