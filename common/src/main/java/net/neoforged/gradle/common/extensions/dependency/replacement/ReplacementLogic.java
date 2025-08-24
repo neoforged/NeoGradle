@@ -376,7 +376,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
             return project.getTasks().named(sourceArtifactSelectorName, WithOutput.class);
         }
 
-        //Create a new task, using the repository to create the output.
+        //Create a new task, using the repository to create the outputs.
         final Repository repository = project.getExtensions().getByType(Repository.class);
         return project.getTasks().register(sourceArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
             artifactFromOutput.setGroup("neogradle/dependencies");
@@ -406,7 +406,7 @@ public abstract class ReplacementLogic implements ConfigurableDSLElement<Depende
             return project.getTasks().named(rawArtifactSelectorName, WithOutput.class);
         }
 
-        // Create a new task, using the repository to create the output.
+        // Create a new task, using the repository to create the outputs.
         final Repository repository = project.getExtensions().getByType(Repository.class);
         return project.getTasks().register(rawArtifactSelectorName, ArtifactFromOutput.class, artifactFromOutput -> {
             artifactFromOutput.setGroup("neogradle/dependencies");

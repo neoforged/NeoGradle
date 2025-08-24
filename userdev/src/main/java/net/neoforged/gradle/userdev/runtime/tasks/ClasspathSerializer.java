@@ -19,7 +19,7 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
     public ClasspathSerializer() {
         getOutputFileName().convention("classpath.txt");
 
-        getTargetFile().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.lcp").map(d::file)));
+        getTargetFile().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("outputs.lcp").map(d::file)));
         getOutput().set(getTargetFile());
 
         setGroup("NeoGradle/Runs");

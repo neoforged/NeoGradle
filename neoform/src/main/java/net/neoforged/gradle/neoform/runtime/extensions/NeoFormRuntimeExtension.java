@@ -98,8 +98,6 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), StripJar.class, task -> task.getInput().fileProvider(NeoFormRuntimeUtils.getTaskInputFor(spec, tasks, step, task)));
             case "listLibraries":
                 return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), ListLibraries.class, task -> {
-                    task.getDownloadedVersionJsonFile()
-                            .fileProvider(cache.cacheVersionManifest(spec.getMinecraftVersion()));
                     task.getVersionJsonLibraries().from(
                         extractVersionJsonLibraries(spec.getProject(), spec.getMinecraftVersion(), definition)
                     );
@@ -165,7 +163,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             throw new IllegalArgumentException(String.format("Invalid NeoForm Config, Unknown function step type: %s File: %s", step.getType(), neoFormConfig));
         }
 
-        // Filter out decompiler arguments that aren't related to its output (log-level and thread-count)
+        // Filter out decompiler arguments that aren't related to its outputs (log-level and thread-count)
         List<String> decompilerArgs = new ArrayList<>(function.getArgs());
         decompilerArgs.removeIf(arg -> arg.startsWith("--log-level") || arg.startsWith("-log=") || arg.startsWith("--thread-count") || arg.startsWith("-thr="));
 
@@ -380,7 +378,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 neoFormRuntimeTaskProvider = createExecute(spec, step, function);
 
                 if (step.getType().equals("mergeMappings")) {
-                    neoFormRuntimeTaskProvider.configure(tsk -> tsk.getOutputFileName().set("output.tsrg"));
+                    neoFormRuntimeTaskProvider.configure(tsk -> tsk.getOutputFileName().set("outputs.tsrg"));
                 }
             }
 
@@ -403,7 +401,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                     }
                 }
 
-                // We consider the output of the final post adapter the output of step
+                // We consider the outputs of the final post adapter the outputs of step
                 taskOutputs.put(taskName, neoFormRuntimeTaskProvider);
                 taskOutputs.put(neoFormRuntimeTaskProvider.getName(), neoFormRuntimeTaskProvider);
             }

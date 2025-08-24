@@ -1,22 +1,24 @@
 package net.neoforged.gradle.common.util;
 
-import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.runtime.tasks.JavaSourceTransformer;
+import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
+import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 import static net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension.configureCommonRuntimeTaskParameters;
 
@@ -40,6 +42,7 @@ public class JavaSourceTransformAdapterUtils
                 interfaceInjections.getFiles(),
                 definition,
                 previousTasksOutput,
+                dependentTaskConfigurationHandler,
                 parchment);
 
             if (transformer != null)
@@ -51,11 +54,27 @@ public class JavaSourceTransformAdapterUtils
         };
     }
 
+    public static TaskProvider<ListLibraries> createRecompileLibrariesList(
+        final Definition<?> definition
+    ) {
+        final FileCollection recompileDependencies = definition.getAdditionalRecompileDependencies().plus(
+            definition.getSpecification().getProject().files(definition.getMinecraftDependenciesConfiguration()
+            ));
+
+        return definition.getSpecification().getProject()
+            .getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "listTransformLibraries"), ListLibraries.class, task -> {
+            task.getVersionJsonLibraries().from(
+                recompileDependencies
+            );
+        });
+    }
+
     public static @Nullable TaskProvider<JavaSourceTransformer> createJavaSourceTransformerTask(
         final FileCollection accessTransformerFiles,
         final FileCollection interfaceInjectionFiles,
         final Definition<?> definition,
         final Provider<? extends WithOutput> previousTasksOutput,
+        final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler,
         final SubsystemsExtension.ParchmentExtensions parchment)
     {
         final Provider<String> parchmentArtifact = parchment.getSelectedParchmentArtifact(definition.getSpecification()
@@ -64,6 +83,10 @@ public class JavaSourceTransformAdapterUtils
         if (accessTransformerFiles.isEmpty() && interfaceInjectionFiles.isEmpty() && !parchmentArtifact.isPresent()) {
             return null;
         }
+
+        var recompileLibraries = createRecompileLibrariesList(definition);
+
+        dependentTaskConfigurationHandler.accept(recompileLibraries);
 
         return definition.getSpecification()
             .getProject()
@@ -82,7 +105,7 @@ public class JavaSourceTransformAdapterUtils
 
                 task.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput));
                 task.dependsOn(definition.getListLibrariesTaskProvider());
-                task.getLibraries().set(definition.getListLibrariesTaskProvider().flatMap(WithOutput::getOutput));
+                task.getLibraries().set(recompileLibraries.flatMap(WithOutput::getOutput));
                 task.getClasspath().from(definition.getAllDependencies());
             });
     }

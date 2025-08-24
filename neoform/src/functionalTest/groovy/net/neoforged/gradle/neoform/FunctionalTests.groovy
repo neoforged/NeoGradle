@@ -125,7 +125,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
 
         then:
         secondRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
-        secondRun.task(':neoFormRecompile').outcome == TaskOutcome.UP_TO_DATE
+        secondRun.task(':neoFormRecompile').outcome == TaskOutcome.FROM_CACHE
     }
 
 

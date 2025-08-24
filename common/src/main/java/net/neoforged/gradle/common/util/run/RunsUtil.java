@@ -549,7 +549,7 @@ public class RunsUtil {
             throw new IllegalStateException("Could not find IntelliJ project directory for project " + project);
         }
 
-        // Find configured output path
+        // Find configured outputs path
         File miscXml = new File(ideaDir, "misc.xml");
         String outputDirUrl = evaluateXPath(miscXml, IDEA_OUTPUT_XPATH);
         if (outputDirUrl == null) {
@@ -557,7 +557,7 @@ public class RunsUtil {
             outputDirUrl = "file://$PROJECT_DIR$/out";
         }
 
-        // The output dir can start with something like "//C:\"; File can handle it.
+        // The outputs dir can start with something like "//C:\"; File can handle it.
         final String outputDirTemplate = outputDirUrl.replaceAll("^file:", "");
         return project.getLayout().dir(project.provider(() -> new File(outputDirTemplate.replace("$PROJECT_DIR$", project.getProjectDir().getAbsolutePath()))));
     }
@@ -619,7 +619,7 @@ public class RunsUtil {
         //buildLayout.getBuildDirectory().map(dir -> dir.dir("idea").dir("resources").dir(sourceSet.getName()));
         //However this has issues at runtime with FML trying to load the old not interpolated mods.toml etc.
         //It works smoothly if a user has an excluded templates directory configured for his templates in process resources however.
-        //To make it work transparently we switched back to this interpolation mechanic where we write into IDEAs output directory.
+        //To make it work transparently we switched back to this interpolation mechanic where we write into IDEAs outputs directory.
         return getRunWithIdeaDirectory(sourceSet, compileType, "resources");
     }
 

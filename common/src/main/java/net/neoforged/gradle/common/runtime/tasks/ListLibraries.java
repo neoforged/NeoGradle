@@ -140,11 +140,6 @@ public abstract class ListLibraries extends DefaultRuntime {
     @Optional
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getServerBundleFile();
-    
-    @InputFile
-    @Optional
-    @PathSensitive(PathSensitivity.NONE)
-    public abstract RegularFileProperty getDownloadedVersionJsonFile();
 
     @InputFiles
     @Optional

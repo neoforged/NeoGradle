@@ -41,7 +41,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends DefaultExecute 
         getArguments().putRegularFile("mappings", getMappings());
         getArguments().putRegularFile("libraries", getLibraries());
 
-        getOutput().convention(getOutputDirectory().map(d -> d.file("output.jar")));
+        getOutput().convention(getOutputDirectory().map(d -> d.file("outputs.jar")));
         
         getShouldReverseMappings().convention(true);
     }

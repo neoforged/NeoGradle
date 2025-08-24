@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.services.caching.cache;
 
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.services.caching.locking.FileBasedLock;
 import net.neoforged.gradle.common.services.caching.locking.LockManager;
 import net.neoforged.gradle.common.services.caching.logging.CacheLogger;
@@ -22,31 +23,31 @@ public class DirectoryCache implements ICache {
     }
 
     @Override
-    public void loadFrom(final List<File> file) throws IOException
+    public void loadFrom(final List<ICacheableJob.OutputEntry> file) throws IOException
     {
-        for (final File file1 : file)
+        for (final ICacheableJob.OutputEntry file1 : file)
         {
             loadFrom(file1);
         }
     }
 
-    public void loadFrom(File file) throws IOException {
-        if (file.exists()) {
-            final File output = new File(cacheDir, file.getName());
+    public void loadFrom(ICacheableJob.OutputEntry file) throws IOException {
+        if (file.output().exists()) {
+            final File output = new File(cacheDir, file.output().getName());
             if (!output.exists()) {
                 output.mkdirs();
             }
 
             FileUtils.cleanDirectory(output);
-            FileUtils.copyDirectory(file, output);
+            FileUtils.copyDirectory(file.output(), output);
         }
     }
 
     @Override
-    public boolean restoreTo(final List<File> file) throws IOException
+    public boolean restoreTo(final List<ICacheableJob.OutputEntry> file) throws IOException
     {
         boolean restored = true;
-        for (final File file1 : file)
+        for (final ICacheableJob.OutputEntry file1 : file)
         {
             if (!restoreTo(file1))
                 restored = false;
@@ -55,31 +56,31 @@ public class DirectoryCache implements ICache {
         return restored;
     }
 
-    public boolean restoreTo(File file) throws IOException {
-        final File output = new File(cacheDir, file.getName());
+    public boolean restoreTo(ICacheableJob.OutputEntry file) throws IOException {
+        final File output = new File(cacheDir, file.output().getName());
 
-        if (file.exists()) {
+        if (file.output().exists()) {
             if (file.isDirectory() && output.exists()) {
-                if (Hashing.hashDirectory(file).equals(Hashing.hashDirectory(output))) {
+                if (Hashing.hashDirectory(file.output()).equals(Hashing.hashDirectory(output))) {
                     return false;
                 }
             }
 
             //When we merge we use FileUtils.copyDirectory to merge the results and overwrite anything we don't need.
             if (file.isDirectory() && !merge) {
-                FileUtils.cleanDirectory(file);
+                FileUtils.cleanDirectory(file.output());
             }
             //When merge is enabled we don't delete the directory, but we do delete it if it is a file.
-            if (file.isFile() || !merge) {
-                file.delete();
+            if (file.output().isFile() || !merge) {
+                file.output().delete();
             }
         }
 
-        file.mkdirs();
+        file.output().mkdirs();
 
         if (output.exists()) {
             try {
-                FileUtils.copyDirectory(output, file);
+                FileUtils.copyDirectory(output, file.output());
             } catch (IOException e) {
                 throw new GradleException("Failed to restore cache.", e);
             }
@@ -94,10 +95,10 @@ public class DirectoryCache implements ICache {
     }
 
     @Override
-    public boolean canRestore(final List<File> output)
+    public boolean canRestore(final List<ICacheableJob.OutputEntry> output)
     {
         boolean restoreable = true;
-        for (final File file : output)
+        for (final ICacheableJob.OutputEntry file : output)
         {
             if (!canRestore(file))
                 restoreable = false;
@@ -105,9 +106,9 @@ public class DirectoryCache implements ICache {
         return restoreable;
     }
 
-    public boolean canRestore(final File file)
+    public boolean canRestore(final ICacheableJob.OutputEntry file)
     {
-        final File output = new File(cacheDir, file.getName());
+        final File output = new File(cacheDir, file.output().getName());
         return output.exists() && output.isDirectory();
     }
 }

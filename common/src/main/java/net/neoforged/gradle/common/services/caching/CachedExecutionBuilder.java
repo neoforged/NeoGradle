@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.neoforged.gradle.common.services.caching.cache.DirectoryCache;
 import net.neoforged.gradle.common.services.caching.cache.FileCache;
 import net.neoforged.gradle.common.services.caching.cache.ICache;
+import net.neoforged.gradle.common.services.caching.cache.MultiEntryCache;
 import net.neoforged.gradle.common.services.caching.hasher.TaskHasher;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.services.caching.locking.FileBasedLock;
@@ -11,7 +12,6 @@ import net.neoforged.gradle.common.services.caching.logging.CacheLogger;
 import net.neoforged.gradle.common.util.hash.HashCode;
 import net.neoforged.gradle.common.util.hash.Hasher;
 import net.neoforged.gradle.common.util.hash.Hashing;
-import net.neoforged.gradle.util.GradleInternalUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.GradleException;
@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class CachedExecutionBuilder<T> {
@@ -150,14 +149,14 @@ public class CachedExecutionBuilder<T> {
 
             try {
                 //A cached execution is only healthy if the healthy file exists
-                if (lock.hasPreviousFailure() || !cache.canRestore(stage.output())) {
+                if (lock.hasPreviousFailure() || !cache.canRestore(stage.outputs())) {
                     logger.debug("Previous failure detected for stage or restore impossible: %s".formatted(stage));
                     return CacheStatus.runWithLock(lock, cache);
                 }
 
                 //We have a healthy lock, and the previous execution was successful
                 //We can now attempt to restore the cache
-                if (!cache.restoreTo(stage.output())) {
+                if (!cache.restoreTo(stage.outputs())) {
                     //No cache restore was needed, we can skip the stage
                     logger.onCacheEquals(stage);
                 }
@@ -177,7 +176,7 @@ public class CachedExecutionBuilder<T> {
         return (stage, status) -> {
             if (status.shouldExecute()) {
                 logger.onCacheMiss(stage);
-                status.cache().loadFrom(stage.output());
+                status.cache().loadFrom(stage.outputs());
             } else {
                 logger.onCacheHit(stage);
             }
@@ -194,8 +193,7 @@ public class CachedExecutionBuilder<T> {
     private ICache createCache(final HashCode taskHash, final ICacheableJob<?,?> job) {
         final JobHasher jobHasher = new JobHasher(taskHash, job);
         final File cacheDir = new File(options.cache(), jobHasher.hash().toString());
-
-        return (job.createsDirectory() || job.mergesDirectory()) ? new DirectoryCache(cacheDir, job.mergesDirectory()) : new FileCache(cacheDir);
+        return new MultiEntryCache(cacheDir);
     }
 
     /**
@@ -203,51 +201,49 @@ public class CachedExecutionBuilder<T> {
      *
      * @param job The job to execute.
      * @param input The input for the job.
-     * @return The output of the job.
+     * @return The outputs of the job.
      * @throws IOException If an error occurs while executing the job.
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     private Object executeStage(ICacheableJob job, Object input) throws Throwable {
-        final List<File> intendedOutput = job.output();
+        final List<ICacheableJob.OutputEntry> intendedOutput = job.outputs();
 
-        prepareWorkspace(intendedOutput, job.createsDirectory());
+        prepareWorkspace(intendedOutput);
 
         return job.execute(input);
     }
 
     /**
-     * Prepares the workspace for the given output.
+     * Prepares the workspace for the given outputs.
      *
-     * @param output The output to prepare the workspace for.
-     * @param isDirectory Whether the output is a directory.
+     * @param output The outputs to prepare the workspace for.
      * @throws IOException If an error occurs while preparing the workspace.
      */
-    private void prepareWorkspace(final List<File> output, final boolean isDirectory) throws IOException {
-        for (final File file : output)
+    private void prepareWorkspace(final List<ICacheableJob.OutputEntry> output) throws IOException {
+        for (final ICacheableJob.OutputEntry file : output)
         {
-            prepareWorkspace(file, isDirectory);
+            prepareWorkspace(file);
         }
     }
 
     /**
-     * Prepares the workspace for the given output.
+     * Prepares the workspace for the given outputs.
      *
-     * @param output The output to prepare the workspace for.
-     * @param isDirectory Whether the output is a directory.
+     * @param output The outputs to prepare the workspace for.
      * @throws IOException If an error occurs while preparing the workspace.
      */
-    private void prepareWorkspace(final File output, final boolean isDirectory) throws IOException {
-        if (isDirectory) {
-            if (!output.exists() && !output.mkdirs()) {
-                throw new RuntimeException("Failed to create directory: %s".formatted(output.getAbsolutePath()));
+    private void prepareWorkspace(final ICacheableJob.OutputEntry output) throws IOException {
+        if (output.isDirectory()) {
+            if (!output.output().exists() && !output.output().mkdirs()) {
+                throw new RuntimeException("Failed to create directory: %s".formatted(output.output().getAbsolutePath()));
             }
 
-            if (output.exists()) {
-                FileUtils.cleanDirectory(output);
+            if (output.output().exists()) {
+                FileUtils.cleanDirectory(output.output());
             }
         } else {
-            if (output.exists() && !output.delete()) {
-                throw new RuntimeException("Failed to delete file: %s".formatted(output.getAbsolutePath()));
+            if (output.output().exists() && !output.output().delete()) {
+                throw new RuntimeException("Failed to delete file: %s".formatted(output.output().getAbsolutePath()));
             }
         }
     }

@@ -144,11 +144,11 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     //We depend on the configuration, this ensures that if we have dependencies with different versions in the
                     //dependency tree they are resolved to one version and are not added with different versions to the ConfigurableFileCollection
                     //on the input files.
-                    //Additionally, we need to directly depend on the output file of the userdevClasspathElementProducer, we can not convert
-                    //this to a dependency because it would be a transform of a configurable file collection that holds the output of the task
+                    //Additionally, we need to directly depend on the outputs file of the userdevClasspathElementProducer, we can not convert
+                    //this to a dependency because it would be a transform of a configurable file collection that holds the outputs of the task
                     //which requires running that task, which would be a cyclic dependency.
                     //This is a workaround to ensure that the path to the userdev classpath element is resolved correctly.
-                    //And added to the LCP, as we are now not transforming the CFC created from the output (we are not even creating a CFC)
+                    //And added to the LCP, as we are now not transforming the CFC created from the outputs (we are not even creating a CFC)
                     task.getInputFiles().from(lcpConfiguration);
                     task.getInputFiles().from(this.userdevClasspathElementProducer.flatMap(WithOutput::getOutput));
                 }

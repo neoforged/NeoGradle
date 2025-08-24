@@ -8,10 +8,7 @@ import net.neoforged.gradle.util.CopyingFileTreeVisitor;
 import net.neoforged.gradle.util.DirectoryTreeBuildingFileTreeVisitor;
 import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
 import org.apache.commons.io.FileUtils;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.file.*;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -61,7 +58,7 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
                                 final File stubsFile = ensureFileWorkspaceReady(getStubs());
 
                                 args.add("--enable-interface-injection");
-                                getTransformers().forEach(f -> {
+                                getInterfaceInjections().forEach(f -> {
                                     args.add("--interface-injection-data");
                                     args.add(f.getAbsolutePath());
                                 });
@@ -103,7 +100,6 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
         );
 
         getTransformers().finalizeValueOnRead();
-        getLogLevel().set(LogLevel.DISABLED);
     }
 
     @Override
@@ -112,13 +108,14 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
         getCacheService().get()
             .cached(
                 this,
-                ICacheableJob.Default.directory(getTransformed(), this::doExecute)
+                ICacheableJob.Default.of(
+                    this::doExecute,
+                    ICacheableJob.OutputEntry.directory(getTransformed().get().getAsFile()),
+                    ICacheableJob.OutputEntry.file(getStubs().get().getAsFile())
+                )
             )
             .withStage(
                 ICacheableJob.Staged.file("pack", this::pack, getOutput())
-            )
-            .withStage(
-                ICacheableJob.Staged.file("stubs", this::validateStubs, getStubs())
             )
             .execute();
     }
@@ -138,18 +135,19 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
             getInterfaceInjections().isEmpty() &&
             getParchmentMappings().isEmpty()) {
 
-            //Unpack the input zip into the output:
+            //Unpack the input zip into the outputs:
             final CopyingFileTreeVisitor visitor = new CopyingFileTreeVisitor(getTransformed().get().getAsFile().toPath());
             getArchiveOperations().zipTree(getInputFile())
                     .visit(visitor);
+
+            validateStubs();
+
             return;
         }
 
-        final DirectoryTreeBuildingFileTreeVisitor visitor = new DirectoryTreeBuildingFileTreeVisitor(getTransformed().get().getAsFile().toPath());
-        getArchiveOperations().zipTree(getInputFile())
-            .visit(visitor);
-
         super.doExecute();
+
+        validateStubs();
     }
 
     private void validateStubs() throws IOException

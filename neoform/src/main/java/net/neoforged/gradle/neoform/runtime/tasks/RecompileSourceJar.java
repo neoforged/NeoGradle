@@ -63,10 +63,10 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
-        //And configure output default locations.
+        //And configure outputs default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-        getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension)));
-        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.jar").map(d::file)));
+        getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("outputs.%s", extension)));
+        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("outputs.jar").map(d::file)));
 
         getJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
             if (!getJavaVersion().isPresent()) {

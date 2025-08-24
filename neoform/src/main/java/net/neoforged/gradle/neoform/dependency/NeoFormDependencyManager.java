@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * This class installs a dependency replacement handler that replaces the following dependencies with the output
+ * This class installs a dependency replacement handler that replaces the following dependencies with the outputs
  * of a NeoForm runtime.
  * <p>
  * <ul>

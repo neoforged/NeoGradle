@@ -34,6 +34,7 @@ public class ParchmentStep implements IStep {
             definition.getSpecification().getProject().files(),
             definition,
             inputProvidingTask,
+            additionalTaskConfigurator,
             (SubsystemsExtension.ParchmentExtensions) parchment
         );
 

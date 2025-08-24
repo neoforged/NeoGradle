@@ -74,7 +74,7 @@ public abstract class UnpackZip extends DefaultRuntime {
     @Override
     public Provider<FileTree> getOutputAsTree()
     {
-        //Walk the output dir
+        //Walk the outputs dir
         return getOutputDirectory().map(it -> getObjectFactory().fileTree().from(it));
     }
 }
