@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.rules;
 
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
-import net.neoforged.gradle.dsl.common.runs.run.Running;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.api.Project;
 import org.gradle.api.Rule;
@@ -37,7 +37,7 @@ public class LaterAddedReplacedDependencyRule implements Rule {
         if (conventions.getIsEnabled().get() && conventions.getRuns().getIsEnabled().get() && conventions.getRuns().getShouldDefaultRunsBeCreated().get()) {
             final String runName = domainObjectName.substring(3);
 
-            Running run = runs.findByName(runName);
+            Run run = runs.findByName(runName);
             if (run == null) {
                 final String decapitalizedRunName = runName.substring(0, 1).toLowerCase() + runName.substring(1);
                 run = runs.findByName(decapitalizedRunName);

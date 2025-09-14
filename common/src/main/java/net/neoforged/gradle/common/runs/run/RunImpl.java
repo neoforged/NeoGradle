@@ -36,7 +36,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class RunImpl implements ConfigurableDSLElement<Running>, Running
+public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run
 {
 
     private final Project project;
@@ -140,7 +140,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Running>, Runnin
     }
 
     @Override
-    public RunRenderDocOptions getRenderDocAsTestTarget() {
+    public RunRenderDocOptions getRenderDoc() {
         return renderDocOptions;
     }
 
@@ -305,13 +305,13 @@ public abstract class RunImpl implements ConfigurableDSLElement<Running>, Runnin
     }
 
     private void configureFromRuns() {
-        Provider<List<Running>> runSpecifications = specifications.map(l -> l.stream().filter(Running.class::isInstance).map(Running.class::cast).collect(Collectors.toList()));
+        Provider<List<Run>> runSpecifications = specifications.map(l -> l.stream().filter(Run.class::isInstance).map(Run.class::cast).collect(Collectors.toList()));
 
         //Properties of the run
         getWorkingDirectory().convention(
                 TransformerUtils.defaulted(
                         runSpecifications.flatMap(
-                                TransformerUtils.takeLast(project, Running::getWorkingDirectory)
+                                TransformerUtils.takeLast(project, Run::getWorkingDirectory)
                         ),
                         project.getLayout().getProjectDirectory().dir("runs").dir(getName())
                 )
@@ -319,10 +319,10 @@ public abstract class RunImpl implements ConfigurableDSLElement<Running>, Runnin
 
         final RenderDoc renderDoc = project.getExtensions().getByType(Subsystems.class).getConventions().getRuns().getRenderDoc();
         //Properties of the renderdoc integration
-        getRenderDocAsTestTarget().getEnabled().convention(
+        getRenderDoc().getEnabled().convention(
                 TransformerUtils.lazyDefaulted(
                         runSpecifications.flatMap(
-                                TransformerUtils.takeLast(project, run -> run.getRenderDocAsTestTarget().getEnabled())
+                                TransformerUtils.takeLast(project, run -> run.getRenderDoc().getEnabled())
                         ),
                         renderDoc.getConventionForRun().zip(getIsClient(), (conventionForRun, isClient) -> conventionForRun && isClient)
                 )
@@ -430,7 +430,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Running>, Runnin
                         TransformerUtils.combineAllSets(
                                 project,
                                 Task.class,
-                                Running::getDependsOn
+                                Run::getDependsOn
                         )
                 )
         );
@@ -441,7 +441,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Running>, Runnin
                         TransformerUtils.combineAllSets(
                                 project,
                                 Task.class,
-                                Running::getPostSyncTasks
+                                Run::getPostSyncTasks
                         )
                 )
         );
@@ -450,7 +450,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Running>, Runnin
         getShouldExportToIDE().convention(
                 TransformerUtils.defaulted(
                         runSpecifications.flatMap(
-                                TransformerUtils.takeLast(project, Running::getShouldExportToIDE)
+                                TransformerUtils.takeLast(project, Run::getShouldExportToIDE)
                         ),
                         true
                 )
@@ -664,12 +664,12 @@ public abstract class RunImpl implements ConfigurableDSLElement<Running>, Runnin
                 });
     }
 
-    private Provider<List<Running>> getRunByName(String name) {
+    private Provider<List<Run>> getRunByName(String name) {
         RunManager runTypes = project.getExtensions().getByType(RunManager.class);
 
         return project.provider(() -> {
                     if (runTypes.getNames().contains(name)) {
-                        final List<Running> list = new ArrayList<>();
+                        final List<Run> list = new ArrayList<>();
                         list.add(runTypes.getByName(name));
                         return list;
                     } else {

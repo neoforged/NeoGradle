@@ -4,9 +4,7 @@ import groovy.transform.CompileStatic
 import net.neoforged.gdi.BaseDSLElement
 import net.neoforged.gdi.NamedDSLElement
 import net.neoforged.gdi.annotations.DSLProperty
-import net.neoforged.gdi.annotations.DefaultMethods
 import net.neoforged.gradle.dsl.common.runs.RunSpecification
-import org.gradle.api.Action
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -22,9 +20,8 @@ import org.jetbrains.annotations.NotNull
  * Defines an object which represents a single configuration for running the game.
  * Gradle tasks, IDE run configurations, and other run configurations are all created from this object.
  */
-@DefaultMethods
 @CompileStatic
-interface Running extends BaseDSLElement<Running>, NamedDSLElement, RunSpecification {
+interface Run extends BaseDSLElement<Run>, NamedDSLElement, RunSpecification {
 
     /**
      * Gives access to the application arguments for the run type.
@@ -51,10 +48,7 @@ interface Running extends BaseDSLElement<Running>, NamedDSLElement, RunSpecifica
      */
     @Nested
     @DSLProperty
-    abstract RunRenderDocOptions getRenderDocAsTestTarget();
-
-    @DSLProperty
-    abstract RunRenderDocOptions getRunningRenderDocTarget();
+    abstract RunRenderDocOptions getRenderDoc();
 
     /**
      * @returns the DevLogin options for this run.
@@ -347,8 +341,4 @@ interface Running extends BaseDSLElement<Running>, NamedDSLElement, RunSpecifica
      * @param typeProvider The type provider to realise and configure with.
      */
     void configure(@NotNull final Provider<? extends RunSpecification> typeProvider);
-
-    default void dependencies(@NotNull Action<DependencyHandler> configure) {
-        getDependencies().configure(configure);
-    }
 }

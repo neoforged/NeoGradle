@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.runs.ide.extensions;
 
 import net.neoforged.gdi.annotations.ProjectGetter;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
-import net.neoforged.gradle.dsl.common.runs.run.Running;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
 
@@ -11,10 +11,10 @@ import javax.inject.Inject;
 public abstract class IdeaRunExtensionImpl implements IdeaRunExtension {
 
     private final Project project;
-    private final Running run;
+    private final Run     run;
 
     @Inject
-    public IdeaRunExtensionImpl(Project project, Running run) {
+    public IdeaRunExtensionImpl(Project project, Run run) {
         this.project = project;
         this.run = run;
 
@@ -30,7 +30,7 @@ public abstract class IdeaRunExtensionImpl implements IdeaRunExtension {
         return project;
     }
     
-    public Running getRun() {
+    public Run getRun() {
         return run;
     }
 }

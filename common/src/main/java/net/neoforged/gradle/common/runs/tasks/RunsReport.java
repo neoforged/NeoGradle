@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.runs.tasks;
 
 import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.util.run.RunsUtil;
-import net.neoforged.gradle.dsl.common.runs.run.Running;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.SourceSet;
@@ -83,7 +83,7 @@ public abstract class RunsReport extends AbstractProjectBasedReportTask<RunsRepo
         private final Set<String> classpath;
         private final Set<String> dependencies;
 
-        public RenderableRun(Running run) {
+        public RenderableRun(Run run) {
             this.name = run.getName();
             this.environment = run.getEnvironmentVariables().get();
             this.mainClass = run.getMainClass().get();

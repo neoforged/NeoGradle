@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.runs.run;
 
 import net.neoforged.gradle.common.util.DelegatingDomainObjectContainer;
-import net.neoforged.gradle.dsl.common.runs.run.Running;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.type.RunType;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +23,7 @@ public class RunTypeManagerImpl extends DelegatingDomainObjectContainer<RunType>
 
     private static NamedDomainObjectContainer<RunType> createAndRegisterContainer(Project project) {
         final NamedDomainObjectContainer<RunType> container = project.container(RunType.class, name -> {
-            final Running template = project.getObjects().newInstance(RunImpl.class, project, "template" + StringUtils.capitalize(name));
+            final Run template = project.getObjects().newInstance(RunImpl.class, project, "template" + StringUtils.capitalize(name));
             final RunType type = project.getObjects().newInstance(RunType.class, name);
             type.setRunTemplate(template);
 

@@ -14,7 +14,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
-import net.neoforged.gradle.dsl.common.runs.run.Running;
+import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.InvalidUserDataException;
@@ -60,11 +60,11 @@ public class RunsUtil {
         throw new IllegalStateException("Tried to create utility class!");
     }
 
-    public static String createNameFor(final String prefix, final Running run) {
+    public static String createNameFor(final String prefix, final Run run) {
         return createNameFor(prefix, run.getName());
     }
 
-    public static void configure(Project project, Running run, boolean isInternal) {
+    public static void configure(Project project, Run run, boolean isInternal) {
         RunsUtil.configureModSourceDefaults(project, run);
 
         run.configure();
@@ -80,12 +80,12 @@ public class RunsUtil {
         RunsUtil.registerPostSyncTasks(project, run);
     }
 
-    public static void registerPostSyncTasks(Project project, Running run) {
+    public static void registerPostSyncTasks(Project project, Run run) {
         final IdeManagementExtension ideManager = project.getExtensions().getByType(IdeManagementExtension.class);
         run.getPostSyncTasks().get().forEach(ideManager::registerTaskToRun);
     }
 
-    public static void createTasks(Project project, Running run) {
+    public static void createTasks(Project project, Run run) {
         if (!run.getIsJUnit().get()) {
             //Create run exec tasks for all non-unit test runs
             project.getTasks().register(createNameFor(run.getName()), JavaExec.class, runExec -> {
@@ -124,7 +124,7 @@ public class RunsUtil {
         }
     }
 
-    public static void ensureMacOsSupport(Running run) {
+    public static void ensureMacOsSupport(Run run) {
         //When we are on mac-os we need to add the -XstartOnFirstThread argument to the JVM arguments
         if (VersionJson.OS.getCurrent() == VersionJson.OS.OSX && run.getIsClient().get()) {
             //This argument is only needed on the client.
@@ -132,7 +132,7 @@ public class RunsUtil {
         }
     }
 
-    public static void configureModSourceDefaults(Project project, Running run) {
+    public static void configureModSourceDefaults(Project project, Run run) {
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
         if (conventions.getSourceSets().getShouldMainSourceSetBeAutomaticallyAddedToRuns().get()) {
             //We always register main
@@ -140,7 +140,7 @@ public class RunsUtil {
         }
     }
 
-    public static void setupModSources(Project project, Running run, boolean isInternal) {
+    public static void setupModSources(Project project, Run run, boolean isInternal) {
         // We add default junit sourcesets here because we need to know the type of the run first
         final Conventions conventions = project.getExtensions().getByType(Subsystems.class).getConventions();
         if (!isInternal && conventions.getSourceSets().getShouldTestSourceSetBeAutomaticallyAddedToRuns().get()) {
@@ -169,7 +169,7 @@ public class RunsUtil {
         }
     }
 
-    public static void setupDevLoginSupport(Project project, Running run) {
+    public static void setupDevLoginSupport(Project project, Run run) {
         //Handle dev login.
         final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getDevLogin();
         final Tools tools = project.getExtensions().getByType(Subsystems.class).getTools();
@@ -211,8 +211,8 @@ public class RunsUtil {
         }
     }
 
-    public static void setupRenderDocSupport(Project project, Running run) {
-        if (run.getRenderDocAsTestTarget().getEnabled().get()) {
+    public static void setupRenderDocSupport(Project project, Run run) {
+        if (run.getRenderDoc().getEnabled().get()) {
             if (!run.getIsClient().get())
                 throw new InvalidUserDataException("RenderDoc can only be enabled for client runs.");
 
@@ -248,7 +248,7 @@ public class RunsUtil {
         }
     }
 
-    private static Configuration addLocalRenderNurse(SourceSet sourceSet, Running run) {
+    private static Configuration addLocalRenderNurse(SourceSet sourceSet, Run run) {
         final Project project = SourceSetUtils.getProject(sourceSet);
         final Configuration renderNurse = registerRenderNurse(project);
 
@@ -268,7 +268,7 @@ public class RunsUtil {
         );
     }
 
-    public static void configureModClasses(Running run) {
+    public static void configureModClasses(Run run) {
         //Create a combined provider for the mod and unit test sources
         Provider<Multimap<String, SourceSet>> sourceSets = run.getModSources().all().zip(
                 run.getUnitTestSources().all(),
@@ -286,11 +286,11 @@ public class RunsUtil {
         run.getEnvironmentVariables().put("MOD_CLASSES", buildGradleModClasses(sourceSets));
     }
 
-    public static Running create(final Project project, final String name) {
+    public static Run create(final Project project, final String name) {
         return project.getObjects().newInstance(RunImpl.class, project, name);
     }
 
-    private static void updateRunExecClasspathBasedOnPrimaryTask(final JavaExec runExec, final Running run) {
+    private static void updateRunExecClasspathBasedOnPrimaryTask(final JavaExec runExec, final Run run) {
         if (run.getModSources().getPrimary().isPresent()) {
             final SourceSet primary = run.getModSources().getPrimary().get();
 
@@ -312,7 +312,7 @@ public class RunsUtil {
         }
     }
 
-    private static void createOrReuseTestTask(Project project, String name, Running run) {
+    private static void createOrReuseTestTask(Project project, String name, Run run) {
         final Set<SourceSet> currentProjectsModSources = run.getModSources().all().get().values()
                 .stream()
                 .filter(sourceSet -> SourceSetUtils.getProject(sourceSet).equals(project))
@@ -342,7 +342,7 @@ public class RunsUtil {
         createNewTestTask(project, name, run);
     }
 
-    private static void createNewTestTask(Project project, String name, Running run) {
+    private static void createNewTestTask(Project project, String name, Run run) {
         //Create a test task for unit tests
         TaskProvider<Test> newTestTask = project.getTasks().register(createNameFor("test", name), Test.class);
         configureTestTask(project, newTestTask, run);
@@ -394,7 +394,7 @@ public class RunsUtil {
     }
 
     public static PreparedUnitTestEnvironment prepareUnitTestEnvironment(
-        Running run,
+        Run run,
                                                                          List<String> jvmArguments,
                                                                          List<String> programArguments) {
         return new PreparedUnitTestEnvironment(
@@ -431,7 +431,7 @@ public class RunsUtil {
         return output;
     }
 
-    private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, Running run) {
+    private static void configureTestTask(Project project, TaskProvider<Test> testTaskProvider, Run run) {
         testTaskProvider.configure(testTask -> {
             PreparedUnitTestEnvironment preparedEnvironment = prepareUnitTestEnvironment(
                     run,
@@ -482,7 +482,7 @@ public class RunsUtil {
         return collection;
     }
 
-    public static void addRunSourcesDependenciesToTask(Task task, Running run, final boolean requireCompile) {
+    public static void addRunSourcesDependenciesToTask(Task task, Run run, final boolean requireCompile) {
         for (SourceSet sourceSet : run.getModSources().all().get().values()) {
             final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 

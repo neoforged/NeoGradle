@@ -42,9 +42,9 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         run.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
     }
 
-    def "compile_supports_configuration_cache_build"() {
+    def "compile_supports_configuration_cache_build_and_is_reused"() {
         given:
-        def project = create("compile_supports_configuration_cache_build", {
+        def project = create("compile_supports_configuration_cache_build_and_is_reused", {
             it.build("""
             java {
                 toolchain {
