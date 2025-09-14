@@ -17,7 +17,7 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.Running;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.util.FileUtils;
@@ -106,7 +106,7 @@ public class IdeRunIntegrationManager {
         }
     }
 
-    public void setupRun(Project project, Run run) {
+    public void setupRun(Project project, Running run) {
         run.getExtensions().create(IdeaRunExtension.class, "idea", IdeaRunExtensionImpl.class, project, run);
     }
 
@@ -171,7 +171,7 @@ public class IdeRunIntegrationManager {
 
                 if (project.getExtensions().getByType(Subsystems.class).getConventions().getIde().getIdea().getShouldReconfigureTemplatesForTests().get()) {
                     final ExtensionAware ideaModelExtensions = (ExtensionAware) idea;
-                    final Run ideaDefaultUnitTestRun = ideaModelExtensions.getExtensions().getByType(Run.class);
+                    final Running ideaDefaultUnitTestRun = ideaModelExtensions.getExtensions().getByType(Running.class);
 
                     //We finally know that the user wants this to be registered, additionally the IDE integration resolved the lazy dependencies
                     //here, so we can now with a gentle heart register the run type, and the run configuration conversion.
@@ -191,7 +191,7 @@ public class IdeRunIntegrationManager {
             }
         }
 
-        private void createIdeaRun(Project project, Run run, RunConfigurationContainer ideaRuns, boolean defaultRun) {
+        private void createIdeaRun(Project project, Running run, RunConfigurationContainer ideaRuns, boolean defaultRun) {
             if (!defaultRun && !run.getShouldExportToIDE().get())
                 return;
 
@@ -413,7 +413,7 @@ public class IdeRunIntegrationManager {
             });
         }
 
-        private List<TaskProvider<?>> createIntelliJCopyResourcesTasks(Run run) {
+        private List<TaskProvider<?>> createIntelliJCopyResourcesTasks(Running run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().all().get().values()) {
                 copyProcessResources.add(setupCopyResourcesForIdea(sourceSet, RunsUtil.IdeaCompileType.Production));
@@ -451,7 +451,7 @@ public class IdeRunIntegrationManager {
             return intelliJResourcesTask;
         }
 
-        private List<TaskProvider<?>> createEclipseCopyResourcesTasks(Run run) {
+        private List<TaskProvider<?>> createEclipseCopyResourcesTasks(Running run) {
             final List<TaskProvider<?>> copyProcessResources = new ArrayList<>();
             for (SourceSet sourceSet : run.getModSources().all().get().values()) {
                 final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);

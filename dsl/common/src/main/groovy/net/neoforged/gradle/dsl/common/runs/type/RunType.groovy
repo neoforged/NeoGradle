@@ -6,13 +6,10 @@ import net.neoforged.gdi.ConfigurableDSLElement
 import net.neoforged.gdi.NamedDSLElement
 import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runs.RunSpecification
-import net.neoforged.gradle.dsl.common.runs.run.Run
+import net.neoforged.gradle.dsl.common.runs.run.Running
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.lang.reflect.Type
@@ -30,7 +27,7 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
 
     private final String name
 
-    private Run runTemplate;
+    private Running runTemplate;
 
     @Inject
     RunType(String name) {
@@ -60,11 +57,11 @@ abstract class RunType implements ConfigurableDSLElement<RunType>, NamedDSLEleme
      */
     @Internal
     @DSLProperty
-    Run getRunTemplate() {
+    Running getRunTemplate() {
         return runTemplate
     }
 
-    void setRunTemplate(Run runTemplate) {
+    void setRunTemplate(Running runTemplate) {
         this.runTemplate = runTemplate
 
         if (this.runTemplate != null) {

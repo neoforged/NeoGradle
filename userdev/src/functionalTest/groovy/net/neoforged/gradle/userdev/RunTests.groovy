@@ -356,7 +356,7 @@ class RunTests extends BuilderBasedTestSpecification {
                         runtime libs.jgrapht
                     }
                     
-                    run.modSource project.sourceSets.main
+                    modSource project.sourceSets.main
                 }
             }
             """)

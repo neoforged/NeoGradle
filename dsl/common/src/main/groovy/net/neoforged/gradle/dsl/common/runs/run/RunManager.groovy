@@ -9,7 +9,7 @@ import org.gradle.api.NamedDomainObjectContainer
  *     Its management functions are exposed to also handle none registered internal runs properly.
  * </p>
  */
-interface RunManager extends NamedDomainObjectContainer<Run> {
+interface RunManager extends NamedDomainObjectContainer<Running> {
 
     /**
      * Method to add an internal run to the manager, this is a run not registered to the collection,
@@ -17,7 +17,7 @@ interface RunManager extends NamedDomainObjectContainer<Run> {
      *
      * @param run The run to add
      */
-    void addInternal(Run run);
+    void addInternal(Running run);
 
     /**
      * Method to register a callback which gets called for all internal and public runs.
@@ -28,7 +28,7 @@ interface RunManager extends NamedDomainObjectContainer<Run> {
      * @param forAll The callback to call for all runs
      * @implNote This method is equivalent to {@link NamedDomainObjectContainer#all(Action)} for public runs.
      */
-    void realizeAll(Action<Run> forAll)
+    void realizeAll(Action<Running> forAll)
 
     /**
      * Method to register a callback which gets called for all runs lazily.
@@ -39,5 +39,5 @@ interface RunManager extends NamedDomainObjectContainer<Run> {
      * @param forAll The callback to call for all internal runs
      * @implNote This method is equivalent to {@link NamedDomainObjectContainer#configureEach(Action)} for public runs.
      */
-    void configureAll(Action<Run> configure)
+    void configureAll(Action<Running> configure)
 }

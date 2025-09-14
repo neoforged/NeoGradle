@@ -2,7 +2,7 @@ package net.neoforged.gradle.common.runs.run;
 
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.runs.DevLogin;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.Running;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
 import org.gradle.api.Project;
 
@@ -13,7 +13,7 @@ public abstract class RunDevLoginOptionsImpl implements RunDevLoginOptions {
     private final Project project;
 
     @Inject
-    public RunDevLoginOptionsImpl(Project project, Run run) {
+    public RunDevLoginOptionsImpl(Project project, Running run) {
         this.project = project;
 
         final DevLogin devLogin = project.getExtensions().getByType(Subsystems.class).getConventions().getRuns().getDevLogin();

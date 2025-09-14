@@ -92,6 +92,9 @@ subprojects.forEach { Project subProject ->
     }
     subProject.repositories.mavenCentral()
     subProject.repositories.gradlePluginPortal()
+
+    /*
+
     subProject.repositories {
         maven {
             name = "Maven for PR #4" // https://github.com/neoforged/GroovyDSLImprover/pull/4
@@ -101,6 +104,8 @@ subprojects.forEach { Project subProject ->
             }
         }
     }
+    */
+
     subProject.repositories {
         maven {
             name = "Maven for PR #4" // https://github.com/neoforged/TrainingWheels/pull/4

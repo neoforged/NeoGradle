@@ -1,7 +1,7 @@
 package net.neoforged.gradle.common.runs.run;
 
 import net.neoforged.gradle.common.util.DelegatingDomainObjectContainer;
-import net.neoforged.gradle.dsl.common.runs.run.Run;
+import net.neoforged.gradle.dsl.common.runs.run.Running;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -11,13 +11,13 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RunManagerImpl extends DelegatingDomainObjectContainer<Run> implements RunManager {
+public class RunManagerImpl extends DelegatingDomainObjectContainer<Running> implements RunManager {
 
-    private final List<Action<Run>> actions = new ArrayList<>();
-    private final List<Run> internalRuns = new ArrayList<>();
+    private final List<Action<Running>> actions      = new ArrayList<>();
+    private final List<Running>         internalRuns = new ArrayList<>();
 
-    private static NamedDomainObjectContainer<Run> createAndRegisterContainer(Project project) {
-        final NamedDomainObjectContainer<Run> container = project.container(Run.class, name -> project.getObjects().newInstance(RunImpl.class, project, name));
+    private static NamedDomainObjectContainer<Running> createAndRegisterContainer(Project project) {
+        final NamedDomainObjectContainer<Running> container = project.container(Running.class, name -> project.getObjects().newInstance(RunImpl.class, project, name));
         project.getExtensions().add("runs", container);
         return container;
     }
@@ -28,32 +28,32 @@ public class RunManagerImpl extends DelegatingDomainObjectContainer<Run> impleme
     }
 
     @Override
-    public void addInternal(Run run) {
+    public void addInternal(Running run) {
         internalRuns.add(run);
 
-        for (Action<Run> action : actions) {
+        for (Action<Running> action : actions) {
             action.execute(run);
         }
     }
 
     @Override
-    public void realizeAll(Action<Run> forAll) {
+    public void realizeAll(Action<Running> forAll) {
         super.all(forAll);
 
         this.actions.add(forAll);
 
-        for (Run run : internalRuns) {
+        for (Running run : internalRuns) {
             forAll.execute(run);
         }
     }
 
     @Override
-    public void configureAll(Action<Run> configure) {
+    public void configureAll(Action<Running> configure) {
         super.configureEach(configure);
 
         this.actions.add(configure);
 
-        for (Run run : internalRuns) {
+        for (Running run : internalRuns) {
             configure.execute(run);
         }
     }

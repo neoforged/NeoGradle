@@ -1,6 +1,5 @@
 package net.neoforged.gradle.dsl.common.runs.run
 
-
 import groovy.transform.CompileStatic
 import net.neoforged.gdi.BaseDSLElement
 import net.neoforged.gdi.NamedDSLElement
@@ -25,7 +24,7 @@ import org.jetbrains.annotations.NotNull
  */
 @DefaultMethods
 @CompileStatic
-interface Run extends BaseDSLElement<Run>, NamedDSLElement, RunSpecification {
+interface Running extends BaseDSLElement<Running>, NamedDSLElement, RunSpecification {
 
     /**
      * Gives access to the application arguments for the run type.
@@ -52,7 +51,10 @@ interface Run extends BaseDSLElement<Run>, NamedDSLElement, RunSpecification {
      */
     @Nested
     @DSLProperty
-    abstract RunRenderDocOptions getRenderDoc();
+    abstract RunRenderDocOptions getRenderDocAsTestTarget();
+
+    @DSLProperty
+    abstract RunRenderDocOptions getRunningRenderDocTarget();
 
     /**
      * @returns the DevLogin options for this run.
