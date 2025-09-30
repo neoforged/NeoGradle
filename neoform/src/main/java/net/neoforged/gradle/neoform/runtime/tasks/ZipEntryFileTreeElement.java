@@ -70,6 +70,11 @@ public class ZipEntryFileTreeElement implements FileTreeElement {
         return RelativePath.parse(!isDirectory(), getPath());
     }
 
+    public int getMode()
+    {
+        return 0;
+    }
+
     @Override
     public FilePermissions getPermissions() {
         throw new UnsupportedOperationException();
