@@ -412,8 +412,9 @@ class RunTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
                 
-                testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-                testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+                testImplementation 'org.junit.jupiter:junit-jupiter-api:5.+'
+                testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.+'
+                testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
             }
             """)
             //We need to add a manifest.mf file to the test source set
