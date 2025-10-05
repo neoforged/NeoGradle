@@ -5,10 +5,14 @@ import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.specification.CommonRuntimeSpecification;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
+import net.neoforged.gradle.common.runtime.tasks.InProcessSourceJarRecompiler;
+import net.neoforged.gradle.common.runtime.tasks.RecompileSourceJar;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.MinecraftArtifactCache;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runtime.extensions.CommonRuntimes;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
@@ -23,22 +27,36 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.compile.ForkOptions;
+import org.gradle.process.CommandLineArgumentProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecification, B extends CommonRuntimeSpecification.Builder<S, B>, D extends CommonRuntimeDefinition<S>> implements CommonRuntimes<S, B, D> {
-    protected final Map<String, D> definitions = Maps.newHashMap();
+    public record CustomCompilerArgsProvider(Provider<List<String>> args) implements CommandLineArgumentProvider
+    {
+        @Override
+        public Iterable<String> asArguments() {
+            return args.get();
+        }
+    }
+
+    protected final Map<String, D>          definitions  = Maps.newHashMap();
     protected final Map<String, Dependency> dependencies = Maps.newHashMap();
-    private final Project project;
+    private final   Project                 project;
 
     protected CommonRuntimeExtension(Project project) {
         this.project = project;
@@ -94,6 +112,71 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                     )
             )
         );
+    }
+
+    protected static @NotNull TaskProvider<? extends Runtime> createRecompileTask(
+        final CommonRuntimeDefinition<?> definition,
+        final TaskProvider<? extends WithOutput> recompileInput,
+        final FileCollection recompileDependencies,
+        final Consumer<TaskProvider<? extends Runtime>> configure)
+    {
+        //TODO: Future change can add the new InProcess Recompiler.
+        return createGradleRecompileTask(definition, recompileInput, recompileDependencies, configure);
+    }
+
+    private static @NotNull TaskProvider<InProcessSourceJarRecompiler> createNativeRecompileTask(
+        final CommonRuntimeDefinition<?> definition,
+        final TaskProvider<? extends WithOutput> recompileInput,
+        final FileCollection recompileDependencies,
+        final Consumer<TaskProvider<? extends Runtime>> configure)
+    {
+        final CommonRuntimeSpecification spec = definition.getSpecification();
+        final TaskProvider<InProcessSourceJarRecompiler> compiler = spec.getProject()
+            .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), InProcessSourceJarRecompiler.class, task -> {
+                task.getSourceToCompile().set(recompileInput.flatMap(WithOutput::getOutput));
+                task.getClasspath().from(recompileDependencies);
+                task.getAdditionalSources().from(definition.getAdditionalCompileSources());
+                task.getResources().from(recompileInput.flatMap(WithOutput::getOutput).map(task.getArchiveOperations()::zipTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
+            });
+
+        configure.accept(compiler);
+
+        return compiler;
+    }
+
+    private static @NotNull TaskProvider<RecompileSourceJar> createGradleRecompileTask(
+        final CommonRuntimeDefinition<?> definition,
+        final TaskProvider<? extends WithOutput> recompileInput,
+        final FileCollection recompileDependencies,
+        final Consumer<TaskProvider<? extends Runtime>> configure)
+    {
+        final Provider<? extends FileTree> recompileSourceFileTree = recompileInput.flatMap(WithOutput::getOutputAsTree);
+
+        final CommonRuntimeSpecification spec = definition.getSpecification();
+        // Consider user-settings
+        final TaskProvider<RecompileSourceJar> recompileSourceJar = spec.getProject()
+                .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, task -> {
+                    task.getCompileFileRoot().from(recompileSourceFileTree);
+                    task.getAdditionalInputFileRoot().from(definition.getAdditionalCompileSources());
+                    task.getAdditionalInputFileRoot().from(spec.getProject().file(recompileInput.flatMap(WithOutput::getOutput)));
+                    task.setClasspath(recompileDependencies);
+                    task.getStepName().set("recompile");
+
+                    // Consider user-settings
+                    Recompiler settings = spec.getProject().getExtensions().getByType(Subsystems.class).getRecompiler();
+                    String maxMemory = settings.getMaxMemory().get();
+                    task.getOptions().setFork(settings.getShouldFork().get());
+                    ForkOptions forkOptions = task.getOptions().getForkOptions();
+                    forkOptions.setMemoryMaximumSize(maxMemory);
+                    forkOptions.setJvmArgs(settings.getJvmArgs().get());
+                    task.getOptions().getCompilerArgumentProviders().add(new CustomCompilerArgsProvider(settings.getArgs()));
+
+                    task.getResources().from(recompileInput.flatMap(WithOutput::getOutputAsTree).map(zipTree -> zipTree.matching(sp -> sp.exclude("**/*.java"))));
+                });
+
+        configure.accept(recompileSourceJar);
+
+        return recompileSourceJar;
     }
 
     @Override
