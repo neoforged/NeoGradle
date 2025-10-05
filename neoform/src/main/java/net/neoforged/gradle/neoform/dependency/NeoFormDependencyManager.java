@@ -62,7 +62,7 @@ public final class NeoFormDependencyManager {
         });
 
         return Optional.of(
-                new ReplacementResult(
+                new NeoFormReplacementResult(
                         project,
                         runtime.getSourceJarTask(),
                         runtime.getRawJarTask(),
@@ -71,7 +71,8 @@ public final class NeoFormDependencyManager {
                                 "neoform_mdk_" + target.distribution.getName().toLowerCase()
                         ),
                         runtime.getMinecraftDependenciesConfiguration(),
-                        Collections.emptySet()
+                        Collections.emptySet(),
+                        runtime
                 ));
     }
 
