@@ -38,6 +38,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 .registerTypeHierarchyAdapter(UserdevProfile.class, new Serializer(objectFactory))
                 .registerTypeAdapter(RunType.class, new RunType.Serializer(objectFactory))
                 .registerTypeHierarchyAdapter(ToolExecution.class, new ToolExecution.Serializer(objectFactory))
+                .registerTypeHierarchyAdapter(Features.class, new Features.Serializer(objectFactory))
                 .create()
     }
 
@@ -113,6 +114,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @Optional
     abstract ListProperty<String> getModules();
 
+    @Input
+    @DSLProperty
+    @Optional
+    abstract Property<Features> getFeatures();
+
     @CompileStatic
     static class Serializer implements JsonSerializer<UserdevProfile>, JsonDeserializer<UserdevProfile> {
 
@@ -156,6 +162,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 }
             })
             deserializeList(instance.modules, object, "modules", String.class, jsonDeserializationContext)
+            deserialize(instance.features, object, "features", Features.class, jsonDeserializationContext)
 
             return instance
         }
@@ -183,6 +190,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 }
             })
             serializeList(userdevProfile.modules, object, "modules", jsonSerializationContext)
+            serialize(userdevProfile.features, object, "features", jsonSerializationContext)
 
             return object
         }
@@ -244,6 +252,48 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 serializeList(toolExecution.arguments, object, "args", jsonSerializationContext)
                 serializeList(toolExecution.jvmArguments, object, "jvmArgs", jsonSerializationContext)
                 serializeMap(toolExecution.data, object, "data", jsonSerializationContext)
+
+                return object
+            }
+        }
+    }
+
+    @CompileStatic
+    static abstract class Features implements ConfigurableDSLElement<Features> {
+
+        @Input
+        @DSLProperty
+        @Optional
+        abstract Property<Boolean> getIsNoLegacyClasspath();
+
+
+        @CompileStatic
+        static class Serializer implements JsonSerializer<Features>, JsonDeserializer<Features> {
+
+            private final ObjectFactory objectFactory
+
+            Serializer(ObjectFactory objectFactory) {
+                this.objectFactory = objectFactory
+            }
+
+            @Override
+            Features deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                if (!jsonElement.isJsonObject())
+                    throw new JsonSyntaxException("Expected object, found " + jsonElement.getClass().getSimpleName())
+
+                final JsonObject object = jsonElement.getAsJsonObject()
+                final Features instance = objectFactory.newInstance(Features.class)
+
+                deserializeBool(instance.isNoLegacyClasspath, object, "noLegacyClasspath")
+
+                return instance
+            }
+
+            @Override
+            JsonElement serialize(Features features, Type type, JsonSerializationContext jsonSerializationContext) {
+                final JsonObject object = new JsonObject();
+
+                serializeBool(features.isNoLegacyClasspath, object, "noLegacyClasspath")
 
                 return object
             }

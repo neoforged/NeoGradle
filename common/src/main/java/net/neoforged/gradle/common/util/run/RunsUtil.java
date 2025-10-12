@@ -78,6 +78,10 @@ public class RunsUtil {
             RunsUtil.createTasks(project, run);
         }
         RunsUtil.registerPostSyncTasks(project, run);
+
+        if (run instanceof RunImpl runImpl) {
+            runImpl.performSdkValidation();
+        }
     }
 
     public static void registerPostSyncTasks(Project project, Run run) {

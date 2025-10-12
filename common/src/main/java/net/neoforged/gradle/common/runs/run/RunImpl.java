@@ -34,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.inject.Inject;
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run
@@ -458,6 +459,15 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run
     }
 
     private void configureFromSDKs() {
+        forEachRegisteredSdk(def -> def.configureRun(this));
+    }
+
+    public void performSdkValidation() {
+        forEachRegisteredSdk(def -> def.validateRun(this));
+    }
+
+    private void forEachRegisteredSdk(Consumer<CommonRuntimeDefinition<?>> sdkConsumer)
+    {
         final Set<SourceSet> unconfiguredSourceSets = new HashSet<>();
         final Set<CommonRuntimeDefinition<?>> configuredDefinitions = new HashSet<>();
 
@@ -470,7 +480,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run
                 final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(sourceSet);
                 definition.ifPresentOrElse(def -> {
                     if (configuredDefinitions.add(def)) {
-                        def.configureRun(this);
+                        sdkConsumer.accept(def);
                     }
                 }, () -> unconfiguredSourceSets.add(sourceSet));
             } catch (MultipleDefinitionsFoundException e) {
@@ -501,7 +511,7 @@ public abstract class RunImpl implements ConfigurableDSLElement<Run>, Run
                     final Optional<CommonRuntimeDefinition<?>> definition = TaskDependencyUtils.findRuntimeDefinition(unconfiguredSourceSet);
                     definition.ifPresent(def -> {
                         if (configuredDefinitions.add(def)) {
-                            def.configureRun(this);
+                            sdkConsumer.accept(def);
                         }
                         iterator.remove();
                     });

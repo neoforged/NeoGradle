@@ -315,4 +315,9 @@ public abstract class CommonRuntimeDefinition<S extends CommonRuntimeSpecificati
             return result;
         });
     }
+
+    public void validateRun(final RunImpl run)
+    {
+        //Noop no validation on common.
+    }
 }
