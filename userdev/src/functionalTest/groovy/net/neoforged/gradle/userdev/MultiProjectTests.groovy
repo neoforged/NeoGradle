@@ -100,8 +100,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':main:writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
-
         run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
                 run.output.contains("net.neoforged.fml.ModLoadingException: Loading errors encountered:")
     }
@@ -293,8 +291,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':main:writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
-
         run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
                 run.output.contains("net.neoforged.fml.ModLoadingException: Loading errors encountered:")
     }

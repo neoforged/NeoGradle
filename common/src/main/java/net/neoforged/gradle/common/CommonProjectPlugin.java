@@ -13,6 +13,7 @@ import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.interfaceinjection.InterfaceInjectionPublishing;
 import net.neoforged.gradle.common.rules.LaterAddedReplacedDependencyRule;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.run.RunManagerImpl;
 import net.neoforged.gradle.common.runs.run.RunTypeManagerImpl;
 import net.neoforged.gradle.common.runs.tasks.RunsReport;
@@ -171,6 +172,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 run,
                 !runs.getNames().contains(run.getName()) //Internal runs are not directly registered, so they don't show up in the name list.
         ));
+        //Second loop over all internal and public runs to validate their configuration and emit warnings.
+        runs.realizeAll(run -> {
+            if (run instanceof RunImpl runImpl) {
+                runImpl.performSdkValidation();
+            }
+        });
         IdeRunIntegrationManager.getInstance().apply(project);
     }
 }
