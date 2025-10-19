@@ -13,6 +13,7 @@ gradleutils {
         branches {
             suffixBranch()
             suffixExemptedBranch('NG_7.0')
+            suffixExemptedBranch('NG_7.1')
         }
     }
 }
