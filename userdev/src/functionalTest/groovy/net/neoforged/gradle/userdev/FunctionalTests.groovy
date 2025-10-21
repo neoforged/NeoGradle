@@ -122,6 +122,54 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         run.output.contains("+--- net.neoforged.fancymodloader:loader:")
     }
 
+    def "userdev supports running in offline mode after setup"() {
+        given:
+        def project = create("userdev_supports_offline_mode", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('assemble')
+        }
+
+        then:
+        run.task(':assemble').outcome == TaskOutcome.SUCCESS
+
+
+        when:
+        def offlineRun = project.run {
+            it.tasks('assemble')
+            it.arguments('--offline')
+        }
+
+        then:
+        offlineRun.task(':assemble').outcome == TaskOutcome.SUCCESS
+    }
+
     def "a mod with userdev as dependency has a mixin-extra dependency on the compile classpath"() {
         given:
         def project = create("userdev_adds_mixin_extra_on_compile_classpath", {
