@@ -39,7 +39,7 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
     public abstract Property<CacheFileSelector> getSelector();
 
     @Optional
-    @Input
+    @Internal
     public abstract Property<Boolean> getIsOffline();
     
     protected void downloadJsonTo(String url) {

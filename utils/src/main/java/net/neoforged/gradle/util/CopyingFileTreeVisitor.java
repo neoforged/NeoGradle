@@ -15,11 +15,16 @@ public class CopyingFileTreeVisitor implements FileVisitor {
     private final Path directory;
     private final boolean processDirectories;
 
-    public CopyingFileTreeVisitor(Path directory, boolean processDirectories) {
+    public CopyingFileTreeVisitor(Path directory, boolean processDirectories, boolean initDirectory) {
         this.directory = directory;
         this.processDirectories = processDirectories;
 
-        initTargetDirectory(directory);
+        if (initDirectory)
+            initTargetDirectory(directory);
+    }
+
+    public CopyingFileTreeVisitor(Path directory, boolean processDirectories) {
+        this(directory, processDirectories, true);
     }
 
     public CopyingFileTreeVisitor(File directory, boolean processDirectories) {

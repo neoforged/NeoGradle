@@ -1,0 +1,254 @@
+package net.neoforged.gradle.common.runtime.tasks;
+
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
+import net.neoforged.gradle.common.util.ReflectionUtils;
+import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
+import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
+import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeMultiArguments;
+import net.neoforged.gradle.util.ZipBuildingFileTreeVisitor;
+import org.gradle.api.GradleException;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
+import org.gradle.api.services.ServiceReference;
+import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.compile.CompileOptions;
+import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.internal.instrumentation.api.annotations.ToBeReplacedByLazyProperty;
+import org.gradle.internal.jvm.Jvm;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
+import org.gradle.jvm.toolchain.JavaToolchainService;
+import org.gradle.work.Incremental;
+import org.gradle.work.InputChanges;
+import org.jetbrains.annotations.Nullable;
+
+import javax.inject.Inject;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.zip.ZipOutputStream;
+
+@CacheableTask
+public abstract class RecompileSourceJar extends JavaCompile implements Runtime {
+
+    private final Property<JavaLanguageVersion> javaVersion;
+    private final Provider<JavaToolchainService> javaToolchainService;
+    private final RuntimeArguments arguments;
+    private final RuntimeMultiArguments multiArguments;
+
+    public RecompileSourceJar() {
+        super();
+
+        //We use a custom instance here that marks the sourcepath as an incremental field, allowing us to provide the compiler
+        //with all required elements directly while keeping incremental compile support for II.
+        ReflectionUtils.setFinalFieldUnchecked(this, "compileOptions", getObjectFactory().newInstance(RecompileOptions.class));
+
+        arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
+        multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
+
+        this.javaVersion = getProject().getObjects().property(JavaLanguageVersion.class);
+
+        final JavaToolchainService service = getProject().getExtensions().getByType(JavaToolchainService.class);
+        this.javaToolchainService = getProviderFactory().provider(() -> service);
+
+        getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
+
+        //And configure outputs default locations.
+        getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
+        getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("outputs.%s", extension)));
+        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("outputs.jar").map(d::file)));
+
+        getJavaLauncher().convention(getJavaToolChain().flatMap(toolChain -> {
+            if (!getJavaVersion().isPresent()) {
+                return toolChain.launcherFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(JavaLanguageVersion.of(Objects.requireNonNull(Jvm.current().getJavaVersion()).getMajorVersion())));
+            }
+
+            return toolChain.launcherFor(spec -> spec.getLanguageVersion().set(getJavaVersion()));
+        }));
+
+        setDescription("Recompiles an already existing decompiled java jar.");
+
+        getOptions().setAnnotationProcessorPath(getAnnotationProcessorPath());
+
+        getOptions().getGeneratedSourceOutputDirectory().convention(getOutputDirectory().map(directory -> directory.dir("generated/sources/annotationProcessor")));
+        getOptions().getHeaderOutputDirectory().convention(getOutputDirectory().map(directory -> directory.dir("generated/sources/headers")));
+
+        final JavaPluginExtension javaPluginExtension = getProject().getExtensions().getByType(JavaPluginExtension.class);
+
+        getModularity().getInferModulePath().convention(javaPluginExtension.getModularity().getInferModulePath());
+        getJavaCompiler().convention(getJavaVersion().flatMap(javaVersion -> service.compilerFor(javaToolchainSpec -> javaToolchainSpec.getLanguageVersion().set(javaVersion))));
+
+        getDestinationDirectory().set(getOutputDirectory().map(directory -> directory.dir("classes")));
+
+        getOptions().setWarnings(false);
+        getOptions().setVerbose(false);
+        getOptions().setDeprecation(false);
+        getOptions().setIncremental(true);
+        getOptions().getIncrementalAfterFailure().set(true);
+
+        setSource(getCompileFileRoot());
+
+        final ConfigurableFileCollection sourcePaths = getProject().files(
+            getAdditionalInputFileRoot()
+        );
+
+        getOptions().setSourcepath(sourcePaths);
+    }
+
+    @Override
+    @Nested
+    public RuntimeArguments getArguments() {
+        return arguments;
+    }
+
+    @Override
+    @Nested
+    public RuntimeMultiArguments getMultiArguments() {
+        return multiArguments;
+    }
+
+    @Override
+    public String getGroup() {
+        final String name = getRuntimeName().getOrElse("unknown");
+        return String.format("NeoGradle/Runtime/%s", name);
+    }
+
+    @Internal
+    public final Provider<JavaToolchainService> getJavaToolChain() {
+        return javaToolchainService;
+    }
+
+    @Nested
+    @Optional
+    @Override
+    public Property<JavaLanguageVersion> getJavaVersion() {
+        return this.javaVersion;
+    }
+
+    @Internal
+    public abstract ConfigurableFileCollection getAnnotationProcessorPath();
+
+    @Inject
+    @Override
+    public abstract ObjectFactory getObjectFactory();
+
+    @Inject
+    @Override
+    public abstract ProviderFactory getProviderFactory();
+
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCacheService();
+
+    @Incremental
+    @InputFiles
+    @CompileClasspath
+    @Optional
+    public abstract ConfigurableFileCollection getAdditionalInputFileRoot();
+
+    @Incremental
+    @InputFiles
+    @CompileClasspath
+    @Optional
+    public abstract ConfigurableFileCollection getCompileFileRoot();
+
+    @Incremental
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    @Optional
+    public abstract ConfigurableFileCollection getResources();
+
+    @Override
+    protected void compile(InputChanges inputs) {
+        try {
+            getCacheService().get()
+                    .cached(
+                            this,
+                            ICacheableJob.Default.directory(
+                                    getDestinationDirectory(),
+                                    () -> {
+                                        doCachedCompile(inputs);
+                                    }
+                            )
+                    )
+                    .withStage(
+                        ICacheableJob.Staged.file("collect",  (v) -> repackageJar(), getOutput())
+                    )
+                .execute();
+        } catch (IOException e) {
+            throw new GradleException("Failed to recompile!", e);
+        }
+    }
+
+    private void doCachedCompile(InputChanges inputs) throws IOException
+    {
+        super.compile(inputs);
+
+        final FileTree output = this.getDestinationDirectory().getAsFileTree();
+        output.visit(details -> {
+            if (details.isDirectory())
+                return;
+
+            final String relativePath = details.getRelativePath().getPathString();
+            final String sourceFilePath;
+            if (!relativePath.contains("$")) {
+                sourceFilePath = relativePath.substring(0, relativePath.length() - ".class".length()) + ".java";
+            } else {
+                sourceFilePath = relativePath.substring(0, relativePath.indexOf('$')) + ".java";
+            }
+
+            if (!getAdditionalInputFileRoot().getAsFileTree().matching(pattern -> pattern.include(sourceFilePath))
+                    .isEmpty()) {
+                getLogger().debug("Deleting additional input file.");
+                details.getFile().delete();
+            }
+        });
+    }
+
+    private File repackageJar() throws IOException
+    {
+        final FileTree output = this.getDestinationDirectory().getAsFileTree();
+        final File outputJar = ensureFileWorkspaceReady(getOutput());
+        try(final var fileStream = new FileOutputStream(outputJar);
+            final var zipStream = new ZipOutputStream(fileStream))
+        {
+            final ZipBuildingFileTreeVisitor visitor = new ZipBuildingFileTreeVisitor(zipStream);
+            output.visit(visitor);
+            getResources().getAsFileTree().visit(visitor);
+        }
+        return outputJar;
+    }
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getArchiveOperations().zipTree(it));
+    }
+
+    public static abstract class RecompileOptions extends CompileOptions {
+
+        @Inject
+        public RecompileOptions(final ObjectFactory objectFactory)
+        {
+            super(objectFactory);
+        }
+
+        @Incremental
+        @Optional
+        @IgnoreEmptyDirectories
+        @PathSensitive(PathSensitivity.RELATIVE)
+        @InputFiles
+        @ToBeReplacedByLazyProperty
+        @Override
+        public @Nullable FileCollection getSourcepath()
+        {
+            return super.getSourcepath();
+        }
+    }
+}

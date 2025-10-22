@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.runs.ide.extensions;
 
-import net.minecraftforge.gdi.annotations.ProjectGetter;
+import net.neoforged.gdi.annotations.ProjectGetter;
 import net.neoforged.gradle.dsl.common.runs.ide.extensions.IdeaRunExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import org.gradle.api.Project;
@@ -11,7 +11,7 @@ import javax.inject.Inject;
 public abstract class IdeaRunExtensionImpl implements IdeaRunExtension {
 
     private final Project project;
-    private final Run run;
+    private final Run     run;
 
     @Inject
     public IdeaRunExtensionImpl(Project project, Run run) {

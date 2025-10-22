@@ -1,9 +1,9 @@
 package net.neoforged.gradle.dsl.common.runs.run;
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElement;
-import net.minecraftforge.gdi.ConfigurableDSLElement
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.BaseDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input

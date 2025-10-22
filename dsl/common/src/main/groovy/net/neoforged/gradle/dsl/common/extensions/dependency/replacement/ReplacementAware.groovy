@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.extensions.dependency.replacement
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DefaultMethods
+import net.neoforged.gdi.annotations.DefaultMethods
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.tasks.TaskProvider

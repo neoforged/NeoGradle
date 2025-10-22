@@ -1,6 +1,6 @@
 package net.neoforged.gradle.dsl.common.tasks.specifications
 
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFileProperty
@@ -57,7 +57,7 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
      *
      * @return The path to the console log file.
      */
-    @Internal
+    @OutputFile
     @DSLProperty
     RegularFileProperty getConsoleLogFile();
 

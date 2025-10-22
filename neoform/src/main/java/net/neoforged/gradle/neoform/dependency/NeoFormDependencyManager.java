@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * This class installs a dependency replacement handler that replaces the following dependencies with the output
+ * This class installs a dependency replacement handler that replaces the following dependencies with the outputs
  * of a NeoForm runtime.
  * <p>
  * <ul>
@@ -58,11 +58,11 @@ public final class NeoFormDependencyManager {
         NeoFormRuntimeExtension runtimeExtension = project.getExtensions().getByType(NeoFormRuntimeExtension.class);
         NeoFormRuntimeDefinition runtime = runtimeExtension.maybeCreateFor(dependency, builder -> {
             builder.withDistributionType(target.distribution).withNeoFormVersion(target.version);
-            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder);
+            NeoFormRuntimeUtils.configureDefaultRuntimeSpecBuilder(project, builder, project.files());
         });
 
         return Optional.of(
-                new ReplacementResult(
+                new NeoFormReplacementResult(
                         project,
                         runtime.getSourceJarTask(),
                         runtime.getRawJarTask(),
@@ -71,7 +71,8 @@ public final class NeoFormDependencyManager {
                                 "neoform_mdk_" + target.distribution.getName().toLowerCase()
                         ),
                         runtime.getMinecraftDependenciesConfiguration(),
-                        Collections.emptySet()
+                        Collections.emptySet(),
+                        runtime
                 ));
     }
 

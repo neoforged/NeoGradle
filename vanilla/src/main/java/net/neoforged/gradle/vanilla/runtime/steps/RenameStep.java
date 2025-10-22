@@ -31,18 +31,33 @@ import java.util.stream.Collectors;
 public class RenameStep implements IStep {
 
     @Override
-    public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull File workingDirectory, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
+    public TaskProvider<? extends Runtime> buildTask(
+        VanillaRuntimeDefinition definition,
+        TaskProvider<? extends WithOutput> inputProvidingTask,
+        @NotNull File minecraftCache,
+        @NotNull File workingDirectory,
+        @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks,
+        @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks,
+        @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator)
+    {
         final Mappings mappingsExtension = definition.getSpecification().getProject().getExtensions().getByType(Mappings.class);
         final Map<String, String> mappingVersionData = Maps.newHashMap();
         mappingVersionData.put(NamingConstants.Version.VERSION, definition.getSpecification().getMinecraftVersion());
         mappingVersionData.put(NamingConstants.Version.MINECRAFT_VERSION, definition.getSpecification().getMinecraftVersion());
         mappingVersionData.putAll(mappingsExtension.getVersion().get());
 
-        final TaskProvider<? extends WithOutput> artifact = inputProvidingTask;
+        final TaskProvider<? extends WithOutput> artifact = gameArtifactTasks.get(definition.getSpecification().getDistribution().getGameArtifact());
 
         final Set<TaskProvider<? extends Runtime>> additionalTasks = Sets.newHashSet();
         final TaskBuildingContext context = new TaskBuildingContext(
-                definition.getSpecification().getProject(), "mapGame", taskName -> CommonRuntimeUtils.buildTaskName(definition.getSpecification(), taskName), artifact, definition.getGameArtifactProvidingTasks(), mappingVersionData, additionalTasks, definition
+            definition.getSpecification().getProject(),
+            "mapGame",
+            taskName -> CommonRuntimeUtils.buildTaskName(definition.getSpecification(), taskName),
+            artifact,
+            definition.getGameArtifactProvidingTasks(),
+            mappingVersionData,
+            additionalTasks,
+            definition
         );
 
         final TaskProvider<? extends Runtime> namingTask = buildApplyCompiledMappingsTask(context);
@@ -51,7 +66,7 @@ public class RenameStep implements IStep {
         namingTask.configure(
                 task -> {
                     CommonRuntimeUtils.buildArguments(task.getArguments(), definition, RenameConstants.DEFAULT_RENAME_VALUES, pipelineTasks, task, Optional.of(artifact));
-                    task.getOutput().set(task.getOutputDirectory().file("output.jar"));
+                    task.getOutput().set(task.getOutputDirectory().file("outputs.jar"));
                 }
         );
 

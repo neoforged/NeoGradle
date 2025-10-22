@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import net.minecraftforge.gdi.annotations.DSLProperty;
+import net.neoforged.gdi.annotations.DSLProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;

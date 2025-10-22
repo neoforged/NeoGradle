@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.dummy;
 
+import groovy.lang.Closure;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;
 import net.neoforged.gradle.util.ResolvedDependencyUtils;

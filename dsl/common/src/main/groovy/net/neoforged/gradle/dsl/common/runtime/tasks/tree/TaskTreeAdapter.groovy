@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.runtime.tasks.tree
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DefaultMethods
+import net.neoforged.gdi.annotations.DefaultMethods
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.tasks.WithOutput

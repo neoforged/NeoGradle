@@ -5,8 +5,10 @@ import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.runtime.tasks.action.ExtractFileAction;
 import net.neoforged.gradle.common.util.VersionJson;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
@@ -52,7 +54,8 @@ public abstract class ExtractNatives extends DefaultRuntime {
         final VersionJson versionJson = getVersionJson().get();
 
         final WorkQueue executor = getWorkerExecutor().noIsolation();
-        final File librariesDirectory = ensureFileWorkspaceReady(getLibrariesDirectory().get().getAsFile());
+        //Because download and extract operate on the same directory, we can be sure that this already exists and does not need cleaning!
+        final File librariesDirectory = getLibrariesDirectory().get().getAsFile();
 
         versionJson.getNatives().forEach(library -> {
             final File outputFile = new File(librariesDirectory, library.getPath());
@@ -86,4 +89,10 @@ public abstract class ExtractNatives extends DefaultRuntime {
 
     @OutputDirectory
     public abstract DirectoryProperty getLibrariesDirectory();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getObjectFactory().fileTree().from(it));
+    }
 }

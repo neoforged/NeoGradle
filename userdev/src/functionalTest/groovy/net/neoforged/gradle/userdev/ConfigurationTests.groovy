@@ -28,7 +28,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
             
             runs {
                 client {
-                    modSources.add(project.getSourceSets().main)
+                    modSources.add(project.sourceSets.main)
                 }
             }
             
@@ -97,7 +97,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
             
             runs {
                 client {
-                    modSources.add(project.getSourceSets().main)
+                    modSources.add(project.sourceSets.main)
                 }
             }
             

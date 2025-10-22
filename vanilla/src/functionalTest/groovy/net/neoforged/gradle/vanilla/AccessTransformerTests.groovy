@@ -45,13 +45,13 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
             it.stacktrace()
         }
 
         then:
         initialRun.task(":clientApplyUserAccessTransformer").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the vanilla runtime supports loading ats from multiple files"() {
@@ -90,12 +90,12 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":clientApplyUserAccessTransformer").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the vanilla runtime supports loading ats from multiple files named the same in different directories"() {
@@ -134,11 +134,11 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks(':compileJava')
         }
 
         then:
         initialRun.task(":clientApplyUserAccessTransformer").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 }

@@ -2,7 +2,9 @@ package net.neoforged.gradle.userdev.runtime.tasks;
 
 import net.neoforged.gradle.common.runtime.tasks.DefaultRuntime;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 
 import java.io.File;
@@ -17,7 +19,7 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
     public ClasspathSerializer() {
         getOutputFileName().convention("classpath.txt");
 
-        getTargetFile().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.lcp").map(d::file)));
+        getTargetFile().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("outputs.lcp").map(d::file)));
         getOutput().set(getTargetFile());
 
         setGroup("NeoGradle/Runs");
@@ -51,4 +53,10 @@ public abstract class ClasspathSerializer extends DefaultRuntime {
 
     @Internal
     public abstract RegularFileProperty getTargetFile();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getObjectFactory().fileTree().from(it));
+    }
 }

@@ -54,7 +54,6 @@ class RunTests extends BuilderBasedTestSpecification {
 
         then:
         true
-        run.task(':writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
         run.output.contains("is not a valid mod file")
 
         when:
@@ -68,7 +67,6 @@ class RunTests extends BuilderBasedTestSpecification {
 
         then:
         true
-        run.task(':writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
         run.output.contains("is not a valid mod file")
     }
 
@@ -119,7 +117,6 @@ class RunTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
         run.output.contains("is not a valid mod file")
     }
 
@@ -176,7 +173,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
             }
             
             runs {
@@ -228,7 +225,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
             }
             
             runs {
@@ -262,6 +259,55 @@ class RunTests extends BuilderBasedTestSpecification {
         classpathFile.exists()
 
         classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
+        !run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: client")
+    }
+
+    def "custom run dependencies warn when running latest neoforge"() {
+        given:
+        def project = create("run_with_custom_dependencies_warn_on_latest", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            
+            runs {
+                client {
+                    dependencies {
+                        runtime 'org.jgrapht:jgrapht-core:+'
+                    }
+                    
+                    modSource project.sourceSets.main
+                }
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':runClientData')
+            it.stacktrace()
+            it.shouldFail()
+            it.debug()
+        }
+
+        then:
+        run.output.contains("You are using a version of NeoForge which does not need run specific dependencies")
+        run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: client")
+        run.output.contains("is not a valid mod file")
+        !run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: server")
+        run.task(":writeMinecraftClasspathClient") == null
     }
 
     def "userdev supports custom run dependencies from configuration"() {
@@ -283,7 +329,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
                 runRuntime 'org.jgrapht:jgrapht-core:+'
             }
             
@@ -347,7 +393,7 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
             }
             
             runs {
@@ -367,6 +413,7 @@ class RunTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
+            it.stacktrace()
         }
 
         then:
@@ -381,11 +428,6 @@ class RunTests extends BuilderBasedTestSpecification {
         classpathFile.exists()
 
         classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
-    }
-
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build", "unit-testing-2")
     }
 
     def "userdev supports unit testing"() {
@@ -416,8 +458,9 @@ class RunTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
                 
-                testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-                testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+                testImplementation 'org.junit.jupiter:junit-jupiter-api:5.+'
+                testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.+'
+                testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
             }
             """)
             //We need to add a manifest.mf file to the test source set

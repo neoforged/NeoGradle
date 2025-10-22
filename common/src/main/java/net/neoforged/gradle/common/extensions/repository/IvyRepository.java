@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.extensions.repository;
 
-import net.minecraftforge.gdi.ConfigurableDSLElement;
+import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.util.ConfigurationPhaseFileUtils;
 import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
 import net.neoforged.gradle.dsl.common.extensions.repository.EntryDefinition;

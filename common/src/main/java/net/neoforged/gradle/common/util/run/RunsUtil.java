@@ -6,15 +6,16 @@ import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.tasks.RenderDocDownloaderTask;
-import net.neoforged.gradle.common.util.*;
+import net.neoforged.gradle.common.util.ClasspathUtils;
+import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.SourceSetUtils;
+import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.tools.RenderDocTools;
 import net.neoforged.gradle.dsl.common.runs.idea.extensions.IdeaRunsExtension;
 import net.neoforged.gradle.dsl.common.runs.run.Run;
 import net.neoforged.gradle.dsl.common.runs.run.RunDevLoginOptions;
-import net.neoforged.gradle.eclipse.EclipseMetadataReader;
-import net.neoforged.gradle.eclipse.IPropertyDelegate;
 import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
@@ -23,7 +24,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.*;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -393,7 +393,8 @@ public class RunsUtil {
     public record PreparedUnitTestEnvironment(File programArgumentsFile, File jvmArgumentsFile) {
     }
 
-    public static PreparedUnitTestEnvironment prepareUnitTestEnvironment(Run run,
+    public static PreparedUnitTestEnvironment prepareUnitTestEnvironment(
+        Run run,
                                                                          List<String> jvmArguments,
                                                                          List<String> programArguments) {
         return new PreparedUnitTestEnvironment(
@@ -549,7 +550,7 @@ public class RunsUtil {
             throw new IllegalStateException("Could not find IntelliJ project directory for project " + project);
         }
 
-        // Find configured output path
+        // Find configured outputs path
         File miscXml = new File(ideaDir, "misc.xml");
         String outputDirUrl = evaluateXPath(miscXml, IDEA_OUTPUT_XPATH);
         if (outputDirUrl == null) {
@@ -557,7 +558,7 @@ public class RunsUtil {
             outputDirUrl = "file://$PROJECT_DIR$/out";
         }
 
-        // The output dir can start with something like "//C:\"; File can handle it.
+        // The outputs dir can start with something like "//C:\"; File can handle it.
         final String outputDirTemplate = outputDirUrl.replaceAll("^file:", "");
         return project.getLayout().dir(project.provider(() -> new File(outputDirTemplate.replace("$PROJECT_DIR$", project.getProjectDir().getAbsolutePath()))));
     }
@@ -619,7 +620,7 @@ public class RunsUtil {
         //buildLayout.getBuildDirectory().map(dir -> dir.dir("idea").dir("resources").dir(sourceSet.getName()));
         //However this has issues at runtime with FML trying to load the old not interpolated mods.toml etc.
         //It works smoothly if a user has an excluded templates directory configured for his templates in process resources however.
-        //To make it work transparently we switched back to this interpolation mechanic where we write into IDEAs output directory.
+        //To make it work transparently we switched back to this interpolation mechanic where we write into IDEAs outputs directory.
         return getRunWithIdeaDirectory(sourceSet, compileType, "resources");
     }
 
@@ -646,12 +647,12 @@ public class RunsUtil {
     public static Provider<String> buildRunWithEclipseModClasses(final Provider<Multimap<String, SourceSet>> compileSourceSets) {
         return buildModClasses(compileSourceSets, sourceSet -> {
             final Project project = SourceSetUtils.getProject(sourceSet);
-            final IPropertyDelegate<File> eclipseBaseSourceOutputDir = EclipseMetadataReader.getBaseSourceOutputDirFor(project);
+            final EclipseModel eclipseModel = project.getExtensions().getByType(EclipseModel.class);
 
             final File conventionsDir = new File(project.getProjectDir(), "bin");
-            eclipseBaseSourceOutputDir.convention(conventionsDir);
+            eclipseModel.getClasspath().getBaseSourceOutputDir().fileProvider(project.provider(() -> conventionsDir));
 
-            final File parentDir = eclipseBaseSourceOutputDir.get();
+            final File parentDir = eclipseModel.getClasspath().getBaseSourceOutputDir().getAsFile().get();
             final File sourceSetDir = new File(parentDir, sourceSet.getName());
             return Stream.of(sourceSetDir);
         });

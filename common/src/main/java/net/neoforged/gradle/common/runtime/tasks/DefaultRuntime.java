@@ -33,10 +33,10 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
         //Sets up the base configuration for directories and outputs.
         getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
-        //And configure output default locations.
+        //And configure outputs default locations.
         getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-        getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension)).orElse("output.jar"));
-        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.jar").map(d::file)));
+        getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("outputs.%s", extension)).orElse("outputs.jar"));
+        getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("outputs.jar").map(d::file)));
 
         //Configure the default runtime data map:
         getRuntimeArguments().convention(getArguments().asMap().map(arguments -> {
@@ -85,12 +85,18 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
     protected void buildRuntimeArguments(final Map<String, Provider<String>> arguments) {
         arguments.computeIfAbsent("output", key -> newProvider(getOutput().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("outputDir", key -> newProvider(getOutputDirectory().get().getAsFile().getAbsolutePath()));
-        arguments.computeIfAbsent("outputExtension", key -> newProvider(getOutputFileName().get().substring(getOutputFileName().get().lastIndexOf('.') + 1)));
+        arguments.computeIfAbsent("outputExtension", key -> newProvider(getOutputFileName().get().contains(".") ? getOutputFileName().get().substring(getOutputFileName().get().lastIndexOf('.') + 1) : ""));
         arguments.computeIfAbsent("outputFileName", key -> newProvider(getOutputFileName().get()));
         arguments.computeIfAbsent("stepsDir", key -> newProvider(getStepsDirectory().get().getAsFile().getAbsolutePath()));
         arguments.computeIfAbsent("stepName", key -> getStepName());
         arguments.computeIfAbsent("side", key -> getDistribution().map(DistributionType::getName));
         arguments.computeIfAbsent("minecraftVersion", key -> getMinecraftVersion().map(Object::toString));
         arguments.computeIfAbsent("javaVersion", key -> getJavaLauncher().map(launcher -> launcher.getMetadata().getLanguageVersion().toString()));
+    }
+
+    @Override
+    public Provider<? extends FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getArchiveOperations().zipTree(it));
     }
 }

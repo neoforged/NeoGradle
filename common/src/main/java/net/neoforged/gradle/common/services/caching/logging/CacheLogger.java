@@ -39,6 +39,10 @@ public class CacheLogger {
         }
     }
 
+    public void error(String message) {
+        task.getLogger().error(" > [{}] ({}): {}", System.currentTimeMillis(), ProcessHandle.current().pid(), message);
+    }
+
     public void debug(String message, Exception e) {
         if (debug) {
             task.getLogger().lifecycle(" > [" + System.currentTimeMillis() + "] (" + ProcessHandle.current().pid() + "): " + message, e);

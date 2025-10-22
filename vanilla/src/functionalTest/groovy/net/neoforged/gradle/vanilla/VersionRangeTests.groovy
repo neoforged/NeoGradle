@@ -36,12 +36,12 @@ class VersionRangeTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('assemble')
             it.stacktrace()
         }
 
         then:
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":assemble").outcome == TaskOutcome.SUCCESS
     }
 
     def "the_vanilla_runtime_supports_loading_a_range_with_a_preferred_option_chosen"() {
@@ -70,12 +70,12 @@ class VersionRangeTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('assemble')
             it.stacktrace()
         }
 
         then:
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":assemble").outcome == TaskOutcome.SUCCESS
         initialRun.task(":cacheVersionManifest1.21.6").outcome == TaskOutcome.SUCCESS
     }
 }

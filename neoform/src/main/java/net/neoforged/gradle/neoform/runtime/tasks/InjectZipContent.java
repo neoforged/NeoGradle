@@ -52,13 +52,12 @@ public abstract class InjectZipContent extends DefaultRuntime {
                 .cached(
                         this,
                         ICacheableJob.Default.file(
-                                getOutput(),
-                                () -> {
-                                    final Provider<RegularFile> inputZipFile = getInjectionSource();
-                                    final File outputFile = ensureFileWorkspaceReady(getOutput());
+                            () -> {
+                                final Provider<RegularFile> inputZipFile = getInjectionSource();
+                                final File outputFile = ensureFileWorkspaceReady(getOutput());
 
-                                    injectCode(inputZipFile.get().getAsFile(), outputFile);
-                                }
+                                injectCode(inputZipFile.get().getAsFile(), outputFile);
+                            }, getOutput()
                         )
                 ).execute();
     }

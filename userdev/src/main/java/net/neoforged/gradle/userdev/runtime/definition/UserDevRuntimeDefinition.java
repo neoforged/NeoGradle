@@ -1,12 +1,14 @@
 package net.neoforged.gradle.userdev.runtime.definition;
 
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.definition.IDelegatingRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.tasks.DownloadAssets;
 import net.neoforged.gradle.common.runtime.tasks.ExtractNatives;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -112,30 +114,33 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
     protected void buildRunInterpolationData(RunImpl run, @NotNull MapProperty<String, String> interpolationData) {
         neoformRuntimeDefinition.buildRunInterpolationData(run, interpolationData);
 
-        if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
-            final Configuration modulesCfg = ConfigurationUtils
+        if (!userdevConfiguration.getFeatures().isPresent() ||
+            !userdevConfiguration.getFeatures().get().getIsNoLegacyClasspath().getOrElse(false)
+        ) {
+            if (userdevConfiguration.getModules() != null && !userdevConfiguration.getModules().get().isEmpty()) {
+                final Configuration modulesCfg = ConfigurationUtils
                     .temporaryUnhandledConfiguration(
-                            getSpecification().getProject().getConfigurations(),
-                            String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName()),
-                            userdevConfiguration.getModules().map(
-                                    modules -> modules.stream().map(
-                                            m -> getSpecification().getProject().getDependencies().create(m)
-                                    ).collect(Collectors.toList())
-                            )
+                        getSpecification().getProject().getConfigurations(),
+                        String.format("moduleResolverForgeUserDev%s", getSpecification().getVersionedName()),
+                        userdevConfiguration.getModules().map(
+                            modules -> modules.stream().map(
+                                m -> getSpecification().getProject().getDependencies().create(m)
+                            ).collect(Collectors.toList())
+                        )
                     );
 
-            interpolationData.put("modules", modulesCfg.getIncoming().getArtifacts().getResolvedArtifacts().map(artifacts -> artifacts.stream()
+                interpolationData.put("modules", modulesCfg.getIncoming().getArtifacts().getResolvedArtifacts().map(artifacts -> artifacts.stream()
                     .map(ResolvedArtifactResult::getFile)
                     .map(File::getAbsolutePath)
                     .collect(Collectors.joining(File.pathSeparator))));
-        }
+            }
 
-        final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer = getSpecification().getProject().getTasks().register(
+            final TaskProvider<ClasspathSerializer> minecraftClasspathSerializer = getSpecification().getProject().getTasks().register(
                 RunsUtil.createNameFor("writeMinecraftClasspath", run),
                 ClasspathSerializer.class,
                 task -> {
                     final Configuration lcpConfiguration = ConfigurationUtils.temporaryConfiguration(getSpecification().getProject(),
-                            RunsUtil.createNameFor("lcp", run));
+                        RunsUtil.createNameFor("lcp", run));
 
                     ConfigurationUtils.extendsFrom(run.getProject(), lcpConfiguration, neoformRuntimeDefinition.getMinecraftDependenciesConfiguration());
                     ConfigurationUtils.extendsFrom(run.getProject(), lcpConfiguration, this.additionalUserDevDependencies);
@@ -144,19 +149,43 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
                     //We depend on the configuration, this ensures that if we have dependencies with different versions in the
                     //dependency tree they are resolved to one version and are not added with different versions to the ConfigurableFileCollection
                     //on the input files.
-                    //Additionally, we need to directly depend on the output file of the userdevClasspathElementProducer, we can not convert
-                    //this to a dependency because it would be a transform of a configurable file collection that holds the output of the task
+                    //Additionally, we need to directly depend on the outputs file of the userdevClasspathElementProducer, we can not convert
+                    //this to a dependency because it would be a transform of a configurable file collection that holds the outputs of the task
                     //which requires running that task, which would be a cyclic dependency.
                     //This is a workaround to ensure that the path to the userdev classpath element is resolved correctly.
-                    //And added to the LCP, as we are now not transforming the CFC created from the output (we are not even creating a CFC)
+                    //And added to the LCP, as we are now not transforming the CFC created from the outputs (we are not even creating a CFC)
                     task.getInputFiles().from(lcpConfiguration);
                     task.getInputFiles().from(this.userdevClasspathElementProducer.flatMap(WithOutput::getOutput));
                 }
-        );
-        configureAssociatedTask(minecraftClasspathSerializer);
-        interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.flatMap(ClasspathSerializer::getTargetFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
+            );
+            configureAssociatedTask(minecraftClasspathSerializer);
+            interpolationData.put("minecraft_classpath_file", minecraftClasspathSerializer.flatMap(ClasspathSerializer::getTargetFile).map(RegularFile::getAsFile).map(File::getAbsolutePath));
 
-        run.getPostSyncTasks().add(minecraftClasspathSerializer);
+            run.getPostSyncTasks().add(minecraftClasspathSerializer);
+        }
+    }
+
+    @Override
+    public void validateRun(final RunImpl run)
+    {
+        if (userdevConfiguration.getFeatures().isPresent() &&
+            userdevConfiguration.getFeatures().get().getIsNoLegacyClasspath().getOrElse(false)
+        )
+        {
+            ProjectUtils.afterEvaluate(getSpecification().getProject(), () -> {
+                if (!run.getDependencies().getRuntimeConfiguration().getResolvedConfiguration().getResolvedArtifacts().isEmpty()) {
+                    final IProblemReporter reporter = getSpecification().getProject().getExtensions().getByType(IProblemReporter.class);
+                    reporter.reporting(problem -> problem
+                            .id("deprecated-method", "Deprecated method")
+                            .contextualLabel("Run.getDependencies().runtime() in run: %s".formatted(run.getName()))
+                            .details("You are using a version of NeoForge which does not need run specific dependencies, they are loaded by default from your classpath.")
+                            .solution("Remove your run specific dependencies block.")
+                            .section("common-dep-run-specific-dependency-management"),
+                        getSpecification().getProject().getLogger()
+                    );
+                }
+            });
+        }
     }
 
     @Override

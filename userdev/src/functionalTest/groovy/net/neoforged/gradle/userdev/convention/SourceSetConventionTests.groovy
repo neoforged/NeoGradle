@@ -390,7 +390,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
             """)
@@ -433,7 +433,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
             
@@ -480,7 +480,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
                 localRuntime 'org.jgrapht:jgrapht-core:+'
             }
             
@@ -521,7 +521,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.8.+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
             }
             

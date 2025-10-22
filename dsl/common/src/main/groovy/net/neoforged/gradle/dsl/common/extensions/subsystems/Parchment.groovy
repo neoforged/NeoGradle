@@ -1,8 +1,8 @@
 package net.neoforged.gradle.dsl.common.extensions.subsystems
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.ConfigurableDSLElement
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.ConfigurableDSLElement
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -48,18 +48,10 @@ interface Parchment extends ConfigurableDSLElement<Parchment> {
     Property<String> getMappingsVersion();
 
     /**
-     * If enabled (the default), the parchment repository will automatically be added to the project,
-     * if {@link #getIsEnabled()} is true.
+     * If enabled (the default), the parchment repository will automatically be added to the project.
      */
     @Internal
     @DSLProperty
     Property<Boolean> getAddRepository();
-
-    /**
-     * Enables or disables the system. It is enabled by default if a {@link #getParchmentArtifact()} is specified.
-     */
-    @Input
-    @DSLProperty
-    Property<Boolean> getIsEnabled();
 
 }

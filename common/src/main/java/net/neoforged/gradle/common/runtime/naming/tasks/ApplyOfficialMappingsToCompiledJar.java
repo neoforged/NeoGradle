@@ -16,6 +16,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends DefaultExecute 
         getArguments().putRegularFile("mappings", getMappings());
         getArguments().putRegularFile("libraries", getLibraries());
 
-        getOutput().convention(getOutputDirectory().map(d -> d.file("output.jar")));
+        getOutput().convention(getOutputDirectory().map(d -> d.file("outputs.jar")));
         
         getShouldReverseMappings().convention(true);
     }

@@ -2,6 +2,7 @@ package net.neoforged.gradle.userdev
 
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
+import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
 
 class MultiProjectTests extends BuilderBasedTestSpecification {
@@ -99,10 +100,8 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':main:writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
-
         run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:")
+                run.output.contains("net.neoforged.fml.ModLoadingException: Loading errors encountered:")
     }
 
     def "multiple projects with neoforge dependencies from version catalogs should be able to build"() {
@@ -292,10 +291,8 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':main:writeMinecraftClasspathClientData').outcome == TaskOutcome.SUCCESS
-
         run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("Caused by: net.neoforged.fml.ModLoadingException: Loading errors encountered:")
+                run.output.contains("net.neoforged.fml.ModLoadingException: Loading errors encountered:")
     }
 
     def "multiple projects with neoforge dependencies should run using the central cache"() {

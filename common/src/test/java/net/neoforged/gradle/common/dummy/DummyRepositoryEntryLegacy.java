@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.dummy;
 
 import com.google.common.collect.ImmutableSet;
+import groovy.lang.Closure;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryEntryLegacy;
 import net.neoforged.gradle.dsl.common.extensions.repository.RepositoryReference;
 import net.neoforged.gradle.dsl.common.util.ModuleReference;

@@ -1,5 +1,6 @@
 package net.neoforged.gradle.neoform.util;
 
+import net.neoforged.gradle.common.util.JavaSourceTransformAdapterUtils;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
@@ -7,6 +8,7 @@ import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfiguration
 import net.neoforged.gradle.neoform.runtime.specification.NeoFormRuntimeSpecification;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -60,6 +62,8 @@ public final class NeoFormRuntimeUtils {
                 case "downloadServerMappings":
                     taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, spec.getMinecraftVersion());
                     break;
+                case "extractServer":
+                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_EXTRACTED_SERVER, spec.getMinecraftVersion());
             }
 
             String finalTaskName = taskName;
@@ -112,8 +116,7 @@ public final class NeoFormRuntimeUtils {
         return Optional.empty();
     }
     
-    public static void configureDefaultRuntimeSpecBuilder(Project project, NeoFormRuntimeSpecification.Builder builder) {
-        builder.withPostTaskAdapter("decompile", NeoFormAccessTaskAdapterUtils.createAccessTransformerAdapter(project));
-        builder.withPreTaskAdapter("recompile", NeoFormAccessTaskAdapterUtils.createInterfaceInjectionAdapter(project));
+    public static void configureDefaultRuntimeSpecBuilder(Project project, NeoFormRuntimeSpecification.Builder builder, ConfigurableFileCollection systemAccessTransformers) {
+        builder.withPreTaskAdapter("recompile", JavaSourceTransformAdapterUtils.createCustomizationsAdapter(project, systemAccessTransformers));
     }
 }

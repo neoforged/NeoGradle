@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class TaskHasher {
-    private final HashFunction hashFunction = Hashing.sha256();
+    private final HashFunction hashFunction = Hashing.md5();
     private final Hasher hasher = hashFunction.newHasher();
 
     private final Task task;
@@ -45,17 +45,7 @@ public final class TaskHasher {
             hasher.put(value, false); //We skin unknown types (mostly file collections)
         });
 
-        final Set<File> inputFiles = new HashSet<>();
-
-        for (File file : inputs.getFiles()) {
-            try (Stream<Path> pathStream = Files.walk(file.toPath())) {
-                for (Path path : pathStream.filter(Files::isRegularFile).toList()) {
-                    inputFiles.add(path.toFile());
-                }
-            }
-        }
-
-        final List<File> files = new ArrayList<>(inputFiles);
+        final List<File> files = new ArrayList<>(inputs.getFiles().getFiles());
         files.sort(Comparator.comparing(File::getAbsolutePath));
 
         for (File file : files) {

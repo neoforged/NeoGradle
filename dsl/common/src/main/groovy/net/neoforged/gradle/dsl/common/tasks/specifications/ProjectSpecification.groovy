@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.tasks.specifications
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.ProjectGetter
+import net.neoforged.gdi.annotations.ProjectGetter
 import org.gradle.api.Project
 import org.gradle.api.tasks.Internal
 

@@ -2,17 +2,14 @@ package net.neoforged.gradle.dsl.common.runs.type
 
 import com.google.gson.*
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.ConfigurableDSLElement
-import net.minecraftforge.gdi.NamedDSLElement
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.ConfigurableDSLElement
+import net.neoforged.gdi.NamedDSLElement
+import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runs.RunSpecification
 import net.neoforged.gradle.dsl.common.runs.run.Run
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.jetbrains.annotations.Nullable
 
 import javax.inject.Inject
 import java.lang.reflect.Type

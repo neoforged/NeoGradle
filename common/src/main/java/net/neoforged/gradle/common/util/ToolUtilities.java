@@ -76,6 +76,14 @@ public class ToolUtilities {
         ).getResolvedConfiguration().getResolvedArtifacts().iterator().next());
     }
 
+    public static Configuration resolveConfigurationFor(final Project project, final String tool) {
+        return ConfigurationUtils.temporaryUnhandledConfiguration(
+            project.getConfigurations(),
+            "ToolLookupFor" + ModuleDependencyUtils.toConfigurationName(tool),
+            project.getDependencies().create(tool)
+        );
+    }
+
     private static <T> T resolveTool(final Supplier<T> searcher) {
         //Return the resolved artifact
         return searcher.get();

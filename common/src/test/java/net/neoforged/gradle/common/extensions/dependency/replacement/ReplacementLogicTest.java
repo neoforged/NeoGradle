@@ -1,7 +1,9 @@
 package net.neoforged.gradle.common.extensions.dependency.replacement;
 
+import groovy.lang.Closure;
 import net.neoforged.gradle.common.extensions.IdeManagementExtension;
 import net.neoforged.gradle.common.tasks.DependencyGenerationTask;
+import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.ReplacementResult;
 import net.neoforged.gradle.dsl.common.extensions.repository.Entry;
 import net.neoforged.gradle.dsl.common.extensions.repository.Repository;

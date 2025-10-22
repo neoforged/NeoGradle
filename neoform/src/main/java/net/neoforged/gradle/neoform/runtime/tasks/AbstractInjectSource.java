@@ -41,7 +41,7 @@ public abstract class AbstractInjectSource {
     public abstract byte @Nullable [] tryReadFile(String path) throws IOException;
 
     /**
-     * Copy the contents of this source to the given zip output stream, while applying the filters
+     * Copy the contents of this source to the given zip outputs stream, while applying the filters
      * defined in {@link #getInclusionFilter()} and {@link #getExclusionFilter()}.
      * <p>
      * Files that have already been written to {@code out} should issue a warning, while directories

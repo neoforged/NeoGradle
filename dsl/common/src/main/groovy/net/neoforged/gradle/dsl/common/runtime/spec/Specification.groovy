@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.provider.Provider
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.annotations.NotNull
 
 import java.util.function.Consumer

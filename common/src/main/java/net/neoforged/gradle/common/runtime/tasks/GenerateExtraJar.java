@@ -7,22 +7,20 @@ import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.tasks.WithWorkspace;
 import net.neoforged.gradle.util.FileUtils;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -49,7 +47,7 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         getCacheService().get()
                 .cached(
                         this,
-                        ICacheableJob.Default.file(getOutput(), this::doRun)
+                        ICacheableJob.Default.file(this::doRun, getOutput())
                 ).execute();
     }
 
@@ -111,24 +109,8 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         }
     }
 
-    private Set<String> getFileIndex(ZipFile zipFile) throws IOException {
-        // Support "nested" ZIP-Files as in recent server jars
-        var embeddedVersionPath = readEmbeddedVersionPath(zipFile);
-        if (embeddedVersionPath != null) {
-            // Extract the embedded zip and instead index that
-            var versionJarEntry = zipFile.getEntry(embeddedVersionPath);
-            if (versionJarEntry == null) {
-                throw new IOException("version list in jar file " + zipFile + " refers to missing entry " + embeddedVersionPath);
-            }
-            var unbundledFile = new File(getTemporaryDir(), "unpacked.jar");
-            try (var in = zipFile.getInputStream(versionJarEntry)) {
-                Files.copy(in, unbundledFile.toPath());
-            }
-            try (ZipFile zf = new ZipFile(unbundledFile)) {
-                return getFileIndex(zf);
-            }
-        }
-
+    private Set<String> getFileIndex(ZipFile zipFile)
+    {
         var result = new HashSet<String>(zipFile.size());
 
         var entries = zipFile.entries();
@@ -159,39 +141,6 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
                );
     }
 
-    /**
-     * Server jars support embedding the actual jar file using an indirection via a version listing at
-     * META-INF/versions.list
-     * This method will try to read that list and return the path to the actual jar embedded in the bundle jar.
-     */
-    @Nullable
-    private static String readEmbeddedVersionPath(ZipFile zipFile) throws IOException {
-        var entry = zipFile.getEntry("META-INF/versions.list");
-        if (entry == null) {
-            return null;
-        }
-
-        var entries = new ArrayList<String>();
-        try (var in = zipFile.getInputStream(entry)) {
-            for (var line : new String(in.readAllBytes()).split("\n")) {
-                if (line.isBlank()) {
-                    continue;
-                }
-                String[] pts = line.split("\t");
-                if (pts.length != 3)
-                    throw new IOException("Invalid file list line: " + line + " in " + zipFile);
-                entries.add(pts[2]);
-            }
-        }
-
-        if (entries.isEmpty()) {
-            return null;
-        } else if (entries.size() == 1) {
-            return "META-INF/versions/" + entries.get(0);
-        } else {
-            throw new IOException("Version file list contains more than one entry in " + zipFile);
-        }
-    }
 
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
@@ -204,4 +153,10 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getMappings();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getArchiveOperations().zipTree(it));
+    }
 }

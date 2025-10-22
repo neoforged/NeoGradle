@@ -1,8 +1,8 @@
 package net.neoforged.gradle.dsl.common.extensions.subsystems
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.ConfigurableDSLElement
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.ConfigurableDSLElement
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -47,5 +47,17 @@ interface Recompiler extends ConfigurableDSLElement<Recompiler> {
     @Optional
     @DSLProperty
     Property<Boolean> getShouldFork();
+
+    /**
+     * Defines the type of compiler that should be used.
+     * Depending on the type of the compiler some of the options in this subsystem configuration class
+     * will have no effect.
+     *
+     * @return The compiler type.
+     */
+    @Input
+    @Optional
+    @DSLProperty
+    Property<RecompilerType> getType();
 
 }

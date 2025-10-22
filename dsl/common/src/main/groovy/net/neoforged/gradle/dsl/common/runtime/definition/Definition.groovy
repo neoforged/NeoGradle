@@ -5,6 +5,7 @@ import net.neoforged.gradle.dsl.common.runtime.spec.Specification
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime
 import net.neoforged.gradle.dsl.common.tasks.ArtifactProvider
 import net.neoforged.gradle.dsl.common.tasks.WithOutput
+import net.neoforged.gradle.dsl.common.tasks.specifications.InputFileSpecification
 import net.neoforged.gradle.dsl.common.util.GameArtifact
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
@@ -13,6 +14,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.annotations.NotNull
 
 @CompileStatic
@@ -32,7 +34,7 @@ interface Definition<S extends Specification> {
      *
      * @return The raw jar producing taskOutputs.
      */
-    @NotNull TaskProvider<? extends ArtifactProvider> getRawJarTask();
+    @NotNull <T extends WithOutput & InputFileSpecification> TaskProvider<T> getRawJarTask();
 
     /**
      * Gives access to the specification which created this definition.
@@ -54,7 +56,7 @@ interface Definition<S extends Specification> {
      *
      * @return The sources jar task.
      */
-    @NotNull TaskProvider<? extends ArtifactProvider> getSourceJarTask();
+    @NotNull <T extends WithOutput & InputFileSpecification> TaskProvider<T> getSourceJarTask();
 
     /**
      * Gives access to the tasks that produce the game artifacts of this runtime.
@@ -146,4 +148,20 @@ interface Definition<S extends Specification> {
      * @param sources The sources to add.
      */
     void additionalCompileSources(FileCollection sources);
+
+    /**
+     * Adds the sources to the compile sources.
+     *
+     * @param sources The sources to add.
+     */
+    void additionalCompileSources(Object sources);
+
+    /**
+     * The java version that is required to process this version.
+     * Primarily needed to determine the version of the game to compile for.
+     *
+     * @return The language version.
+     */
+    @NotNull
+    Provider<JavaLanguageVersion> getRequiredJavaVersion();
 }

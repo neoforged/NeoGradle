@@ -1,9 +1,9 @@
 package net.neoforged.gradle.dsl.common.runtime.extensions
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.ClosureEquivalent
-import net.minecraftforge.gdi.annotations.DSLProperty
-import net.minecraftforge.gdi.annotations.ProjectGetter
+import groovy.transform.stc.ClosureParams
+import net.neoforged.gdi.annotations.DSLProperty
+import net.neoforged.gdi.annotations.ProjectGetter
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification
 import net.neoforged.gradle.dsl.common.util.DistributionType
@@ -57,7 +57,6 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
      * @return The runtime definition, unbaked.
      */
-    @ClosureEquivalent
     D maybeCreate(Action<B> configurator);
 
     /**
@@ -69,7 +68,6 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
      * @return The runtime definition, unbaked.
      */
-    @ClosureEquivalent
     D maybeCreateFor(Dependency dependency, Action < B > configurator);
 
     /**
@@ -79,7 +77,6 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
      * @return The runtime definition, unbaked.
      */
-    @ClosureEquivalent
     D create(Action<B> configurator);
 
     /**
@@ -90,7 +87,6 @@ interface CommonRuntimes<S extends Specification, B extends Specification.Builde
      * @param configurator The configurator which consumes a builder that will create the specification which defines the runtime.
      * @return The runtime definition, unbaked.
      */
-    @ClosureEquivalent
     D create(Dependency dependency, Action<B> configurator);
 
     /**

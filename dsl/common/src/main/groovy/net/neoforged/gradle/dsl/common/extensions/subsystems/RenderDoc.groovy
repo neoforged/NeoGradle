@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.extensions.subsystems
 
-import net.minecraftforge.gdi.ConfigurableDSLElement
-import net.minecraftforge.gdi.annotations.DSLProperty
+import net.neoforged.gdi.ConfigurableDSLElement
+import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional

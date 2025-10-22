@@ -1,9 +1,9 @@
 package net.neoforged.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.BaseDSLElement
-import net.minecraftforge.gdi.annotations.DSLProperty
-import net.minecraftforge.gdi.annotations.ProjectGetter
+import net.neoforged.gdi.BaseDSLElement
+import net.neoforged.gdi.annotations.DSLProperty
+import net.neoforged.gdi.annotations.ProjectGetter
 import net.neoforged.gradle.dsl.common.runtime.naming.NamingChannel
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty

@@ -13,8 +13,8 @@ import java.util.List;
 
 public class RunManagerImpl extends DelegatingDomainObjectContainer<Run> implements RunManager {
 
-    private final List<Action<Run>> actions = new ArrayList<>();
-    private final List<Run> internalRuns = new ArrayList<>();
+    private final List<Action<Run>> actions      = new ArrayList<>();
+    private final List<Run>         internalRuns = new ArrayList<>();
 
     private static NamedDomainObjectContainer<Run> createAndRegisterContainer(Project project) {
         final NamedDomainObjectContainer<Run> container = project.container(Run.class, name -> project.getObjects().newInstance(RunImpl.class, project, name));

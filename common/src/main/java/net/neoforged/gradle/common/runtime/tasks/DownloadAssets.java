@@ -72,7 +72,7 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         getCache().get()
                 .cached(
                         this,
-                        ICacheableJob.Initial.file("assetIndex", getAssetIndexFile(), this::downloadAssetIndex)
+                        ICacheableJob.Initial.file("assetIndex", this::downloadAssetIndex, getAssetIndexFile())
                 )
                 .withStage(
                         ICacheableJob.Initial.directory("assets", assetsObjects, this::downloadAssets)

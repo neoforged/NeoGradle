@@ -35,7 +35,7 @@ public abstract class Patch extends DefaultRuntime {
     public void run() throws Throwable {
         getCacheService().get().cached(
                 this,
-                    ICacheableJob.Default.file(getOutput(), this::doRun)
+                    ICacheableJob.Default.file(this::doRun, getOutput())
                 ).execute();
     }
 

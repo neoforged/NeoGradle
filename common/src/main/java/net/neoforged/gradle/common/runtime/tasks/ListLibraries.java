@@ -1,24 +1,20 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
-import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.util.FileCacheUtils;
-import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.util.HashFunction;
 import net.neoforged.gradle.util.TransformerUtils;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.*;
-import org.gradle.workers.WorkQueue;
-import org.gradle.workers.WorkerExecutor;
 
-import javax.inject.Inject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
@@ -56,7 +52,6 @@ public abstract class ListLibraries extends DefaultRuntime {
     @ServiceReference(CachedExecutionService.NAME)
     public abstract Property<CachedExecutionService> getCacheService();
 
-    
     @TaskAction
     public void run() throws IOException {
         getCacheService().get()
@@ -65,7 +60,7 @@ public abstract class ListLibraries extends DefaultRuntime {
                         ICacheableJob.Initial.merging("collect", getLibrariesDirectory(), this::extractAndCollect)
                 )
                 .withStage(
-                        ICacheableJob.Staged.file("list", getOutput(), this::createList)
+                        ICacheableJob.Staged.file("list", this::createList, getOutput())
                 )
                 .execute();
     }
@@ -116,33 +111,7 @@ public abstract class ListLibraries extends DefaultRuntime {
         
         return FileList.read(bundleFs.getPath("META-INF", "libraries.list")).entries;
     }
-    
-    private Set<PathAndUrl> listDownloadJsonLibraries() {
-        JsonObject json = SerializationUtils.fromJson(getDownloadedVersionJsonFile().getAsFile().get(), JsonObject.class);
 
-        // Gather all the libraries
-        Set<PathAndUrl> artifacts = new HashSet<>();
-        for (JsonElement libElement : json.getAsJsonArray("libraries")) {
-            JsonObject library = libElement.getAsJsonObject();
-            
-            if (library.has("downloads")) {
-                JsonObject downloads = library.get("downloads").getAsJsonObject();
-                if (downloads.has("artifact")) {
-                    final JsonObject artifact = downloads.getAsJsonObject("artifact");
-                    artifacts.add(
-                            new PathAndUrl(
-                                    artifact.get("path").getAsString(),
-                                    artifact.get("url").getAsString(),
-                                    artifact.get("sha1").getAsString()
-                            )
-                    );
-                }
-            }
-        }
-        
-        return artifacts;
-    }
-    
     private Set<File> unpackAndListBundleLibraries(FileSystem bundleFs) throws IOException {
         final File outputDir = getLibrariesDirectory().get().getAsFile();
         
@@ -163,41 +132,25 @@ public abstract class ListLibraries extends DefaultRuntime {
                        }).collect(Collectors.toSet());
     }
     
-    private Set<File> downloadAndListJsonLibraries() throws IOException {
-        final Set<PathAndUrl> libraryCoordinates = listDownloadJsonLibraries();
-        final File outputDirectory = getLibrariesDirectory().get().getAsFile();
-        
-        final Set<File> result = new HashSet<>();
-
-        final WorkQueue executor = getWorkerExecutor().noIsolation();
-        for (PathAndUrl libraryCoordinate : libraryCoordinates) {
-            final File outputFile = new File(outputDirectory, libraryCoordinate.path);
-            executor.submit(DownloadFileAction.class, params -> {
-                params.getUrl().set(libraryCoordinate.url);
-                params.getShouldValidateHash().set(true);
-                params.getSha1().set(libraryCoordinate.hash);
-                params.getOutputFile().set(outputFile);
-                params.getIsOffline().set(getIsOffline());
-            });
-            result.add(outputFile);
-        }
-        executor.await();
-        
-        return result;
+    private Set<File> downloadAndListJsonLibraries() {
+        return getVersionJsonLibraries().getFiles();
     }
 
-    @Inject
-    protected abstract WorkerExecutor getWorkerExecutor();
-    
     @InputFile
     @Optional
     @PathSensitive(PathSensitivity.NONE)
     public abstract RegularFileProperty getServerBundleFile();
-    
-    @InputFile
+
+    @InputFiles
     @Optional
-    @PathSensitive(PathSensitivity.NONE)
-    public abstract RegularFileProperty getDownloadedVersionJsonFile();
+    @CompileClasspath
+    public abstract ConfigurableFileCollection getVersionJsonLibraries();
+
+    @Override
+    public Provider<FileTree> getOutputAsTree()
+    {
+        return getOutput().map(it -> getObjectFactory().fileTree().from(it));
+    }
     
     @OutputDirectory
     public abstract DirectoryProperty getLibrariesDirectory();

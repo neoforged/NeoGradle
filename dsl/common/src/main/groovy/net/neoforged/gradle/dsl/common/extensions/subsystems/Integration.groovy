@@ -1,6 +1,6 @@
 package net.neoforged.gradle.dsl.common.extensions.subsystems
 
-import net.minecraftforge.gdi.BaseDSLElement
+import net.neoforged.gdi.BaseDSLElement
 import org.gradle.api.provider.Property
 
 /**

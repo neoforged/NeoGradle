@@ -510,7 +510,10 @@ using [Gradle properties](https://docs.gradle.org/current/userguide/project_prop
 | `neogradle.subsystems.recompiler.args`       | Pass additional command line arguments to the Java compiler.                                                                         |
 | `neogradle.subsystems.recompiler.shouldFork` | Indicates whether or not a process fork should be used for the recompiler. (Default is true).                                        |
 
-## Run specific dependency management
+## <a id="common-dep-run-specific-dependency-management" /> Run specific dependency management
+> [!WARNING]
+> Minecraft Version 21.9 and later do not need Run Specific dependency management anymore. Please remove your gradle code. It is not used by NeoGradle anymore to configure NeoForge or FML
+
 This implements run specific dependency management for the classpath of a run.
 In the past this had to happen via a manual modification of the "minecraft_classpath" token, however tokens don't exist anymore as a component that can be configured on a run.
 It was as such not possible to add none FML aware libraries to your classpath of a run.

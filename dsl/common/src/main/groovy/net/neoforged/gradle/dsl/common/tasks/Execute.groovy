@@ -2,7 +2,7 @@ package net.neoforged.gradle.dsl.common.tasks
 
 import com.google.common.collect.Lists
 import groovy.transform.CompileStatic
-import net.minecraftforge.gdi.annotations.DefaultMethods
+import net.neoforged.gdi.annotations.DefaultMethods
 import net.neoforged.gradle.dsl.common.tasks.specifications.ExecuteSpecification
 import net.neoforged.gradle.dsl.common.util.RegexUtils
 import org.gradle.api.file.FileTree
@@ -97,6 +97,79 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         }) as Provider<List<String>>
     }
 
+    default void createScripts(
+            final List<String> jvmArgs,
+            final List<String> runArgs,
+            String executable,
+            String classPath,
+            String workingDirectory,
+            String mainClass
+    ) {
+        createLinuxScript(jvmArgs, runArgs, executable, classPath, workingDirectory, mainClass)
+        createWindowsScript(jvmArgs, runArgs, executable, classPath, workingDirectory, mainClass)
+    }
+
+    default void createLinuxScript(
+            final List<String> jvmArgs,
+            final List<String> runArgs,
+            String executable,
+            String classPath,
+            String workingDirectory,
+            String mainClass
+    ) {
+        // Compose the script content
+        String scriptName = mainClass.replace('.', '_') + ".sh"
+        File scriptFile = new File(workingDirectory, scriptName)
+        StringBuilder script = new StringBuilder()
+        script.append("#!/bin/bash\n")
+        script.append("cd \"").append(workingDirectory).append("\"\n")
+        script.append("exec \"").append(executable).append("\"")
+        for (String arg : jvmArgs) {
+            script.append(" ").append('"').append(arg.replace("\"", "\\\"")).append('"')
+        }
+        script.append(" -cp \"").append(classPath).append("\"")
+        script.append(" ").append(mainClass)
+        for (String arg : runArgs) {
+            script.append(" ").append('"').append(arg.replace("\"", "\\\"")).append('"')
+        }
+
+        // Write the script to file
+        scriptFile.text = script.toString()
+        // Make the script executable
+        scriptFile.setExecutable(true)
+    }
+
+    default void createWindowsScript(
+            final List<String> jvmArgs,
+            final List<String> runArgs,
+            String executable,
+            String classPath,
+            String workingDirectory,
+            String mainClass
+    ) {
+        // Compose the script content
+        String scriptName = mainClass.replace('.', '_') + ".bat"
+        File scriptFile = new File(workingDirectory, scriptName)
+        StringBuilder script = new StringBuilder()
+        script.append("@echo off\r\n")
+        script.append("cd /d \"").append(workingDirectory).append("\"\r\n")
+        script.append('"').append(executable).append('"')
+        for (String arg : jvmArgs) {
+            script.append(' "').append(arg.replace('"', '""')).append('"')
+        }
+        script.append(" -cp \"").append(classPath).append("\"")
+        script.append(" ").append(mainClass)
+        for (String arg : runArgs) {
+            script.append(' "').append(arg.replace('"', '""')).append('"')
+        }
+        script.append(" %*\r\n")
+
+        // Write the script to file
+        scriptFile.text = script.toString()
+        // Make the script executable (optional on Windows, but for consistency)
+        scriptFile.setExecutable(true)
+    }
+
     default void doExecute() throws Exception {
         final Provider<List<String>> jvmArgs = applyVariableSubstitutions(getJvmArguments())
         final Provider<List<String>> programArgs = applyVariableSubstitutions(getRuntimeProgramArguments())
@@ -126,6 +199,15 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 writer.println("Output file:       " + outputFile.getAbsolutePath())
                 writer.flush()
 
+                me.createScripts(
+                        jvmArgs.get(),
+                        programArgs.get(),
+                        executable.get(),
+                        me.getExecutingJar().get().getAsFile().getAbsolutePath(),
+                        me.getOutputDirectory().get().getAsFile().getAbsolutePath(),
+                        mainClass.get()
+                )
+
                 java.executable(executable.get())
                 java.setJvmArgs(jvmArgs.get())
                 java.setArgs(programArgs.get())
@@ -144,7 +226,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         private final boolean shouldLog;
 
         public LogLevelAwareOutputStream(OutputStream target, ExecuteSpecification.LogLevel minLevel, ExecuteSpecification.LogLevel currentLevel) {
-            this.target = target;
+            this.target = target
             this.shouldLog = minLevel.ordinal() > currentLevel.ordinal(); //Inverse selection logic, if current is error and min is warn then it should not log.
         }
 

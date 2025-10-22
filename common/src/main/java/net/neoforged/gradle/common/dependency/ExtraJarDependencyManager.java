@@ -94,13 +94,9 @@ public abstract class ExtraJarDependencyManager {
 
             final TaskProvider<GenerateExtraJar> extraJarTaskProvider = project.getTasks().register("create" + minecraftVersion + StringUtils.capitalize(dependency.getName()) + "ExtraJar", GenerateExtraJar.class, task -> {
                 task.getOriginalJar().set(tasks.get(GameArtifact.CLIENT_JAR).flatMap(WithOutput::getOutput));
-                task.getServerJar().set(tasks.get(GameArtifact.SERVER_JAR).flatMap(WithOutput::getOutput));
+                task.getServerJar().set(tasks.get(GameArtifact.EXTRACTED_SERVER_JAR).flatMap(WithOutput::getOutput));
                 task.getMappings().set(tasks.get(GameArtifact.CLIENT_MAPPINGS).flatMap(WithOutput::getOutput));
                 task.getOutput().set(project.getLayout().getBuildDirectory().dir("jars/extra/" + dependency.getName()).map(cacheDir -> cacheDir.dir(Objects.requireNonNull(minecraftVersion)).file( dependency.getName() + "-extra.jar")));
-
-                task.dependsOn(tasks.get(GameArtifact.CLIENT_JAR));
-                task.dependsOn(tasks.get(GameArtifact.SERVER_JAR));
-                task.dependsOn(tasks.get(GameArtifact.CLIENT_MAPPINGS));
             });
 
             return new ReplacementResult(

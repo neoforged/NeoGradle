@@ -20,7 +20,7 @@ enum DistributionType {
     /**
      * Defines the server distribution type, generally contains only the game logic code and game logic (data) assets.
      */
-    SERVER("server", GameArtifact.SERVER_JAR, false, true),
+    SERVER("server", GameArtifact.EXTRACTED_SERVER_JAR, false, true),
     /**
      * Defines the common distribution type, is a merged version of client and server distribution types, generally the client overrides the server.
      */

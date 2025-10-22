@@ -12,9 +12,9 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    def "assemble_supports_configuration_cache_build"() {
+    def "compile_supports_configuration_cache_build"() {
         given:
-        def project = create("assemble_supports_configuration_cache_build", {
+        def project = create("compile_supports_configuration_cache_build", {
             it.build("""
             java {
                 toolchain {
@@ -35,16 +35,16 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build') 
+            it.tasks('compileJava')
         }
 
         then:
-        run.task(':build').outcome == TaskOutcome.SUCCESS
+        run.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
     }
 
-    def "compile_supports_configuration_cache_build"() {
+    def "compile_supports_configuration_cache_build_and_is_reused"() {
         given:
-        def project = create("compile_supports_configuration_cache_build", {
+        def project = create("compile_supports_configuration_cache_build_and_is_reused", {
             it.build("""
             java {
                 toolchain {
@@ -75,17 +75,17 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
         when:
         def run = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         and:
         def secondaryRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         and:
         def thirdRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
@@ -94,11 +94,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
         thirdRun.task(':neoFormDecompile').outcome == TaskOutcome.FROM_CACHE
         thirdRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
-    }
-
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("build/test-temp")
     }
 
     def "run_tasks_supports_configuration_cache_build"() {

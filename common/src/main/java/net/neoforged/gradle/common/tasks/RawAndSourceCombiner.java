@@ -27,7 +27,7 @@ public abstract class RawAndSourceCombiner extends NeoGradleBase implements With
         try {
             Files.copy(input, output);
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Failed to copy: %s to output: %s", input.getAbsolutePath(), output.getAbsolutePath()), e);
+            throw new RuntimeException(String.format("Failed to copy: %s to outputs: %s", input.getAbsolutePath(), output.getAbsolutePath()), e);
         }
     }
 

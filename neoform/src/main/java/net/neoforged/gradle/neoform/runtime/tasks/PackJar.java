@@ -46,10 +46,10 @@ public abstract class PackJar extends Zip implements Runtime {
       //Sets up the base configuration for directories and outputs.
       getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
 
-      //And configure output default locations.
+      //And configure outputs default locations.
       getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
-      getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("output.%s", extension)).orElse("output.jar"));
-      getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("output.jar").map(d::file)));
+      getOutputFileName().convention(getArguments().getOrDefault("outputExtension", getProviderFactory().provider(() -> "jar")).map(extension -> String.format("outputs.%s", extension)).orElse("outputs.jar"));
+      getOutput().convention(getOutputDirectory().flatMap(d -> getOutputFileName().orElse("outputs.jar").map(d::file)));
 
       getOutputDirectory().finalizeValueOnRead();
    }

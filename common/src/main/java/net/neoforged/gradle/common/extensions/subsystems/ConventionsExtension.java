@@ -1,6 +1,6 @@
 package net.neoforged.gradle.common.extensions.subsystems;
 
-import net.minecraftforge.gdi.BaseDSLElement;
+import net.neoforged.gdi.BaseDSLElement;
 import net.neoforged.gradle.common.extensions.base.WithEnabledProperty;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Configurations;
@@ -14,7 +14,7 @@ import org.gradle.api.Project;
 
 import javax.inject.Inject;
 
-public abstract class ConventionsExtension extends WithEnabledProperty implements BaseDSLElement<Conventions>, Conventions {
+public abstract class ConventionsExtension extends WithEnabledProperty implements Conventions {
 
     private final Configurations configurations;
     private final SourceSets sourceSets;

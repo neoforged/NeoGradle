@@ -2,7 +2,7 @@ package net.neoforged.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
-import net.minecraftforge.gdi.BaseDSLElement
+import net.neoforged.gdi.BaseDSLElement
 import org.gradle.api.provider.Provider
 
 /**

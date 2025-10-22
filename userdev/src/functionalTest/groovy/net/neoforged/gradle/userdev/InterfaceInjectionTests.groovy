@@ -28,7 +28,14 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
-            it.file("src/main/resources/META-INF/iis.json", """{"net/minecraft/client/Minecraft": ["com/example/examplemod/MyInjectedInterface"]}""")
+            it.file("src/main/resources/META-INF/iis.json",
+                """\
+                {
+                    "net/minecraft/client/Minecraft": [
+                        "com/example/examplemod/MyInjectedInterface"
+                    ]
+                }
+                """.stripIndent())
             it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
                 package net.neoforged.gradle.userdev;
                 
@@ -53,13 +60,13 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
-            it.debug()
+            it.tasks('compileJava')
+            it.stacktrace()
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the userdev runtime supports loading iis from a file after the dependencies block"() {
@@ -103,12 +110,12 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the userdev runtime supports loading iis from multiple files"() {
@@ -162,12 +169,12 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def "the userdev runtime supports loading iis from multiple files named the same in different directories"() {
@@ -221,11 +228,71 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def initialRun = project.run {
-            it.tasks('build')
+            it.tasks('compileJava')
         }
 
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
-        initialRun.task(":build").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def "the userdev runtime includes all recompile dependencies when using JST"() {
+        given:
+        def project = create("userdev_includes_all_recompile_dependencies", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
+            minecraft.interfaceInjections.file rootProject.file('src/main/resources/iis.json')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/resources/META-INF/iis.json", """{"net/minecraft/client/Minecraft": ["com/example/examplemod/MyInjectedInterface"]}""")
+            it.file("src/main/resources/iis.json", """{"net/minecraft/client/Minecraft": ["com/example/examplemod/MySecondaryInterface"]}""")
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        Minecraft.getInstance().doSomething();
+                        Minecraft.getInstance().doSecondSomething();
+                    }
+                }
+            """)
+            it.file("src/main/java/com/example/examplemod/MyInjectedInterface.java", """
+                package com.example.examplemod;
+                
+                public interface MyInjectedInterface {
+                    default void doSomething() { };
+                }
+            """)
+            it.file("src/main/java/com/example/examplemod/MySecondaryInterface.java", """
+                package com.example.examplemod;
+                
+                public interface MySecondaryInterface {
+                    default void doSecondSomething() { };
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('compileJava')
+        }
+
+        then:
+        initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        !initialRun.output.contains("Failed to create binary representation for type")
     }
 }

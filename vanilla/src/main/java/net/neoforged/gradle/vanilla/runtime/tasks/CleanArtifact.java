@@ -67,7 +67,7 @@ public abstract class CleanArtifact extends DefaultRuntime {
             outputZipStream.close();
             fileOutputStream.close();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create cleaned output jar", e);
+            throw new RuntimeException("Failed to create cleaned outputs jar", e);
         }
     }
 

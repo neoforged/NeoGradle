@@ -13,6 +13,7 @@ import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.interfaceinjection.InterfaceInjectionPublishing;
 import net.neoforged.gradle.common.rules.LaterAddedReplacedDependencyRule;
 import net.neoforged.gradle.common.runs.ide.IdeRunIntegrationManager;
+import net.neoforged.gradle.common.runs.run.RunImpl;
 import net.neoforged.gradle.common.runs.run.RunManagerImpl;
 import net.neoforged.gradle.common.runs.run.RunTypeManagerImpl;
 import net.neoforged.gradle.common.runs.tasks.RunsReport;
@@ -36,7 +37,6 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
-import net.neoforged.gradle.eclipse.EclipseMetadataReader;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -162,9 +162,6 @@ public class CommonProjectPlugin implements Plugin<Project> {
         ConventionConfigurator.configureConventions(project);
 
         project.afterEvaluate(this::applyAfterEvaluate);
-
-        //EMR Init
-        EclipseMetadataReader.init(project);
     }
 
     private void applyAfterEvaluate(final Project project) {
@@ -175,6 +172,12 @@ public class CommonProjectPlugin implements Plugin<Project> {
                 run,
                 !runs.getNames().contains(run.getName()) //Internal runs are not directly registered, so they don't show up in the name list.
         ));
+        //Second loop over all internal and public runs to validate their configuration and emit warnings.
+        runs.realizeAll(run -> {
+            if (run instanceof RunImpl runImpl) {
+                runImpl.performSdkValidation();
+            }
+        });
         IdeRunIntegrationManager.getInstance().apply(project);
     }
 }
