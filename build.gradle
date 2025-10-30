@@ -159,9 +159,7 @@ subprojects.forEach { subProject ->
 
         subProject.dependencies.testImplementation subProject.dependencies.gradleTestKit()
         subProject.dependencies.testImplementation "net.neoforged.trainingwheels:gradle-base:${project.trainingwheels_version}"
-        subProject.dependencies.testImplementation ("net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}") {
-            exclude group: 'org.spockframework', module: 'spock-core'
-        }
+        subProject.dependencies.testImplementation "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
 
         //Custom source set.
         evalSubProject.sourceSets.register('functionalTest') { SourceSet sourceSet ->
@@ -181,9 +179,7 @@ subprojects.forEach { subProject ->
         evalSubProject.dependencies.functionalTestImplementation("org.spockframework:spock-core:${project.spock_version}-groovy-${project.spock_groovy_version}") { spec ->
             spec.exclude group: 'org.codehaus.groovy'
         }
-        evalSubProject.dependencies.functionalTestImplementation ("net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}") {
-            exclude group: 'org.spockframework', module: 'spock-core'
-        }
+        evalSubProject.dependencies.functionalTestImplementation "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
         evalSubProject.dependencies.functionalTestImplementation project(':test-utils')
 
         //Configure the plugin metadata, so we can publish it.
