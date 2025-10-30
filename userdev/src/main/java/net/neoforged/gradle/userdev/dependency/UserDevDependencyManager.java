@@ -1,6 +1,7 @@
 package net.neoforged.gradle.userdev.dependency;
 
 import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.DependencyCollectorInjector;
 import net.neoforged.gradle.common.util.SourceSetUtils;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
@@ -52,7 +53,8 @@ public final class UserDevDependencyManager {
                                                 .map(parser::parse).collect(Collectors.toList()))
                                         .flatMap(TransformerUtils.combineAllLists(project, String.class, Function.identity()))
                                         .map(dependencyCoordinates -> {
-                                            final DependencyCollector collector = project.getObjects().dependencyCollector();
+                                            final DependencyCollectorInjector injector = project.getObjects().newInstance(DependencyCollectorInjector.class);
+                                            final DependencyCollector collector = injector.dependencyCollector();
                                             dependencyCoordinates.forEach(collector::add);
                                             return collector;
                                         })
