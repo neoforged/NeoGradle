@@ -165,7 +165,7 @@ public final class FileUtils {
             try (InputStream in = zipFile.getInputStream(entry)) {
                 return processor.apply(in);
             } catch (Throwable e) {
-                throw new IOException("Failed to process file " + pathInArchive + " from " + zipArchivePath);
+                throw new IOException("Failed to process file " + pathInArchive + " from " + zipArchivePath, e);
             }
         }
     }

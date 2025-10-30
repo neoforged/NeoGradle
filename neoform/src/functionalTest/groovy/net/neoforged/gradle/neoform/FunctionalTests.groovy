@@ -128,5 +128,56 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         secondRun.task(':neoFormRecompile').outcome == TaskOutcome.FROM_CACHE
     }
 
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("./decomp_oom")
+    }
+
+    def "neoform decompile detects OOM errors" () {
+        given:
+        def project = create "neoform-vf-oom-detection", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
+            }
+            """)
+
+            it.file("src/main/java/net/neoforged/gradle/neoform/FunctionalTests.java", """
+            package net.neoforged.gradle.neoform;
+            
+            import net.minecraft.client.Minecraft;
+            
+            public class FunctionalTests {
+                public static void main(String[] args) {
+                    System.out.println(Minecraft.getInstance().getClass().toString());
+                }
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.enableLocalBuildCache()
+            it.enableConfigurationCache()
+            it.property("neogradle.subsystems.decompiler.maxMemory", "1g") //We explicitly set a low memory availability to trigger the OOM
+        }
+
+        when:
+        def run = project.run {
+            it.tasks('compileJava')
+            it.shouldFail()
+        }
+
+        then:
+        run.task(':compileJava') == null
+        run.output.contains("NeoGradle detected a problem with your project: decompiler")
+
+
+    }
+
 
 }

@@ -1,0 +1,16 @@
+plugins {
+   id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+} 
+
+
+                buildCache {
+                    local {
+                        directory = new File('/var/home/marchermans/IdeaProjects/NeoGradle/neoform/./decomp_oom/neoform-vf-oom-detection/build-cache')
+                    }
+                } 
+
+
+            rootProject.name = 'neoform-vf-oom-detection'
+
+enableFeaturePreview "STABLE_CONFIGURATION_CACHE" 
+
