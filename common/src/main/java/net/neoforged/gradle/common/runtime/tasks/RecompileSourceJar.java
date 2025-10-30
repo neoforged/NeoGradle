@@ -48,7 +48,7 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
 
         //We use a custom instance here that marks the sourcepath as an incremental field, allowing us to provide the compiler
         //with all required elements directly while keeping incremental compile support for II.
-        ReflectionUtils.setFinalFieldUnchecked(this, "compileOptions", getObjectFactory().newInstance(RecompileOptions.class));
+        ReflectionUtils.setFinalFieldUncheckedWithAlternatives(this, getObjectFactory().newInstance(RecompileOptions.class), "compileOptions", "__options__");
 
         arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
