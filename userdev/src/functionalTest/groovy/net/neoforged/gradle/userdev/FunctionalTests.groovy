@@ -33,9 +33,6 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':neoFormRecompile')
-            it.gradleVersion("9.2.0")
-            it.stacktrace()
-            it.debug()
         }
 
         then:

@@ -5,18 +5,13 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Tools;
 import net.neoforged.gradle.util.ModuleDependencyUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.dsl.Dependencies;
 import org.gradle.api.artifacts.dsl.DependencyCollector;
-import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
 
 import java.io.File;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -41,7 +36,8 @@ public class ToolUtilities {
         //If we were to use the provider directly, for example via map, the lambda would need to capture
         //the project that converts the string to a dependency.
         //This breaks the configuration cache as Projects can not be serialized.
-        final DependencyCollector collector = project.getObjects().dependencyCollector();
+        final DependencyCollectorInjector inject = project.getObjects().newInstance(DependencyCollectorInjector.class);
+        final DependencyCollector collector = inject.dependencyCollector();
         collector.add(tool.map(project.getDependencies()::create));
         final Configuration config = ConfigurationUtils.temporaryUnhandledConfiguration(
                 project.getConfigurations(),

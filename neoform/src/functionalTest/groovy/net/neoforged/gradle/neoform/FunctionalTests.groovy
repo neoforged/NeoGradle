@@ -163,7 +163,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
             it.withGlobalCacheDirectory(tempDir)
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
-            it.property("neogradle.subsystems.decompiler.maxMemory", "1g") //We explicitly set a low memory availability to trigger the OOM
+            it.property("neogradle.subsystems.decompiler.maxMemory", "1500m") //We explicitly set a low memory availability to trigger the OOM
         }
 
         when:

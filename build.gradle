@@ -228,6 +228,12 @@ subprojects.forEach { subProject ->
             classpath = evalSubProject.sourceSets.functionalTest.runtimeClasspath
 
             it.extensions.add('test-source-set', evalSubProject.sourceSets.functionalTest)
+
+            if (evalSubProject.rootProject.getProperties().get("training-wheels.gradle-version") != null)
+                it.systemProperty(
+                        "training-wheels.gradle-version",
+                        evalSubProject.rootProject.getProperties().get("training-wheels.gradle-version")
+                )
         }
 
         //Wire them up so they run as part of the check task (and as such through build, but not through test!)

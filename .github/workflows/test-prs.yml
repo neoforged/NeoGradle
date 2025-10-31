@@ -1,5 +1,5 @@
 name: Test PRs
-run-name: Tests for PR ${{ github.event.pull_request.number }}
+run-name: Tests for ${{ github.event.pull_request.number || github.event.inputs.gradle-version }}
 
 on:
   pull_request:
@@ -8,17 +8,40 @@ on:
       - opened
       - ready_for_review
       - reopened
+  workflow_dispatch:
+    inputs:
+      gradle-version:
+        description: 'Gradle version to use (required for manual run)'
+        required: true
+        default: ''
 
 concurrency:
   group: ci-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
+  set-gradle-version:
+    name: Set Gradle Version
+    runs-on: ubuntu-latest
+    outputs:
+      gradle-version: ${{ steps.set-version.outputs.gradle-version }}
+    steps:
+      - name: Determine gradle version
+        id: set-version
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "gradle-version=default" >> "$GITHUB_OUTPUT"
+          else
+            echo "gradle-version=${{ github.event.inputs.gradle-version }}" >> "$GITHUB_OUTPUT"
+          fi
+
   setup:
     name: Setup
     runs-on: ubuntu-latest
+    needs: set-gradle-version
     outputs:
       tests-to-run: ${{ steps.test.outputs.tests-to-run }}
+      gradle-version: ${{ needs.set-gradle-version.outputs.gradle-version }}
     steps:
       - name: Checkout repository
         uses: neoforged/actions/checkout@main
@@ -42,10 +65,12 @@ jobs:
           #!/bin/bash
           ./.github/scripts/collect-tests.sh
 
-
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: set-gradle-version
+    env:
+      GRADLE_VERSION: ${{ needs.set-gradle-version.outputs.gradle-version }}
     steps:
       - name: Checkout repository
         uses: neoforged/actions/checkout@main
@@ -60,18 +85,20 @@ jobs:
         uses: gradle/gradle-build-action@v3
 
       - name: Build
-        run: ./gradlew --info -s -x assemble
+        run: ./gradlew --info -s -x assemble -Ptraining-wheels.gradle-version=${{ env.GRADLE_VERSION }}
 
   test:
     name: "${{ matrix.test.displayName }} (${{ matrix.os }})"
     runs-on: "${{ matrix.os }}-latest"
-    needs: setup
+    needs: [setup, set-gradle-version]
     strategy:
       max-parallel: 15
       fail-fast: false
       matrix:
         test: ${{ fromJSON(needs.setup.outputs.tests-to-run) }}
         os: [ubuntu, windows, macos]
+    env:
+      GRADLE_VERSION: ${{ needs.set-gradle-version.outputs.gradle-version }}
     steps:
       - name: Checkout repository
         uses: neoforged/actions/checkout@main
@@ -87,11 +114,11 @@ jobs:
 
       - name: Test
         if: ${{ matrix.test.filter != null }}
-        run: ./gradlew --info -s ${{ matrix.test.path }} --tests "${{ matrix.test.filter }}"
+        run: ./gradlew --info -s ${{ matrix.test.path }} --tests "${{ matrix.test.filter }}" -Ptraining-wheels.gradle-version=${{ env.GRADLE_VERSION }}
 
       - name: Test
         if: ${{ matrix.test.filter == null }}
-        run: ./gradlew --info -s ${{ matrix.test.path }}
+        run: ./gradlew --info -s ${{ matrix.test.path }} -Ptraining-wheels.gradle-version=${{ env.GRADLE_VERSION }}
 
       # Always upload test results
       - name: Merge Test Reports
@@ -123,7 +150,7 @@ jobs:
         run: |
           # We need to remove all invalid characters from the test name:
           # Invalid characters include:  Double quote ", Colon :, Less than <, Greater than >, Vertical bar |, Asterisk *, Question mark ?, Carriage return \r, Line feed \n, Backslash \, Forward slash /
-          NAME=$(echo "${{ matrix.test.displayName }}" | tr '":<>|*?\\/' '-' | tr -d ' ')          
+          NAME=$(echo "${{ matrix.test.displayName }}" | tr '":<>|*?\\/' '-' | tr -d ' ')
           # Check if the GITHUB_OUTPUT is set
           echo "Determined name to be $NAME-${{ matrix.os }}"
           if [ -z "$GITHUB_OUTPUT" ]; then
@@ -191,4 +218,3 @@ jobs:
         with:
           script: |
             core.setFailed('Test build failure!')
-
