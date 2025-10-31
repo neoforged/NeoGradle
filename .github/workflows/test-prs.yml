@@ -114,11 +114,11 @@ jobs:
 
       - name: Test
         if: ${{ matrix.test.filter != null }}
-        run: ./gradlew --info -s ${{ matrix.test.path }} --tests "${{ matrix.test.filter }}" -Ptraining-wheels.gradle-version=${{ env.GRADLE_VERSION }}
+        run: ./gradlew --info -s ${{ matrix.test.path }} --tests "${{ matrix.test.filter }}" "-Ptraining-wheels.gradle-version=${{ env.GRADLE_VERSION }}"
 
       - name: Test
         if: ${{ matrix.test.filter == null }}
-        run: ./gradlew --info -s ${{ matrix.test.path }} -Ptraining-wheels.gradle-version=${{ env.GRADLE_VERSION }}
+        run: ./gradlew --info -s ${{ matrix.test.path }} "-Ptraining-wheels.gradle-version=${{ env.GRADLE_VERSION }}"
 
       # Always upload test results
       - name: Merge Test Reports
