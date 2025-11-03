@@ -127,10 +127,4 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         secondRun.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
         secondRun.task(':neoFormRecompile').outcome == TaskOutcome.FROM_CACHE
     }
-
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("./decomp_oom")
-    }
-
 }
