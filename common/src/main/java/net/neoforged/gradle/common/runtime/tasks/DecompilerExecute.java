@@ -5,6 +5,7 @@ import net.neoforged.gradle.dsl.common.tasks.Execute;
 import org.gradle.api.GradleException;
 import org.gradle.api.problems.Problems;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Internal;
 
 import javax.inject.Inject;
 import java.io.ByteArrayOutputStream;
@@ -22,8 +23,14 @@ public abstract class DecompilerExecute extends DefaultExecute
     {
         return new BifurcatingOutputStream(
             super.createErrorOutputStream(),
-            this.detector
+            new OOMDetectorStream(this.detector)
         );
+    }
+
+    @Internal
+    public OOMDetector getDetector()
+    {
+        return detector;
     }
 
     @Override
@@ -41,7 +48,7 @@ public abstract class DecompilerExecute extends DefaultExecute
 
     private void detectError(boolean throwError)
     {
-        if (detector.failed()) {
+        if (getDetector().failed()) {
             //We failed, so we can access the project now, to get the reporter
             //We should not need to care about the config cache here,
             getProject().getExtensions().getByType(IProblemReporter.class)
@@ -59,35 +66,47 @@ public abstract class DecompilerExecute extends DefaultExecute
         }
     }
 
-    private static final class OOMDetector extends OutputStream {
-        private final ByteArrayOutputStream collectionDelegate = new ByteArrayOutputStream();
+    public static final class OOMDetector {
         private final StringBuilder resultBuilder = new StringBuilder();
 
         private OOMDetector() {
         }
 
+        private void addLog(String log) {
+            resultBuilder.append(log);
+        }
+
+        public boolean failed() {
+            return this.resultBuilder.toString().contains("java.lang.OutOfMemoryError");
+        }
+    }
+
+    public static final class OOMDetectorStream extends OutputStream {
+        private final OOMDetector detector;
+        private final ByteArrayOutputStream collectionDelegate = new ByteArrayOutputStream();
+
+        public OOMDetectorStream(final OOMDetector detector) {this.detector = detector;}
+
         @Override
-        public void write(final int b)
+        public void write(final int b) throws IOException
         {
-            this.collectionDelegate.write(b);
+            collectionDelegate.write(b);
         }
 
         @Override
         public void flush() throws IOException
         {
-            this.collectionDelegate.flush();
+            super.flush();
+            collectionDelegate.flush();
         }
 
         @Override
         public void close() throws IOException
         {
-            this.collectionDelegate.close();
+            super.close();
+            collectionDelegate.close();
 
-            this.resultBuilder.append(this.collectionDelegate);
-        }
-
-        public boolean failed() {
-            return this.resultBuilder.toString().contains("java.lang.OutOfMemoryError");
+            this.detector.addLog(collectionDelegate.toString());
         }
     }
 }
