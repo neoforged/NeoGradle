@@ -30,7 +30,6 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
             it.withGlobalCacheDirectory(tempDir)
             it.enableLocalBuildCache()
             it.enableConfigurationCache()
-            it.enableBuildScan()
         })
 
         when:

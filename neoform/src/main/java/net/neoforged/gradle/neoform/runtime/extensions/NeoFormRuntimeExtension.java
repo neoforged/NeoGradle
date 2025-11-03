@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.tasks.DecompilerExecute;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
 import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
@@ -184,7 +185,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         }
         decompilerArgs.add(0, "-log=" + logLevel);
 
-        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), DefaultExecute.class, task -> {
+        return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), DecompilerExecute.class, task -> {
             task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
             task.getJvmArguments().addAll(jvmArgs);
             task.getProgramArguments().addAll(decompilerArgs);

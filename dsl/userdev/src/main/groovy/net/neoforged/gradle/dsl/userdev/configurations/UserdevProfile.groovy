@@ -7,6 +7,7 @@ import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.runs.type.RunType
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectCollection
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -101,13 +102,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
     @Nested
     @DSLProperty
     @Optional
-    abstract NamedDomainObjectCollection<RunType> getRunTypes();
-
-    void runType(final String name, Action<RunType> configurer) {
-        final RunType runType = factory.newInstance(RunType.class, name)
-        configurer.execute(runType)
-        runTypes.add(runType)
-    }
+    abstract NamedDomainObjectContainer<RunType> getRunTypes();
 
     @Input
     @DSLProperty

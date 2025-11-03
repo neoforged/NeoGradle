@@ -1,6 +1,9 @@
 package net.neoforged.gradle.common.util;
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ReflectionUtils {
     /**
@@ -43,5 +46,26 @@ public class ReflectionUtils {
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to set final field '" + fieldName + "'", e);
         }
+    }
+
+    public static void setFinalFieldUncheckedWithAlternatives(Object target, Object value, String... fieldNames) {
+        final List<ReflectiveOperationException> exceptions = new ArrayList<>(fieldNames.length);
+        for (final String fieldName : fieldNames)
+        {
+            try {
+                setFinalField(target, fieldName, value);
+                return;
+            } catch (ReflectiveOperationException e) {
+                exceptions.add(e);
+            }
+        }
+
+        final RuntimeException ex = new RuntimeException("Failed to set final field '" + String.join(", ", fieldNames) + "'");
+        for (final ReflectiveOperationException exception : exceptions)
+        {
+            ex.addSuppressed(exception);
+        }
+
+        throw ex;
     }
 }

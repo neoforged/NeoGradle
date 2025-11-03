@@ -486,17 +486,17 @@ subsystems {
 
 ## Advanced Settings
 
-### Override Decompiler Settings
+### <a id="common-decompiler-settings" /> Override Decompiler Settings
 
 The settings used by the decompiler when preparing Minecraft dependencies can be overridden
 using [Gradle properties](https://docs.gradle.org/current/userguide/project_properties.html).
 This can be useful to run NeoGradle on lower-end machines, at the cost of slower build times.
 
-| Property                                     | Description                                                                                                                |
-|----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| `neogradle.subsystems.decompiler.maxMemory`  | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`).         |
-| `neogradle.subsystems.decompiler.maxThreads` | By default the decompiler uses all available CPU cores. This setting can be used to limit it to a given number of threads. |
-| `neogradle.subsystems.decompiler.logLevel`   | Can be used to override the [decompiler loglevel](https://vineflower.org/usage/#cmdoption-log).                            |
+| Property                                     | Description                                                                                                                                                                                                                     |
+|----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `neogradle.subsystems.decompiler.maxMemory`  | How much heap memory is given to the decompiler. Can be specified either in gigabyte (`4g`) or megabyte (`4096m`).                                                                                                              |
+| `neogradle.subsystems.decompiler.maxThreads` | By default the decompiler uses all available CPU cores. This setting can be used to limit it to a given number of threads, the lower the amount of threads the less memory is consumed. If set to 0 then the limit is disabled. |
+| `neogradle.subsystems.decompiler.logLevel`   | Can be used to override the [decompiler loglevel](https://vineflower.org/usage/#cmdoption-log).                                                                                                                                 |
 
 ### Override Recompiler Settings
 

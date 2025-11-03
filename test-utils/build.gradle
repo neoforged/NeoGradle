@@ -12,6 +12,8 @@ dependencies.api "org.mockito:mockito-core:${project.mockito_version}"
 dependencies.api "org.mockito:mockito-inline:${project.mockito_version}"
 dependencies.api "net.neoforged.trainingwheels:base:${project.trainingwheels_version}"
 dependencies.api "net.neoforged.trainingwheels:gradle-base:${project.trainingwheels_version}"
-dependencies.api "net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}"
+dependencies.api ("net.neoforged.trainingwheels:gradle-functional:${project.trainingwheels_version}") {
+    exclude group: 'org.spockframework', module: 'spock-core'
+}
 
 dependencies.implementation project(':common')

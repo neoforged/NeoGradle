@@ -170,6 +170,10 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         scriptFile.setExecutable(true)
     }
 
+    default OutputStream createErrorOutputStream() {
+        return new LoggerOutputStream(getLogger(), getLogLevel().get());
+    }
+
     default void doExecute() throws Exception {
         final Provider<List<String>> jvmArgs = applyVariableSubstitutions(getJvmArguments())
         final Provider<List<String>> programArgs = applyVariableSubstitutions(getRuntimeProgramArguments())
@@ -183,9 +187,10 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
 
         final Execute me = this
 
-        try (LoggerOutputStream error_out = new LoggerOutputStream(me.getLogger(), me.getLogLevel().get())
+        try (OutputStream error_out = createErrorOutputStream()
              BufferedOutputStream log_out = new BufferedOutputStream(new FileOutputStream(consoleLogFile))
-             LogLevelAwareOutputStream standard_out = new LogLevelAwareOutputStream(log_out, ExecuteSpecification.LogLevel.WARN, getLogLevel().get()) ){
+             LogLevelAwareOutputStream standard_out = new LogLevelAwareOutputStream(log_out, ExecuteSpecification.LogLevel.WARN, getLogLevel().get())
+             BifurcatingOutputStream wrapped_error_out = new BifurcatingOutputStream(error_out, log_out)){
             getExecuteOperation().javaexec({ JavaExecSpec java ->
                 PrintWriter writer = new PrintWriter(log_out)
                 Function<String, CharSequence> quote = s -> (CharSequence) ('"' + s + '"')
@@ -215,7 +220,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 java.setWorkingDir(me.getOutputDirectory().get())
                 java.getMainClass().set(mainClass)
                 java.setStandardOutput(standard_out)
-                java.setErrorOutput(error_out)
+                java.setErrorOutput(wrapped_error_out)
             }).rethrowFailure().assertNormalExitValue()
         }
     }
@@ -276,6 +281,37 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 }
             } else {
                 baos.write(b)
+            }
+        }
+    }
+
+    protected static final class BifurcatingOutputStream
+        extends OutputStream {
+
+        private final OutputStream[] streams;
+
+        BifurcatingOutputStream(final OutputStream... streams) {
+            this.streams = streams
+        }
+
+        @Override
+        void write(final int b) throws IOException {
+            for (final def stream in streams) {
+                stream.write(b)
+            }
+        }
+
+        @Override
+        void flush() throws IOException {
+            for (final def stream in streams) {
+                stream.flush();
+            }
+        }
+
+        @Override
+        void close() throws IOException {
+            for (final def stream in streams) {
+                stream.close()
             }
         }
     }

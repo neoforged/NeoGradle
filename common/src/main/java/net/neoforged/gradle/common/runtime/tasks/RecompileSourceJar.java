@@ -46,10 +46,6 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     public RecompileSourceJar() {
         super();
 
-        //We use a custom instance here that marks the sourcepath as an incremental field, allowing us to provide the compiler
-        //with all required elements directly while keeping incremental compile support for II.
-        ReflectionUtils.setFinalFieldUnchecked(this, "compileOptions", getObjectFactory().newInstance(RecompileOptions.class));
-
         arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
 
@@ -90,8 +86,8 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         getOptions().setWarnings(false);
         getOptions().setVerbose(false);
         getOptions().setDeprecation(false);
-        getOptions().setIncremental(true);
-        getOptions().getIncrementalAfterFailure().set(true);
+        getOptions().setIncremental(false);
+        getOptions().getIncrementalAfterFailure().set(false);
 
         setSource(getCompileFileRoot());
 
@@ -229,26 +225,5 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
     public Provider<FileTree> getOutputAsTree()
     {
         return getOutput().map(it -> getArchiveOperations().zipTree(it));
-    }
-
-    public static abstract class RecompileOptions extends CompileOptions {
-
-        @Inject
-        public RecompileOptions(final ObjectFactory objectFactory)
-        {
-            super(objectFactory);
-        }
-
-        @Incremental
-        @Optional
-        @IgnoreEmptyDirectories
-        @PathSensitive(PathSensitivity.RELATIVE)
-        @InputFiles
-        @ToBeReplacedByLazyProperty
-        @Override
-        public @Nullable FileCollection getSourcepath()
-        {
-            return super.getSourcepath();
-        }
     }
 }
