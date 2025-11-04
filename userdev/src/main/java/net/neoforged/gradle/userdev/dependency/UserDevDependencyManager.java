@@ -54,7 +54,7 @@ public final class UserDevDependencyManager {
                                         .flatMap(TransformerUtils.combineAllLists(project, String.class, Function.identity()))
                                         .map(dependencyCoordinates -> {
                                             final DependencyCollectorInjector injector = project.getObjects().newInstance(DependencyCollectorInjector.class);
-                                            final DependencyCollector collector = injector.dependencyCollector();
+                                            final DependencyCollector collector = injector.getDependencyCollector();
                                             dependencyCoordinates.forEach(collector::add);
                                             return collector;
                                         })

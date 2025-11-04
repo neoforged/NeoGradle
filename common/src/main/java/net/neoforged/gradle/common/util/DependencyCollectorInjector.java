@@ -8,5 +8,5 @@ public interface DependencyCollectorInjector
 {
 
     @Inject
-    public DependencyCollector dependencyCollector();
+    public DependencyCollector getDependencyCollector();
 }
