@@ -33,16 +33,20 @@ public abstract class WithPropertyLookup {
     }
 
     protected Provider<Boolean> getBooleanProperty(String propertyName, boolean defaultValue, boolean disabledValue) {
+        return getBooleanProperty(propertyName)
+                .orElse(defaultValue);
+    }
+
+    protected Provider<Boolean> getBooleanProperty(String propertyName) {
         String fullPropertyName = SUBSYSTEM_PROPERTY_PREFIX + propertyName;
         return this.project.getProviders().gradleProperty(fullPropertyName)
-                .map(value -> {
-                    try {
-                        return Boolean.valueOf(value);
-                    } catch (Exception e) {
-                        throw new GradleException("Gradle Property " + fullPropertyName + " is not set to a boolean value: '" + value + "'");
-                    }
-                })
-                .orElse(defaultValue);
+            .map(value -> {
+                try {
+                    return Boolean.valueOf(value);
+                } catch (Exception e) {
+                    throw new GradleException("Gradle Property " + fullPropertyName + " is not set to a boolean value: '" + value + "'");
+                }
+            });
     }
 
     protected Provider<List<String>> getSpaceSeparatedListProperty(String propertyName, List<String> defaultValue) {

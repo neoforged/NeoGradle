@@ -1,9 +1,7 @@
 package net.neoforged.gradle.common.extensions.subsystems;
 
-import groovy.lang.Closure;
 import groovy.transform.Internal;
 import net.neoforged.gdi.ConfigurableDSLElement;
-import net.neoforged.gradle.common.extensions.base.WithEnabledProperty;
 import net.neoforged.gradle.common.extensions.base.WithLocalProperties;
 import net.neoforged.gradle.common.extensions.base.WithPropertyLookup;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.*;
@@ -21,16 +19,17 @@ import java.util.Locale;
 
 import static net.neoforged.gradle.dsl.common.util.Constants.*;
 
-public abstract class SubsystemsExtension extends WithPropertyLookup implements ConfigurableDSLElement<Subsystems>, Subsystems {
+public abstract class SubsystemsExtension extends WithPropertyLookup implements ConfigurableDSLElement<Subsystems>, Subsystems
+{
 
     private final Conventions conventions;
-    private final Parchment parchment;
-    private final Tools tools;
+    private final Parchment   parchment;
+    private final Tools       tools;
     private final Integration integration;
 
-
     @Inject
-    public SubsystemsExtension(Project project) {
+    public SubsystemsExtension(Project project)
+    {
         super(project);
 
         this.integration = project.getObjects().newInstance(IntegrationExtensions.class, project);
@@ -46,77 +45,94 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         configureRenderDocDefaults();
     }
 
-    private void configureRenderDocDefaults() {
+    private void configureRenderDocDefaults()
+    {
         RenderDoc devLogin = getRenderDoc();
         devLogin.getConfigurationSuffix().convention(
-                getStringProperty("renderDoc.configurationSuffix", "RenderDocLocalOnly")
+            getStringProperty("renderDoc.configurationSuffix", "RenderDocLocalOnly")
         );
     }
 
-    private void configureDevLoginDefaults() {
+    private void configureDevLoginDefaults()
+    {
         DevLogin devLogin = getDevLogin();
         devLogin.getMainClass().convention(
-                getStringProperty("devLogin.mainClass", DEVLOGIN_MAIN_CLASS)
+            getStringProperty("devLogin.mainClass", DEVLOGIN_MAIN_CLASS)
         );
         devLogin.getConfigurationSuffix().convention(
-                getStringProperty("devLogin.configurationSuffix", "DevLoginLocalOnly")
+            getStringProperty("devLogin.configurationSuffix", "DevLoginLocalOnly")
         );
     }
 
-    private void configureToolsDefaults() {
+    private void configureToolsDefaults()
+    {
         Tools tools = getTools();
         tools.getJST().convention(
-                getStringProperty("tools.jst", JST_TOOL_ARTIFACT)
+            getStringProperty("tools.jst", JST_TOOL_ARTIFACT)
         );
         tools.getDevLogin().convention(
-                getStringProperty("tools.devLogin", DEVLOGIN_TOOL_ARTIFACT)
+            getStringProperty("tools.devLogin", DEVLOGIN_TOOL_ARTIFACT)
         );
         tools.getBinaryPatcher().convention(
-                getStringProperty("tools.binaryPatcher", BINPARCHER_TOOL_ARTIFACT)
+            getStringProperty("tools.binaryPatcher", BINPARCHER_TOOL_ARTIFACT)
         );
         tools.getAccessTransformer().convention(
-                getStringProperty("tools.accessTransformer", ACCESSTRANSFORMER_TOOL_ARTIFACT)
+            getStringProperty("tools.accessTransformer", ACCESSTRANSFORMER_TOOL_ARTIFACT)
         );
         tools.getAutoRenamingTool().convention(
-                getStringProperty("tools.autoRenamingTool", FART_TOOL_ARTIFACT)
+            getStringProperty("tools.autoRenamingTool", FART_TOOL_ARTIFACT)
         );
         tools.getInstallerTools().convention(
-                getStringProperty("tools.installerTools", INSTALLERTOOLS_TOOL_ARTIFACT)
+            getStringProperty("tools.installerTools", INSTALLERTOOLS_TOOL_ARTIFACT)
         );
         tools.getJarSplitter().convention(
-                getStringProperty("tools.jarSplitter", JARSPLITTER_TOOL_ARTIFACT)
+            getStringProperty("tools.jarSplitter", JARSPLITTER_TOOL_ARTIFACT)
         );
         tools.getDecompiler().convention(
-                getStringProperty("tools.decompiler", DECOMPILER_TOOL_ARTIFACT)
+            getStringProperty("tools.decompiler", DECOMPILER_TOOL_ARTIFACT)
         );
 
         RenderDocTools renderDocTools = tools.getRenderDoc();
         renderDocTools.getRenderDocPath().convention(
-                getDirectoryProperty("tools.renderDoc.path", getProject().getLayout().getBuildDirectory().dir("renderdoc"))
+            getDirectoryProperty("tools.renderDoc.path", getProject().getLayout().getBuildDirectory().dir("renderdoc"))
         );
         renderDocTools.getRenderDocVersion().convention(
-                getStringProperty("tools.renderDoc.version", "1.33")
+            getStringProperty("tools.renderDoc.version", "1.33")
         );
         renderDocTools.getRenderNurse().convention(
-                getStringProperty("tools.renderDoc.renderNurse", RENDERNURSE_TOOL_ARTIFACT)
+            getStringProperty("tools.renderDoc.renderNurse", RENDERNURSE_TOOL_ARTIFACT)
         );
     }
 
-    private void configureDecompilerDefaults() {
+    private void configureDecompilerDefaults()
+    {
         Decompiler decompiler = getDecompiler();
         decompiler.getMaxMemory().convention(getStringProperty("decompiler.maxMemory", "4g"));
         decompiler.getMaxThreads().convention(getStringProperty("decompiler.maxThreads", "0").map(Integer::parseUnsignedInt));
         decompiler.getLogLevel().convention(getStringProperty("decompiler.logLevel", "ERROR").map(s -> {
-            try {
+            try
+            {
                 return DecompilerLogLevel.valueOf(s.toUpperCase(Locale.ROOT));
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new GradleException("Unknown DecompilerLogLevel: " + s + ". Available options: " + Arrays.toString(DecompilerLogLevel.values()));
             }
         }));
         decompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("decompiler.jvmArgs", Collections.emptyList()));
+        decompiler.getIsDisabled().convention(
+            getBooleanProperty("decompiler.enabled")
+                .orElse(
+                    this.project.getProviders()
+                        .environmentVariable("CI")
+                        .map(ciMode -> ciMode.toLowerCase(Locale.ROOT).trim().equals("true") || ciMode.toLowerCase(Locale.ROOT).trim().equals("1"))
+                )
+                .orElse(false)
+        );
     }
 
-    private void configureRecompilerDefaults() {
+    private void configureRecompilerDefaults()
+    {
         Recompiler recompiler = getRecompiler();
         recompiler.getArgs().convention(getSpaceSeparatedListProperty("recompiler.args", Collections.emptyList()));
         recompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("recompiler.jvmArgs", Collections.emptyList()));
@@ -125,7 +141,8 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         recompiler.getType().convention(getStringProperty("recompiler.type", RecompilerType.getDefaultCompilerType().name()).map(RecompilerType::valueOf));
     }
 
-    private void configureParchmentDefaults() {
+    private void configureParchmentDefaults()
+    {
         Parchment parchment = getParchment();
         project.afterEvaluate(p -> {
             MavenArtifactRepository repo = p.getRepositories().maven(m -> {
@@ -140,48 +157,55 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
     }
 
     @Override
-    public Integration getIntegration() {
+    public Integration getIntegration()
+    {
         return integration;
     }
 
     @Override
-    public Conventions getConventions() {
+    public Conventions getConventions()
+    {
         return conventions;
     }
 
     @Override
-    public Parchment getParchment() {
+    public Parchment getParchment()
+    {
         return parchment;
     }
 
     @Override
-    public Tools getTools() {
+    public Tools getTools()
+    {
         return tools;
     }
 
-    public static abstract class ParchmentExtensions extends WithLocalProperties implements Parchment {
+    public static abstract class ParchmentExtensions extends WithLocalProperties implements Parchment
+    {
 
         @Inject
-        public ParchmentExtensions(Project project) {
+        public ParchmentExtensions(Project project)
+        {
             super(project, "parchment");
 
             getParchmentArtifact().convention(
-                    getStringLocalProperty("parchmentArtifact", null)
+                getStringLocalProperty("parchmentArtifact", null)
             );
             getConflictPrefix().convention("p_");
             getMinecraftVersion().convention(
-                    getStringLocalProperty("minecraftVersion", null)
+                getStringLocalProperty("minecraftVersion", null)
             );
             getMappingsVersion().convention(
-                    getStringLocalProperty("mappingsVersion", null)
+                getStringLocalProperty("mappingsVersion", null)
             );
             getAddRepository().convention(
-                    getBooleanLocalProperty("addRepository", true)
+                getBooleanLocalProperty("addRepository", true)
             );
         }
 
         @Internal
-        public Provider<String> getSelectedParchmentArtifact(String artifactMinecraftVersion) {
+        public Provider<String> getSelectedParchmentArtifact(String artifactMinecraftVersion)
+        {
             return getParchmentArtifact().orElse(getMinecraftVersion().orElse(artifactMinecraftVersion)
                 .zip(getMappingsVersion(), (minecraftVersion, mappingVersion) -> {
                     return DEFAULT_PARCHMENT_GROUP
