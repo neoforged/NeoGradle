@@ -88,26 +88,16 @@ public final class NeoFormRuntimeUtils {
         String stepName = matcher.group(1);
         if (stepName != null) {
             String taskName = CommonRuntimeUtils.buildTaskName(spec, stepName);
-            switch (stepName) {
-                case "downloadManifest":
-                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_LAUNCHER_METADATA, spec.getMinecraftVersion());
-                    break;
-                case "downloadJson":
-                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MANIFEST, spec.getMinecraftVersion());
-                    break;
-                case "downloadClient":
-                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, spec.getMinecraftVersion());
-                    break;
-                case "downloadServer":
-                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, spec.getMinecraftVersion());
-                    break;
-                case "downloadClientMappings":
-                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, spec.getMinecraftVersion());
-                    break;
-                case "downloadServerMappings":
-                    taskName = String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, spec.getMinecraftVersion());
-                    break;
-            }
+            taskName = switch (stepName)
+            {
+                case "downloadManifest" -> String.format("%s%s", NamingConstants.Task.CACHE_LAUNCHER_METADATA, spec.getMinecraftVersion());
+                case "downloadJson" -> String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MANIFEST, spec.getMinecraftVersion());
+                case "downloadClient" -> String.format("%s%s", NamingConstants.Task.CACHE_VERSION_ARTIFACT_CLIENT, spec.getMinecraftVersion());
+                case "downloadServer" -> String.format("%s%s", NamingConstants.Task.CACHE_VERSION_ARTIFACT_SERVER, spec.getMinecraftVersion());
+                case "downloadClientMappings" -> String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MAPPINGS_CLIENT, spec.getMinecraftVersion());
+                case "downloadServerMappings" -> String.format("%s%s", NamingConstants.Task.CACHE_VERSION_MAPPINGS_SERVER, spec.getMinecraftVersion());
+                default -> taskName;
+            };
 
             String finalTaskName = taskName;
             return Optional.ofNullable(tasks.get(finalTaskName));

@@ -122,6 +122,7 @@ public abstract class SubsystemsExtension extends WithPropertyLookup implements 
         decompiler.getJvmArgs().convention(getSpaceSeparatedListProperty("decompiler.jvmArgs", Collections.emptyList()));
         decompiler.getIsDisabled().convention(
             getBooleanProperty("decompiler.enabled")
+                .map(prop -> !prop)
                 .orElse(
                     this.project.getProviders()
                         .environmentVariable("CI")

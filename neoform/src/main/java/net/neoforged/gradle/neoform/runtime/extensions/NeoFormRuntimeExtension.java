@@ -9,10 +9,7 @@ import net.neoforged.gradle.common.runtime.tasks.DecompilerExecute;
 import net.neoforged.gradle.common.runtime.tasks.DefaultExecute;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
 import net.neoforged.gradle.common.tasks.ArtifactFromOutput;
-import net.neoforged.gradle.common.util.ConfigurationUtils;
-import net.neoforged.gradle.common.util.ProjectUtils;
-import net.neoforged.gradle.common.util.ToolUtilities;
-import net.neoforged.gradle.common.util.VersionJson;
+import net.neoforged.gradle.common.util.*;
 import net.neoforged.gradle.dsl.common.extensions.ConfigurationData;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
@@ -66,7 +63,24 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         super(project);
     }
 
-    private static void configureMcpRuntimeTaskWithDefaults(
+    public static void configureMcpRuntimeTaskWithDefaults(
+        final NeoFormRuntimeDefinition definition,
+        final Runtime neoFormRuntimeTask,
+        final NeoFormConfigConfigurationSpecV1.Step step
+    ) {
+        final NeoFormRuntimeSpecification spec = definition.getSpecification();
+        configureMcpRuntimeTaskWithDefaults(
+            spec,
+            spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile(),
+            buildDataFilesMap(definition.getNeoFormConfig(), spec.getDistribution()),
+            definition.getTasks(),
+            step,
+            neoFormRuntimeTask,
+            Optional.empty()
+        );
+    }
+
+    public static void configureMcpRuntimeTaskWithDefaults(
         NeoFormRuntimeSpecification spec,
         File neoFormDirectory,
         Map<String, String> symbolicDataSources,
@@ -430,8 +444,11 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         spec.getMutator().accept(steps, functions);
 
+        definition.setBakedStepsAndFunctions(steps, functions);
+
         final LinkedHashMap<String, TaskProvider<? extends WithOutput>> taskOutputs = definition.getTasks();
-        final Map<String, TaskProvider<? extends WithOutput>> taskOutputsByStepName = Maps.newHashMap();
+        final Map<String, TaskProvider<? extends WithOutput>> taskOutputsByStepName = definition.getTaskOutputsByStepName();
+        final Map<String, Optional<TaskProvider<? extends WithOutput>>> taskInputsByStepName = definition.getTaskInputsByStepName();
         for (NeoFormConfigConfigurationSpecV1.Step step : steps)
         {
             Optional<TaskProvider<? extends WithOutput>> adaptedInput = Optional.empty();
@@ -485,6 +502,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             }
 
             Optional<TaskProvider<? extends WithOutput>> finalAdaptedInput = adaptedInput;
+            taskInputsByStepName.put(step.getName(), finalAdaptedInput);
             neoFormRuntimeTaskProvider.configure((WithOutput neoFormRuntimeTask) -> {
                 if (neoFormRuntimeTask instanceof Runtime runtimeTask)
                 {

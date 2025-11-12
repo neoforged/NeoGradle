@@ -2,8 +2,11 @@ package net.neoforged.gradle.dsl.neoform.runtime.definition
 
 import groovy.transform.CompileStatic;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition
+import net.neoforged.gradle.dsl.common.tasks.WithOutput
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV2
-import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification;
+import net.neoforged.gradle.dsl.neoform.runtime.specification.NeoFormSpecification
+import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull
 
 /**
@@ -20,4 +23,9 @@ interface NeoFormDefinition<S extends NeoFormSpecification> extends Definition<S
      * @return The deserialized NeoForm configuration.
      */
     @NotNull NeoFormConfigConfigurationSpecV2 getNeoFormConfig();
-}
+    @NotNull
+    Map<String, TaskProvider<? extends WithOutput>> getTaskOutputsByStepName(); @NotNull
+    Map<String, Optional<TaskProvider<? extends WithOutput>>> getTaskInputsByStepName();
+    @NotNull
+    List<NeoFormConfigConfigurationSpecV1.Step> getBakedSteps(); @NotNull
+    Map<String, NeoFormConfigConfigurationSpecV1.Function> getBakedFunctions(); }

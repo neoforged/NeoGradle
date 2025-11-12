@@ -1,0 +1,6 @@
+[versions]
+                    # Neoforge Settings
+                    neoforge = "+"
+                    
+                    [libraries]
+                    neoforge = { group = "net.neoforged", name = "neoforge", version.ref = "neoforge" }

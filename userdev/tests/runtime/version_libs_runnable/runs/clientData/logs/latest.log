@@ -1,0 +1,37 @@
+[12Nov2025 21:49:10.256] [main/INFO] [net.neoforged.fml.startup.Entrypoint/]: JVM Uptime at startup: 61ms
+[12Nov2025 21:49:10.261] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Starting FancyModLoader version 10.0.29 (CLIENT in DEV)
+[12Nov2025 21:49:10.261] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Game directory: /var/home/marchermans/IdeaProjects/NeoGradle/userdev/tests/runtime/version_libs_runnable/runs/clientData
+[12Nov2025 21:49:10.295] [main/INFO] [net.neoforged.fml.loading.EarlyServiceDiscovery/]: Found 2 early service jars (out of 104) in 16ms
+[12Nov2025 21:49:10.295] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Early Services:
+[12Nov2025 21:49:10.296] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - /var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged.fancymodloader/loader/10.0.29/623a30d16a3a06ae8bd93074178a756e6aa55158/loader-10.0.29.jar
+[12Nov2025 21:49:10.296] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - /var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged.fancymodloader/earlydisplay/10.0.29/6268812ffd0c16cc1eea921b2335d58585384574/earlydisplay-10.0.29.jar
+[12Nov2025 21:49:10.300] [main/INFO] [net.neoforged.fml.loading.ImmediateWindowHandler/]: Not loading early display in headless mode.
+[12Nov2025 21:49:10.308] [main/ERROR] [net.neoforged.fml.loading.moddiscovery.locators.RequiredSystemFiles/]: Couldn't find [data/.mcassetsroot, assets/.mcassetsroot] on classpath, while we did find other required files in: [jar(/var/home/marchermans/IdeaProjects/NeoGradle/userdev/tests/runtime/version_libs_runnable/.gradle/repositories/ng_dummy_ng/net/neoforged/neoforge/21.10.51-beta/neoforge-21.10.51-beta.jar), jar(/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged/neoforge/21.10.51-beta/921a7e80ee87ce7480faa4b542a957e29d91c0b7/neoforge-21.10.51-beta-universal.jar)]
+[12Nov2025 21:49:10.309] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.InDevFolderLocator/CORE]: Got mod coordinates version_libs_runnable%%/var/home/marchermans/IdeaProjects/NeoGradle/userdev/tests/runtime/version_libs_runnable/build/resources/main:version_libs_runnable%%/var/home/marchermans/IdeaProjects/NeoGradle/userdev/tests/runtime/version_libs_runnable/build/classes/java/main from env
+[12Nov2025 21:49:10.402] [main/WARN] [net.neoforged.jarjar.selection.JarSelector/]: Attempted to select a dependency jar for JarJar which was passed in as source: library:mixinextras.neoforge. Using jar(/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-neoforge/0.5.0/d734b83ce6542bb70ea31755c1595b88992dbe65/mixinextras-neoforge-0.5.0.jar)
+[12Nov2025 21:49:10.403] [main/INFO] [net.neoforged.fml.loading.moddiscovery.locators.JarInJarDependencyLocator/]: Found 1 dependencies adding them to mods collection
+[12Nov2025 21:49:10.404] [main/INFO] [net.neoforged.fml.loading.moddiscovery.ModDiscoverer/]: 
+     Mod List:
+		Name Version (Mod Id)
+
+		NeoForge 21.10.51-beta (neoforge)
+[12Nov2025 21:49:10.425] [main/ERROR] [net.neoforged.fml.loading.FMLLoader/]: The patched Minecraft jar is missing. Please try to reinstall NeoForge.
+[12Nov2025 21:49:10.426] [main/ERROR] [net.neoforged.fml.loading.FMLLoader/]: File /var/home/marchermans/IdeaProjects/NeoGradle/userdev/tests/runtime/version_libs_runnable/build/resources/main is not a jar file
+java.nio.file.NoSuchFileException: At least one of the paths must exist when constructing jar contents: [/var/home/marchermans/IdeaProjects/NeoGradle/userdev/tests/runtime/version_libs_runnable/build/resources/main, /var/home/marchermans/IdeaProjects/NeoGradle/userdev/tests/runtime/version_libs_runnable/build/classes/java/main]
+	at net.neoforged.fml.jarcontents.JarContents.ofPaths(JarContents.java:103) ~[loader-10.0.29.jar:10.0]
+	at net.neoforged.fml.loading.moddiscovery.locators.InDevFolderLocator.findCandidates(InDevFolderLocator.java:46) ~[loader-10.0.29.jar:10.0]
+	at net.neoforged.fml.loading.moddiscovery.ModDiscoverer.discoverMods(ModDiscoverer.java:79) ~[loader-10.0.29.jar:10.0]
+	at net.neoforged.fml.loading.FMLLoader.runDiscovery(FMLLoader.java:638) ~[loader-10.0.29.jar:10.0]
+	at net.neoforged.fml.loading.FMLLoader.create(FMLLoader.java:340) [loader-10.0.29.jar:10.0]
+	at net.neoforged.fml.startup.Entrypoint.startup(Entrypoint.java:65) [loader-10.0.29.jar:10.0]
+	at net.neoforged.fml.startup.DataClient.main(DataClient.java:14) [loader-10.0.29.jar:10.0]
+[12Nov2025 21:49:10.461] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.16.5+mixin.0.8.7/80fc3a9f592673cea87f4cd702f87991c6c9fe4d/sponge-mixin-0.16.5+mixin.0.8.7.jar Service=FML Env=CLIENT
+[12Nov2025 21:49:10.475] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Loading FML Plugins:
+[12Nov2025 21:49:10.475] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]:  - /var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged/neoforge/21.10.51-beta/921a7e80ee87ce7480faa4b542a957e29d91c0b7/neoforge-21.10.51-beta-universal.jar > net.neoforged.neoforge-coremods-21.10.51-beta.jar
+[12Nov2025 21:49:10.526] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Building game content classloader:
+ - mixinextras.neoforge (jar(/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-neoforge/0.5.0/d734b83ce6542bb70ea31755c1595b88992dbe65/mixinextras-neoforge-0.5.0.jar))
+ - neoforge (jar(/var/home/marchermans/IdeaProjects/NeoGradle/userdev/build/tmp/functionalTest/work/.gradle-test-kit/caches/modules-2/files-2.1/net.neoforged/neoforge/21.10.51-beta/921a7e80ee87ce7480faa4b542a957e29d91c0b7/neoforge-21.10.51-beta-universal.jar))
+ - net.neoforged.fml.generated (empty(VirtualJar/net.neoforged.fml.generated))
+[12Nov2025 21:49:10.532] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Built game content classloader in 9ms
+[12Nov2025 21:49:10.551] [main/INFO] [net.neoforged.fml.loading.FMLLoader/]: Closing FML Loader 60e9df3c
+[12Nov2025 21:49:10.552] [main/INFO] [net.neoforged.fml.ModLoader/]: Clearing ModLoader

@@ -26,7 +26,7 @@ class NamedRegularFile implements NamedFileRef {
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    File getFile() {
-        return file.get().asFile
+    Provider<File> getFile() {
+        return file.map { it.asFile }
     }
 }

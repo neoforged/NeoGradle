@@ -29,7 +29,7 @@ public abstract class PackJar extends Zip implements Runtime {
    public PackJar() {
       super();
 
-      arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
+      arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class);
       multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
 
       this.javaVersion = getProject().getObjects().property(JavaLanguageVersion.class);
