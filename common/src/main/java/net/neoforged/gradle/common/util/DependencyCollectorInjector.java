@@ -6,7 +6,5 @@ import javax.inject.Inject;
 
 public interface DependencyCollectorInjector
 {
-
-    @Inject
-    public DependencyCollector dependencyCollector();
+    DependencyCollector getDependencyCollector();
 }

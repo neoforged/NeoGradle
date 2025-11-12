@@ -37,7 +37,7 @@ public class ToolUtilities {
         //the project that converts the string to a dependency.
         //This breaks the configuration cache as Projects can not be serialized.
         final DependencyCollectorInjector inject = project.getObjects().newInstance(DependencyCollectorInjector.class);
-        final DependencyCollector collector = inject.dependencyCollector();
+        final DependencyCollector collector = inject.getDependencyCollector();
         collector.add(tool.map(project.getDependencies()::create));
         final Configuration config = ConfigurationUtils.temporaryUnhandledConfiguration(
                 project.getConfigurations(),
