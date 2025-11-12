@@ -81,7 +81,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
 
         final NeoFormRuntimeDefinition neoformRuntimeDefinition = runtimeDefinition.get();
         final Provider<File> neoformMappings = context.getProject().getProviders().of(MappingsFileValueSource.class, spec -> {
-            spec.getParameters().getNeoFormArchive().from(context.getProject().fileTree(neoformRuntimeDefinition.getSpecification().getNeoFormArchive()));
+            spec.getParameters().getNeoFormArchive().from(context.getProject().fileTree(neoformRuntimeDefinition.getSpecification().getUnpackedNeoFormArchive()));
             spec.getParameters().getMappingsFilePath().set(neoformRuntimeDefinition.getNeoFormConfig().getData("mappings"));
         });
 
@@ -152,7 +152,7 @@ public final class NeoFormOfficialNamingChannelConfigurator {
         
         final NeoFormRuntimeDefinition neoformRuntimeDefinition = runtimeDefinition.get();
         final Provider<File> neoformMappings = context.getProject().getProviders().of(MappingsFileValueSource.class, spec -> {
-            spec.getParameters().getNeoFormArchive().from(context.getProject().fileTree(neoformRuntimeDefinition.getSpecification().getNeoFormArchive()));
+            spec.getParameters().getNeoFormArchive().from(context.getProject().fileTree(neoformRuntimeDefinition.getSpecification().getUnpackedNeoFormArchive()));
             spec.getParameters().getMappingsFilePath().set(neoformRuntimeDefinition.getNeoFormConfig().getData("mappings"));
         });
 

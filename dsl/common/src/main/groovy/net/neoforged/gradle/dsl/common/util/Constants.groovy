@@ -14,7 +14,7 @@ class Constants {
     public static final String BINPARCHER_TOOL_ARTIFACT = "net.neoforged.installertools:binarypatcher:2.1.7:fatjar"
     public static final String ACCESSTRANSFORMER_TOOL_ARTIFACT = "net.neoforged.accesstransformers:at-cli:11.0.2:fatjar"
     public static final String FART_TOOL_ARTIFACT = "net.neoforged:AutoRenamingTool:2.0.4:all"
-    public static final String INSTALLERTOOLS_TOOL_ARTIFACT = "net.neoforged.installertools:installertools:2.1.7"
+    public static final String INSTALLERTOOLS_TOOL_ARTIFACT = "net.neoforged.installertools:installertools:4.0.1:fatjar"
     public static final String JARSPLITTER_TOOL_ARTIFACT = "net.neoforged.installertools:jarsplitter:2.1.7"
     public static final String DECOMPILER_TOOL_ARTIFACT = "org.vineflower:vineflower:1.10.1"
 

@@ -48,17 +48,6 @@ public final class UserDevRuntimeDefinition extends CommonRuntimeDefinition<User
         this.unpackedUserDevJarDirectory = unpackedUserDevJarDirectory;
         this.userdevConfiguration = userdevConfiguration;
         this.additionalUserDevDependencies = additionalUserDevDependencies;
-
-        //Create the client-extra jar dependency.
-        final Dependency clientExtraJar = this.getSpecification().getProject().getDependencies().create(
-                ExtraJarDependencyManager.generateClientCoordinateFor(this.getSpecification().getMinecraftVersion())
-        );
-
-        //Add it as a user dev dependency, this will trigger replacement, which will need to be addressed down-below.
-        this.additionalUserDevDependencies.getDependencies().add(
-                clientExtraJar
-        );
-
         this.getAllDependencies().from(neoformRuntimeDefinition.getAllDependencies());
         this.getAllDependencies().from(getAdditionalUserDevDependencies());
         this.getAllDependencies().from(getUserdevConfiguration());
