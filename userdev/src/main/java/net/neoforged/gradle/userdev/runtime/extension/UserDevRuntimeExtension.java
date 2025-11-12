@@ -11,7 +11,6 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
-import net.neoforged.gradle.dsl.common.runtime.tasks.RuntimeArguments;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -62,7 +61,8 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             "AdditionalDependenciesFor" + spec.getIdentifier()
         );
 
-        if (!useCombinedJarWithNeoForgeOnRecompile(spec)) {
+        if (!useCombinedJarWithNeoForgeOnRecompile(spec))
+        {
             //Create the client-extra jar dependency.
             final Dependency clientExtraJar = spec.getProject().getDependencies().create(
                 ExtraJarDependencyManager.generateClientCoordinateFor(spec.getMinecraftVersion())
@@ -72,7 +72,9 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             userDevAdditionalDependenciesConfiguration.getDependencies().add(
                 clientExtraJar
             );
-        } else {
+        }
+        else
+        {
             userDevAdditionalDependenciesConfiguration.getDependencies().addLater(
                 userDevProfile.getUniversalJarArtifactCoordinate().map(spec.getProject().getDependencies()::create)
             );
@@ -92,7 +94,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             builder.withNeoFormDependency(userDevProfile.getNeoForm().get())
                 .withDistributionType(DistributionType.JOINED)
                 .withAdditionalDependencies(getProject().files(userDevAdditionalDependenciesConfiguration))
-                .withStepsMutator(this.adaptNeoFormRuntime(spec));
+                .withStepsMutator(this.adaptNeoFormRuntime(spec, userDevProfile, userDevJar));
 
             final FileTree accessTransformerFiles =
                 userDevJar.matching(filter -> filter.include(userDevProfile.getAccessTransformerDirectory().get() + "/**"));
@@ -102,6 +104,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
             if (!useCombinedJarWithNeoForgeOnRecompile(spec))
+            {
                 builder.withTaskCustomizer("inject", InjectZipContent.class, task -> {
                     FileTree injectionDirectoryTree;
                     if (userDevProfile.getInjectedFilesDirectory().isPresent())
@@ -120,6 +123,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                         ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeRawLookupFor" + spec.getIdentifier(), userDevProfile.getUniversalJarArtifactCoordinate())
                     );
                 });
+            }
         });
 
         spec.setMinecraftVersion(neoFormRuntimeDefinition.getSpecification().getMinecraftVersion());
@@ -133,7 +137,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         );
     }
 
-    private @NotNull BiConsumer<List<NeoFormConfigConfigurationSpecV1.Step>, Map<String, NeoFormConfigConfigurationSpecV1.Function>> adaptNeoFormRuntime(final UserDevRuntimeSpecification spec)
+    private @NotNull BiConsumer<List<NeoFormConfigConfigurationSpecV1.Step>, Map<String, NeoFormConfigConfigurationSpecV1.Function>> adaptNeoFormRuntime(
+        final UserDevRuntimeSpecification spec,
+        final UserdevProfile userDevProfile,
+        final FileTree userDevJar)
     {
         return (steps, functions) -> {
             if (!useCombinedJarWithNeoForgeOnRecompile(spec))
@@ -166,7 +173,11 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             );
 
             final Subsystems parchment = spec.getProject().getExtensions().getByType(Subsystems.class);
-            final SetupConfiguration configuration = buildSetupConfiguration();
+            final SetupConfiguration configuration = buildSetupConfiguration(
+                spec,
+                userDevProfile,
+                userDevJar
+            );
 
             //Register the setup function:
             functions.put(
@@ -188,13 +199,15 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         };
     }
 
-    private record SetupConfiguration(List<String> arguments, Map<String, String> values) {
+    private record SetupConfiguration(
+        List<String> arguments,
+        Map<String, String> values) {}
 
-    }
-
-    private SetupConfiguration buildSetupConfiguration(UserDevRuntimeDefinition definition) {
+    private SetupConfiguration buildSetupConfiguration(UserDevRuntimeSpecification spec, final UserdevProfile userDevProfile, final FileTree userDevJar)
+    {
         final Decompiler decompilerSubsystemConfiguration = getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
-        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(definition.getSpecification())) {
+        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(spec))
+        {
             return new SetupConfiguration(
                 List.of(
                     "--task", "PROCESS_MINECRAFT_JAR",
@@ -210,7 +223,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     "clientMappings", "{downloadClientMappingsOutput}",
                     "server", "{downloadServerOutput}",
                     "neoform", "{neoform}",
-                    "patches", "{patches}"
+                    "patches", userDevProfile.getBinaryPatchFile()
+                        .map(patchFilePath -> userDevJar
+                            .matching(matcher -> matcher.include(patchFilePath))
+                            .getSingleFile()).get().getAbsolutePath()
                 )
             );
         }
@@ -277,83 +293,16 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         );
     }
 
-    private void bakeDefinition(UserDevRuntimeDefinition definition) {
+    private void bakeDefinition(UserDevRuntimeDefinition definition)
+    {
         final Decompiler decompilerSubsystemConfiguration = this.getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
-        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(definition.getSpecification())) {
-            final TaskProvider<? extends Runtime> binaryPatchedOutput = configureBinaryPatchMode(
-                definition,
-                definition.getNeoFormRuntimeDefinition().getTaskInputsByStepName(),
-                definition.getNeoFormRuntimeDefinition().getBakedSteps()
-            );
-
-            binaryPatchedOutput.configure(task -> {
-                NeoFormRuntimeExtension.configureMcpRuntimeTaskWithDefaults(
-                    definition.getNeoFormRuntimeDefinition(),
-                    task,
-                    new NeoFormConfigConfigurationSpecV1.Step("binPatch", "binPatch", Map.of())
-                    );
-            });
-
+        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(definition.getSpecification()))
+        {
             definition.getNeoFormRuntimeDefinition().getRawJarTask().configure(task -> {
-                task.getInput().set(binaryPatchedOutput.flatMap(WithOutput::getOutput));
+                task.getInput().set(definition.getNeoFormRuntimeDefinition().getTask("setup").flatMap(WithOutput::getOutput));
             });
         }
     }
-
-    private TaskProvider<? extends Runtime> configureBinaryPatchMode(
-        final UserDevRuntimeDefinition definition,
-        final Map<String, Optional<TaskProvider<? extends WithOutput>>> taskInputsByStepName,
-        final List<NeoFormConfigConfigurationSpecV1.Step> steps) {
-        final NeoFormConfigConfigurationSpecV1.Step step = ListUtils.find(
-            steps, s -> s.getType().equals("decompile")
-        );
-        if (step == null)
-            throw new IllegalArgumentException("Could not find the decompile step!");
-        final Provider<File> cleanFileProvider;
-        Optional<TaskProvider<? extends WithOutput>> decompilerInputOptional = taskInputsByStepName.get("decompile");
-        TaskProvider<? extends Runtime> decompileTask = definition.getSpecification().getProject().getTasks().named(
-            CommonRuntimeUtils.buildTaskName(definition.getNeoFormRuntimeDefinition(), "decompile"),
-            Runtime.class
-        );
-        if (decompilerInputOptional != null && decompilerInputOptional.isPresent()) {
-            cleanFileProvider = decompilerInputOptional.get().flatMap(WithOutput::getOutput)
-                .map(RegularFile::getAsFile);
-        } else {
-            cleanFileProvider = decompileTask.map(Runtime::getArguments)
-                .flatMap(arguments -> arguments.get("input"))
-                .map(File::new);
-        }
-
-        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "binaryPatch"), DefaultExecute.class, task -> {
-            task.getExecutingJar().fileProvider(ToolUtilities.resolveTool(
-                task.getProject(),
-                definition.getUserdevConfiguration().getBinaryPatcher()
-                    .flatMap(UserdevProfile.ToolExecution::getTool)
-            ));
-            task.getJvmArguments().addAll(
-                definition.getUserdevConfiguration().getBinaryPatcher()
-                    .flatMap(UserdevProfile.ToolExecution::getJvmArguments)
-            );
-            task.getProgramArguments().addAll(
-                definition.getUserdevConfiguration().getBinaryPatcher()
-                    .flatMap(UserdevProfile.ToolExecution::getArguments)
-            );
-
-            task.getArguments().putFile(
-                "clean",
-                cleanFileProvider
-            );
-            task.getArguments().putFile(
-                "patch",
-                definition.getUserdevConfiguration().getBinaryPatchFile()
-                    .map(patchFilePath -> definition.getUnpackedUserDevJarDirectory()
-                        .matching(matcher -> matcher.include(patchFilePath))
-                        .getSingleFile())
-            );
-        });
-
-    }
-
 
     @Override
     protected UserDevRuntimeSpecification.Builder createBuilder()

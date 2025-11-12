@@ -58,6 +58,17 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
             it.withEnvironmentVariable("CI", "true")
@@ -70,13 +81,13 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
         run.task(":neoFormDecompile") == null
     }
 
     def "a mod with userdev as dependency can run the compile task for that dependency with the decompiler disabled"() {
         given:
-        def project = create("running_compile_in_ci", {
+        def project = create("running_compile_with_compiler_disabled", {
             it.build("""
             java {
                 toolchain {
@@ -87,6 +98,17 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -100,23 +122,13 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.task(':compileJava').outcome == TaskOutcome.NO_SOURCE
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
         run.task(":neoFormDecompile") == null
     }
 
     def "a mod using a disabled decompiler should be able to run the game"() {
         given:
-        def project = create("version_libs_runnable", {
-            it.file("gradle/libs.versions.toml",
-                    """
-                    [versions]
-                    # Neoforge Settings
-                    neoforge = "+"
-                    
-                    [libraries]
-                    neoforge = { group = "net.neoforged", name = "neoforge", version.ref = "neoforge" }
-                    """.trim())
-
+        def project = create("disabled_decompiler_runs_game", {
             it.build("""
             java {
                 toolchain {
@@ -129,9 +141,32 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
             }
                         
             dependencies {
-                implementation(libs.neoforge)
+                implementation 'net.neoforged:neoforge:+'
             }
             """)
+
+            it.file("src/main/resources/META-INF/neoforge.mods.toml", """
+            license="MIT"
+            [[mods]]
+            modId="neogradle_test"
+            version="1.0"
+            displayName="NeoGradle Test"
+            description='''Test Mod for NeoGradle'''
+            """.stripMargin())
+
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                import net.neoforged.fml.common.Mod;
+                
+                @Mod("neogradle_test")
+                public class FunctionalTests {
+                    public FunctionalTests() {
+                        System.out.println(Minecraft.class.toString());
+                    }
+                }
+            """.stripMargin())
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
             it.property("neogradle.subsystems.decompiler.enabled", "false")
@@ -140,14 +175,12 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':runClientData')
-            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
-            it.shouldFail()
             it.stacktrace()
         }
 
         then:
         true
-        run.output.contains("is not a valid mod file")
+        run.output.contains("class net.minecraft.client.Minecraft")
         run.task(":neoFormDecompile") == null
     }
 }
