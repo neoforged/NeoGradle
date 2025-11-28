@@ -11,11 +11,6 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         injectIntoAllProject = true;
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("tests/runtime")
-    }
-
     def "a mod with userdev as dependency can run the patch task for that dependency"() {
         given:
         def project = create("running_patch_task_is_possible", {
