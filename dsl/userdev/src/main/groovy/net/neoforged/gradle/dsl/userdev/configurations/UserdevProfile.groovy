@@ -261,6 +261,11 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
         @Optional
         abstract Property<Boolean> getIsNoLegacyClasspath();
 
+        @Input
+        @DSLProperty
+        @Optional
+        abstract Property<Boolean> getUsesCombinedBinaryPatches();
+
 
         @CompileStatic
         static class Serializer implements JsonSerializer<Features>, JsonDeserializer<Features> {
@@ -280,6 +285,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 final Features instance = objectFactory.newInstance(Features.class)
 
                 deserializeBool(instance.isNoLegacyClasspath, object, "noLegacyClasspath")
+                deserializeBool(instance.usesCombinedBinaryPatches, object, "combinedBinaryPatches")
 
                 return instance
             }
@@ -289,6 +295,7 @@ abstract class UserdevProfile implements ConfigurableDSLElement<UserdevProfile> 
                 final JsonObject object = new JsonObject();
 
                 serializeBool(features.isNoLegacyClasspath, object, "noLegacyClasspath")
+                deserializeBool(features.usesCombinedBinaryPatches, object, "combinedBinaryPatches")
 
                 return object
             }

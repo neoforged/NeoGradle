@@ -179,8 +179,41 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        true
         run.output.contains("class net.minecraft.client.Minecraft")
         run.task(":neoFormDecompile") == null
+    }
+
+    def "a mod using an enabled decompiler should use the setup to decompile the game"() {
+        given:
+        def project = create("enabled_decompiler_uses_setup", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+                        
+            dependencies {
+                implementation 'net.neoforged:neoforge:[21.10.60-beta,)'
+            }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.property("neogradle.subsystems.decompiler.enabled", "false")
+        })
+
+        when:
+        def run = project.run {
+            it.tasks(':neoFormDecompile')
+            it.stacktrace()
+            it.debug()
+        }
+
+        then:
+        run.task(":neoFormSetup") != null
     }
 }
