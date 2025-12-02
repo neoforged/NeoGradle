@@ -1,0 +1,17 @@
+plugins {
+   id 'net.neoforged.gradle.userdev'
+} 
+
+
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            

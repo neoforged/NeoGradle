@@ -2,8 +2,11 @@ package net.neoforged.gradle.userdev.runtime.extension;
 
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
+import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
 import net.neoforged.gradle.common.util.*;
 import net.neoforged.gradle.common.util.run.TypesUtil;
+import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
@@ -26,6 +29,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,6 +51,8 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     protected @NotNull UserDevRuntimeDefinition doCreate(UserDevRuntimeSpecification spec)
     {
         final NeoFormRuntimeExtension neoFormRuntimeExtension = getProject().getExtensions().getByType(NeoFormRuntimeExtension.class);
+        final Decompiler decompilerSubsystemConfiguration = getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
+        final Minecraft minecraftExtension = getProject().getExtensions().getByType(Minecraft.class);
 
         final UserdevProfile userDevProfile = spec.getProfile();
         final FileTree userDevJar = spec.getUserDevArchive();
@@ -56,7 +62,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             "AdditionalDependenciesFor" + spec.getIdentifier()
         );
 
-        if (useCombinedJarWithNeoForgeOnRecompile(spec, userDevProfile))
+        if (useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
         {
             userDevAdditionalDependenciesConfiguration.getDependencies().addLater(
                 userDevProfile.getUniversalJarArtifactCoordinate().map(spec.getProject().getDependencies()::create)
@@ -86,7 +92,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
-            if (!useCombinedJarWithNeoForgeOnRecompile(spec, userDevProfile))
+            if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
             {
                 builder.withTaskCustomizer("inject", InjectZipContent.class, task -> {
                     FileTree injectionDirectoryTree;
@@ -106,12 +112,35 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                         ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeRawLookupFor" + spec.getIdentifier(), userDevProfile.getUniversalJarArtifactCoordinate())
                     );
                 });
+            } else if (decompilerSubsystemConfiguration.getIsDisabled().get()){
+                builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
+                    final AccessTransformers userAts = minecraftExtension.getAccessTransformers();
+
+                    if (accessTransformerFiles.getFiles().isEmpty()) {
+                        return null;
+                    }
+
+                    final TaskProvider<? extends BinaryAccessTransformer> task = CommonRuntimeTaskUtils.createBinaryAccessTransformer(
+                        definition,
+                        "",
+                        userAts.getFiles().getAsFileTree()
+                    );
+
+                    task.configure(t -> {
+                        t.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                        t.dependsOn(previousTasksOutput);
+                    });
+
+                    dependentTaskConfigurationHandler.accept(task);
+
+                    return task;
+                });
             }
         });
 
         spec.setMinecraftVersion(neoFormRuntimeDefinition.getSpecification().getMinecraftVersion());
 
-        if (!useCombinedJarWithNeoForgeOnRecompile(spec, userDevProfile))
+        if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
         {
             //Create the client-extra jar dependency.
             final Dependency clientExtraJar = spec.getProject().getDependencies().create(
@@ -139,7 +168,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final FileTree userDevJar)
     {
         return (steps, functions) -> {
-            if (!useCombinedJarWithNeoForgeOnRecompile(spec, userDevProfile))
+            if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
             {
                 return;
             }
@@ -170,7 +199,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
             final Subsystems subsystems = spec.getProject().getExtensions().getByType(Subsystems.class);
             final SetupConfiguration configuration = buildSetupConfiguration(
-                spec,
                 userDevProfile,
                 userDevJar
             );
@@ -199,10 +227,10 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         List<String> arguments,
         Map<String, String> values) {}
 
-    private SetupConfiguration buildSetupConfiguration(UserDevRuntimeSpecification spec, final UserdevProfile userDevProfile, final FileTree userDevJar)
+    private SetupConfiguration buildSetupConfiguration(final UserdevProfile userDevProfile, final FileTree userDevJar)
     {
         final Decompiler decompilerSubsystemConfiguration = getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
-        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(spec, userDevProfile))
+        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
         {
             return new SetupConfiguration(
                 List.of(
@@ -245,7 +273,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         );
     }
 
-    private boolean useCombinedJarWithNeoForgeOnRecompile(final UserDevRuntimeSpecification specification, final UserdevProfile userDevProfile)
+    private boolean useCombinedJarWithNeoForgeOnRecompile(final UserdevProfile userDevProfile)
     {
         return userDevProfile.getFeatures()
             .flatMap(UserdevProfile.Features::getUsesCombinedBinaryPatches)
@@ -293,7 +321,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     private void bakeDefinition(UserDevRuntimeDefinition definition)
     {
         final Decompiler decompilerSubsystemConfiguration = this.getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
-        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(definition.getSpecification(), definition.getUserdevConfiguration()))
+        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(definition.getUserdevConfiguration()))
         {
             definition.getNeoFormRuntimeDefinition().getRawJarTask().configure(task -> {
                 task.getInput().set(definition.getNeoFormRuntimeDefinition().getTask("setup").flatMap(WithOutput::getOutput));

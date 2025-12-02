@@ -58,6 +58,56 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
+    @Override
+    protected File getTestTempDirectory() {
+        return new File("tests")
+    }
+
+    def "the userdev runtime supports loading ats from a file with the decompiler disabled"() {
+        given:
+        def project = create("userdev_supports_ats_from_file_decompiler_disabled", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/resources/META-INF/accesstransformer.cfg", """public-f net.minecraft.client.Minecraft fixerUpper # fixerUpper""")
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().fixerUpper.getClass().toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.parallel()
+            it.property("neogradle.subsystems.decompiler.enabled", "false")
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('compileJava')
+            it.stacktrace()
+        }
+
+        then:
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        initialRun.task(":neoFormDecompile") == null
+    }
+
     def "the userdev runtime supports loading ats from a file after the dependencies block"() {
         given:
         def project = create("userdev_supports_ats_from_file", {
