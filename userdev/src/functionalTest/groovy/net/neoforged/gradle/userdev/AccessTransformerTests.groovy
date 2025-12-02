@@ -58,11 +58,6 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
-    @Override
-    protected File getTestTempDirectory() {
-        return new File("tests")
-    }
-
     def "the userdev runtime supports loading ats from a file with the decompiler disabled"() {
         given:
         def project = create("userdev_supports_ats_from_file_decompiler_disabled", {
