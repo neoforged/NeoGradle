@@ -5,7 +5,7 @@
                 
                 public class FunctionalTests {
                     public static void main(String[] args) {
-                        System.out.println(Minecraft.getInstance().fixerUpper.getClass().toString());
+                        System.out.println(Minecraft.getInstance().getClass().toString());
                     }
                 }
             

@@ -2,5 +2,5 @@ plugins {
    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 } 
 
-rootProject.name = 'userdev_supports_ats_from_file_decompiler_disabled'
+rootProject.name = 'running_patch_task_is_possible'
 

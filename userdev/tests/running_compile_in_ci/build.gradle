@@ -9,9 +9,11 @@ plugins {
                 }
             }
             
-            minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
-            
+            repositories {
+                mavenLocal()
+            }
+                        
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:21.10.64-fix-issue-2848-binpatches-userdev'
             }
             

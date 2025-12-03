@@ -21,6 +21,10 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
                 }
             }
             
+            repositories {
+                mavenLocal()
+            }
+                        
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
@@ -49,6 +53,10 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
                 }
             }
             
+            repositories {
+                mavenLocal()
+            }
+                        
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
             }

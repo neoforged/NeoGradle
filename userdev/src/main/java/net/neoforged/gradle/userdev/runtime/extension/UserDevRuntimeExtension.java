@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev.runtime.extension;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
+import net.neoforged.gradle.common.tasks.StripFinalFromParametersTask;
 import net.neoforged.gradle.common.util.*;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
@@ -12,10 +13,13 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
+import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
+import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
+import net.neoforged.gradle.dsl.common.util.GameArtifact;
 import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1;
 import net.neoforged.gradle.dsl.userdev.configurations.UserdevProfile;
 import net.neoforged.gradle.neoform.runtime.definition.NeoFormRuntimeDefinition;
@@ -24,6 +28,7 @@ import net.neoforged.gradle.neoform.runtime.tasks.InjectZipContent;
 import net.neoforged.gradle.neoform.runtime.tasks.Patch;
 import net.neoforged.gradle.userdev.runtime.definition.UserDevRuntimeDefinition;
 import net.neoforged.gradle.userdev.runtime.specification.UserDevRuntimeSpecification;
+import net.neoforged.gradle.util.StringCapitalizationUtils;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
@@ -37,6 +42,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<UserDevRuntimeSpecification, UserDevRuntimeSpecification.Builder, UserDevRuntimeDefinition>
 {
@@ -113,10 +119,48 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     );
                 });
             } else if (decompilerSubsystemConfiguration.getIsDisabled().get()){
+                builder.withPostTaskAdapter("downloadClient", new TaskTreeAdapter() {
+                    @Override
+                    public @NotNull TaskProvider<? extends Runtime> adapt(
+                        final Definition<?> definition,
+                        final Provider<? extends WithOutput> previousTasksOutput,
+                        final File runtimeWorkspace,
+                        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts,
+                        final Map<String, String> mappingVersionData,
+                        final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler)
+                    {
+                        var stripper = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(),
+                            "stripClientFinals"), StripFinalFromParametersTask.class, task -> {
+                            task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                        });
+                        dependentTaskConfigurationHandler.accept(stripper);
+                        return stripper;
+                    }
+                });
+
+                builder.withPostTaskAdapter("downloadServer", new TaskTreeAdapter() {
+                    @Override
+                    public @NotNull TaskProvider<? extends Runtime> adapt(
+                        final Definition<?> definition,
+                        final Provider<? extends WithOutput> previousTasksOutput,
+                        final File runtimeWorkspace,
+                        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts,
+                        final Map<String, String> mappingVersionData,
+                        final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler)
+                    {
+                        var stripper = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(),
+                            "stripServerFinals"), StripFinalFromParametersTask.class, task -> {
+                            task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                        });
+                        dependentTaskConfigurationHandler.accept(stripper);
+                        return stripper;
+                    }
+                });
+
                 builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
                     final AccessTransformers userAts = minecraftExtension.getAccessTransformers();
 
-                    if (accessTransformerFiles.getFiles().isEmpty()) {
+                    if (userAts.getFiles().isEmpty()) {
                         return null;
                     }
 
