@@ -99,6 +99,7 @@ jobs:
         os: [ubuntu, windows, macos]
     env:
       GRADLE_VERSION: ${{ needs.set-gradle-version.outputs.gradle-version }}
+      CI: false
     steps:
       - name: Checkout repository
         uses: neoforged/actions/checkout@main
