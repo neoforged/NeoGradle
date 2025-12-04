@@ -49,4 +49,16 @@ interface Decompiler extends ConfigurableDSLElement<Decompiler> {
     @DSLProperty
     ListProperty<String> getJvmArgs();
 
+    /**
+     * Indicates whether the decompiler is enabled or not.
+     * <p>
+     *     When running in CI mode the decompiler will be disabled as long as no sources artifact are requested manually.
+     * </p>
+     *
+     * @return True for disabled, false when enabled.
+     */
+    @Input
+    @Optional
+    @DSLProperty
+    Property<Boolean> getIsDisabled();
 }

@@ -1,6 +1,7 @@
 package net.neoforged.gradle.dsl.common.runtime.tasks
 
 import groovy.transform.CompileStatic
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
@@ -10,9 +11,9 @@ import org.gradle.api.tasks.PathSensitivity
 class NamedFile implements NamedFileRef {
 
     private final String name;
-    private final File file;
+    private final Provider<File> file;
 
-    NamedFile(String name, File file) {
+    NamedFile(String name, Provider<File> file) {
         this.name = name
         this.file = file
     }
@@ -24,7 +25,7 @@ class NamedFile implements NamedFileRef {
 
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    File getFile() {
+    Provider<File> getFile() {
         return file
     }
 }

@@ -11,6 +11,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
+import org.jetbrains.annotations.Nullable
 
 @CompileStatic
 interface RuntimeArguments extends ConfigurableDSLElement<RuntimeArguments> {
@@ -23,6 +24,7 @@ interface RuntimeArguments extends ConfigurableDSLElement<RuntimeArguments> {
     @Nested
     abstract ListProperty<NamedFileRef> getFiles();
 
+    @Nullable
     Provider<String> get(String key)
 
     Provider<String> getOrDefault(String key, Provider<String> defaultProvider)
@@ -32,10 +34,6 @@ interface RuntimeArguments extends ConfigurableDSLElement<RuntimeArguments> {
     void putFile(String input, Provider<File> fileProvider);
 
     void putRegularFile(String input, Provider<RegularFile> fileProvider);
-
-    void putDirectoryFile(String input, Provider<File> fileProvider);
-
-    void putDirectory(String input, Provider<Directory> fileProvider);
 
     void put(String input, Provider<String> stringProvider);
 }

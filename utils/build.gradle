@@ -6,4 +6,8 @@ dependencies {
     api "commons-io:commons-io:${project.commons_io_version}"
     api "net.minecraftforge:srgutils:${project.srgutils_version}"
     api "de.siegmar:fastcsv:${project.fastcsv_version}"
+
+    api "org.ow2.asm:asm:${project.asm_version}"
+    api "org.ow2.asm:asm-commons:${project.asm_version}"
+    api "org.ow2.asm:asm-tree:${project.asm_version}"
 }

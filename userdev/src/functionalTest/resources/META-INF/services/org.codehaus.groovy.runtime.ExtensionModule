@@ -1,0 +1,3 @@
+moduleName=Builder Test extension.
+moduleVersion=1.0.0
+extensionClasses=net.neoforged.gradle.userdev.extensions.TestExtensions

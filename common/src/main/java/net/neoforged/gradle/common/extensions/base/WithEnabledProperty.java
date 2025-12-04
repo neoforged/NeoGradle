@@ -58,6 +58,15 @@ public abstract class WithEnabledProperty extends WithLocalProperties
     }
 
     @Override
+    protected Provider<Boolean> getBooleanProperty(final String propertyName)
+    {
+        return getIsEnabled().zip(
+            getBooleanLocalProperty(propertyName),
+            (enabled, value) -> enabled ? value : null
+        );
+    }
+
+    @Override
     protected Provider<List<String>> getSpaceSeparatedListProperty(String propertyName, List<String> defaultValue)
     {
         return getIsEnabled().zip(

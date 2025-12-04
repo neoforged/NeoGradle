@@ -104,11 +104,6 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
         return ret == null ? Collections.emptyList() : ret;
     }
 
-    @Nullable
-    public Function getFunction(String name) {
-        return functions == null ? null : functions.get(name);
-    }
-
     @Nested
     @Optional
     public Map<String, Function> getFunctions() {
@@ -133,7 +128,7 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
         @Nullable
         private final Map<String, String> values;
 
-        private Step(String type, String name, @Nullable Map<String, String> values) {
+        public Step(String type, String name, @Nullable Map<String, String> values) {
             this.type = type;
             this.name = name;
             this.values = values;
@@ -183,6 +178,26 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
         protected List<String> args;
         @Nullable
         protected List<String> jvmargs;
+
+        public Function()
+        {
+        }
+
+        public Function(final String version, @Nullable final List<String> args, @Nullable final List<String> jvmargs)
+        {
+            this.version = version;
+            this.args = args;
+            this.jvmargs = jvmargs;
+            this.repo = null;
+        }
+
+        public Function(final String version, @Nullable final List<String> args)
+        {
+            this.version = version;
+            this.args = args;
+            this.jvmargs = List.of();
+            this.repo = null;
+        }
 
         @Input
         public String getVersion() {

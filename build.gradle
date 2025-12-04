@@ -65,11 +65,6 @@ subprojects.forEach { Project subProject ->
     subProject.java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_version)
     subProject.java.withSourcesJar()
 
-    //We exclude ASM from all subprojects, it is handled by Gradle itself.
-    subProject.configurations.configureEach { Configuration configuration ->
-        configuration.exclude group: 'org.ow2.asm'
-    }
-
     ['apiElements', 'runtimeElements'].each {
         subProject.configurations.named(it).configure {
             attributes {

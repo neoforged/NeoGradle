@@ -31,7 +31,7 @@ class AndTaskTreeAdapter implements TaskTreeAdapter {
         if (currentAdapted != null)
             dependentTaskConfigurationHandler.accept(currentAdapted);
 
-        final TaskProvider<? extends Runtime> afterAdapted = right.adapt(definition, currentAdapted, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler);
+        final TaskProvider<? extends Runtime> afterAdapted = right.adapt(definition, currentAdapted != null ? currentAdapted : previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler);
 
         if (currentAdapted != null && afterAdapted == null)
             return currentAdapted;

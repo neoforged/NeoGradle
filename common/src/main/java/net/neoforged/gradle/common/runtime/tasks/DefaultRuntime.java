@@ -24,7 +24,7 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
     public DefaultRuntime() {
         super();
 
-        arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class, getProviderFactory());
+        arguments = getObjectFactory().newInstance(RuntimeArgumentsImpl.class);
         multiArguments = getObjectFactory().newInstance(RuntimeMultiArgumentsImpl.class, getProviderFactory());
         
         //All of these taskOutputs belong to the MCP group

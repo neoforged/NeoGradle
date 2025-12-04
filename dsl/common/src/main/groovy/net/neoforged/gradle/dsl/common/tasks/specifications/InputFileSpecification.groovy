@@ -5,6 +5,8 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 
 /**
  * Represents an object with an input file.
@@ -20,5 +22,6 @@ trait InputFileSpecification implements ProjectSpecification {
     @DSLProperty
     @InputFile
     @Optional
+    @PathSensitive(PathSensitivity.NONE)
     abstract RegularFileProperty getInput();
 }

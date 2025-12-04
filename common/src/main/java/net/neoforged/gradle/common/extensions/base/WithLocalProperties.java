@@ -37,6 +37,11 @@ public class WithLocalProperties extends WithPropertyLookup
         return super.getBooleanProperty(String.format("%s.%s", prefix, propertyName), defaultValue, false);
     }
 
+    protected Provider<Boolean> getBooleanLocalProperty(String propertyName)
+    {
+        return super.getBooleanProperty(String.format("%s.%s", prefix, propertyName));
+    }
+
     protected Provider<List<String>> getSpaceSeparatedListLocalProperty(String propertyName, List<String> defaultValue)
     {
         return super.getSpaceSeparatedListProperty(String.format("%s.%s", prefix, propertyName), defaultValue);

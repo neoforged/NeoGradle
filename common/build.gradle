@@ -35,6 +35,10 @@ dependencies {
     api "net.neoforged:JarJarMetadata:${project.jarjar_version}"
     api "net.neoforged:JarJarSelector:${project.jarjar_version}"
 
+    api "org.ow2.asm:asm:${project.asm_version}"
+    api "org.ow2.asm:asm-commons:${project.asm_version}"
+    api "org.ow2.asm:asm-tree:${project.asm_version}"
+
     // IDE support
     api "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:${project.gradle_idea_extension_version}"
 }

@@ -1,6 +1,7 @@
 package net.neoforged.gradle.util;
 
 import org.gradle.api.file.FileVisitDetails;
+import org.gradle.api.tasks.OutputFile;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,9 +14,9 @@ import java.util.zip.ZipOutputStream;
  */
 public class AdaptingZipBuildingFileTreeVisitor extends ZipBuildingFileTreeVisitor {
 
-    private final BiConsumer<FileVisitDetails, OutputStream> fileAdapter;
+    private final Adapter fileAdapter;
 
-    public AdaptingZipBuildingFileTreeVisitor(ZipOutputStream outputZipStream, BiConsumer<FileVisitDetails, OutputStream> fileAdapter) {
+    public AdaptingZipBuildingFileTreeVisitor(ZipOutputStream outputZipStream, Adapter fileAdapter) {
         super(outputZipStream);
         this.fileAdapter = fileAdapter;
     }
@@ -30,5 +31,9 @@ public class AdaptingZipBuildingFileTreeVisitor extends ZipBuildingFileTreeVisit
         } catch (IOException e) {
             throw new RuntimeException("Could not create zip file: " + fileVisitDetails.getRelativePath().getPathString(), e);
         }
+    }
+
+    public interface Adapter {
+        void accept(FileVisitDetails details, OutputStream outputStream) throws IOException;
     }
 }

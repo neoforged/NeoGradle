@@ -2,8 +2,13 @@ package net.neoforged.gradle.dsl.neoform.runtime.specification
 
 import groovy.transform.CompileStatic
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification
+import net.neoforged.gradle.dsl.neoform.configuration.NeoFormConfigConfigurationSpecV1
 import org.gradle.api.file.FileCollection
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.NotNull
+import org.jetbrains.annotations.Nullable
+
+import java.util.function.BiConsumer
+import java.util.function.Consumer;
 
 /**
  * Defines an NeoForm specific runtime specification.
@@ -28,6 +33,15 @@ interface NeoFormSpecification extends Specification {
      */
     @NotNull
     FileCollection getAdditionalRecompileDependencies();
+
+    /**
+     * Returns the task name of the task to use as an output as a replacement of the task with the given name.
+     *
+     * @param taskName The task name to check for.
+     * @return The task name of the task to replace it with, null if not replaced.
+     */
+    @Nullable
+    String skipTaskWith(final String taskName); BiConsumer<List<NeoFormConfigConfigurationSpecV1.Step>, Map<String, NeoFormConfigConfigurationSpecV1.Function>> getMutator ( ) ;
 
     /**
      * Defines a builder for an {@link NeoFormSpecification}.
@@ -62,5 +76,26 @@ interface NeoFormSpecification extends Specification {
          */
         @NotNull
         B withAdditionalDependencies(@NotNull final FileCollection files);
+
+        /**
+         * Configures this runtime to skip the given task.
+         * <p>
+         *     The individual behaviour of the skipping is up to the runtime implementation.
+         * </p>
+         *
+         * @param task The task name to skip.
+         * @param outputSource The task to take the output of as the output of the source.
+         * @return The builder.
+         */
+        @NotNull
+        B withSkippedTask(@NotNull final String task, @NotNull final String outputSource);
+
+        /**
+         * Registers a new mutator that can alter the step list and known functions.
+         *
+         * @param mutator The mutator
+         * @return The builder
+         */
+        B withStepsMutator(@NotNull final BiConsumer<List<NeoFormConfigConfigurationSpecV1.Step>, Map<String, NeoFormConfigConfigurationSpecV1.Function>> mutator)
     }
 }

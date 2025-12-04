@@ -247,6 +247,46 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         run.task(':compileJava').outcome == TaskOutcome.SUCCESS
     }
 
+    def "a mod with userdev as dependency can access neoforge classes"() {
+        given:
+        def project = create("compile_with_gradle_and_official_mappings", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                import net.neoforged.neoforge.event.VanillaGameEvent;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                        System.out.println(VanillaGameEvent.class.toString());
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+        })
+
+        when:
+        def run = project.run {
+            it.tasks('compileJava')
+        }
+
+        then:
+        run.task(':compileJava').outcome == TaskOutcome.SUCCESS
+    }
+
     def "a mod with userdev as dependency and official mappings can run build and clean in the same execution"() {
         given:
         def project = create("gradle_userdev_clean_build", {
