@@ -74,19 +74,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.file("src/main/java/net/neoforged/gradle/main/ApiTests.java", """
-                package net.neoforged.gradle.main;
-                
-                import net.minecraft.client.Minecraft;
-                import net.neoforged.gradle.apitest.FunctionalTests;
-                
-                public class ApiTests {
-                    public static void main(String[] args) {
-                        System.out.println(Minecraft.getInstance().getClass().toString());
-                        FunctionalTests.main(args);
-                    }
-                }
-            """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
@@ -95,13 +83,10 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         when:
         def run = rootProject.run {
             it.tasks(':main:runClientData')
-            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
-            it.shouldFail()
         }
 
         then:
-        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("net.neoforged.fml.ModLoadingException: Loading errors encountered:")
+        run.checkModLoading()
     }
 
     def "multiple projects with neoforge dependencies from version catalogs should be able to build"() {
@@ -193,7 +178,6 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         def run = rootProject.run {
             it.tasks(':main:build')
             it.stacktrace()
-            it.debug()
         }
 
         then:
@@ -265,19 +249,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.file("src/main/java/net/neoforged/gradle/main/ApiTests.java", """
-                package net.neoforged.gradle.main;
-                
-                import net.minecraft.client.Minecraft;
-                import net.neoforged.gradle.apitest.FunctionalTests;
-                
-                public class ApiTests {
-                    public static void main(String[] args) {
-                        System.out.println(Minecraft.getInstance().getClass().toString());
-                        FunctionalTests.main(args);
-                    }
-                }
-            """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
@@ -286,13 +258,10 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         when:
         def run = rootProject.run {
             it.tasks(':main:runClientData')
-            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
-            it.shouldFail()
         }
 
         then:
-        run.output.contains("Error during pre-loading phase: ERROR: File null is not a valid mod file") ||
-                run.output.contains("net.neoforged.fml.ModLoadingException: Loading errors encountered:")
+        run.checkModLoading()
     }
 
     def "multiple projects with neoforge dependencies should run using the central cache"() {

@@ -148,28 +148,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
             }
             """)
 
-            it.file("src/main/resources/META-INF/neoforge.mods.toml", """
-            license="MIT"
-            [[mods]]
-            modId="neogradle_test"
-            version="1.0"
-            displayName="NeoGradle Test"
-            description='''Test Mod for NeoGradle'''
-            """.stripMargin())
-
-            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
-                package net.neoforged.gradle.userdev;
-                
-                import net.minecraft.client.Minecraft;
-                import net.neoforged.fml.common.Mod;
-                
-                @Mod("neogradle_test")
-                public class FunctionalTests {
-                    public FunctionalTests() {
-                        System.out.println(Minecraft.class.toString());
-                    }
-                }
-            """.stripMargin())
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
             it.property("neogradle.subsystems.decompiler.enabled", "false")
@@ -182,7 +161,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         }
 
         then:
-        run.output.contains("class net.minecraft.client.Minecraft")
+        run.checkModLoading()
         run.task(":neoFormDecompile") == null
     }
 

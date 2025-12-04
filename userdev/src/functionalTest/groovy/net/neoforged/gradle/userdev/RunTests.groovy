@@ -40,6 +40,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 implementation(libs.neoforge)
             }
             """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
@@ -47,14 +48,11 @@ class RunTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':runClientData')
-            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
-            it.shouldFail()
             it.stacktrace()
         }
 
         then:
-        true
-        run.output.contains("is not a valid mod file")
+        run.checkModLoading()
     }
 
     def "configuring of the configurations after the dependencies block should work"() {
@@ -92,6 +90,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 modRunImplementation.extendsFrom implementation
             }
             """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
@@ -99,12 +98,10 @@ class RunTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':runClientData')
-            //We are expecting this test to fail, since there is a mod without any files included so it is fine.
-            it.shouldFail()
         }
 
         then:
-        run.output.contains("is not a valid mod file")
+        run.checkModLoading()
     }
 
     def "runs can be declared before the dependencies block"() {
@@ -131,6 +128,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
@@ -173,6 +171,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
@@ -225,6 +224,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
@@ -277,6 +277,7 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
+            it.withMod()
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
@@ -285,16 +286,14 @@ class RunTests extends BuilderBasedTestSpecification {
         def run = project.run {
             it.tasks(':runClientData')
             it.stacktrace()
-            it.shouldFail()
-            it.debug()
         }
 
         then:
         run.output.contains("You are using a version of NeoForge which does not need run specific dependencies")
         run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: client")
-        run.output.contains("is not a valid mod file")
         !run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: server")
         run.task(":writeMinecraftClasspathClient") == null
+        run.checkModLoading()
     }
 
     def "userdev supports custom run dependencies from configuration"() {
@@ -338,7 +337,6 @@ class RunTests extends BuilderBasedTestSpecification {
         def run = project.run {
             it.tasks(':writeMinecraftClasspathClient')
             it.stacktrace()
-            
         }
 
         then:
