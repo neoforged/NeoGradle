@@ -3,10 +3,12 @@ package net.neoforged.gradle.userdev.runtime.extension;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
+import net.neoforged.gradle.common.tasks.InjectInterfacesTask;
 import net.neoforged.gradle.common.tasks.StripFinalFromParametersTask;
 import net.neoforged.gradle.common.util.*;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Decompiler;
@@ -172,6 +174,29 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
                     task.configure(t -> {
                         t.getInputFile().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                        t.dependsOn(previousTasksOutput);
+                    });
+
+                    dependentTaskConfigurationHandler.accept(task);
+
+                    return task;
+                });
+
+                builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
+                    final InterfaceInjections userIIs = minecraftExtension.getInterfaceInjections();
+
+                    if (userIIs.getFiles().isEmpty()) {
+                        return null;
+                    }
+
+                    final TaskProvider<? extends InjectInterfacesTask> task = CommonRuntimeTaskUtils.createBinaryInterfaceInjector(
+                        definition,
+                        "",
+                        userIIs.getFiles().getAsFileTree()
+                    );
+
+                    task.configure(t -> {
+                        t.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
                         t.dependsOn(previousTasksOutput);
                     });
 

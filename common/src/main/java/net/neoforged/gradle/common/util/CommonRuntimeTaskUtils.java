@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.util;
 
 import net.neoforged.gradle.common.runtime.tasks.*;
+import net.neoforged.gradle.common.tasks.InjectInterfacesTask;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
@@ -36,6 +37,12 @@ public final class CommonRuntimeTaskUtils {
     public static TaskProvider<? extends BinaryAccessTransformer> createBinaryAccessTransformer(Definition<?> definition, String namePreFix, FileTree files) {
         return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sAccessTransformer", StringCapitalizationUtils.capitalize(namePreFix))), BinaryAccessTransformer.class, task -> {
             task.getTransformers().from(files);
+        });
+    }
+
+    public static TaskProvider<? extends InjectInterfacesTask> createBinaryInterfaceInjector(Definition<?> definition, String namePreFix, FileTree files) {
+        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sInterfaceInjections", StringCapitalizationUtils.capitalize(namePreFix))), InjectInterfacesTask.class, task -> {
+            task.getInterfaceInjectionFiles().from(files);
         });
     }
 }
