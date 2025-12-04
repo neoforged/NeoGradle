@@ -104,6 +104,19 @@ runs {
 You do not need to create all five of the different runs, only the ones you need.
 This is because at the point where gradle actually adds the dependency, we can not create any further runs, yet we can still configure them for you when the dependency is added.
 
+#### <a id="userdev-binary-mode" /> Binary patch mode
+The userdev plugin modifies the NeoForm pipeline when it detects that the decompiler should be disabled.
+In that case it will run a completely seperate subsystem, known as the binary patcher to generate a production like jar, 
+and then apply the binary patches to that. This is significantly faster to setup, better for caching and disk usage, but does not
+produce a sources jar to debug against.
+
+The binary mode is enabled in one of two conditions:
+- The environment variable `CI` contains `true`
+- The gradle property: `neogradle.subsystems.decompiler.enabled` is set to `false`
+
+> [!WARNING]
+> For now this mode is only available to the UserDev plugin, it will eventually be ported to the NeoForm plugin as well.
+
 ### Common Plugin
 #### <a id="common-dep-management" /> Available Dependency Management
 ##### <a id="common-dep-management-extra-jar" /> Extra Jar
