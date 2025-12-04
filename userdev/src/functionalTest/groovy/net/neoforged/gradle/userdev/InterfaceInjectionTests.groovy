@@ -69,9 +69,68 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
+    def "the userdev runtime supports loading iis from a file with the decompiler disabled"() {
+        given:
+        def project = create("userdev_supports_iis_from_file_no_decompile", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/resources/META-INF/iis.json",
+                    """\
+                {
+                    "net/minecraft/client/Minecraft": [
+                        "com/example/examplemod/MyInjectedInterface"
+                    ]
+                }
+                """.stripIndent())
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        Minecraft.getInstance().doSomething();
+                    }
+                }
+            """)
+            it.file("src/main/java/com/example/examplemod/MyInjectedInterface.java", """
+                package com.example.examplemod;
+                
+                public interface MyInjectedInterface {
+                    default void doSomething() { };
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.property("neogradle.subsystems.decompiler.enabled", "false")
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('compileJava')
+            it.stacktrace()
+            it.debug()
+        }
+
+        then:
+        initialRun.task(":neoFormRecompile") == null
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
     def "the userdev runtime supports loading iis from a file after the dependencies block"() {
         given:
-        def project = create("userdev_supports_iis_from_file", {
+        def project = create("userdev_supports_iis_from_file_decompiler_disabled", {
             it.build("""
             java {
                 toolchain {
@@ -294,5 +353,127 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
         initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
         !initialRun.output.contains("Failed to create binary representation for type")
+    }
+
+    def "the userdev runtime supports loading iis from inner interfaces from a file with the decompiler disabled"() {
+        given:
+        def project = create("userdev_supports_iis_inner_from_file_no_decompile", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/resources/META-INF/iis.json",
+                    """\
+                {
+                    "net/minecraft/client/Minecraft": [
+                        "com/example/examplemod/MyInjectedInterface\$Inner"
+                    ]
+                }
+                """.stripIndent())
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        Minecraft.getInstance().doSomething();
+                    }
+                }
+            """)
+            it.file("src/main/java/com/example/examplemod/MyInjectedInterface.java", """
+                package com.example.examplemod;
+                
+                public interface MyInjectedInterface {
+                
+                    public interface Inner {
+                        default void doSomething() { };
+                    }
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.property("neogradle.subsystems.decompiler.enabled", "false")
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('compileJava')
+            it.stacktrace()
+        }
+
+        then:
+        initialRun.task(":neoFormRecompile") == null
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def "the userdev runtime supports loading iis from generic from a file with the decompiler disabled"() {
+        given:
+        def project = create("userdev_supports_iis_inner_from_file_no_decompile", {
+            it.build("""
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+            
+            minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+            """)
+            it.file("src/main/resources/META-INF/iis.json",
+                    """\
+                {
+                    "net/minecraft/client/Minecraft": [
+                        "com/example/examplemod/MyInjectedInterface<net.minecraft.client.Minecraft>"
+                    ]
+                }
+                """.stripIndent())
+            it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
+                package net.neoforged.gradle.userdev;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        Minecraft.getInstance().doSomething();
+                    }
+                }
+            """)
+            it.file("src/main/java/com/example/examplemod/MyInjectedInterface.java", """
+                package com.example.examplemod;
+                
+                public interface MyInjectedInterface<T> {
+                    default T doSomething() {
+                        return null;
+                    };
+                }
+            """)
+            it.withToolchains()
+            it.withGlobalCacheDirectory(tempDir)
+            it.property("neogradle.subsystems.decompiler.enabled", "false")
+        })
+
+        when:
+        def initialRun = project.run {
+            it.tasks('compileJava')
+            it.stacktrace()
+            it.debug()
+        }
+
+        then:
+        initialRun.task(":neoFormRecompile") == null
+        initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 }
