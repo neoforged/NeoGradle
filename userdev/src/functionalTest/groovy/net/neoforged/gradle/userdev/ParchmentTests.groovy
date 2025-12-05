@@ -17,15 +17,7 @@ class ParchmentTests extends BuilderBasedTestSpecification {
             it.property("neogradle.subsystems.parchment.minecraftVersion", "1.21")
             it.property("neogradle.subsystems.parchment.mappingsVersion", "2024.07.28")
             it.build("""
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'

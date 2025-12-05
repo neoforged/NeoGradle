@@ -16,11 +16,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -45,11 +41,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build_and_is_reused", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -99,11 +91,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'

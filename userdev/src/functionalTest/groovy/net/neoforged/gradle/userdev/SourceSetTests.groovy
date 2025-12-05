@@ -14,11 +14,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("inheriting_sourcesets_compile", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             sourceSets {
                 target {
@@ -61,11 +57,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("inheriting_sourcesets_runtime", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             sourceSets {
                 target {
@@ -108,11 +100,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("depending_sourcesets_compile", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             sourceSets {
                 target {
@@ -156,11 +144,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("depending_sourcesets_runtime", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             sourceSets {
                 target {

@@ -26,11 +26,7 @@ class RunTests extends BuilderBasedTestSpecification {
                     """.trim())
 
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -59,11 +55,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_configuration_after_dependencies", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -108,11 +100,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_before_dependencies", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -147,11 +135,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_support_poms", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -200,11 +184,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_with_custom_dependencies", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -253,11 +233,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_with_custom_dependencies_warn_on_latest", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -300,11 +276,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_with_custom_dependencies_from_configuration", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -363,11 +335,7 @@ class RunTests extends BuilderBasedTestSpecification {
                     """.trim())
 
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -419,11 +387,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_unit_tests", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -449,11 +413,12 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             //We need to add a manifest.mf file to the test source set
-            it.file("src/test/resources/META-INF/MANIFEST.MF", """Manifest-Version: 1.0
-            |FMLModType: GAMELIBRARY
-            |""".stripMargin())
+            it.file("src/test/resources/META-INF/MANIFEST.MF", """
+            Manifest-Version: 1.0
+            FMLModType: GAMELIBRARY
+            """)
 
-            it.file("src/test/java/net/test/TestTest.java",
+            it.javaClassFile("test", "net.test.TestTest",
                     """
                     package net.test;
                     
@@ -476,7 +441,7 @@ class RunTests extends BuilderBasedTestSpecification {
                             );
                         }
                     }
-                    """.trim())
+                    """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
@@ -496,11 +461,7 @@ class RunTests extends BuilderBasedTestSpecification {
             it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
             it.property('neogradle.subsystems.conventions.sourcesets.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -536,11 +497,7 @@ class RunTests extends BuilderBasedTestSpecification {
         def project = create("runs_can_inherit_from_each_other", {
             it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -599,11 +556,7 @@ class RunTests extends BuilderBasedTestSpecification {
         def project = create("runs_have_configurable_working_directories_with_default", {
             it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()

@@ -15,11 +15,7 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
         given:
         def project = create("vanilla_supports_ats_from_file", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             
@@ -58,11 +54,8 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
         given:
         def project = create("vanilla_supports_ats_in_multiple_distinctly_named_files", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer2.cfg')
             
@@ -102,11 +95,8 @@ class AccessTransformerTests extends BuilderBasedTestSpecification {
         given:
         def project = create("vanilla_supports_ats_in_files_named_the_same", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             minecraft.accessTransformers.file rootProject.file('src/main/resources/accesstransformer.cfg')
             

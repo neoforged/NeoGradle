@@ -12,6 +12,8 @@ class UserDevPluginTests extends SimpleTestSpecification {
             plugins {
                 id 'net.neoforged.gradle.userdev'
             }
+            
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
         """
 
         when:
@@ -28,6 +30,8 @@ class UserDevPluginTests extends SimpleTestSpecification {
             plugins {
                 id 'net.neoforged.gradle.userdev'
             }
+            
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             println "Loaded plugins:"
             project.plugins.each { plugin ->
@@ -50,6 +54,8 @@ class UserDevPluginTests extends SimpleTestSpecification {
             plugins {
                 id 'net.neoforged.gradle.userdev'
             }
+            
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             println project.userDevRuntime.class.toString()
         """

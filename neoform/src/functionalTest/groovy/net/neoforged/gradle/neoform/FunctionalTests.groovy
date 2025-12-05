@@ -18,11 +18,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create "neoform-can-run-clean-build", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
@@ -46,12 +42,8 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create "neoform-compile-with-ats", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
-                }
-            }
-            
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             
             dependencies {
@@ -87,11 +79,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create "neoform-compile-with-ats", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(17)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'

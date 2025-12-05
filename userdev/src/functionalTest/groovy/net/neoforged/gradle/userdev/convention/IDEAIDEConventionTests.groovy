@@ -20,11 +20,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             <option name=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -56,11 +52,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             <option name=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -92,11 +84,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             <option name=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -128,11 +116,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             <option name=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -163,11 +147,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
             <option name=\"delegatedBuild\" value=\"false\" />
             """)
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -194,11 +174,7 @@ class IDEAIDEConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("disable_compiler_idea_ide_disables_auto_detection", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()

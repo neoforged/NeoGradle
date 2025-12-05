@@ -18,11 +18,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_globally_errors_local_runtime", {
             it.property('neogradle.subsystems.conventions.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -51,11 +47,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_globally_errors_local_run_runtime", {
             it.property('neogradle.subsystems.conventions.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -84,11 +76,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_configurations_errors_local_runtime", {
             it.property('neogradle.subsystems.conventions.configurations.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -117,11 +105,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_configurations_errors_local_run_runtime", {
             it.property('neogradle.subsystems.conventions.configurations.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -150,11 +134,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_sourcesets_fails_local_runtime", {
             it.property('neogradle.subsystems.conventions.sourcesets.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -183,11 +163,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_sourcesets_fails_local_run_runtime", {
             it.property('neogradle.subsystems.conventions.sourcesets.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -216,11 +192,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_global_no_registration_main", {
             it.property('neogradle.subsystems.conventions.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -257,11 +229,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_sourcesets_no_registration_main", {
             it.property('neogradle.subsystems.conventions.sourcesets.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -298,11 +266,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_sourcesets_no_registration_main", {
             it.property('neogradle.subsystems.conventions.sourcesets.automatic-inclusion', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -338,11 +302,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("registration_enabled", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -379,11 +339,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_sourcesets_prevents_local_run_runtime", {
             it.property('neogradle.subsystems.conventions.sourcesets.automatic-inclusion-local-run-runtime', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -422,11 +378,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("disable_sourcesets_prevents_local_run_runtime", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -469,11 +421,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_can_download_runtime_elements", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -510,11 +458,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_can_download_runtime_elements", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
