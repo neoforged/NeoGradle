@@ -201,6 +201,7 @@ jobs:
         with:
           report_paths: '**/*.xml'
           update_check: 'true'
+          comment: 'true'
 
       - name: Merge Test Reports
         if: always()
