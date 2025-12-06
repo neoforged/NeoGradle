@@ -413,10 +413,9 @@ class RunTests extends BuilderBasedTestSpecification {
             }
             """)
             //We need to add a manifest.mf file to the test source set
-            it.file("src/test/resources/META-INF/MANIFEST.MF", """
-            Manifest-Version: 1.0
-            FMLModType: GAMELIBRARY
-            """)
+            it.file("src/test/resources/META-INF/MANIFEST.MF", """Manifest-Version: 1.0
+            |FMLModType: GAMELIBRARY
+            |""".stripMargin())
 
             it.javaClassFile("test", "net.test.TestTest",
                     """
