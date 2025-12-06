@@ -32,7 +32,7 @@ dependencies {
 The userdev plugin provides a way to configure access transformers for your mod.
 You need to create an access transformer configuration file in your resources directory, and then configure the userdev plugin to use it.
 ```groovy
-accessTransformer {
+accessTransformers {
     file 'src/main/resources/META-INF/accesstransformer.cfg'
 }
 ```
@@ -69,7 +69,7 @@ You can find more information on the format of the file [here](https://github.co
 ##### <a id="userdev-interface-injections-from-dependencies" /> From Dependencies
 When you want to include interfaces during the injection process from a dependency you can do so by using the `consume` and `consumeApi` dependency collector:
 ```groovy
-interfaceInjection {
+interfaceInjections {
     consume 'net.something.group:module:1.0.0-version' //Use the interface injections published by this dependency.
     consumeApi 'net.something.group:module:1.0.0-version' //Use the interface injections published by this dependency, and expose it for your consumers as a dependency as well.
 }
