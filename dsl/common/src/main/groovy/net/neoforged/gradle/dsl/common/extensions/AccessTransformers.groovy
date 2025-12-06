@@ -38,6 +38,7 @@ interface AccessTransformers extends Dependencies {
      *
      * @param dependency to expose to consumers
      */
+    @Deprecated
     void expose(Dependency dependency)
 
     /**

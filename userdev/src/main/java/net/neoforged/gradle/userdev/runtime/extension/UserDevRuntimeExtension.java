@@ -162,10 +162,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                 builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
                     final AccessTransformers userAts = minecraftExtension.getAccessTransformers();
 
-                    if (userAts.getFiles().isEmpty()) {
-                        return null;
-                    }
-
                     final TaskProvider<? extends BinaryAccessTransformer> task = CommonRuntimeTaskUtils.createBinaryAccessTransformer(
                         definition,
                         "",
@@ -184,10 +180,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
                 builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
                     final InterfaceInjections userIIs = minecraftExtension.getInterfaceInjections();
-
-                    if (userIIs.getFiles().isEmpty()) {
-                        return null;
-                    }
 
                     final TaskProvider<? extends InjectInterfacesTask> task = CommonRuntimeTaskUtils.createBinaryInterfaceInjector(
                         definition,

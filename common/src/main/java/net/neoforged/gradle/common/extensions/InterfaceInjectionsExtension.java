@@ -1,6 +1,8 @@
 package net.neoforged.gradle.common.extensions;
 
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.interfaceinjection.InterfaceInjectionPublishing;
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -8,8 +10,14 @@ import org.gradle.api.artifacts.ConfigurablePublishArtifact;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.dsl.ArtifactHandler;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.File;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 
 public abstract class InterfaceInjectionsExtension implements InterfaceInjections {
     private transient final DependencyHandler projectDependencies;
@@ -19,17 +27,11 @@ public abstract class InterfaceInjectionsExtension implements InterfaceInjection
 
     @SuppressWarnings("UnstableApiUsage")
     @Inject
-    public InterfaceInjectionsExtension(Project project) {
+    public InterfaceInjectionsExtension(final Project project) {
         this.project = project;
 
         this.projectDependencies = project.getDependencies();
         this.projectArtifacts = project.getArtifacts();
-
-        // We have to add these after project evaluation because of dependency replacement making configurations non-lazy; adding them earlier would prevent further addition of dependencies
-        project.afterEvaluate(p -> {
-            p.getConfigurations().maybeCreate(InterfaceInjectionPublishing.INTERFACE_INJECTION_CONFIGURATION).fromDependencyCollector(getConsume());
-            p.getConfigurations().maybeCreate(InterfaceInjectionPublishing.INTERFACE_INJECTION_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());
-        });
     }
 
     @Override
@@ -49,8 +51,19 @@ public abstract class InterfaceInjectionsExtension implements InterfaceInjection
         });
     }
 
+    @SuppressWarnings("removal")
     @Override
     public void expose(Dependency dependency) {
+        project.getExtensions().getByType(IProblemReporter.class)
+                .reporting(
+                    spec -> spec.id("interface-injections", "expose.deprecated")
+                        .details("Using the expose(Dependency) method is deprecated.")
+                        .solution("Use the dependency collectors: 'consume' and 'consumeApi' for adding interface injections from your dependencies.")
+                        .section("userdev-interface-injections-from-dependencies")
+                        .contextualLabel("Deprecations"),
+                    project.getLogger()
+                );
+
         projectDependencies.add(InterfaceInjectionPublishing.INTERFACE_INJECTION_API_CONFIGURATION, dependency);
     }
 }

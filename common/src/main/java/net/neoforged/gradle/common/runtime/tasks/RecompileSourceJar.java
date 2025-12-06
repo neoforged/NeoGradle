@@ -199,11 +199,13 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
                 sourceFilePath = relativePath.substring(0, relativePath.indexOf('$')) + ".java";
             }
 
-            if (!getAdditionalInputFileRoot().getAsFileTree().matching(pattern -> pattern.include(sourceFilePath))
+            getAdditionalInputFileRoot().forEach(inputFileRoot -> {
+                if (!getArchiveOperations().zipTree(inputFileRoot).matching(pattern -> pattern.include(sourceFilePath))
                     .isEmpty()) {
-                getLogger().debug("Deleting additional input file.");
-                details.getFile().delete();
-            }
+                    getLogger().debug("Deleting additional input file.");
+                    details.getFile().delete();
+                }
+            });
         });
     }
 
