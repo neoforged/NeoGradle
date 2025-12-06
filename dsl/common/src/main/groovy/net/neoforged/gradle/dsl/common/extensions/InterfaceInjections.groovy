@@ -1,7 +1,7 @@
 package net.neoforged.gradle.dsl.common.extensions
 
 import groovy.transform.CompileStatic
-import net.neoforged.gdi.BaseDSLElementWithFilesAndEntries
+import net.neoforged.gdi.BaseDSLElement
 import net.neoforged.gdi.annotations.DSLProperty
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ConfigurablePublishArtifact
@@ -9,12 +9,13 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.dsl.Dependencies
 import org.gradle.api.artifacts.dsl.DependencyCollector
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.Internal
 
 /**
  * Defines a DSL extension which allows for the specification of interface injections.
  */
 @CompileStatic
-interface InterfaceInjections extends Dependencies {
+interface InterfaceInjections extends BaseDSLElement<InterfaceInjections>, Dependencies {
 
     /**
      * {@return interface injection files}
@@ -33,21 +34,23 @@ interface InterfaceInjections extends Dependencies {
     DependencyCollector getConsumeApi()
 
     /**
-     * Publishes a transitive dependency on the given access transformer in the published interface injections of this component.
+     * Publishes a transitive dependency on the given interface injection in the published interface injections of this component.
      *
      * @param dependency to expose to consumers
      */
+    @Deprecated(forRemoval = true, since="7.1")
     void expose(Dependency dependency)
 
     /**
-     * Publishes the provided access transformer as an artifact.
+     * Publishes a transitive dependency on the given interface injection in the published interface injections of this component.
      *
      * @param path access transformer file to publish
      */
     void expose(Object path)
 
     /**
-     * Publishes the provided access transformer as an artifact and configures it with the provided action.
+     * Publishes a given interface injection in the published interface injections of this component.
+     *
      * @param path access transformer file to publish
      * @param action configures the published artifact
      */

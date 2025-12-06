@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.interfaceinjection;
 
+import net.neoforged.gradle.common.util.ProjectUtils;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -8,6 +9,10 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.component.AdhocComponentWithVariants;
 
+import java.io.File;
+import java.util.Comparator;
+import java.util.List;
+
 public class InterfaceInjectionPublishing {
 
     public static final String INTERFACE_INJECTION_ELEMENTS_CONFIGURATION = "InterfaceInjectionElements";
@@ -15,42 +20,65 @@ public class InterfaceInjectionPublishing {
     public static final String INTERFACE_INJECTION_CONFIGURATION = "InterfaceInjection";
     public static final String INTERFACE_INJECTION_CATEGORY = "interfaceinjection";
 
+    @SuppressWarnings("UnstableApiUsage")
     public static void setup(Project project) {
-        InterfaceInjections InterfaceInjectionsExtension = project.getExtensions().getByType(InterfaceInjections.class);
+        InterfaceInjections extension = project.getExtensions().getByType(InterfaceInjections.class);
 
-        Configuration InterfaceInjectionElements = project.getConfigurations().maybeCreate(INTERFACE_INJECTION_ELEMENTS_CONFIGURATION);
-        Configuration InterfaceInjectionApi = project.getConfigurations().maybeCreate(INTERFACE_INJECTION_API_CONFIGURATION);
-        Configuration InterfaceInjection = project.getConfigurations().maybeCreate(INTERFACE_INJECTION_CONFIGURATION);
+        Configuration elementsConfig = project.getConfigurations().maybeCreate(INTERFACE_INJECTION_ELEMENTS_CONFIGURATION);
+        Configuration apiConfig = project.getConfigurations().maybeCreate(INTERFACE_INJECTION_API_CONFIGURATION);
+        Configuration implementationConfig = project.getConfigurations().maybeCreate(INTERFACE_INJECTION_CONFIGURATION);
 
-        InterfaceInjectionApi.setCanBeConsumed(false);
-        InterfaceInjectionApi.setCanBeResolved(false);
+        apiConfig.setCanBeConsumed(false);
+        apiConfig.setCanBeResolved(false);
 
-        InterfaceInjection.setCanBeConsumed(false);
-        InterfaceInjection.setCanBeResolved(true);
+        implementationConfig.setCanBeConsumed(false);
+        implementationConfig.setCanBeResolved(true);
 
-        InterfaceInjectionElements.setCanBeConsumed(true);
-        InterfaceInjectionElements.setCanBeResolved(false);
-        InterfaceInjectionElements.setCanBeDeclared(false);
+        elementsConfig.setCanBeConsumed(true);
+        elementsConfig.setCanBeResolved(false);
+        elementsConfig.setCanBeDeclared(false);
 
         Action<AttributeContainer> action = attributes -> {
             attributes.attribute(Category.CATEGORY_ATTRIBUTE, project.getObjects().named(Category.class, INTERFACE_INJECTION_CATEGORY));
         };
 
-        InterfaceInjectionElements.attributes(action);
-        InterfaceInjection.attributes(action);
+        elementsConfig.attributes(action);
+        implementationConfig.attributes(action);
 
-        InterfaceInjection.extendsFrom(InterfaceInjectionApi);
-        InterfaceInjectionElements.extendsFrom(InterfaceInjectionApi);
+        implementationConfig.extendsFrom(apiConfig);
+        elementsConfig.extendsFrom(apiConfig);
 
         // Now we set up the component, conditionally
         AdhocComponentWithVariants java = (AdhocComponentWithVariants) project.getComponents().getByName("java");
-        Runnable enable = () -> java.addVariantsFromConfiguration(InterfaceInjectionElements, variant -> {
+        Runnable enable = () -> java.addVariantsFromConfiguration(elementsConfig, variant -> {
         });
 
-        InterfaceInjectionElements.getAllDependencies().configureEach(dep -> enable.run());
-        InterfaceInjectionElements.getArtifacts().configureEach(artifact -> enable.run());
+        elementsConfig.getAllDependencies().configureEach(dep -> {
+            enable.run();
+        });
+        elementsConfig.getArtifacts().configureEach(artifact -> enable.run());
 
-        // And add resolved ATs to the extension
-        InterfaceInjectionsExtension.getFiles().from(InterfaceInjection);
+        // And add resolved iis to the extension
+        extension.getFiles().from(implementationConfig);
+
+        //When the user has configured the dependency collectors add the relevant files.
+        ProjectUtils.afterEvaluate(project, () -> {
+            apiConfig.fromDependencyCollector(extension.getConsumeApi());
+            implementationConfig.fromDependencyCollector(extension.getConsume());
+
+            final List<File> files = extension.getFiles().getFiles().stream()
+                .sorted(Comparator.comparing(File::getName))
+                .toList();
+            for (int i = 0; i < files.size(); i++)
+            {
+                final var file = files.get(i);
+                if (files.size() == 1) {
+                    extension.expose(file, artifact -> artifact.setClassifier("interface-injections"));
+                } else {
+                    final int index = i;
+                    extension.expose(file, artifact -> artifact.setClassifier("interface-injection-%d".formatted(index)));
+                }
+            }
+        });
     }
 }

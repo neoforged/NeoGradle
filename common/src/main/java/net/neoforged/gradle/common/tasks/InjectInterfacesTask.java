@@ -69,7 +69,7 @@ public abstract class InjectInterfacesTask extends DefaultRuntime implements Wit
                 List<String> interfaces;
                 if (entry.getValue() instanceof String) {
                     interfaces = List.of((String) entry.getValue());
-                } else if (entry.getValue() instanceof List l) {
+                } else if (entry.getValue() instanceof List) {
                     interfaces = (List<String>) entry.getValue();
                 } else {
                     throw new IllegalArgumentException("Invalid interface injection format in " + file + ": " + entry.getValue());

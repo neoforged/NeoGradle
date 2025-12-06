@@ -15,6 +15,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 @CacheableTask
@@ -55,4 +56,16 @@ public abstract class BinaryAccessTransformer extends DefaultExecute {
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getTransformers();
+
+    @Override
+    public void doExecute() throws Exception
+    {
+        //No ATs to apply.
+        if (getTransformers().isEmpty()) {
+            Files.copy(getInputFile().get().getAsFile().toPath(), getOutput().get().getAsFile().toPath());
+            return;
+        }
+
+        super.doExecute();
+    }
 }

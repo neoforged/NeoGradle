@@ -1,6 +1,6 @@
 package net.neoforged.gradle.userdev
 
-
+import groovy.json.JsonSlurper
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -213,5 +213,89 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         then:
         initialRun.task(":neoFormRecompile").outcome == TaskOutcome.SUCCESS
         initialRun.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def "the userdev runtime supports loading ats from dependencies and exposing them"() {
+        given:
+        def consumedProject = create("u_e_iis_publisher", {
+            it.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+            group = "n.n.n.u.t.p"
+            version = "1.0.0"
+            
+            minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+            }
+           
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+            """)
+            it.file("src/main/resources/META-INF/accesstransformer.cfg", """public-f net.minecraft.client.Minecraft fixerUpper # fixerUpper""")
+            it.withMod("Publisher")
+            it.plugin("maven-publish")
+        })
+
+        when:
+        def publishRun = consumedProject.run {
+            it.tasks("publishToMavenLocal")
+            it.stacktrace()
+        }
+
+        then:
+        publishRun.task(":publishToMavenLocal").outcome == TaskOutcome.SUCCESS
+
+        and:
+        def consumingProject = create("u_e_iis_consuming", {
+            it.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+            group = "n.n.n.u.t.g"
+            version = "1.0.0"
+            
+            repositories {
+                mavenLocal()
+            }
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:+'
+                implementation 'n.n.n.u.t.p:u_e_iis_publisher:1.0.0'
+            }
+            
+            accessTransformers {
+                consumeApi 'n.n.n.u.t.p:u_e_iis_publisher:1.0.0'
+            }
+            
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        from components.java
+                    }
+                }
+            }
+            """)
+            it.withMod("Consumer")
+            it.plugin("maven-publish")
+        })
+
+        when:
+        def consumerPublish = consumingProject.run {
+            it.tasks("publishToMavenLocal")
+        }
+
+        then:
+        consumerPublish.task(":publishToMavenLocal").outcome == TaskOutcome.SUCCESS
+        def moduleJson = consumerPublish.file("build/publications/maven/module.json")
+        def slurper = new JsonSlurper()
+        def module = slurper.parse(moduleJson)
+        module.variants.find(it -> it.name == "accessTransformerElements").dependencies.size() > 0
+        module.variants.find(it -> it.name == "accessTransformerElements").files.size() > 0
     }
 }

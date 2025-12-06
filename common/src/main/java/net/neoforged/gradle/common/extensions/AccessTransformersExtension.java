@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.extensions;
 
 import net.neoforged.gradle.common.accesstransformers.AccessTransformerPublishing;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -24,12 +25,6 @@ public abstract class AccessTransformersExtension implements AccessTransformers 
 
         this.projectDependencies = project.getDependencies();
         this.projectArtifacts = project.getArtifacts();
-
-        // We have to add these after project evaluation because of dependency replacement making configurations non-lazy; adding them earlier would prevent further addition of dependencies
-        project.afterEvaluate(p -> {
-            p.getConfigurations().maybeCreate(AccessTransformerPublishing.ACCESS_TRANSFORMER_CONFIGURATION).fromDependencyCollector(getConsume());
-            p.getConfigurations().maybeCreate(AccessTransformerPublishing.ACCESS_TRANSFORMER_API_CONFIGURATION).fromDependencyCollector(getConsumeApi());
-        });
     }
 
     @Override
@@ -50,6 +45,16 @@ public abstract class AccessTransformersExtension implements AccessTransformers 
 
     @Override
     public void expose(Dependency dependency) {
+        project.getExtensions().getByType(IProblemReporter.class)
+            .reporting(
+                spec -> spec.id("access-transformers", "expose.deprecated")
+                    .details("Using the expose(Dependency) method is deprecated.")
+                    .solution("Use the dependency collectors: 'consume' and 'consumeApi' for adding access transformers from your dependencies.")
+                    .section("userdev-access-transformers-from-dependencies")
+                    .contextualLabel("Deprecations"),
+                project.getLogger()
+            );
+
         projectDependencies.add(AccessTransformerPublishing.ACCESS_TRANSFORMER_API_CONFIGURATION, dependency);
     }
 }

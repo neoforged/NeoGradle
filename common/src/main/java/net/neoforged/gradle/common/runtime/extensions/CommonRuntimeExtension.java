@@ -158,7 +158,6 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
                 .getTasks().register(CommonRuntimeUtils.buildTaskName(spec, "recompile"), RecompileSourceJar.class, task -> {
                     task.getCompileFileRoot().from(recompileSourceFileTree);
                     task.getAdditionalInputFileRoot().from(definition.getAdditionalCompileSources());
-                    task.getAdditionalInputFileRoot().from(spec.getProject().file(recompileInput.flatMap(WithOutput::getOutput)));
                     task.setClasspath(recompileDependencies);
                     task.getStepName().set("recompile");
 
