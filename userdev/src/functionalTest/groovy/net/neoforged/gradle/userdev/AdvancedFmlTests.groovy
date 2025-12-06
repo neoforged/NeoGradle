@@ -15,11 +15,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_patch_task_is_possible", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenLocal()
@@ -47,11 +43,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_compile_in_ci", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenLocal()
@@ -92,11 +84,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_compile_with_compiler_disabled", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -133,11 +121,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("disabled_decompiler_runs_game", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -169,11 +153,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("enabled_decompiler_uses_setup", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()

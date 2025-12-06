@@ -19,11 +19,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("caching_is_enabled_by_default", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -49,11 +45,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         File cacheDir;
         def project = create("cache_supports_cleanup_and_take_over_of_failed_lock", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -92,11 +84,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("cache_can_be_disabled", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -122,11 +110,7 @@ class CentralCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_ats_from_file", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             

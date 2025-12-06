@@ -10,6 +10,7 @@ public final class NeoGradleProblemSpec {
     private String solution;
     private String details;
     private String section;
+    private String documentationUrl;
 
     public NeoGradleProblemSpec id(String category, String id) {
         this.category = category;
@@ -34,6 +35,11 @@ public final class NeoGradleProblemSpec {
 
     public NeoGradleProblemSpec section(String section) {
         this.section = section;
+        return this;
+    }
+
+    public NeoGradleProblemSpec documentedAt(String url) {
+        this.documentationUrl = url;
         return this;
     }
 
@@ -62,6 +68,9 @@ public final class NeoGradleProblemSpec {
     }
 
     String documentedAt() {
+        if (documentationUrl != null)
+            return documentationUrl;
+
         return readMeUrl(section);
     }
 

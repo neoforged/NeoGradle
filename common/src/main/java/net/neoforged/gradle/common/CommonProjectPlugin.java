@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.conventions.ConventionConfigurator;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.replacement.ReplacementLogic;
+import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
 import net.neoforged.gradle.common.extensions.problems.ProblemReportingConfigurator;
 import net.neoforged.gradle.common.extensions.repository.IvyRepository;
 import net.neoforged.gradle.common.extensions.sourcesets.SourceSetDependencyExtensionImpl;
@@ -38,10 +39,13 @@ import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
 import net.neoforged.gradle.util.UrlConstants;
+import org.gradle.api.GradleScriptException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.problems.ProblemId;
 import org.gradle.api.problems.Problems;
 import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSet;
@@ -165,6 +169,20 @@ public class CommonProjectPlugin implements Plugin<Project> {
     }
 
     private void applyAfterEvaluate(final Project project) {
+        final JavaPluginExtension java = project.getExtensions().getByType(JavaPluginExtension.class);
+        if (!java.getToolchain().getLanguageVersion().isPresent()) {
+            final IProblemReporter reporter = project.getExtensions().getByType(IProblemReporter.class);
+            throw reporter.throwing(
+                spec -> {
+                    spec.id("java", "toolchain.missing")
+                        .section("java")
+                        .details("NeoGradle requires a configured java toolchain to properly configure jar in jar and setup java tool executions. ")
+                        .solution("Please configure it by setting the java toolchain version.")
+                        .documentedAt("https://docs.gradle.org/current/userguide/toolchains.html#sec:consuming");
+                }
+            );
+        }
+
         //We now eagerly get all runs and configure them.
         final RunManager runs = project.getExtensions().getByType(RunManager.class);
         runs.realizeAll(run -> RunsUtil.configure(

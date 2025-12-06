@@ -15,6 +15,11 @@ on:
         required: true
         default: ''
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write # only required if `comment: true` was enabled
+
 concurrency:
   group: ci-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
@@ -196,6 +201,7 @@ jobs:
         with:
           report_paths: '**/*.xml'
           update_check: 'true'
+          comment: 'true'
 
       - name: Merge Test Reports
         if: always()

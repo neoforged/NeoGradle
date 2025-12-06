@@ -12,6 +12,8 @@ class NeoformDependencyManagerTest extends SimpleTestSpecification {
                 id 'net.neoforged.gradle.neoform'
             }
             
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            
             dependencies {
                 implementation 'com.google.guava:guava:30.1.1-jre'
             }
@@ -31,6 +33,8 @@ class NeoformDependencyManagerTest extends SimpleTestSpecification {
             plugins {
                 id 'net.neoforged.gradle.neoform'
             }
+            
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.minecraft:neoform_client:+'

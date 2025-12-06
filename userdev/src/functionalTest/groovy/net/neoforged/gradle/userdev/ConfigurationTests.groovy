@@ -16,11 +16,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_in_implementation_does_not_leak", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -85,11 +81,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
         def project = create("userdev_in_implementation_does_not_leak_via_publishing", {
             it.plugin('maven-publish')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -140,11 +132,7 @@ class ConfigurationTests extends BuilderBasedTestSpecification {
         def project = create("userdev_with_delayed_config_works", {
             it.plugin('maven-publish')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'

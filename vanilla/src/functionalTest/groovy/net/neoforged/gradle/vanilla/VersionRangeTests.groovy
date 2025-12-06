@@ -15,12 +15,8 @@ class VersionRangeTests extends BuilderBasedTestSpecification {
         given:
         def project = create("vanilla_loads_from_a_range", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
-
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            
             dependencies {
                 implementation ('net.minecraft:client') {
                     version {
@@ -48,11 +44,7 @@ class VersionRangeTests extends BuilderBasedTestSpecification {
         given:
         def project = create("vanilla_supports_ats_from_file", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
             dependencies {
                 implementation ('net.minecraft:client') {

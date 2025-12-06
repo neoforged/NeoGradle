@@ -8,7 +8,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
 
     @Override
     protected void configurePluginUnderTest() {
-        pluginUnderTest = "net.neoforged.gradle.neoform";
+        pluginUnderTest = "net.neoforged.gradle.userdev";
         injectIntoAllProject = true;
     }
 
@@ -17,15 +17,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
         given:
         def project = create("apply_supports_configuration_cache_build", {
             it.build("""
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -45,15 +37,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build", {
             it.build("""
-            plugins {
-                id 'net.neoforged.gradle.userdev'
-            }
-
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'

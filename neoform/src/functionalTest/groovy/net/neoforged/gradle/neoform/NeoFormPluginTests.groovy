@@ -16,6 +16,9 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
     def "can apply plugin"() {
         given:
         def project = create "apply-neoform", {
+            it.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            """)
         }
 
         when:
@@ -32,6 +35,8 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
         given:
         def project = create "apply-neoform-applies-common", {
             it.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            
             tasks.register('plugins') {
                 doLast {
                     project.getPlugins().forEach { plugin -> project.logger.lifecycle plugin.class.name }
@@ -52,6 +57,8 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
         given:
         def project = create "apply-neoform-allows-neoformruntime-configuration", {
             it.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            
             neoFormRuntime { }
             """)
         }
@@ -67,6 +74,8 @@ class NeoFormPluginTests extends BuilderBasedTestSpecification {
         given:
         def project = create "apply-neoform-adds-required-mavens", {
             it.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            
             tasks.register('repositoryUrls') {
                 doLast {
                     project.repositories.each { repo ->

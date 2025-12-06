@@ -211,11 +211,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_globally_errors_runs", {
             it.property('neogradle.subsystems.conventions.enabled', 'false')
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -243,11 +239,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_can_download_runtime_elements", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
@@ -281,11 +273,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_can_download_runtime_elements", {
             it.build("""
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                }
-            }
+            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             repositories {
                 mavenCentral()
