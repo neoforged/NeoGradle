@@ -7,7 +7,7 @@ class ParchmentTests extends BuilderBasedTestSpecification {
 
     @Override
     protected void configurePluginUnderTest() {
-        pluginUnderTest = "net.neoforged.gradle.neoform";
+        pluginUnderTest = "net.neoforged.gradle.userdev";
         injectIntoAllProject = true;
     }
 
@@ -23,7 +23,7 @@ class ParchmentTests extends BuilderBasedTestSpecification {
                 implementation 'net.neoforged:neoforge:+'
             }
             """)
-            it.file("src/main/java/net/neoforged/gradle/userdev/ConfigurationCacheTests.java", """
+            it.javaClassFile("net.neoforged.gradle.userdev.ConfigurationCacheTests", """
                 package net.neoforged.gradle.userdev;
                 
                 import net.minecraft.client.Minecraft;

@@ -8,7 +8,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
 
     @Override
     protected void configurePluginUnderTest() {
-        pluginUnderTest = "net.neoforged.gradle.neoform";
+        pluginUnderTest = "net.neoforged.gradle.userdev";
         injectIntoAllProject = true;
     }
 
