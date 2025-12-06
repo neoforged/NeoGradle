@@ -15,9 +15,9 @@ import java.util.List;
 
 public class InterfaceInjectionPublishing {
 
-    public static final String INTERFACE_INJECTION_ELEMENTS_CONFIGURATION = "InterfaceInjectionElements";
-    public static final String INTERFACE_INJECTION_API_CONFIGURATION = "InterfaceInjectionApi";
-    public static final String INTERFACE_INJECTION_CONFIGURATION = "InterfaceInjection";
+    public static final String INTERFACE_INJECTION_ELEMENTS_CONFIGURATION = "interfaceInjectionElements";
+    public static final String INTERFACE_INJECTION_API_CONFIGURATION = "interfaceInjectionApi";
+    public static final String INTERFACE_INJECTION_CONFIGURATION = "interfaceInjection";
     public static final String INTERFACE_INJECTION_CATEGORY = "interfaceinjection";
 
     @SuppressWarnings("UnstableApiUsage")
