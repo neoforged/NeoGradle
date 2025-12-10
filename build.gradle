@@ -158,7 +158,7 @@ subprojects.forEach { subProject ->
 
         //Custom source set.
         evalSubProject.sourceSets.register('functionalTest') { SourceSet sourceSet ->
-            sourceSet.java.srcDir evalSubProject.file('src/functionalTest/java')
+            sourceSet.groovy.srcDir evalSubProject.file('src/functionalTest/groovy')
             sourceSet.resources.srcDir evalSubProject.file('src/functionalTest/resources')
         }
 
@@ -243,7 +243,7 @@ subprojects.forEach { subProject ->
         //Handle the idea plugin
         evalSubProject.idea { ideaSpec ->
             ideaSpec.module { ideaModule ->
-                ideaModule.getTestSources().from(evalSubProject.sourceSets.functionalTest.java)
+                ideaModule.getTestSources().from(evalSubProject.sourceSets.functionalTest.groovy)
                 ideaModule.getTestSources().from(evalSubProject.sourceSets.functionalTest.resources)
             }
         }

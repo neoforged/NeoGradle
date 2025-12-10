@@ -100,6 +100,46 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
+            if (decompilerSubsystemConfiguration.getIsDisabled().get() || !useCombinedJarWithNeoForgeOnRecompile(userDevProfile)) {
+                builder.withPostTaskAdapter("downloadClient", new TaskTreeAdapter() {
+                    @Override
+                    public @NotNull TaskProvider<? extends Runtime> adapt(
+                            final Definition<?> definition,
+                            final Provider<? extends WithOutput> previousTasksOutput,
+                            final File runtimeWorkspace,
+                            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts,
+                            final Map<String, String> mappingVersionData,
+                            final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler)
+                    {
+                        var stripper = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(),
+                                "stripClientFinals"), StripFinalFromParametersTask.class, task -> {
+                            task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                        });
+                        dependentTaskConfigurationHandler.accept(stripper);
+                        return stripper;
+                    }
+                });
+
+                builder.withPostTaskAdapter("downloadServer", new TaskTreeAdapter() {
+                    @Override
+                    public @NotNull TaskProvider<? extends Runtime> adapt(
+                            final Definition<?> definition,
+                            final Provider<? extends WithOutput> previousTasksOutput,
+                            final File runtimeWorkspace,
+                            final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts,
+                            final Map<String, String> mappingVersionData,
+                            final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler)
+                    {
+                        var stripper = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(),
+                                "stripServerFinals"), StripFinalFromParametersTask.class, task -> {
+                            task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                        });
+                        dependentTaskConfigurationHandler.accept(stripper);
+                        return stripper;
+                    }
+                });
+            }
+
             if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
             {
                 builder.withTaskCustomizer("inject", InjectZipContent.class, task -> {
@@ -121,44 +161,6 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     );
                 });
             } else if (decompilerSubsystemConfiguration.getIsDisabled().get()){
-                builder.withPostTaskAdapter("downloadClient", new TaskTreeAdapter() {
-                    @Override
-                    public @NotNull TaskProvider<? extends Runtime> adapt(
-                        final Definition<?> definition,
-                        final Provider<? extends WithOutput> previousTasksOutput,
-                        final File runtimeWorkspace,
-                        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts,
-                        final Map<String, String> mappingVersionData,
-                        final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler)
-                    {
-                        var stripper = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(),
-                            "stripClientFinals"), StripFinalFromParametersTask.class, task -> {
-                            task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-                        });
-                        dependentTaskConfigurationHandler.accept(stripper);
-                        return stripper;
-                    }
-                });
-
-                builder.withPostTaskAdapter("downloadServer", new TaskTreeAdapter() {
-                    @Override
-                    public @NotNull TaskProvider<? extends Runtime> adapt(
-                        final Definition<?> definition,
-                        final Provider<? extends WithOutput> previousTasksOutput,
-                        final File runtimeWorkspace,
-                        final Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifacts,
-                        final Map<String, String> mappingVersionData,
-                        final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler)
-                    {
-                        var stripper = definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(),
-                            "stripServerFinals"), StripFinalFromParametersTask.class, task -> {
-                            task.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
-                        });
-                        dependentTaskConfigurationHandler.accept(stripper);
-                        return stripper;
-                    }
-                });
-
                 builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
                     final AccessTransformers userAts = minecraftExtension.getAccessTransformers();
 
