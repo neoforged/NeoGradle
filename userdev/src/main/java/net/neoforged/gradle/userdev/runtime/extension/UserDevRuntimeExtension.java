@@ -100,7 +100,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
-            if (decompilerSubsystemConfiguration.getIsDisabled().get() || !useCombinedJarWithNeoForgeOnRecompile(userDevProfile)) {
+            if (decompilerSubsystemConfiguration.getIsDisabled().get() || useCombinedJarWithNeoForgeOnRecompile(userDevProfile)) {
                 builder.withPostTaskAdapter("downloadClient", new TaskTreeAdapter() {
                     @Override
                     public @NotNull TaskProvider<? extends Runtime> adapt(
