@@ -83,7 +83,7 @@ public abstract class Patch extends DefaultRuntime {
 
         boolean success = result.exit == 0;
         if (!success) {
-            getProject().getLogger().error("Rejects saved to: {}", rejects);
+            getLogger().error("Rejects saved to: {}", rejects);
             throw new RuntimeException("Patch failure.");
         }
 
