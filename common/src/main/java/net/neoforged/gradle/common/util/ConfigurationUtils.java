@@ -12,7 +12,6 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.util.internal.GUtil;
 
 import java.io.File;
 import java.util.*;
@@ -257,7 +256,24 @@ public class ConfigurationUtils {
     }
 
     public static String configurationNameOf(final SourceSet sourceSet, final String baseName) {
-        return StringUtils.uncapitalize(getTaskBaseName(sourceSet) + StringUtils.capitalize(baseName));
+        //We need to do some shenanigans here to create configuration names because source sets do not expose the configurationNameOf method in the public API.
+        //First check if we are main.
+        if (SourceSet.isMain(sourceSet)) {
+            //If so lower case the first character of the requested config name.
+            if (baseName.length() == 1) {
+                //One length config name, okey but what the hell.
+                return baseName.toLowerCase(Locale.ROOT);
+            }
+
+            //LowerCase the first character return the rest normally.
+            return baseName.substring(0, 1).toLowerCase(Locale.ROOT) + baseName.substring(1);
+        }
+
+        //To get the configuration name for the rest, we grab the compileOnlyApi configuration (if somebody generates a sourceset with that name, they are out of luck really)
+        var compileOnlyApiName = sourceSet.getCompileOnlyApiConfigurationName();
+
+        //Now we replace that configuration suffix with our own.
+        return compileOnlyApiName.replace(StringUtils.capitalize("compileOnlyApi"), StringUtils.capitalize(baseName));
     }
 
     public static Configuration getSdkConfiguration(final SourceSet sourceSet) {
@@ -274,10 +290,6 @@ public class ConfigurationUtils {
     public static void ensureReplacementConfigurationExists(Project project) {
         project.getExtensions().getByType(SourceSetContainer.class)
                 .all(sourceSet -> project.getConfigurations().maybeCreate(getSourceSetName(sourceSet, "%s%s".formatted(NEOGRADLE_RUNTIME_REPLACEMENT, StringUtils.capitalize(sourceSet.getName())))));
-    }
-
-    public static String getTaskBaseName(final SourceSet sourceSet) {
-        return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "" : GUtil.toCamelCase(sourceSet.getName());
     }
 
     private static final Set<Configuration> UNHANDLED_CONFIGURATIONS = new HashSet<Configuration>();
