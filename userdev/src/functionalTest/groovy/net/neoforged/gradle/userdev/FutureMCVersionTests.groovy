@@ -15,7 +15,7 @@ class FutureMCVersionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_patch_task_is_possible", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(25)
             
             repositories {
                 mavenLocal()
@@ -33,7 +33,7 @@ class FutureMCVersionTests extends BuilderBasedTestSpecification {
             }
                         
             dependencies {
-                implementation 'net.neoforged:neoforge:26.1.0.0-alpha.2+snapshot-1'
+                implementation 'net.neoforged:neoforge:26.1.0.0-alpha.3+snapshot-1'
             }
             """)
             it.withToolchains()
