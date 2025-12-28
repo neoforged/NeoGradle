@@ -43,6 +43,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -100,7 +101,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
 
             builder.withPostTaskAdapter("patch", createPatchAdapter(userDevJar, userDevProfile.getSourcePatchesDirectory().get()));
 
-            if (decompilerSubsystemConfiguration.getIsDisabled().get() || useCombinedJarWithNeoForgeOnRecompile(userDevProfile)) {
+            if ((decompilerSubsystemConfiguration.getIsDisabled().get() || useCombinedJarWithNeoForgeOnRecompile(userDevProfile)) && isObfuscatedVersion(userDevProfile.getNeoForm().get())) {
                 builder.withPostTaskAdapter("downloadClient", new TaskTreeAdapter() {
                     @Override
                     public @NotNull TaskProvider<? extends Runtime> adapt(
@@ -160,7 +161,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                         ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeRawLookupFor" + spec.getIdentifier(), userDevProfile.getUniversalJarArtifactCoordinate())
                     );
                 });
-            } else if (decompilerSubsystemConfiguration.getIsDisabled().get()){
+            } else if (decompilerSubsystemConfiguration.getIsDisabled().get() && isObfuscatedVersion(userDevProfile.getNeoForm().get())){
                 builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
                     final AccessTransformers userAts = minecraftExtension.getAccessTransformers();
 
@@ -231,7 +232,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final FileTree userDevJar)
     {
         return (steps, functions) -> {
-            if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
+            if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile) || !isObfuscatedVersion(userDevProfile.getNeoForm().get()))
             {
                 return;
             }
@@ -341,6 +342,23 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         return userDevProfile.getFeatures()
             .flatMap(UserdevProfile.Features::getUsesCombinedBinaryPatches)
             .getOrElse(false);
+    }
+
+    private boolean isObfuscatedVersion(final String neoformCoordinate) {
+        var neoformVersion=neoformCoordinate.split(":")[2];
+
+        //Check if we are minecraft 26.x or later.
+        if (Objects.equals(neoformVersion.substring(2, 3), ".")) {
+            var mcYear = neoformVersion.substring(0, 2);
+            try {
+                var yearParsed = Integer.parseInt(mcYear);
+                return yearParsed < 26;
+            } catch (Exception ignored) {
+                return true;
+            }
+        }
+
+        return true;
     }
 
     @Override
