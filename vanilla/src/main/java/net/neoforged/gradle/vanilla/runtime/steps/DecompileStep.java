@@ -24,7 +24,7 @@ public class DecompileStep implements IStep {
     @Override
     public TaskProvider<? extends Runtime> buildTask(VanillaRuntimeDefinition definition, TaskProvider<? extends WithOutput> inputProvidingTask, @NotNull File minecraftCache, @NotNull File workingDirectory, @NotNull Map<String, TaskProvider<? extends WithOutput>> pipelineTasks, @NotNull Map<GameArtifact, TaskProvider<? extends WithOutput>> gameArtifactTasks, @NotNull Consumer<TaskProvider<? extends Runtime>> additionalTaskConfigurator) {
         return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition, "decompile"), DefaultExecute.class, task -> {
-            task.getExecutingJar().fileProvider(ToolUtilities.resolveTool(task.getProject(), Tools::getDecompiler));
+            task.getExecutingClasspath().from(ToolUtilities.resolveTool(task.getProject(), Tools::getDecompiler));
             task.getJvmArguments().addAll(DecompileUtils.DEFAULT_JVM_ARGS);
             task.getProgramArguments().addAll(DecompileUtils.DEFAULT_PROGRAMM_ARGS);
             CommonRuntimeUtils.buildArguments(task.getArguments(), definition, DecompileUtils.DEFAULT_DECOMPILE_VALUES, pipelineTasks, task, Optional.of(inputProvidingTask));

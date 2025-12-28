@@ -43,6 +43,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -246,7 +247,29 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         decompilerArgs.add(0, "-log=" + logLevel);
 
         return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), DecompilerExecute.class, task -> {
-            task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
+            if (function.getClasspath() != null && !function.getClasspath().isEmpty()) {
+                task.getExecutingClasspath().from(
+                    function.getClasspath()
+                        .stream()
+                        .map(tool -> ToolUtilities.resolveTool(task.getProject(), tool))
+                        .collect(Collectors.toSet())
+                );
+            }
+
+            if (function.getVersion() != null) {
+                task.getExecutingClasspath().from(
+                    ToolUtilities.resolveTool(task.getProject(), function.getVersion())
+                );
+            }
+
+            if (function.getMain_class() != null) {
+                task.getMainClass().set(function.getMain_class());
+            }
+
+            if (function.getJava_version() != null) {
+                task.getJavaVersion().set(JavaLanguageVersion.of(function.getJava_version()));
+            }
+
             task.getJvmArguments().addAll(jvmArgs);
             task.getProgramArguments().addAll(decompilerArgs);
         });
@@ -270,7 +293,29 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         final NeoFormConfigConfigurationSpecV1.Function function)
     {
         return spec.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(spec, step.getName()), DefaultExecute.class, task -> {
-            task.getExecutingJar().set(ToolUtilities.resolveTool(task.getProject(), function.getVersion()));
+            if (function.getClasspath() != null && !function.getClasspath().isEmpty()) {
+                task.getExecutingClasspath().from(
+                    function.getClasspath()
+                        .stream()
+                        .map(tool -> ToolUtilities.resolveTool(task.getProject(), tool))
+                        .collect(Collectors.toSet())
+                );
+            }
+
+            if (function.getVersion() != null) {
+                task.getExecutingClasspath().from(
+                    ToolUtilities.resolveTool(task.getProject(), function.getVersion())
+                );
+            }
+
+            if (function.getMain_class() != null) {
+                task.getMainClass().set(function.getMain_class());
+            }
+
+            if (function.getJava_version() != null) {
+                task.getJavaVersion().set(JavaLanguageVersion.of(function.getJava_version()));
+            }
+
             task.getJvmArguments().addAll(function.getJvmArgs());
             task.getProgramArguments().addAll(function.getArgs());
         });

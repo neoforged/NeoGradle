@@ -4,6 +4,7 @@ import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.dsl.common.tasks.Execute;
 import net.neoforged.gradle.util.TransformerUtils;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -33,10 +34,20 @@ public abstract class DefaultExecute extends DefaultRuntime implements Execute {
         getConsoleLogFileName().convention(getArguments().getOrDefault("console.log", getProviderFactory().provider(() -> "console.log")));
         getConsoleLogFile().convention(getOutputDirectory().flatMap(d -> getConsoleLogFileName().map(d::file)));
 
-        getMainClass().convention(getExecutingJar().map(TransformerUtils.guardWithResource(
-                jarFile -> jarFile.getManifest().getMainAttributes().getValue(Attributes.Name.MAIN_CLASS),
-                f -> new JarFile(f.getAsFile())
-        )));
+        getMainClass().convention(
+            getExecutingClasspath().getElements()
+                .map(e -> {
+                    if (e.isEmpty())
+                        return null;
+
+                    return e.iterator().next();
+                })
+                .filter(fsl -> fsl != null && fsl.getAsFile().isFile())
+                .map(TransformerUtils.guardWithResource(
+                    jarFile -> jarFile.getManifest().getMainAttributes().getValue(Attributes.Name.MAIN_CLASS),
+                    f -> new JarFile(f.getAsFile())
+                ))
+        );
 
         getRuntimeProgramArguments().convention(getProgramArguments());
         getMultiRuntimeArguments().convention(getMultiArguments().AsMap());

@@ -1,6 +1,7 @@
 package net.neoforged.gradle.dsl.common.tasks.specifications
 
 import net.neoforged.gdi.annotations.DSLProperty
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFileProperty
@@ -33,14 +34,14 @@ interface ExecuteSpecification extends ProjectSpecification, OutputSpecification
     ListProperty<String> getJvmArguments();
 
     /**
-     * Defines the path to the jar that will be executed.
+     * Defines the paths to the jars that will be executed.
      *
-     * @return The path to the jar.
+     * @return The paths to the jars.
      */
-    @InputFile
+    @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     @DSLProperty
-    RegularFileProperty getExecutingJar();
+    ConfigurableFileCollection getExecutingClasspath();
 
     /**
      * Defines the main class that will be executed.

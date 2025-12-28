@@ -36,7 +36,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
             Provider<String> argument = runtimeArguments.get(argName)
             if (argument != null) {
                 try {
-                    return Lists.newArrayList(argument.get())
+                    return Lists.newArrayList(matcher.replaceAll(argument.get()))
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to get runtime argument " + argName, e)
                 }
@@ -101,7 +101,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
             final List<String> jvmArgs,
             final List<String> runArgs,
             String executable,
-            String classPath,
+            final Set<File> classPath,
             String workingDirectory,
             String mainClass
     ) {
@@ -113,7 +113,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
             final List<String> jvmArgs,
             final List<String> runArgs,
             String executable,
-            String classPath,
+            final Set<File> classPath,
             String workingDirectory,
             String mainClass
     ) {
@@ -127,7 +127,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         for (String arg : jvmArgs) {
             script.append(" ").append('"').append(arg.replace("\"", "\\\"")).append('"')
         }
-        script.append(" -cp \"").append(classPath).append("\"")
+        script.append(" -cp \"").append(classPath.join(":")).append("\"")
         script.append(" ").append(mainClass)
         for (String arg : runArgs) {
             script.append(" ").append('"').append(arg.replace("\"", "\\\"")).append('"')
@@ -143,7 +143,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
             final List<String> jvmArgs,
             final List<String> runArgs,
             String executable,
-            String classPath,
+            final Set<File> classPath,
             String workingDirectory,
             String mainClass
     ) {
@@ -157,7 +157,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
         for (String arg : jvmArgs) {
             script.append(' "').append(arg.replace('"', '""')).append('"')
         }
-        script.append(" -cp \"").append(classPath).append("\"")
+        script.append(" -cp \"").append(classPath.join(";")).append("\"")
         script.append(" ").append(mainClass)
         for (String arg : runArgs) {
             script.append(' "').append(arg.replace('"', '""')).append('"')
@@ -197,7 +197,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 writer.println("JVM Args:          " + jvmArgs.get().stream().map(quote).collect(Collectors.joining(", ")))
                 writer.println("Run Args:          " + programArgs.get().stream().map(quote).collect(Collectors.joining(", ")))
                 writer.println("JVM:               " + executable.get())
-                writer.println("Classpath:         " + me.getExecutingJar().get().getAsFile().getAbsolutePath())
+                writer.println("Classpath:         " + me.getExecutingClasspath().getFiles().join(", "))
                 writer.println("Working Dir:       " + me.getOutputDirectory().get().getAsFile().getAbsolutePath())
                 writer.println("Main Class:        " + mainClass.get())
                 writer.println("Program log file:  " + logFile.getAbsolutePath())
@@ -208,7 +208,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                         jvmArgs.get(),
                         programArgs.get(),
                         executable.get(),
-                        me.getExecutingJar().get().getAsFile().getAbsolutePath(),
+                        me.getExecutingClasspath().getFiles(),
                         me.getOutputDirectory().get().getAsFile().getAbsolutePath(),
                         mainClass.get()
                 )
@@ -216,7 +216,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
                 java.executable(executable.get())
                 java.setJvmArgs(jvmArgs.get())
                 java.setArgs(programArgs.get())
-                java.setClasspath(me.getObjectFactory().fileCollection().from(me.getExecutingJar().get()))
+                java.setClasspath(me.getExecutingClasspath())
                 java.setWorkingDir(me.getOutputDirectory().get())
                 java.getMainClass().set(mainClass)
                 java.setStandardOutput(standard_out)

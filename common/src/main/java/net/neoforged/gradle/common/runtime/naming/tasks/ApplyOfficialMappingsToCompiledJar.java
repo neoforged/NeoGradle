@@ -26,7 +26,7 @@ public abstract class ApplyOfficialMappingsToCompiledJar extends DefaultExecute 
     public ApplyOfficialMappingsToCompiledJar() {
         super();
 
-        getExecutingJar().fileProvider(ToolUtilities.resolveTool(getProject(), Tools::getAutoRenamingTool));
+        getExecutingClasspath().from(ToolUtilities.resolveTool(getProject(), Tools::getAutoRenamingTool));
         getProgramArguments().set(getShouldReverseMappings().map(shouldReverse -> {
             final List<String> result = Lists.newArrayList(RenameConstants.DEFAULT_PROGRAMM_ARGS);
             if (shouldReverse) {

@@ -6,7 +6,7 @@ import org.gradle.testkit.runner.TaskOutcome
 
 class FunctionalTests extends BuilderBasedTestSpecification {
 
-    private static final String NEOFORM_VERSION = "1.20.2-20230921.152923"
+    private static final String NEOFORM_VERSION = "26.1-snapshot-1-3"
 
     @Override
     protected void configurePluginUnderTest() {
@@ -18,10 +18,10 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create "neoform-can-run-clean-build", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(25)
             
             dependencies {
-                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
+                implementation 'net.minecraft:neoform_joined:${NEOFORM_VERSION}'
             }
             """)
             it.withToolchains()
@@ -31,6 +31,8 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         when:
         def run = project.run {
             it.tasks(':clean', ':build')
+            it.stacktrace()
+            it.debug()
         }
 
         then:
@@ -42,12 +44,12 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create "neoform-compile-with-ats", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             
             dependencies {
-                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
+                implementation 'net.minecraft:neoform_joined:${NEOFORM_VERSION}'
             }
             """)
             it.file("src/main/resources/META-INF/accesstransformer.cfg", """public-f net.minecraft.client.Minecraft LOGGER""")
@@ -79,10 +81,10 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create "neoform-compile-with-ats", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(25)
             
             dependencies {
-                implementation 'net.minecraft:neoform_client:${NEOFORM_VERSION}'
+                implementation 'net.minecraft:neoform_joined:${NEOFORM_VERSION}'
             }
             """)
 
