@@ -99,9 +99,6 @@ public final class PIDBasedFileLock implements AutoCloseable {
             logger.debug("Unlocking: " + Thread.currentThread().getId() + " - " + Thread.currentThread().getName());
             final OwnerAwareReentrantLock lock = FILE_LOCKS.get(lockFile.getAbsolutePath());
             lock.unlock();
-            if (lock.getHoldCount() == 0) {
-                FILE_LOCKS.remove(lockFile.getAbsolutePath());
-            }
         }
     }
 }
