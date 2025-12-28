@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * This class installs a dependency replacement handler that replaces the following dependencies with the outputs
@@ -102,7 +103,11 @@ public final class NeoFormDependencyManager {
             return null;
         }
 
-        return new NeoFormTarget(dependency.getVersion(), distributionType);
+        var target = new NeoFormTarget(dependency.getVersion(), distributionType);
+        if (target.isValid())
+            return target;
+
+        return null;
     }
 
     private static boolean hasMatchingArtifact(ModuleDependency externalModuleDependency) {
@@ -130,6 +135,21 @@ public final class NeoFormDependencyManager {
             this.version = version;
             this.distribution = distribution;
         }
+
+        public boolean isValid() {
+            //Check if we are minecraft 26.x or later.
+            if (Objects.equals(version.substring(2, 3), ".")) {
+                var mcYear = version.substring(0, 2);
+                try {
+                    var yearParsed = Integer.parseInt(mcYear);
+                    return yearParsed >= 26 && this.distribution == DistributionType.JOINED;
+                } catch (Exception ignored) {
+                    return true;
+                }
+            }
+
+            return true;
+        }
     }
-    
+
 }

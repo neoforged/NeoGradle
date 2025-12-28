@@ -26,7 +26,7 @@ public abstract class BinaryAccessTransformer extends DefaultExecute {
 
         setDescription("Runs the access transformer on the decompiled sources.");
 
-        getExecutingJar().fileProvider(ToolUtilities.resolveTool(getProject(), Tools::getAccessTransformer));
+        getExecutingClasspath().from(ToolUtilities.resolveTool(getProject(), Tools::getAccessTransformer));
         getRuntimeProgramArguments().convention(
                 getInputFile().map(inputFile -> {
                             final List<String> args = Lists.newArrayList();

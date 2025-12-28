@@ -22,6 +22,7 @@ package net.neoforged.gradle.dsl.neoform.configuration;
 
 import com.google.gson.*;
 
+import groovy.lang.GString;
 import net.neoforged.gradle.dsl.common.configuration.VersionedConfiguration;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.tasks.Input;
@@ -100,6 +101,11 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
     }
 
     public List<Step> getSteps(String side) {
+        if (spec >= 6 && steps != null && !steps.containsKey(side) && steps.size() == 1) {
+            //From v6 on forward there is only one steps list, does not matter what you want.
+            return steps.values().iterator().next();
+        }
+
         List<Step> ret = steps == null ? null : steps.get(side);
         return ret == null ? Collections.emptyList() : ret;
     }
@@ -175,9 +181,15 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
         @Nullable
         protected String repo; //Maven repo to download the jar from
         @Nullable
+        protected List<String> classpath;
+        @Nullable
         protected List<String> args;
         @Nullable
         protected List<String> jvmargs;
+        @Nullable
+        protected String main_class;
+        @Nullable
+        protected Integer java_version;
 
         public Function()
         {
@@ -232,6 +244,39 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
         }
         public void setJvmArgs(List<String> value) {
             this.jvmargs = value;
+        }
+
+        @Nullable
+        public List<String> getClasspath()
+        {
+            return classpath;
+        }
+
+        public void setClasspath(@Nullable final List<String> classpath)
+        {
+            this.classpath = classpath;
+        }
+
+        @Nullable
+        public String getMain_class()
+        {
+            return main_class;
+        }
+
+        public void setMain_class(@Nullable final String main_class)
+        {
+            this.main_class = main_class;
+        }
+
+        @Nullable
+        public Integer getJava_version()
+        {
+            return java_version;
+        }
+
+        public void setJava_version(@Nullable final Integer java_version)
+        {
+            this.java_version = java_version;
         }
     }
 }

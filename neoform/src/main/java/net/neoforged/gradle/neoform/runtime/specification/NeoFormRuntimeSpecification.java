@@ -231,7 +231,7 @@ public class NeoFormRuntimeSpecification extends CommonRuntimeSpecification impl
             }
             catch (IOException e)
             {
-                throw new GradleException("Failed to read NeoForm config file from version " + effectiveVersion);
+                throw new GradleException("Failed to read NeoForm config file from version " + effectiveVersion, e);
             }
 
             return new NeoFormRuntimeSpecification(

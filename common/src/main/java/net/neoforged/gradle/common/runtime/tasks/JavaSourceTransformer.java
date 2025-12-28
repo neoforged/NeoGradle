@@ -31,7 +31,7 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
         getStubs().convention(getOutputDirectory().map(dir -> dir.file("stubs.jar")));
         getParchmentConflictPrefix().convention("p_");
 
-        getExecutingJar().set(ToolUtilities.resolveTool(getProject(), getProject().getExtensions().getByType(Subsystems.class).getTools().getJST().get()));
+        getExecutingClasspath().from(ToolUtilities.resolveTool(getProject(), getProject().getExtensions().getByType(Subsystems.class).getTools().getJST().get()));
 
         getTransformed().convention(getOutputDirectory().map(output -> output.dir("transformed")));
 
