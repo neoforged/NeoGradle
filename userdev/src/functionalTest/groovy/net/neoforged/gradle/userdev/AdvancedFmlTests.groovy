@@ -87,7 +87,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
             java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
+                implementation 'net.neoforged:neoforge:[21.11,21.12)'
             }
             """)
             it.file("src/main/java/net/neoforged/gradle/userdev/FunctionalTests.java", """
