@@ -1,5 +1,7 @@
 package net.neoforged.gradle.userdev.runtime.extension;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
@@ -41,6 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.Serial;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -232,7 +235,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         final FileTree userDevJar)
     {
         return (steps, functions) -> {
-            if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile) || !isObfuscatedVersion(userDevProfile.getNeoForm().get()))
+            if (!useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
             {
                 return;
             }
@@ -244,6 +247,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             steps.removeIf(step -> step.getType().equals("merge"));
             steps.removeIf(step -> step.getType().equals("mergeMappings"));
             steps.removeIf(step -> step.getType().equals("rename"));
+            steps.removeIf(step -> step.getType().equals("preProcessJar"));
 
             final int decompileIndex = ListUtils.removeIfAndReturnIndex(
                 steps, step -> step.getType().equals("decompile")
@@ -256,6 +260,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     "decompile", "decompile",
                     Map.of(
                         "libraries", "{listLibrariesOutput}",
+                        "inputLibraries", "{listLibrariesOutput}",
                         "input", "{setupOutput}"
                     )
                 )
@@ -294,47 +299,37 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
     private SetupConfiguration buildSetupConfiguration(final UserdevProfile userDevProfile, final FileTree userDevJar)
     {
         final Decompiler decompilerSubsystemConfiguration = getProject().getExtensions().getByType(Subsystems.class).getDecompiler();
-        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(userDevProfile))
-        {
-            return new SetupConfiguration(
-                List.of(
-                    "--task", "PROCESS_MINECRAFT_JAR",
-                    "--input", "{client}",
-                    "--input", "{server}",
-                    "--output", "{output}",
-                    "--input-mappings", "{clientMappings}",
-                    "--neoform-data", "{neoform}",
-                    "--apply-patches", "{patches}"
-                ),
-                Map.of(
-                    "client", "{downloadClientOutput}",
-                    "clientMappings", "{downloadClientMappingsOutput}",
-                    "server", "{downloadServerOutput}",
-                    "neoform", "{neoform}",
-                    "patches", userDevProfile.getBinaryPatchFile()
-                        .map(patchFilePath -> userDevJar
-                            .matching(matcher -> matcher.include(patchFilePath))
-                            .getSingleFile()).get().getAbsolutePath()
-                )
-            );
+        final List<String> arguments = Lists.newArrayList(
+            "--task", "PROCESS_MINECRAFT_JAR",
+            "--input", "{client}",
+            "--input", "{server}",
+            "--output", "{output}",
+            "--neoform-data", "{neoform}"
+        );
+        final Map<String, String> values = Maps.newHashMap(Map.of(
+            "client", "{downloadClientOutput}",
+            "server", "{downloadServerOutput}",
+            "neoform", "{neoform}"
+        ));
+
+        if (isObfuscatedVersion(userDevProfile.getNeoForm().get())) {
+            arguments.addAll(List.of(
+                "--input-mappings", "{clientMappings}"
+            ));
+            values.put("clientMappings", "{downloadClientMappingsOutput}");
         }
 
-        return new SetupConfiguration(
-            List.of(
-                "--task", "PROCESS_MINECRAFT_JAR",
-                "--input", "{client}",
-                "--input", "{server}",
-                "--output", "{output}",
-                "--input-mappings", "{clientMappings}",
-                "--neoform-data", "{neoform}"
-            ),
-            Map.of(
-                "client", "{downloadClientOutput}",
-                "clientMappings", "{downloadClientMappingsOutput}",
-                "server", "{downloadServerOutput}",
-                "neoform", "{neoform}"
-            )
-        );
+        if (decompilerSubsystemConfiguration.getIsDisabled().get() && useCombinedJarWithNeoForgeOnRecompile(userDevProfile)) {
+            arguments.addAll(List.of(
+                "--apply-patches", "{patches}"
+            ));
+            values.put("patches", userDevProfile.getBinaryPatchFile()
+                .map(patchFilePath -> userDevJar
+                    .matching(matcher -> matcher.include(patchFilePath))
+                    .getSingleFile()).get().getAbsolutePath());
+        }
+
+        return new SetupConfiguration(arguments, values);
     }
 
     private boolean useCombinedJarWithNeoForgeOnRecompile(final UserdevProfile userDevProfile)
