@@ -164,7 +164,7 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                         ConfigurationUtils.getArtifactProvider(getProject(), "NeoForgeRawLookupFor" + spec.getIdentifier(), userDevProfile.getUniversalJarArtifactCoordinate())
                     );
                 });
-            } else if (decompilerSubsystemConfiguration.getIsDisabled().get() && isObfuscatedVersion(userDevProfile.getNeoForm().get())){
+            } else if (decompilerSubsystemConfiguration.getIsDisabled().get()){
                 builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
                     final AccessTransformers userAts = minecraftExtension.getAccessTransformers();
 
