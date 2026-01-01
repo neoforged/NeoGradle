@@ -36,7 +36,7 @@ interface Execute extends WithWorkspace, WithOutput, WithJavaVersion, ExecuteSpe
             Provider<String> argument = runtimeArguments.get(argName)
             if (argument != null) {
                 try {
-                    return Lists.newArrayList(matcher.replaceAll(argument.get()))
+                    return Lists.newArrayList(matcher.replaceAll(argument.get().replace("\\", "\\\\")))
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to get runtime argument " + argName, e)
                 }
