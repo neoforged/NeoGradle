@@ -2,6 +2,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class ParchmentTests extends BuilderBasedTestSpecification {
 
@@ -17,7 +18,7 @@ class ParchmentTests extends BuilderBasedTestSpecification {
             it.property("neogradle.subsystems.parchment.minecraftVersion", "1.21")
             it.property("neogradle.subsystems.parchment.mappingsVersion", "2024.07.28")
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'

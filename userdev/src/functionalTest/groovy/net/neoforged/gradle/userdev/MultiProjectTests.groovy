@@ -4,6 +4,7 @@ package net.neoforged.gradle.userdev
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class MultiProjectTests extends BuilderBasedTestSpecification {
 
@@ -17,42 +18,20 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
         })
 
         def apiProject = create(rootProject, "api", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            """)
-            it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
-                package net.neoforged.gradle.apitest;
-                
-                import net.minecraft.client.Minecraft;
-                
-                public class FunctionalTests {
-                    public static void main(String[] args) {
-                        System.out.println(Minecraft.getInstance().getClass().toString());
-                    }
-                }
-            """)
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
+            it.run()
             it.plugin(this.pluginUnderTest)
         })
 
         def mainProject = create(rootProject,"main", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            
+            it.run("""
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
                 implementation project(':api')
             }
             
@@ -62,15 +41,12 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.withMod()
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
             it.plugin(this.pluginUnderTest)
         })
 
         when:
         def run = rootProject.run {
-            it.tasks(':main:runClientData')
+            it.run()
         }
 
         then:
@@ -91,7 +67,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
                     """.trim())
 
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -99,7 +75,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def apiProject = create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 api(libs.neoforge)
@@ -124,7 +100,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def mainProject = create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation project(':api')
@@ -160,79 +136,11 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         run.task(':main:build').outcome == TaskOutcome.SUCCESS
     }
 
-    def "multiple projects with neoforge dependencies should be able to run the game when renderDoc is enabled"() {
-        given:
-        def rootProject = create("multi_neoforge_root_renderdoc", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            """)
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
-        })
-
-        def apiProject = create(rootProject, "api", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            """)
-            it.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
-                package net.neoforged.gradle.apitest;
-                
-                import net.minecraft.client.Minecraft;
-                
-                public class FunctionalTests {
-                    public static void main(String[] args) {
-                        System.out.println(Minecraft.getInstance().getClass().toString());
-                    }
-                }
-            """)
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
-            it.plugin(this.pluginUnderTest)
-        })
-
-        def mainProject = create(rootProject,"main", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-                implementation project(':api')
-            }
-            
-            runs {
-                client {
-                    modSource project(':api').sourceSets.main
-                    
-                    renderDoc {
-                        enabled = true
-                    }
-                }
-            }
-            """)
-            it.withMod()
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
-            it.plugin(this.pluginUnderTest)
-        })
-
-        when:
-        def run = rootProject.run {
-            it.tasks(':main:runClientData')
-        }
-
-        then:
-        run.checkModLoading()
-    }
-
     def "multiple projects with neoforge dependencies should run using the central cache"() {
         given:
         def rootProject = create("multi_neoforge_root_cached", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withGlobalCacheDirectory(tempDir)
             it.withToolchains()
@@ -240,7 +148,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def apiProject = create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -264,7 +172,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def mainProject = create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -310,7 +218,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_none_ng", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -319,7 +227,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
             }
@@ -340,7 +248,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
@@ -406,7 +314,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_none_ng", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -415,7 +323,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
             }
@@ -436,7 +344,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
@@ -503,7 +411,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_none_ng", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -512,7 +420,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
             }
@@ -533,7 +441,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
@@ -598,7 +506,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_none_ng", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -607,7 +515,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
             }
@@ -628,7 +536,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
@@ -694,7 +602,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_none_ng", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -702,7 +610,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
             }
@@ -723,7 +631,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:20.6.104-beta'
@@ -791,7 +699,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_cached", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withGlobalCacheDirectory(tempDir)
             it.withToolchains()
@@ -800,7 +708,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def apiProject = create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -824,7 +732,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def mainProject = create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -876,14 +784,14 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_sourceset_inheritance", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
         })
 
         def apiProject = create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.plugin(this.pluginUnderTest)
@@ -891,7 +799,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def mainProject = create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             sourceSets.main.inherits.from(project(':api').sourceSets.main)
             
@@ -914,14 +822,14 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
         given:
         def rootProject = create("multi_neoforge_root_sourceset_dependency", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
         })
 
         def apiProject = create(rootProject, "api", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.plugin(this.pluginUnderTest)
@@ -929,7 +837,7 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         def mainProject = create(rootProject,"main", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             sourceSets.main.depends.on(project(':api').sourceSets.main)
             

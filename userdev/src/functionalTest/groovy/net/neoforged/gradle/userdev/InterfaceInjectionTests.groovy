@@ -1,6 +1,7 @@
 package net.neoforged.gradle.userdev
 
 import groovy.json.JsonSlurper
+import net.neoforged.gradle.userdev.constants.TestConstants
 import net.neoforged.gradle.userdev.extensions.TestExtensions
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
@@ -17,7 +18,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_iis_from_file", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
             
@@ -70,7 +71,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_iis_from_file_no_decompile", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
             
@@ -125,7 +126,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_iis_from_file_decompiler_disabled", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -170,7 +171,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_iis_in_multiple_distinctly_named_files", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis2.json')
@@ -225,7 +226,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_iis_in_files_named_the_same", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/iis.json')
@@ -280,7 +281,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_includes_all_recompile_dependencies", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/iis.json')
@@ -336,7 +337,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_iis_inner_from_file_no_decompile", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
             
@@ -393,7 +394,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_iis_inner_from_file_no_decompile", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.interfaceInjections.file rootProject.file('src/main/resources/META-INF/iis.json')
             
@@ -449,7 +450,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         given:
         def consumedProject = create("u_e_iis_publisher", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
 
             group = "n.n.n.u.t.p"
             version = "1.0.0"
@@ -498,9 +499,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         and:
         def consumingProject = create("u_e_iis_consuming", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
+            it.run("""
             group = "n.n.n.u.t.g"
             version = "1.0.0"
             
@@ -509,7 +508,6 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
             }
             
             dependencies {
-                implementation 'net.neoforged:neoforge:+'
                 implementation 'n.n.n.u.t.p:u_e_iis_publisher:1.0.0'
             }
             
@@ -531,7 +529,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         when:
         def consumerRun = consumingProject.run {
-            it.tasks("runClientData")
+            it.run()
             it.stacktrace()
         }
 

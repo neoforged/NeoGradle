@@ -2,6 +2,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class AdvancedFmlTests extends BuilderBasedTestSpecification {
 
@@ -15,7 +16,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_patch_task_is_possible", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenLocal()
@@ -43,7 +44,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_compile_in_ci", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenLocal()
@@ -84,7 +85,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_compile_with_compiler_disabled", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:[21.11,21.12)'
@@ -120,28 +121,13 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
     def "a mod using a disabled decompiler should be able to run the game"() {
         given:
         def project = create("disabled_decompiler_runs_game", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            
-            repositories {
-                mavenCentral()
-            }
-                        
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            """)
-
-            it.withMod()
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
+            it.withRun()
             it.property("neogradle.subsystems.decompiler.enabled", "false")
         })
 
         when:
         def run = project.run {
-            it.tasks(':runClientData')
-            it.stacktrace()
+            it.run()
         }
 
         then:
@@ -153,7 +139,7 @@ class AdvancedFmlTests extends BuilderBasedTestSpecification {
         given:
         def project = create("enabled_decompiler_uses_setup", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()

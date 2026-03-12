@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class RunTests extends BuilderBasedTestSpecification {
 
@@ -26,7 +27,7 @@ class RunTests extends BuilderBasedTestSpecification {
                     """.trim())
 
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -35,16 +36,24 @@ class RunTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation(libs.neoforge)
             }
+            
+            runs {
+                server { 
+                    environmentVariables.put('NEOFORGE_DEDICATED_SERVER_SELFTEST', "${(new Date()).format('ddMMyy_HHmm')}.json")
+                    arguments.add('--nogui')
+                }
+            }
             """)
-            it.withMod()
+            it.file("runs/server/eula.txt", """eula=true""")
             it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
+            it.enableLocalBuildCache()
+            it.withTemporaryGlobalCacheDirectory()
+            it.withMod()
         })
 
         when:
         def run = project.run {
-            it.tasks(':runClientData')
-            it.stacktrace()
+            it.run()
         }
 
         then:
@@ -55,7 +64,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_configuration_after_dependencies", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -100,7 +109,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_before_dependencies", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -135,7 +144,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_support_poms", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -184,7 +193,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_with_custom_dependencies", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -233,7 +242,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_with_custom_dependencies_warn_on_latest", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -276,7 +285,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_with_custom_dependencies_from_configuration", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -335,7 +344,7 @@ class RunTests extends BuilderBasedTestSpecification {
                     """.trim())
 
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -387,7 +396,7 @@ class RunTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_unit_tests", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -460,7 +469,7 @@ class RunTests extends BuilderBasedTestSpecification {
             it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
             it.property('neogradle.subsystems.conventions.sourcesets.enabled', 'false')
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -496,7 +505,7 @@ class RunTests extends BuilderBasedTestSpecification {
         def project = create("runs_can_inherit_from_each_other", {
             it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -555,7 +564,7 @@ class RunTests extends BuilderBasedTestSpecification {
         def project = create("runs_have_configurable_working_directories_with_default", {
             it.property('neogradle.subsystems.conventions.runs.enabled', 'false')
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()

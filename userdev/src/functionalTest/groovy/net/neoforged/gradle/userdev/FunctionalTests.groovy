@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class FunctionalTests extends BuilderBasedTestSpecification {
 
@@ -16,8 +17,8 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("running_patch_task_is_possible", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
+                        
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
             }
@@ -39,7 +40,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_version_ranges", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:[20,)'
@@ -74,7 +75,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_complex_versions", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation ('net.neoforged:neoforge') {
@@ -114,7 +115,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_offline_mode", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -158,7 +159,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_adds_mixin_extra_on_compile_classpath", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -193,7 +194,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_with_gradle_and_official_mappings", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -227,7 +228,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_with_gradle_and_official_mappings", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -263,7 +264,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("gradle_userdev_clean_build", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -299,7 +300,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_loading_from_buildcache", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -348,7 +349,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_loading_from_buildcache", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 exclusiveContent {
@@ -403,7 +404,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("gradle_multi_sourceset", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             sourceSets {
                 content {
@@ -459,7 +460,7 @@ class FunctionalTests extends BuilderBasedTestSpecification {
         given:
         def project = create("gradle_multi_sourceset", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 api 'net.neoforged:neoforge:+'

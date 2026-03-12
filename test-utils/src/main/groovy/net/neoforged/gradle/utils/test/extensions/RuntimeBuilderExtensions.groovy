@@ -8,6 +8,10 @@ import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
  */
 class RuntimeBuilderExtensions {
 
+    static File withTemporaryGlobalCacheDirectory(final Runtime.Builder self) {
+        return withGlobalCacheDirectory(self, self.tempDir)
+    }
+
     /**
      * Sets the global cache directory to the given {@param testProjectDir}.
      *

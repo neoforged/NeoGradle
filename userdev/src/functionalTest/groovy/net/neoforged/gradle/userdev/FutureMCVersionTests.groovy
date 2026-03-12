@@ -2,6 +2,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class FutureMCVersionTests extends BuilderBasedTestSpecification {
 
