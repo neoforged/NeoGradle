@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev
 import groovy.json.JsonSlurper
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 import java.util.zip.ZipFile
 
@@ -18,7 +19,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_ats_from_file", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             
@@ -58,7 +59,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_ats_from_file_decompiler_disabled", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             
@@ -99,7 +100,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_ats_from_file", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -137,7 +138,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_ats_in_multiple_distinctly_named_files", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer2.cfg')
@@ -178,7 +179,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("userdev_supports_ats_in_files_named_the_same", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
             minecraft.accessTransformers.file rootProject.file('src/main/resources/accesstransformer.cfg')
@@ -219,7 +220,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         given:
         def consumedProject = create("u_e_iis_publisher", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
 
             group = "n.n.n.u.t.p"
             version = "1.0.0"
@@ -255,7 +256,7 @@ class AccessTransformerTests  extends BuilderBasedTestSpecification {
         and:
         def consumingProject = create("u_e_iis_consuming", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
 
             group = "n.n.n.u.t.g"
             version = "1.0.0"

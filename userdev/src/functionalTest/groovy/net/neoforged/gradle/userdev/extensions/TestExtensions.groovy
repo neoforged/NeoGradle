@@ -1,9 +1,45 @@
 package net.neoforged.gradle.userdev.extensions
 
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime.Builder
+import net.neoforged.trainingwheels.gradle.functional.builder.Runtime.RunBuilder
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime.RunResult
+import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants;
 
 class TestExtensions {
+
+    static Builder withRun(
+            Builder self,
+            String additionalBuildContent = ""
+    ) {
+        self.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
+            
+            dependencies {
+                implementation 'net.neoforged:neoforge:${TestConstants.Latest.NeoForgeVersion}'
+            }
+            
+            runs {
+                server { 
+                    environmentVariables.put('NEOFORGE_DEDICATED_SERVER_SELFTEST', "${(new Date()).format('ddMMyy_HHmm')}.json")
+                    arguments.add('--nogui')
+                }
+            }
+            
+            ${additionalBuildContent.stripIndent(true)}
+            """)
+        self.file("runs/server/eula.txt", """eula=true""")
+        self.withToolchains()
+        self.enableLocalBuildCache()
+        self.withTemporaryGlobalCacheDirectory()
+        self.withMod()
+    }
+
+    static RunBuilder run(
+            RunBuilder self
+    ) {
+        self.tasks('runServer')
+    }
 
     /**
      * Registers a test mod to the project run builder.
@@ -63,6 +99,6 @@ class TestExtensions {
     }
 
     static boolean checkModLoading(RunResult self) {
-        return self.output.contains("NeoGradle Test Mod has been loaded successfully!")
+        return self.task(':runServer').outcome == TaskOutcome.SUCCESS && self.output.contains("NeoGradle Test Mod has been loaded successfully!")
     }
 }

@@ -1,8 +1,8 @@
 package net.neoforged.gradle.userdev
 
-
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants;
 
 class ConfigurationCacheTests extends BuilderBasedTestSpecification {
 
@@ -16,7 +16,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -41,7 +41,7 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build_and_is_reused", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'
@@ -90,48 +90,15 @@ class ConfigurationCacheTests extends BuilderBasedTestSpecification {
     def "run_tasks_supports_configuration_cache_build"() {
         given:
         def project = create("compile_supports_configuration_cache_build", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            
-            runs {
-                clientData { }
-            }
-            
-            afterEvaluate {
-                //We don't care for the error here, we just want to run the task so that the config cache is created
-                tasks.withType(JavaExec).named('runClientData') {
-                    ignoreExitValue = true
-                    group = 'run'
-                }
-            }
-            """)
-            it.file("src/main/java/net/neoforged/gradle/userdev/ConfigurationCacheTests.java", """
-                package net.neoforged.gradle.userdev;
-                
-                import net.minecraft.client.Minecraft;
-                
-                public class ConfigurationCacheTests {
-                    public static void main(String[] args) {
-                        System.out.println(Minecraft.getInstance().getClass().toString());
-                    }
-                }
-            """)
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
-            it.enableLocalBuildCache()
+            it.withRun()
         })
 
         when:
         def run = project.run {
-            it.tasks('runClientData')
-            
+            it.run()
         }
 
         then:
-        run.task(':runClientData').outcome == TaskOutcome.SUCCESS
+        run.checkModLoading()
     }
 }

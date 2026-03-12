@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class DepreciationTests extends BuilderBasedTestSpecification {
 
@@ -17,7 +18,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
         given:
         def project = create("apply_supports_configuration_cache_build", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -37,7 +38,7 @@ class DepreciationTests extends BuilderBasedTestSpecification {
         given:
         def project = create("compile_supports_configuration_cache_build", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             dependencies {
                 implementation 'net.neoforged:neoforge:+'

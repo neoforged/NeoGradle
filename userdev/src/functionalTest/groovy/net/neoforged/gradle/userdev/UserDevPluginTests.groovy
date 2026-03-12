@@ -1,6 +1,7 @@
 package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.SimpleTestSpecification
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class UserDevPluginTests extends SimpleTestSpecification {
 
@@ -13,7 +14,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
                 id 'net.neoforged.gradle.userdev'
             }
             
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
         """
 
         when:
@@ -31,7 +32,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
                 id 'net.neoforged.gradle.userdev'
             }
             
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             println "Loaded plugins:"
             project.plugins.each { plugin ->
@@ -55,7 +56,7 @@ class UserDevPluginTests extends SimpleTestSpecification {
                 id 'net.neoforged.gradle.userdev'
             }
             
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             println project.userDevRuntime.class.toString()
         """

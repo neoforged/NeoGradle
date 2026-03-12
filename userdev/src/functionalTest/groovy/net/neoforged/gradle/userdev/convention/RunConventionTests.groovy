@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev.convention
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 /**
  * Tests the run conventions.
@@ -22,7 +23,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
+                    languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
                 }
             }
             
@@ -59,7 +60,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
+                    languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
                 }
             }
             
@@ -98,7 +99,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
+                    languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
                 }
             }
             
@@ -136,7 +137,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
+                    languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
                 }
             }
             
@@ -179,7 +180,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
             it.build("""
             java {
                 toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
+                    languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
                 }
             }
             
@@ -211,7 +212,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         def project = create("disable_globally_errors_runs", {
             it.property('neogradle.subsystems.conventions.enabled', 'false')
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -239,7 +240,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("run_can_download_runtime_elements", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
@@ -273,7 +274,7 @@ class RunConventionTests extends BuilderBasedTestSpecification {
         given:
         def project = create("runs_can_download_runtime_elements", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()

@@ -595,7 +595,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
         ).orElseThrow(() -> new IllegalStateException("No input for recompile task due to pre-task adapters"));
 
         final FileCollection recompileDependencies =
-            definition.getAdditionalRecompileDependencies().plus(spec.getProject().files(definition.getMinecraftDependenciesConfiguration()));
+            definition.getMinecraftDependenciesConfiguration().plus(spec.getProject().files(definition.getAdditionalRecompileDependencies()));
 
         final TaskProvider<? extends Runtime> recompileTask =
             createRecompileTask(definition, recompileInput, recompileDependencies, task -> {

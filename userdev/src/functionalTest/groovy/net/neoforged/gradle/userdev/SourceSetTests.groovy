@@ -1,6 +1,7 @@
 package net.neoforged.gradle.userdev
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
+import net.neoforged.gradle.userdev.constants.TestConstants
 
 class SourceSetTests  extends BuilderBasedTestSpecification {
 
@@ -14,7 +15,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("inheriting_sourcesets_compile", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             sourceSets {
                 target {
@@ -57,7 +58,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("inheriting_sourcesets_runtime", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             sourceSets {
                 target {
@@ -100,7 +101,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("depending_sourcesets_compile", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             sourceSets {
                 target {
@@ -144,7 +145,7 @@ class SourceSetTests  extends BuilderBasedTestSpecification {
         given:
         def project = create("depending_sourcesets_runtime", {
             it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             sourceSets {
                 target {
