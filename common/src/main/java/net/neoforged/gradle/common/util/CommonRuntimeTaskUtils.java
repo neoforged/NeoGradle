@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.util;
 
 import net.neoforged.gradle.common.runtime.tasks.*;
+import net.neoforged.gradle.common.tasks.ExtendEnumsTask;
 import net.neoforged.gradle.common.tasks.InjectInterfacesTask;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
@@ -43,6 +44,12 @@ public final class CommonRuntimeTaskUtils {
     public static TaskProvider<? extends InjectInterfacesTask> createBinaryInterfaceInjector(Definition<?> definition, String namePreFix, FileTree files) {
         return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sInterfaceInjections", StringCapitalizationUtils.capitalize(namePreFix))), InjectInterfacesTask.class, task -> {
             task.getInterfaceInjectionFiles().from(files);
+        });
+    }
+
+    public static TaskProvider<? extends ExtendEnumsTask> createBinaryEnumExtender(Definition<?> definition, String namePreFix, FileTree files) {
+        return definition.getSpecification().getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), String.format("apply%sEnumExtensions", StringCapitalizationUtils.capitalize(namePreFix))), ExtendEnumsTask.class, task -> {
+            task.getEnumExtensionsFiles().from(files);
         });
     }
 }
