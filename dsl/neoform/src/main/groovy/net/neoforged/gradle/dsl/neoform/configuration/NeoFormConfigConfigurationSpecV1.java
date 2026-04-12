@@ -35,9 +35,11 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -152,7 +154,13 @@ public class NeoFormConfigConfigurationSpecV1 extends VersionedConfiguration {
 
         @Nested
         public Map<String, String> getValues() {
-            return values == null ? Collections.emptyMap() : values;
+            if (values != null) {
+                var sorted = new TreeMap<String, String>(Comparator.naturalOrder());
+                sorted.putAll(values);
+                return sorted;
+            }
+
+            return Collections.emptyMap();
         }
 
         @Nullable
