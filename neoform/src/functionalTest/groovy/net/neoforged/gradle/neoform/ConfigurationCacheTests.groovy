@@ -1,4 +1,4 @@
-package net.neoforged.gradle.userdev
+package net.neoforged.gradle.neoform
 
 import net.neoforged.trainingwheels.gradle.functional.BuilderBasedTestSpecification
 import org.gradle.testkit.runner.TaskOutcome
