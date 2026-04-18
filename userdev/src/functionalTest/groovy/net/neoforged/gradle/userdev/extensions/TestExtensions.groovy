@@ -8,6 +8,58 @@ import net.neoforged.gradle.userdev.constants.TestConstants;
 
 class TestExtensions {
 
+    static Builder withRoot(
+            Builder self
+    ) {
+        self.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
+            """)
+        self.withToolchains()
+        self.enableLocalBuildCache()
+        self.withTemporaryGlobalCacheDirectory()
+    }
+
+    static Builder withSimpleLibrary(
+            Builder self,
+            String additionalBuildContent = "") {
+        self.build(
+    """
+           plugins {
+               id 'java-library'
+           }
+           java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
+           
+           sourceSets {
+              main {
+                 runs {
+                   modIdentifier = "main"
+                 }
+              }
+           }
+           
+           dependencies {
+               implementation 'net.neoforged:neoforge:${TestConstants.Latest.NeoForgeVersion}'
+           }
+                       
+           ${additionalBuildContent.stripIndent(true)}
+           """)
+        self.file("src/main/java/net/neoforged/gradle/apitest/FunctionalTests.java", """
+                package net.neoforged.gradle.apitest;
+                
+                import net.minecraft.client.Minecraft;
+                
+                public class FunctionalTests {
+                    public static void main(String[] args) {
+                        System.out.println(Minecraft.getInstance().getClass().toString());
+                    }
+                }
+            """)
+        self.file("runs/server/eula.txt", """eula=true""")
+        self.withToolchains()
+        self.enableLocalBuildCache()
+        self.withTemporaryGlobalCacheDirectory()
+    }
+
     static Builder withRun(
             Builder self,
             String additionalBuildContent = ""
@@ -36,9 +88,10 @@ class TestExtensions {
     }
 
     static RunBuilder run(
-            RunBuilder self
+            RunBuilder self,
+            String projectPrefix = ""
     ) {
-        self.tasks('runServer')
+        self.tasks(projectPrefix + ':runServer')
     }
 
     /**
@@ -98,7 +151,8 @@ class TestExtensions {
         return self
     }
 
-    static boolean checkModLoading(RunResult self) {
-        return self.task(':runServer').outcome == TaskOutcome.SUCCESS && self.output.contains("NeoGradle Test Mod has been loaded successfully!")
+    static boolean checkModLoading(RunResult self,
+                                   String projectPrefix = "") {
+        return self.task(projectPrefix + ':runServer').outcome == TaskOutcome.SUCCESS && self.output.contains("NeoGradle Test Mod has been loaded successfully!")
     }
 }

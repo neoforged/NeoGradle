@@ -8,8 +8,9 @@ import net.neoforged.trainingwheels.gradle.functional.builder.Runtime
  */
 class RuntimeBuilderExtensions {
 
-    static File withTemporaryGlobalCacheDirectory(final Runtime.Builder self) {
-        return withGlobalCacheDirectory(self, self.tempDir)
+    static Runtime.Builder withTemporaryGlobalCacheDirectory(final Runtime.Builder self) {
+        withGlobalCacheDirectory(self, self.tempDir)
+        return self;
     }
 
     /**

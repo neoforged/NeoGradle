@@ -17,26 +17,18 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
     def "multiple projects with neoforge dependencies should be able to run the game"() {
         given:
         def rootProject = create("multi_neoforge_root", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
-            """)
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
+            it.withRoot()
         })
 
         def apiProject = create(rootProject, "api", {
-            it.run()
+            it.withSimpleLibrary()
             it.plugin(this.pluginUnderTest)
         })
 
         def mainProject = create(rootProject,"main", {
-            it.run("""
-            dependencies {
-                implementation project(':api')
-            }
-            
+            it.withRun("""
             runs {
-                client {
+                server {
                     modSource project(':api').sourceSets.main
                 }
             }
@@ -46,11 +38,11 @@ class MultiProjectTests extends BuilderBasedTestSpecification {
 
         when:
         def run = rootProject.run {
-            it.run()
+            it.run(":main")
         }
 
         then:
-        run.checkModLoading()
+        run.checkModLoading(":main")
     }
 
     def "multiple projects with neoforge dependencies from version catalogs should be able to build"() {
