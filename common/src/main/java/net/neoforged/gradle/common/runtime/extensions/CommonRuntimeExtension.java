@@ -150,7 +150,7 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         final FileCollection recompileDependencies,
         final Consumer<TaskProvider<? extends Runtime>> configure)
     {
-        final Provider<? extends FileTree> recompileSourceFileTree = recompileInput.flatMap(WithOutput::getOutputAsTree);
+        final Provider<? extends FileTree>  recompileSourceFileTree = recompileInput.flatMap(WithOutput::getOutputAsTree);
 
         final CommonRuntimeSpecification spec = definition.getSpecification();
         // Consider user-settings
