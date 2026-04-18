@@ -37,12 +37,12 @@ class NeoformDependencyManagerTest extends SimpleTestSpecification {
             java.toolchain.languageVersion = JavaLanguageVersion.of(21)
             
             dependencies {
-                implementation 'net.minecraft:neoform_client:+'
+                implementation 'net.minecraft:neoform_joined:+'
             }
         """
 
         when:
-        def result = gradleRunner().build()
+        def result = gradleRunner().withDebug(true).withArguments("--stacktrace").build()
 
         then:
         result.output.contains('BUILD SUCCESSFUL')

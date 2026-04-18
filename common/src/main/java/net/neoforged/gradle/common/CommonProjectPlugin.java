@@ -115,6 +115,8 @@ public class CommonProjectPlugin implements Plugin<Project> {
             }));
         });
 
+        project.getRepositories().mavenCentral();
+
         project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.MOJANG_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);

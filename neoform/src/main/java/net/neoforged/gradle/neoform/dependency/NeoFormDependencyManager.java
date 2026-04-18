@@ -138,7 +138,7 @@ public final class NeoFormDependencyManager {
 
         public boolean isValid() {
             //Check if we are minecraft 26.x or later.
-            if (Objects.equals(version.substring(2, 3), ".")) {
+            if (version.length() > 3 && Objects.equals(version.substring(2, 3), ".")) {
                 var mcYear = version.substring(0, 2);
                 try {
                     var yearParsed = Integer.parseInt(mcYear);
