@@ -97,6 +97,7 @@ public abstract class DefaultRuntime extends JavaRuntimeTask implements Runtime 
     @Override
     public Provider<? extends FileTree> getOutputAsTree()
     {
-        return getOutput().map(it -> getArchiveOperations().zipTree(it));
+        var archiveOperations = getArchiveOperations();
+        return getOutput().map(archiveOperations::zipTree);
     }
 }
