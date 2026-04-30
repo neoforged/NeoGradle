@@ -52,6 +52,22 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
     protected File doDownloadVersionDownloadToCache(final String artifact, final String potentialError, File versionManifest) {
         JsonObject json = SerializationUtils.fromJson(versionManifest, JsonObject.class);
 
+        final JsonObject downloads = json.getAsJsonObject("downloads");
+        if (!downloads.has(artifact)) {
+            final File output = getOutput().get().getAsFile();
+            if (output.exists())
+                output.delete();
+
+            try
+            {
+                output.createNewFile();
+                return output;
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
         final JsonObject artifactInfo = json.getAsJsonObject("downloads").getAsJsonObject(artifact);
         final String url = artifactInfo.get("url").getAsString();
         final String hash = artifactInfo.get("sha1").getAsString();

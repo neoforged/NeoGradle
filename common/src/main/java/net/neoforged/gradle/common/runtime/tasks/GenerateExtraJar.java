@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
+import net.minecraftforge.srgutils.IMappingBuilder;
 import net.minecraftforge.srgutils.IMappingFile;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
@@ -14,6 +15,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
@@ -21,6 +23,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -55,7 +58,7 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
         final File outputJar = ensureFileWorkspaceReady(getOutput());
 
         // Official mappings are Named -> Obf and need to be reversed
-        var mappings = IMappingFile.load(getMappings().getAsFile().get()).reverse();
+        var mappings = getMappings().isPresent() ? getReverse() : null;
         try (var clientZip = new JarFile(getOriginalJar().getAsFile().get());
              var serverZip = new JarFile(getServerJar().getAsFile().get())) {
             var clientFiles = getFileIndex(clientZip);
@@ -67,8 +70,10 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
             manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
             manifest.getMainAttributes().putValue("Minecraft-Dists", "server client");
 
-            addSourceDistEntries(clientFiles, serverFiles, "client", mappings, manifest);
-            addSourceDistEntries(serverFiles, clientFiles, "server", mappings, manifest);
+            if (mappings != null) {
+                addSourceDistEntries(clientFiles, serverFiles, "client", mappings, manifest);
+                addSourceDistEntries(serverFiles, clientFiles, "server", mappings, manifest);
+            }
 
             try (var zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputJar)))) {
                 zos.putNextEntry(FileUtils.getStableEntry(JarFile.MANIFEST_NAME));
@@ -89,6 +94,15 @@ public abstract class GenerateExtraJar extends NeoGradleBase implements WithOutp
                 }
             }
         }
+    }
+
+    private IMappingFile getReverse() throws IOException
+    {
+        final File mappingsFile = getMappings().getAsFile().get();
+        if (mappingsFile.length() > 0)
+            return IMappingFile.load(getMappings().getAsFile().get()).reverse();
+
+        return IMappingBuilder.create("left", "right").build().getMap("left", "right");
     }
 
     private static void addSourceDistEntries(Set<String> distFiles,
