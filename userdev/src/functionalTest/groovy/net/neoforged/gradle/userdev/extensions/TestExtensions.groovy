@@ -4,7 +4,9 @@ import net.neoforged.trainingwheels.gradle.functional.builder.Runtime.Builder
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime.RunBuilder
 import net.neoforged.trainingwheels.gradle.functional.builder.Runtime.RunResult
 import org.gradle.testkit.runner.TaskOutcome
-import net.neoforged.gradle.userdev.constants.TestConstants;
+import net.neoforged.gradle.userdev.constants.TestConstants
+
+import java.util.function.Consumer;
 
 class TestExtensions {
 
@@ -73,7 +75,7 @@ class TestExtensions {
             
             runs {
                 server { 
-                    environmentVariables.put('NEOFORGE_DEDICATED_SERVER_SELFTEST', "${(new Date()).format('ddMMyy_HHmm')}.json")
+                    environmentVariables.put('NEOFORGE_DEDICATED_SERVER_SELFTEST', "server_self_test.json")
                     arguments.add('--nogui')
                 }
             }
@@ -154,5 +156,36 @@ class TestExtensions {
     static boolean checkModLoading(RunResult self,
                                    String projectPrefix = "") {
         return self.task(projectPrefix + ':runServer').outcome == TaskOutcome.SUCCESS && self.output.contains("NeoGradle Test Mod has been loaded successfully!")
+    }
+
+    static void updatePropertiesFile(net.neoforged.trainingwheels.gradle.functional.builder.Runtime self,
+            Consumer<Properties> updater
+    ) {
+        final File propertiesFile = self.file("gradle.properties")
+        if (!propertiesFile.exists()) {
+            propertiesFile.parentFile.mkdirs()
+            propertiesFile.createNewFile()
+        }
+
+        final Properties result = new Properties()
+        try(InputStream stream = new FileInputStream(propertiesFile)) {
+            result.load(stream)
+        }
+
+        updater.accept(result);
+
+        if (propertiesFile.exists()) {
+            propertiesFile.delete()
+            propertiesFile.createNewFile()
+        }
+        try(OutputStream stream = new FileOutputStream(propertiesFile)) {
+            result.store(stream, "Gradle properties updated by test run")
+        }
+    }
+
+    static void resetSelfTestFile(net.neoforged.trainingwheels.gradle.functional.builder.Runtime self) {
+        var selfTestFile = self.file("runs/server/server_self_test.json")
+        if (selfTestFile.exists())
+            selfTestFile.delete()
     }
 }

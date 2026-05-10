@@ -2,6 +2,7 @@ package net.neoforged.gradle.dsl.common.runtime.spec
 
 import com.google.common.collect.Multimap
 import groovy.transform.CompileStatic
+import net.neoforged.gradle.dsl.common.runtime.tasks.AsPartOfStep
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer
 import net.neoforged.gradle.dsl.common.util.DistributionType
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter
@@ -86,7 +87,7 @@ interface Specification {
     /**
      * The customizers that are allowed to change the configuration of Neoform tasks.
      */
-    @NotNull Multimap<String, TaskCustomizer<? extends Task>> getTaskCustomizers();
+    @NotNull Multimap<String, TaskCustomizer<?>> getTaskCustomizers();
 
     /**
      * Determines the specifications minecraft version.
@@ -146,6 +147,6 @@ interface Specification {
          * @param customizer   The function to apply to the task via {@link Task#configure}.
          * @return The builder instance.
          */
-         <T extends Task> B withTaskCustomizer(final String taskTypeName, Class<T> taskType, Consumer<T> customizer);
+         <T extends Task & AsPartOfStep> B withTaskCustomizer(final String taskTypeName, Class<T> taskType, Consumer<T> customizer);
     }
 }

@@ -1,5 +1,6 @@
 package net.neoforged.gradle.common.tasks;
 
+import net.neoforged.gradle.common.services.caching.hasher.TaskHashingAware;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
 import net.neoforged.gradle.common.util.VersionJson;
 import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
@@ -12,9 +13,12 @@ import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @CacheableTask
-public abstract class RenderDocDownloaderTask extends NeoGradleBase {
+public abstract class RenderDocDownloaderTask extends NeoGradleBase implements TaskHashingAware
+{
 
     public RenderDocDownloaderTask() {
         getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
@@ -26,6 +30,14 @@ public abstract class RenderDocDownloaderTask extends NeoGradleBase {
         );
 
         getOutputs().upToDateWhen(task -> false);
+    }
+
+    @Override
+    public Map<String, Object> getHashableProperties()
+    {
+        var properties = new HashMap<>(getInputs().getProperties());
+        properties.remove("isOffline"); //We don't care about the offline mode!
+        return properties;
     }
 
     @TaskAction

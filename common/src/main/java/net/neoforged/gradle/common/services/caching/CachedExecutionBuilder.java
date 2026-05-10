@@ -23,11 +23,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 public class CachedExecutionBuilder<T> {
 
-    public record LoggingOptions(boolean cacheHits, boolean debug) {}
+    public record LoggingOptions(boolean cacheHits, boolean debug, Set<String> taskPaths) {}
 
     public record Options(boolean enabled, File cache, LoggingOptions logging) {}
 
@@ -96,7 +97,7 @@ public class CachedExecutionBuilder<T> {
         this.options = options;
         this.targetTask = targetTask;
         this.stages = stages;
-        this.logger = new CacheLogger(targetTask, options.logging().debug(), options.logging().cacheHits());
+        this.logger = new CacheLogger(targetTask, options.logging().debug(), options.logging().cacheHits(), options.logging().taskPaths());
     }
 
     public <Y> CachedExecutionBuilder<Y> withStage(ICacheableJob<T, Y> job) {

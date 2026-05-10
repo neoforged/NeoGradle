@@ -1,5 +1,11 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
+import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.hasher.TaskHashingAware;
+import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
+import net.neoforged.gradle.dsl.common.runtime.tasks.AsPartOfStep;
+import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
+import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.util.TransformerUtils;
 import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.runtime.tasks.action.ExtractFileAction;
@@ -9,28 +15,65 @@ import org.gradle.api.file.FileTree;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.*;
 import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @CacheableTask()
-public abstract class ExtractNatives extends DefaultRuntime {
+public abstract class ExtractNatives extends NeoGradleBase implements TaskHashingAware, WithOutput, AsPartOfStep
+{
 
     public ExtractNatives() {
+        //Sets up the base configuration for directories and outputs.
+        getStepsDirectory().convention(getRuntimeDirectory().dir("steps"));
+        getOutputDirectory().convention(getStepsDirectory().flatMap(d -> getStepName().map(d::dir)));
+
         getVersionJson().convention(getVersionJsonFile().map(TransformerUtils.guard(file -> VersionJson.get(file.getAsFile()))));
         getLibrariesDirectory().convention(getOutputDirectory().map(dir -> dir.dir("libraries")));
+        getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
+    }
+
+    @ServiceReference(CachedExecutionService.NAME)
+    public abstract Property<CachedExecutionService> getCache();
+
+    @Override
+    public Map<String, Object> getHashableProperties()
+    {
+        var properties = new HashMap<>(getInputs().getProperties());
+        properties.remove("isOffline"); //We don't care about the offline mode!
+        return properties;
     }
 
     @TaskAction
-    public void extract() {
-        downloadNatives();
-        extractNatives();
+    public void run() throws IOException
+    {
+        getCache().get()
+            .cached(
+                this,
+                ICacheableJob.Initial.directory("nativesAndLibraries", getLibrariesDirectory(), this::doDownloadAndExtract)
+            )
+            .execute();
     }
 
-    private void downloadNatives() {
+    private File doDownloadAndExtract() {
+        downloadNatives();
+        extractNatives();
+
+        final File librariesDirectory = ensureFileWorkspaceReady(getLibrariesDirectory().get().getAsFile());
+        if (!librariesDirectory.exists())
+            librariesDirectory.mkdirs();
+
+        return librariesDirectory;
+    }
+
+    private File downloadNatives() {
         final VersionJson versionJson = getVersionJson().get();
 
         final WorkQueue executor = getWorkerExecutor().noIsolation();
@@ -39,7 +82,7 @@ public abstract class ExtractNatives extends DefaultRuntime {
         versionJson.getNatives().forEach(library -> {
             final File outputFile = new File(librariesDirectory, library.getPath());
             executor.submit(DownloadFileAction.class, params -> {
-                params.getIsOffline().set(getProject().getGradle().getStartParameter().isOffline());
+                params.getIsOffline().set(getIsOffline());
                 params.getShouldValidateHash().set(true);
                 params.getOutputFile().set(outputFile);
                 params.getUrl().set(library.getUrl().toString());
@@ -48,6 +91,8 @@ public abstract class ExtractNatives extends DefaultRuntime {
         });
 
         executor.await();
+
+        return librariesDirectory;
     }
 
     private void extractNatives() {
@@ -89,6 +134,9 @@ public abstract class ExtractNatives extends DefaultRuntime {
 
     @OutputDirectory
     public abstract DirectoryProperty getLibrariesDirectory();
+
+    @Input
+    public abstract Property<Boolean> getIsOffline();
 
     @Override
     public Provider<FileTree> getOutputAsTree()

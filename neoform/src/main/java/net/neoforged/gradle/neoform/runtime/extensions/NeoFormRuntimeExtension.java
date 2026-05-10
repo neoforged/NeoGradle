@@ -402,10 +402,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 )
         );
 
-        final File neoFormDirectory = spec.getProject().getExtensions().getByType(ConfigurationData.class)
+        final File neoFormConfigurationDirectory = spec.getProject().getExtensions().getByType(ConfigurationData.class)
             .getLocation()
             .dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
-        final File stepsMcpDirectory = new File(neoFormDirectory, "steps");
+
+        final File neoFormBuildDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
+        final File stepsMcpDirectory = new File(neoFormBuildDirectory, "steps");
 
         stepsMcpDirectory.mkdirs();
 
@@ -418,11 +420,11 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final TaskProvider<? extends ArtifactFromOutput> sourceJarTask =
             spec.getProject().getTasks().register("supplySourcesFor" + spec.getIdentifier(), ArtifactFromOutput.class, task -> {
-                task.getOutput().set(new File(neoFormDirectory, "sources.jar"));
+                task.getOutput().set(new File(neoFormBuildDirectory, "sources.jar"));
             });
         final TaskProvider<? extends ArtifactFromOutput> rawJarTask =
             spec.getProject().getTasks().register("supplyRawJarFor" + spec.getIdentifier(), ArtifactFromOutput.class, task -> {
-                task.getOutput().set(new File(neoFormDirectory, "raw.jar"));
+                task.getOutput().set(new File(neoFormBuildDirectory, "raw.jar"));
             });
 
         return new NeoFormRuntimeDefinition(
@@ -433,12 +435,12 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             gameArtifactTasks,
             minecraftDependenciesConfiguration,
             taskProvider -> taskProvider.configure(runtimeTask -> {
-                configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, runtimeTask);
+                configureMcpRuntimeTaskWithDefaults(spec, neoFormBuildDirectory, symbolicDataSources, runtimeTask);
             }),
             versionJson,
             neoFormConfig,
             createDownloadAssetsTasks(spec, versionJson),
-            createExtractNativesTasks(spec, symbolicDataSources, neoFormDirectory, versionJson)
+            createExtractNativesTasks(spec, neoFormBuildDirectory, versionJson)
         );
     }
 
@@ -467,8 +469,8 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final File minecraftCache = artifactCacheExtension.getCacheDirectory().get().getAsFile();
 
-        final File neoFormDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
-        final File stepsMcpDirectory = new File(neoFormDirectory, "steps");
+        final File neoFormBuildDirectory = spec.getProject().getLayout().getBuildDirectory().dir(String.format("neoForm/%s", spec.getIdentifier())).get().getAsFile();
+        final File stepsMcpDirectory = new File(neoFormBuildDirectory, "steps");
 
         final Map<String, String> versionData = Maps.newHashMap(mappingsExtension.getVersion().get());
         versionData.put(NamingConstants.Version.MINECRAFT_VERSION, spec.getMinecraftVersion());
@@ -500,7 +502,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
             if (spec.getPreTaskTypeAdapters().containsKey(step.getName()))
             {
-                adaptedInput = adaptPreTaskInput(definition, step, spec, taskOutputs, neoFormDirectory, symbolicDataSources, adaptedInput);
+                adaptedInput = adaptPreTaskInput(definition, step, spec, taskOutputs, neoFormBuildDirectory, symbolicDataSources, adaptedInput);
             }
 
             TaskProvider<? extends WithOutput> neoFormRuntimeTaskProvider;
@@ -551,7 +553,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             neoFormRuntimeTaskProvider.configure((WithOutput neoFormRuntimeTask) -> {
                 if (neoFormRuntimeTask instanceof Runtime runtimeTask)
                 {
-                    configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, taskOutputs, step, runtimeTask, finalAdaptedInput);
+                    configureMcpRuntimeTaskWithDefaults(spec, neoFormBuildDirectory, symbolicDataSources, taskOutputs, step, runtimeTask, finalAdaptedInput);
                 }
             });
 
@@ -562,13 +564,13 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
                 {
                     final TaskProvider<? extends Runtime> taskProvider = taskTreeAdapter.adapt(definition,
                         neoFormRuntimeTaskProvider,
-                        neoFormDirectory,
+                        neoFormBuildDirectory,
                         definition.getGameArtifactProvidingTasks(),
                         definition.getMappingVersionData(),
-                        dependentTaskProvider -> dependentTaskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task)));
+                        dependentTaskProvider -> dependentTaskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormBuildDirectory, symbolicDataSources, task)));
                     if (taskProvider != null)
                     {
-                        taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, task));
+                        taskProvider.configure(task -> configureMcpRuntimeTaskWithDefaults(spec, neoFormBuildDirectory, symbolicDataSources, task));
                         neoFormRuntimeTaskProvider = taskProvider;
                     }
                 }
@@ -588,7 +590,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
             definition,
             "recompile",
             spec,
-            neoFormDirectory,
+            neoFormBuildDirectory,
             symbolicDataSources,
             Optional.of(lastTask),
             Optional.of(lastTask)
@@ -599,7 +601,7 @@ public abstract class NeoFormRuntimeExtension extends CommonRuntimeExtension<Neo
 
         final TaskProvider<? extends Runtime> recompileTask =
             createRecompileTask(definition, recompileInput, recompileDependencies, task -> {
-                task.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormDirectory, symbolicDataSources, neoFormRuntimeTask));
+                task.configure(neoFormRuntimeTask -> configureMcpRuntimeTaskWithDefaults(spec, neoFormBuildDirectory, symbolicDataSources, neoFormRuntimeTask));
             });
 
         taskOutputs.put(recompileTask.getName(), recompileTask);

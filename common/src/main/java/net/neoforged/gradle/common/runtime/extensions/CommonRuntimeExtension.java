@@ -15,13 +15,13 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Recompiler;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runtime.extensions.CommonRuntimes;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
+import net.neoforged.gradle.dsl.common.runtime.tasks.AsPartOfStep;
 import net.neoforged.gradle.dsl.common.runtime.tasks.Runtime;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.tasks.WithOutput;
 import net.neoforged.gradle.dsl.common.util.CacheableMinecraftVersion;
 import net.neoforged.gradle.dsl.common.util.CommonRuntimeUtils;
 import net.neoforged.gradle.dsl.common.util.GameArtifact;
-import net.neoforged.gradle.util.TransformerUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -73,6 +73,15 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         runtimeTask.getJavaVersion().convention(spec.getProject().getExtensions().getByType(JavaPluginExtension.class).getToolchain().getLanguageVersion());
 
         for (TaskCustomizer<? extends Task> taskCustomizer : spec.getTaskCustomizers().get(step)) {
+            taskCustomizer.apply(runtimeTask);
+        }
+    }
+
+    public static <T extends WithOutput & Task & AsPartOfStep> void configureOutputForSimpleStepTaskParameters(T runtimeTask, String step, Specification spec, File runtimeDirectory) {
+        runtimeTask.getStepName().set(step);
+        runtimeTask.getRuntimeDirectory().set(runtimeDirectory);
+
+        for (TaskCustomizer<?> taskCustomizer : spec.getTaskCustomizers().get(step)) {
             taskCustomizer.apply(runtimeTask);
         }
     }
@@ -299,16 +308,12 @@ public abstract class CommonRuntimeExtension<S extends CommonRuntimeSpecificatio
         });
     }
 
-    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final Map<String, String> symbolicDataSources, final File runtimeDirectory, final Provider<VersionJson> versionJson) {
+    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final File runtimeDirectory, final Provider<VersionJson> versionJson) {
         return specification.getProject().getTasks().register(CommonRuntimeUtils.buildTaskName(specification, "extractNatives"), ExtractNatives.class, task -> {
             task.getVersionJson().set(versionJson);
 
-            configureCommonRuntimeTaskParameters(task, symbolicDataSources, "extractNatives", specification, runtimeDirectory);
+            configureOutputForSimpleStepTaskParameters(task, "extractNatives", specification, runtimeDirectory);
             task.getOutputDirectory().set(task.getStepsDirectory().map(dir -> dir.dir("extractNatives")));
         });
-    }
-
-    protected final TaskProvider<ExtractNatives> createExtractNativesTasks(final CommonRuntimeSpecification specification, final File runtimeDirectory, final Provider<VersionJson> versionJson) {
-        return createExtractNativesTasks(specification, Collections.emptyMap(), runtimeDirectory, versionJson);
     }
 }

@@ -6,6 +6,7 @@ import com.google.common.collect.Multimap;
 import net.neoforged.gradle.common.runtime.definition.CommonRuntimeDefinition;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.dsl.common.runtime.spec.Specification;
+import net.neoforged.gradle.dsl.common.runtime.tasks.AsPartOfStep;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskCustomizer;
 import net.neoforged.gradle.dsl.common.runtime.tasks.tree.TaskTreeAdapter;
 import net.neoforged.gradle.dsl.common.util.DistributionType;
@@ -107,7 +108,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
 
     @NotNull
     @Override
-    public Multimap<String, TaskCustomizer<? extends Task>> getTaskCustomizers() {
+    public Multimap<String, TaskCustomizer<?>> getTaskCustomizers() {
         return taskCustomizers;
     }
 
@@ -228,7 +229,7 @@ public abstract class CommonRuntimeSpecification implements Specification {
 
         @Override
         @NotNull
-        public final <T extends Task> B withTaskCustomizer(final String taskTypeName, Class<T> taskType, Consumer<T> customizer) {
+        public final <T extends Task & AsPartOfStep> B withTaskCustomizer(final String taskTypeName, Class<T> taskType, Consumer<T> customizer) {
             this.taskCustomizers.put(taskTypeName, new TaskCustomizer<>(taskType, customizer));
             return getThis();
         }
