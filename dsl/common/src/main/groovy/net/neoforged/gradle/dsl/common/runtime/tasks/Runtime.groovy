@@ -19,7 +19,7 @@ import org.gradle.api.tasks.Nested
  * By default, it has an output.
  */
 @CompileStatic
-trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
+trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion, AsPartOfStep {
 
     /**
      * The runtime name, it is the overarching identifier of the runtime that this task is
@@ -30,34 +30,11 @@ trait Runtime implements WithOutput, WithWorkspace, WithJavaVersion {
     abstract Property<String> getRuntimeName();
 
     /**
-     * The runtime directory, it is the location of the runtime working directory.
-     * @return The mcp working directory.
-     */
-    @Internal
-    abstract DirectoryProperty getRuntimeDirectory();
-
-    /**
      * The unpacked mcp directory in the global cache.
      * @return The unpacked mcp directory.
      */
     @Internal
     abstract ConfigurableFileCollection getNeoFormArchive();
-
-    /**
-     * The steps directory, it is the location of the steps working directory.
-     *
-     * @return The steps directory.
-     */
-    @Internal
-    abstract DirectoryProperty getStepsDirectory();
-
-    /**
-     * The name of the step.
-     * @return The name of the step.
-     */
-    @Input
-    @DSLProperty
-    abstract Property<String> getStepName();
 
     /**
      * The requested distribution.

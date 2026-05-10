@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.runtime.tasks;
 
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.hasher.TaskHashingAware;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.util.HashFunction;
@@ -28,7 +29,8 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("UnstableApiUsage")
 @CacheableTask
-public abstract class ListLibraries extends DefaultRuntime {
+public abstract class ListLibraries extends DefaultRuntime implements TaskHashingAware
+{
     private static final Attributes.Name FORMAT = new Attributes.Name("Bundler-Format");
     
     @SuppressWarnings("ConstantConditions")
@@ -44,6 +46,14 @@ public abstract class ListLibraries extends DefaultRuntime {
         }));
         getOutputFileName().set("libraries.txt");
         getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
+    }
+
+    @Override
+    public Map<String, Object> getHashableProperties()
+    {
+        var properties = new HashMap<>(getInputs().getProperties());
+        properties.remove("isOffline"); //We don't care about the offline mode!
+        return properties;
     }
 
     @Input

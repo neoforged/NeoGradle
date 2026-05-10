@@ -22,8 +22,11 @@ package net.neoforged.gradle.common.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.*;
+import net.neoforged.gradle.common.util.hash.Hashable;
+import net.neoforged.gradle.common.util.hash.Hasher;
 import net.neoforged.gradle.dsl.common.util.Artifact;
 import org.gradle.api.file.RegularFile;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -37,7 +40,8 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-public class VersionJson implements Serializable {
+public class VersionJson implements Serializable, Hashable
+{
 
     protected static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(VersionJson.Argument.class, new VersionJson.Argument.Deserializer())
@@ -165,6 +169,12 @@ public class VersionJson implements Serializable {
 
     public static VersionJson get(RegularFile regularFile) throws IOException {
         return get(regularFile.getAsFile());
+    }
+
+    @Override
+    public void appendToHasher(final @NotNull Hasher hasher)
+    {
+        hasher.putString(this.id);
     }
 
     public static class JavaVersion implements Serializable {

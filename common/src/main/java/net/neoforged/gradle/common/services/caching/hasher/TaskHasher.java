@@ -10,11 +10,7 @@ import org.gradle.api.tasks.TaskInputs;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class TaskHasher {
     private final HashFunction hashFunction = Hashing.md5();
@@ -32,13 +28,18 @@ public final class TaskHasher {
         logger.debug("Hashing task: " + task.getPath());
         hasher.putString(task.getClass().getName());
 
-        final TaskInputs taskInputs = task.getInputs();
-        hash(taskInputs);
+        hash(task);
     }
 
-    private void hash(TaskInputs inputs) throws IOException {
+    private void hash(Task task) throws IOException {
         logger.debug("Hashing task inputs: " + task.getPath());
-        inputs.getProperties().forEach((key, value) -> {
+        var inputs = task.getInputs();
+        var properties = inputs.getProperties();
+        if (task instanceof TaskHashingAware taskHashingAware) {
+            properties = taskHashingAware.getHashableProperties();
+        }
+
+        properties.forEach((key, value) -> {
             logger.debug("Hashing task input property: " + key);
             hasher.putString(key);
             logger.debug("Hashing task input property value: " + value);

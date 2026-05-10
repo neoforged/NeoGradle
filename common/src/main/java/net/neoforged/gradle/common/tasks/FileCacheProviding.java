@@ -1,6 +1,7 @@
 package net.neoforged.gradle.common.tasks;
 
 import com.google.gson.JsonObject;
+import net.neoforged.gradle.common.services.caching.hasher.TaskHashingAware;
 import net.neoforged.gradle.common.util.FileDownloadingUtils;
 import net.neoforged.gradle.common.util.SerializationUtils;
 import net.neoforged.gradle.dsl.common.tasks.NeoGradleBase;
@@ -18,9 +19,12 @@ import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @DisableCachingByDefault(because = "This is an abstract underlying task which provides defaults and systems for caching game artifacts.")
-public abstract class FileCacheProviding extends NeoGradleBase implements WithOutput, WithWorkspace {
+public abstract class FileCacheProviding extends NeoGradleBase implements WithOutput, WithWorkspace, TaskHashingAware
+{
 
     protected FileCacheProviding() {
         this.getFileCache().set(getSelector().map(selector -> getLayout().getProjectDirectory().dir(".gradle/caches/minecraft").dir(selector.getCacheDirectory())));
@@ -30,6 +34,14 @@ public abstract class FileCacheProviding extends NeoGradleBase implements WithOu
         
         this.getOutputFileName().set(getSelector().map(CacheFileSelector::getCacheFileName));
         this.getOutput().set(getFileCache().flatMap(cacheDir -> getOutputFileName().map(cacheDir::file)));
+    }
+
+    @Override
+    public Map<String, Object> getHashableProperties()
+    {
+        var properties = new HashMap<>(getInputs().getProperties());
+        properties.remove("isOffline"); //We don't care about the offline mode!
+        return properties;
     }
     
     @Internal

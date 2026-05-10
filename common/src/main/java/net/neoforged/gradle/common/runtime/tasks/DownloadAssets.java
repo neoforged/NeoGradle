@@ -3,6 +3,7 @@ package net.neoforged.gradle.common.runtime.tasks;
 import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.runtime.tasks.action.DownloadFileAction;
 import net.neoforged.gradle.common.services.caching.CachedExecutionService;
+import net.neoforged.gradle.common.services.caching.hasher.TaskHashingAware;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
 import net.neoforged.gradle.common.util.FileCacheUtils;
 import net.neoforged.gradle.common.util.SerializationUtils;
@@ -25,16 +26,18 @@ import org.jetbrains.annotations.NotNull;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings({"UnstableApiUsage"})
 @CacheableTask
-public abstract class DownloadAssets extends DefaultTask implements WithWorkspace {
+public abstract class DownloadAssets extends DefaultTask implements WithWorkspace, TaskHashingAware
+{
 
     private final Provider<Directory> assetsCache;
     private final Provider<Directory> assetsObjects;
 
-    public DownloadAssets() {
+    public DownloadAssets()
+    {
         this.assetsCache = getAssetsDirectory(getProject());
         this.assetsObjects = assetsCache.map(directory -> directory.dir("objects"));
 
@@ -47,20 +50,32 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         getIsOffline().convention(getProject().getGradle().getStartParameter().isOffline());
     }
 
-    public static @NotNull Provider<Directory> getAssetsDirectory(final Project project) {
+    @Override
+    public Map<String, Object> getHashableProperties()
+    {
+        var properties = new HashMap<>(getInputs().getProperties());
+        properties.remove("isOffline"); //We don't care about the offline mode!
+        return properties;
+    }
+
+    public static @NotNull Provider<Directory> getAssetsDirectory(final Project project)
+    {
         return FileCacheUtils.getAssetsCacheDirectory(project).map(TransformerUtils.ensureExists());
     }
 
     @Deprecated
-    public static @NotNull Provider<Directory> getAssetsDirectory(final Project project, final Provider<VersionJson> versionJsonProvider) {
+    public static @NotNull Provider<Directory> getAssetsDirectory(final Project project, final Provider<VersionJson> versionJsonProvider)
+    {
         return getAssetsDirectory(project);
     }
 
-    protected Provider<File> getFileInAssetsDirectory(final String fileName) {
+    protected Provider<File> getFileInAssetsDirectory(final String fileName)
+    {
         return assetsObjects.map(directory -> directory.file(fileName).getAsFile());
     }
 
-    protected Provider<RegularFile> getRegularFileInAssetsDirectory(final Provider<String> fileName) {
+    protected Provider<RegularFile> getRegularFileInAssetsDirectory(final Provider<String> fileName)
+    {
         return assetsCache.flatMap(directory -> fileName.map(directory::file));
     }
 
@@ -68,19 +83,21 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
     public abstract Property<CachedExecutionService> getCache();
 
     @TaskAction
-    public void run() throws IOException {
+    public void run() throws IOException
+    {
         getCache().get()
-                .cached(
-                        this,
-                        ICacheableJob.Initial.file("assetIndex", this::downloadAssetIndex, getAssetIndexFile())
-                )
-                .withStage(
-                        ICacheableJob.Initial.directory("assets", assetsObjects, this::downloadAssets)
-                )
-                .execute();
+            .cached(
+                this,
+                ICacheableJob.Initial.file("assetIndex", this::downloadAssetIndex, getAssetIndexFile())
+            )
+            .withStage(
+                ICacheableJob.Initial.directory("assets", assetsObjects, this::downloadAssets)
+            )
+            .execute();
     }
 
-    private Void downloadAssetIndex() {
+    private Void downloadAssetIndex()
+    {
         final VersionJson json = getVersionJson().get();
         final VersionJson.AssetIndex assetIndexData = json.getAssetIndex();
 
@@ -98,7 +115,8 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         return null;
     }
 
-    private Void downloadAssets() {
+    private Void downloadAssets()
+    {
         final AssetIndex assetIndex = SerializationUtils.fromJson(getAssetIndexFile().getAsFile().get(), AssetIndex.class);
 
         final WorkQueue executor = getWorkerExecutor().noIsolation();
@@ -106,8 +124,8 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         assetIndex.getObjects().values().stream().distinct().forEach((asset) -> {
             final Provider<File> assetFile = getFileInAssetsDirectory(asset.getPath());
             final Provider<String> assetUrl = getAssetRepository()
-                    .map(repo -> repo.endsWith("/") ? repo : repo + "/")
-                    .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
+                .map(repo -> repo.endsWith("/") ? repo : repo + "/")
+                .map(TransformerUtils.guard(repository -> repository + asset.getPath()));
 
             executor.submit(DownloadFileAction.class, params -> {
                 params.getIsOffline().set(getIsOffline());
@@ -152,37 +170,51 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
     @Input
     public abstract Property<Boolean> getIsOffline();
 
-    private static class AssetIndex {
+    private static class AssetIndex
+    {
         private Map<String, Asset> objects = Maps.newHashMap();
 
-        public Map<String, Asset> getObjects() {
+        public Map<String, Asset> getObjects()
+        {
             return objects;
         }
 
-        public void setObjects(Map<String, Asset> objects) {
+        public void setObjects(Map<String, Asset> objects)
+        {
             this.objects = objects;
         }
     }
 
-    private static class Asset {
+    private static class Asset
+    {
         private String hash;
 
-        public String getHash() {
+        public String getHash()
+        {
             return hash;
         }
 
-        public void setHash(String hash) {
+        public void setHash(String hash)
+        {
             this.hash = hash;
         }
 
-        public String getPath() {
+        public String getPath()
+        {
             return hash.substring(0, 2) + '/' + hash;
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Asset)) return false;
+        public boolean equals(Object o)
+        {
+            if (this == o)
+            {
+                return true;
+            }
+            if (!(o instanceof Asset))
+            {
+                return false;
+            }
 
             Asset asset = (Asset) o;
 
@@ -190,7 +222,8 @@ public abstract class DownloadAssets extends DefaultTask implements WithWorkspac
         }
 
         @Override
-        public int hashCode() {
+        public int hashCode()
+        {
             return getHash().hashCode();
         }
     }
