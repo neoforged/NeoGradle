@@ -908,3 +908,7 @@ net.neoforged.gradle.caching.debug=<true/false>
 ```
 The first property will log when a cache hit occurs, and the second property will log more information about the cache in general, including how hashes are calculated.
 If you are experiencing issues with the cache, you can enable these properties to get more information about what is happening.
+
+## Testing
+This project has many tests.
+Do not run them locally, (unless scoped), but run them all in a PR scent.
