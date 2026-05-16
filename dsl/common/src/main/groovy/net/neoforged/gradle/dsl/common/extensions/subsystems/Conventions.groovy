@@ -5,6 +5,7 @@ import net.neoforged.gdi.BaseDSLElement
 import net.neoforged.gdi.annotations.DSLProperty
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Configurations
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.JarJar
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets
 import org.gradle.api.provider.Property
@@ -50,4 +51,11 @@ interface Conventions extends BaseDSLElement<Conventions> {
     @Nested
     @DSLProperty
     Runs getRuns()
+
+    /**
+     * The jarJar conventions used by NeoGradle.
+     */
+    @Nested
+    @DSLProperty
+    JarJar getJarJar()
 }
