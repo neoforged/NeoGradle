@@ -60,6 +60,53 @@ class RunTests extends BuilderBasedTestSpecification {
         run.checkModLoading()
     }
 
+    def "a mod with a library reference should be able to directly reference the runtype"() {
+        given:
+        def project = create("version_libs_runnable", {
+            it.file("gradle/libs.versions.toml",
+                    """
+                    [versions]
+                    # Neoforge Settings
+                    neoforge = "+"
+                    
+                    [libraries]
+                    neoforge = { group = "net.neoforged", name = "neoforge", version.ref = "neoforge" }
+                    """.trim())
+
+            it.build("""
+            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
+            
+            repositories {
+                mavenCentral()
+            }
+                        
+            dependencies {
+                implementation(libs.neoforge)
+            }
+                        
+            runs {
+                server { 
+                    environmentVariables.put('NEOFORGE_DEDICATED_SERVER_SELFTEST', "${(new Date()).format('ddMMyy_HHmm')}.json")
+                    arguments.add('--nogui')
+                }
+            }
+            """)
+            it.file("runs/server/eula.txt", """eula=true""")
+            it.withToolchains()
+            it.enableLocalBuildCache()
+            it.withTemporaryGlobalCacheDirectory()
+            it.withMod()
+        })
+
+        when:
+        def run = project.run {
+            it.run()
+        }
+
+        then:
+        run.checkModLoading()
+    }
+
     def "configuring of the configurations after the dependencies block should work"() {
         given:
         def project = create("runs_configuration_after_dependencies", {
