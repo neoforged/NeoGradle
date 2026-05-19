@@ -109,27 +109,17 @@ class RunTests extends BuilderBasedTestSpecification {
 
     def "configuring of the configurations after the dependencies block should work"() {
         given:
-        def project = create("runs_configuration_after_dependencies", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
-            
-            repositories {
-                mavenCentral()
-            }
-            
+        def project = create("running_second_when_offline", {
+            it.withRun("""
             sourceSets {
                 modRun {
                     java.setSrcDirs(['src/main/mod'])
                     resources.setSrcDirs(['src/main/modResources'])
                 }
             }
-                        
-            dependencies {
-                implementation "net.neoforged:neoforge:+"
-            }
             
             runs {
-                clientData {
+                server {
                     modSource project.sourceSets.main
                 }
             }
@@ -138,14 +128,12 @@ class RunTests extends BuilderBasedTestSpecification {
                 modRunImplementation.extendsFrom implementation
             }
             """)
-            it.withMod()
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
+
         })
 
         when:
         def run = project.run {
-            it.tasks(':runClientData')
+            it.run()
         }
 
         then:
