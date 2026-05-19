@@ -117,9 +117,16 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         project.getRepositories().mavenCentral();
 
-        project.getRepositories().maven(e -> {
+        var mojangRepository = project.getRepositories().maven(e -> {
             e.setUrl(UrlConstants.MOJANG_MAVEN);
             e.metadataSources(MavenArtifactRepository.MetadataSources::mavenPom);
+        });
+
+        project.getRepositories().exclusiveContent(content -> {
+            content.forRepositories(mojangRepository);
+            content.filter(filter -> {
+                filter.includeModule("org.lwjgl", "lwjgl-freetype");
+            });
         });
 
         project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
