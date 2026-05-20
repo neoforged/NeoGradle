@@ -212,7 +212,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def neoformDir = run.file("build/neoForm")
         def versionedNeoformDir = neoformDir.listFiles()[0]
         def stepsDir = new File(versionedNeoformDir, "steps")
         def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
@@ -261,7 +261,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def neoformDir = run.file("build/neoForm")
         def versionedNeoformDir = neoformDir.listFiles()[0]
         def stepsDir = new File(versionedNeoformDir, "steps")
         def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
@@ -358,7 +358,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def neoformDir = run.file("build/neoForm")
         def versionedNeoformDir = neoformDir.listFiles()[0]
         def stepsDir = new File(versionedNeoformDir, "steps")
         def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
@@ -416,7 +416,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
+        def neoformDir = run.file("build/neoForm")
         def versionedNeoformDir = neoformDir.listFiles()[0]
         def stepsDir = new File(versionedNeoformDir, "steps")
         def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
