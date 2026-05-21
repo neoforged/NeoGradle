@@ -276,19 +276,9 @@ class RunTests extends BuilderBasedTestSpecification {
     def "custom run dependencies warn when running latest neoforge"() {
         given:
         def project = create("run_with_custom_dependencies_warn_on_latest", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            
+            it.withRun("""
             runs {
-                client {
+                server {
                     dependencies {
                         runtime 'org.jgrapht:jgrapht-core:+'
                     }
@@ -297,22 +287,18 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.withMod()
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
         def run = project.run {
-            it.tasks(':runClientData')
-            it.stacktrace()
+            it.run()
         }
 
         then:
         run.output.contains("You are using a version of NeoForge which does not need run specific dependencies")
-        run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: client")
-        !run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: server")
-        run.task(":writeMinecraftClasspathClient") == null
+        !run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: client")
+        run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: server")
+        run.task(":writeMinecraftClasspathServer") == null
         run.checkModLoading()
     }
 
