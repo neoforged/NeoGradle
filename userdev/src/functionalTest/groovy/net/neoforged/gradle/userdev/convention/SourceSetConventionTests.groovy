@@ -377,7 +377,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
     def "enabling sourceset local run runtime registration conventions registers localRunRuntime"() {
         given:
-        def project = create("disable_sourcesets_prevents_local_run_runtime", {
+        def project = create("sslr_conv", {
             it.build("""
             java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
