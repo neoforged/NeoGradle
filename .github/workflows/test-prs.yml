@@ -96,7 +96,7 @@ jobs:
     runs-on: "${{ matrix.os }}-latest"
     needs: [setup, set-gradle-version]
     strategy:
-      max-parallel: 8
+      max-parallel: 15
       fail-fast: false
       matrix:
         test: ${{ fromJSON(needs.setup.outputs.tests-to-run) }}
