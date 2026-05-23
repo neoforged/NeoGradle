@@ -198,6 +198,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withMod()
             it.withToolchains()
@@ -212,12 +218,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file("build/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
-
+        def classpathFile = run.file("classpath.txt")
         classpathFile.exists()
 
         classpathFile.text.contains("org.graalvm.polyglot${File.separator}polyglot")
@@ -247,6 +248,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withMod()
             it.withToolchains()
@@ -261,11 +268,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file("build/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
+        def classpathFile = run.file("classpath.txt")
 
         classpathFile.exists()
 
@@ -330,6 +333,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -344,11 +353,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file("build/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
+        def classpathFile = run.file("classpath.txt")
 
         classpathFile.exists()
 
@@ -388,6 +393,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -402,11 +413,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file("build/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
+        def classpathFile = run.file("classpath.txt")
 
         classpathFile.exists()
 
