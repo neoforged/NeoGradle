@@ -337,7 +337,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
 
     def "disabling sourceset local run runtime registration conventions prevents registration of localRunRuntime"() {
         given:
-        def project = create("disable_sourcesets_prevents_local_run_runtime", {
+        def project = create("dss_p_l_r", {
             it.property('neogradle.subsystems.conventions.sourcesets.automatic-inclusion-local-run-runtime', 'false')
             it.build("""
             java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
@@ -349,6 +349,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             dependencies {
                 implementation 'net.neoforged:neoforge:21.8.+'
                 localRunRuntime 'org.jgrapht:jgrapht-core:+'
+            }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
             }
             """)
             it.withToolchains()
@@ -363,12 +369,7 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-
-        def neoformDir = run.file("build/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
+        def classpathFile = run.file("classpath.txt")
 
         classpathFile.exists()
 
@@ -393,6 +394,12 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
             runs {
                 client { }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -406,15 +413,8 @@ class SourceSetConventionTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-
-        def neoformDir = run.file("build/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
-
+        def classpathFile = run.file("classpath.txt")
         classpathFile.exists()
-
         classpathFile.text.contains("org.jgrapht${File.separator}jgrapht-core")
     }
 
