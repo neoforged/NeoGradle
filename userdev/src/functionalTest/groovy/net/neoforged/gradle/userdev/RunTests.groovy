@@ -60,29 +60,66 @@ class RunTests extends BuilderBasedTestSpecification {
         run.checkModLoading()
     }
 
-    def "configuring of the configurations after the dependencies block should work"() {
+    def "a mod with a library reference should be able to directly reference the runtype"() {
         given:
-        def project = create("runs_configuration_after_dependencies", {
+        def project = create("version_libs_runnable", {
+            it.file("gradle/libs.versions.toml",
+                    """
+                    [versions]
+                    # Neoforge Settings
+                    neoforge = "+"
+                    
+                    [libraries]
+                    neoforge = { group = "net.neoforged", name = "neoforge", version.ref = "neoforge" }
+                    """.trim())
+
             it.build("""
             java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
             
             repositories {
                 mavenCentral()
             }
-            
+                        
+            dependencies {
+                implementation(libs.neoforge)
+            }
+                        
+            runs {
+                server { 
+                    environmentVariables.put('NEOFORGE_DEDICATED_SERVER_SELFTEST', "${(new Date()).format('ddMMyy_HHmm')}.json")
+                    arguments.add('--nogui')
+                }
+            }
+            """)
+            it.file("runs/server/eula.txt", """eula=true""")
+            it.withToolchains()
+            it.enableLocalBuildCache()
+            it.withTemporaryGlobalCacheDirectory()
+            it.withMod()
+        })
+
+        when:
+        def run = project.run {
+            it.run()
+        }
+
+        then:
+        run.checkModLoading()
+    }
+
+    def "configuring of the configurations after the dependencies block should work"() {
+        given:
+        def project = create("running_second_when_offline", {
+            it.withRun("""
             sourceSets {
                 modRun {
                     java.setSrcDirs(['src/main/mod'])
                     resources.setSrcDirs(['src/main/modResources'])
                 }
             }
-                        
-            dependencies {
-                implementation "net.neoforged:neoforge:+"
-            }
             
             runs {
-                clientData {
+                server {
                     modSource project.sourceSets.main
                 }
             }
@@ -91,14 +128,12 @@ class RunTests extends BuilderBasedTestSpecification {
                 modRunImplementation.extendsFrom implementation
             }
             """)
-            it.withMod()
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
+
         })
 
         when:
         def run = project.run {
-            it.tasks(':runClientData')
+            it.run()
         }
 
         then:
@@ -163,6 +198,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withMod()
             it.withToolchains()
@@ -177,12 +218,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
-
+        def classpathFile = run.file("classpath.txt")
         classpathFile.exists()
 
         classpathFile.text.contains("org.graalvm.polyglot${File.separator}polyglot")
@@ -212,6 +248,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withMod()
             it.withToolchains()
@@ -226,11 +268,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
+        def classpathFile = run.file("classpath.txt")
 
         classpathFile.exists()
 
@@ -241,19 +279,9 @@ class RunTests extends BuilderBasedTestSpecification {
     def "custom run dependencies warn when running latest neoforge"() {
         given:
         def project = create("run_with_custom_dependencies_warn_on_latest", {
-            it.build("""
-            java.toolchain.languageVersion = JavaLanguageVersion.of(${TestConstants.Latest.JavaVersion})
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                implementation 'net.neoforged:neoforge:+'
-            }
-            
+            it.withRun("""
             runs {
-                client {
+                server {
                     dependencies {
                         runtime 'org.jgrapht:jgrapht-core:+'
                     }
@@ -262,22 +290,18 @@ class RunTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.withMod()
-            it.withToolchains()
-            it.withGlobalCacheDirectory(tempDir)
         })
 
         when:
         def run = project.run {
-            it.tasks(':runClientData')
-            it.stacktrace()
+            it.run()
         }
 
         then:
         run.output.contains("You are using a version of NeoForge which does not need run specific dependencies")
-        run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: client")
-        !run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: server")
-        run.task(":writeMinecraftClasspathClient") == null
+        !run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: client")
+        run.output.contains("NeoGradle detected a problem with your project: Run.getDependencies().runtime() in run: server")
+        run.task(":writeMinecraftClasspathServer") == null
         run.checkModLoading()
     }
 
@@ -309,6 +333,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -323,11 +353,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
+        def classpathFile = run.file("classpath.txt")
 
         classpathFile.exists()
 
@@ -367,6 +393,12 @@ class RunTests extends BuilderBasedTestSpecification {
                     modSource project.sourceSets.main
                 }
             }
+            
+            afterEvaluate {
+                tasks.named("writeMinecraftClasspathClient").configure { task ->
+                   task.output = project.file("classpath.txt")
+                }
+            }
             """)
             it.withToolchains()
             it.withGlobalCacheDirectory(tempDir)
@@ -381,11 +413,7 @@ class RunTests extends BuilderBasedTestSpecification {
         then:
         run.task(':writeMinecraftClasspathClient').outcome == TaskOutcome.SUCCESS
 
-        def neoformDir = run.file(".gradle/configuration/neoForm")
-        def versionedNeoformDir = neoformDir.listFiles()[0]
-        def stepsDir = new File(versionedNeoformDir, "steps")
-        def stepDir = new File(stepsDir, "writeMinecraftClasspathClient")
-        def classpathFile = new File(stepDir, "classpath.txt")
+        def classpathFile = run.file("classpath.txt")
 
         classpathFile.exists()
 

@@ -499,7 +499,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
 
         and:
         def consumingProject = create("u_e_iis_consuming", {
-            it.run("""
+            it.withRun("""
             group = "n.n.n.u.t.g"
             version = "1.0.0"
             
@@ -523,7 +523,6 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
                 }
             }
             """)
-            it.withMod("Consumer")
             it.plugin("maven-publish")
         })
 
@@ -546,7 +545,7 @@ class InterfaceInjectionTests extends BuilderBasedTestSpecification {
         def moduleJson = consumerPublish.file("build/publications/maven/module.json")
         def slurper = new JsonSlurper()
         def module = slurper.parse(moduleJson)
-        module.variants.find(it -> it.name == "InterfaceInjectionElements").dependencies.size() > 0
-        module.variants.find(it -> it.name == "InterfaceInjectionElements").files.size() > 0
+        module.variants.find(it -> it.name == "interfaceInjectionElements").dependencies.size() > 0
+        module.variants.find(it -> it.name == "interfaceInjectionElements").files.size() > 0
     }
 }
