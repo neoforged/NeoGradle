@@ -96,6 +96,10 @@ public abstract class RecompileSourceJar extends JavaCompile implements Runtime 
         );
 
         getOptions().setSourcepath(sourcePaths);
+
+        getOptions().getRelease().set(
+            getJavaVersion().map(JavaLanguageVersion::asInt)
+        );
     }
 
     @Override
