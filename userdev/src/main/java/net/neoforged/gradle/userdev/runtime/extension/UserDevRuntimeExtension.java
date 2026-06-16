@@ -312,6 +312,12 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
             "neoform", "{neoform}"
         ));
 
+        if (decompilerInjectsOnlyIn(userDevProfile.getNeoForm().get())) {
+            getProject().getLogger().error("Disabling dist annotations on PMJ");
+            arguments.add("--no-dist-annotations");
+        } else
+            getProject().getLogger().error("Enabling dist annotations on PMJ");
+
         if (isObfuscatedVersion(userDevProfile.getNeoForm().get())) {
             arguments.addAll(List.of(
                 "--input-mappings", "{clientMappings}"
@@ -337,6 +343,27 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
         return userDevProfile.getFeatures()
             .flatMap(UserdevProfile.Features::getUsesCombinedBinaryPatches)
             .getOrElse(false);
+    }
+
+    private boolean decompilerInjectsOnlyIn(final String neoformCoordinate) {
+        var neoformVersion=neoformCoordinate.split(":")[2];
+        var mcVersionParts = neoformVersion.split("([.\\-])");
+
+        //Check if we are minecraft 26.x or later.
+        if (mcVersionParts.length > 2) {
+            var mcYear = mcVersionParts[0];
+            var mcRelease = mcVersionParts[1];
+
+            try {
+                var yearParsed = Integer.parseInt(mcYear);
+                var releaseParsed = Integer.parseInt(mcRelease);
+                return yearParsed >= 26 && releaseParsed >= 2;
+            } catch (Exception ignored) {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private boolean isObfuscatedVersion(final String neoformCoordinate) {
