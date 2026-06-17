@@ -3,6 +3,7 @@ package net.neoforged.gradle.userdev;
 import net.neoforged.gradle.common.extensions.DefaultJarJarFeature;
 import net.neoforged.gradle.common.extensions.JarJarExtension;
 import net.neoforged.gradle.dsl.common.extensions.JarJar;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.neoform.NeoFormPlugin;
 import net.neoforged.gradle.userdev.dependency.UserDevDependencyManager;
 import net.neoforged.gradle.userdev.runtime.extension.UserDevRuntimeExtension;
@@ -30,6 +31,10 @@ public class UserDevProjectPlugin implements Plugin<Project> {
     }
 
     protected void configureJarJarTask(Project project, JarJar jarJarExtension) {
-        ((DefaultJarJarFeature) jarJarExtension).createTaskAndConfiguration();
+        final boolean createMainFeature = project.getExtensions().getByType(Subsystems.class)
+                .getConventions().getJarJar().getShouldDefaultMainFeatureBeCreated().get();
+        if (createMainFeature) {
+            ((DefaultJarJarFeature) jarJarExtension).createTaskAndConfiguration();
+        }
     }
 }
