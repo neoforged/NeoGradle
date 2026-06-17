@@ -23,6 +23,7 @@ package net.neoforged.gradle.common.extensions;
 import net.neoforged.gdi.ConfigurableDSLElement;
 import net.neoforged.gradle.common.runtime.naming.NamingChannelProvider;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.dsl.common.extensions.EnumExtensions;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import net.neoforged.gradle.dsl.common.extensions.Mappings;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
@@ -38,6 +39,7 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
     private final Project project;
     private final AccessTransformers accessTransformers;
     private final InterfaceInjections interfaceInjections;
+    private final EnumExtensions enumExtensions;
     private final NamedDomainObjectContainer<NamingChannel> namingChannelProviders;
 
     @Inject
@@ -45,6 +47,7 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
         this.project = project;
         this.accessTransformers = project.getExtensions().getByType(AccessTransformers.class);
         this.interfaceInjections = project.getExtensions().getByType(InterfaceInjections.class);
+        this.enumExtensions = project.getExtensions().getByType(EnumExtensions.class);
         this.namingChannelProviders = project.getObjects().domainObjectContainer(NamingChannel.class, name -> project.getObjects().newInstance(NamingChannelProvider.class, project, name));
         
         final String baseName = project.getName().replace(":", "_");
@@ -84,5 +87,11 @@ public abstract class MinecraftExtension implements ConfigurableDSLElement<Minec
     @Override
     public InterfaceInjections getInterfaceInjections() {
         return interfaceInjections;
+    }
+    
+    @NotNull
+    @Override
+    public EnumExtensions getEnumExtensions() {
+        return enumExtensions;
     }
 }
