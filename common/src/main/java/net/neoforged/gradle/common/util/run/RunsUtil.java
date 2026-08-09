@@ -486,21 +486,17 @@ public class RunsUtil {
         for (SourceSet sourceSet : run.getModSources().all().get().values()) {
             final Project sourceSetProject = SourceSetUtils.getProject(sourceSet);
 
-            //The following tasks are not guaranteed to be in the source sets build dependencies
-            //We however need at least the classes as well as the resources of the source set to be run
+            //The following tasks are not guaranteed to be in the source sets build dependencies.
+            //We however need at least the classes as well as the resources of the source set to be run.
             task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getProcessResourcesTaskName()));
             if (requireCompile) {
-                //When running through the IDE we do not need to compile the IDE already will take care of this if need be.
+                //When running through the IDE we do not need to compile, the IDE already will take care of this if need be.
                 task.dependsOn(sourceSetProject.getTasks().named(sourceSet.getCompileJavaTaskName()));
             }
 
-            //There might be additional tasks that are needed to configure and run a source set.
-            //Also run those
-            //Exclude the compileJava and classes tasks, as they are already added above, if need be.
-            sourceSet.getOutput().getBuildDependencies().getDependencies(null).stream()
-                    .filter(depTask -> !depTask.getName().equals(sourceSet.getCompileJavaTaskName()))
-                    .filter(depTask -> !depTask.getName().equals(sourceSet.getClassesTaskName()))
-                    .forEach(task::dependsOn);
+            //TODO: Additional tasks registered via output.dir(task) (custom resource generators) are currently not wired here.
+            //The old implementation used getBuildDependencies().getDependencies(null) which violates isolated projects constraints.
+            //A proper solution using variant-aware configurations is documented in docs/design/isolated-projects/variant-aware-configurations.md
         }
     }
 

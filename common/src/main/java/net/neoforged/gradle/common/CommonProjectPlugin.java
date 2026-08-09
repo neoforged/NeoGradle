@@ -27,6 +27,7 @@ import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.run.RunPreparationAttributes;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
@@ -38,10 +39,13 @@ import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.dsl.common.runs.run.RunManager;
 import net.neoforged.gradle.dsl.common.runs.type.RunTypeManager;
 import net.neoforged.gradle.dsl.common.util.NamingConstants;
+import net.neoforged.gradle.util.StringCapitalizationUtils;
 import net.neoforged.gradle.util.UrlConstants;
 import org.gradle.api.GradleScriptException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationPublications;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -177,10 +181,45 @@ public class CommonProjectPlugin implements Plugin<Project> {
         final SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         sourceSets.all(ConfigurationUtils::getSdkConfiguration);
 
+        //Configure variant-aware run preparation configurations for isolated projects support.
+        //Each source set exposes two consumable variants: one requiring compile, one resources-only.
+        sourceSets.configureEach(sourceSet -> configureRunVariants(project, sourceSet));
+
         //Needs to be before after evaluate
         ConventionConfigurator.configureConventions(project);
 
         project.afterEvaluate(this::applyAfterEvaluate);
+    }
+
+    /**
+     * Configures variant-aware run preparation configurations for a source set.
+     * 
+     * Creates two consumable configurations distinguished by the RUN_PREPARATION_MODE attribute:
+     * - runCompileClasspath*: For Gradle-launched runs requiring full compilation
+     * - runResourcesOnlyClasspath*: For IDE runs where only resources are needed
+     * 
+     * These configurations serve as variant markers for consumer-side selection. The actual task
+     * dependencies are wired via file-based dependency tracking on sourceSet.getOutput(), which
+     * automatically includes all build dependencies (compileJava, processResources, custom generators).
+     */
+    private void configureRunVariants(Project project, SourceSet sourceSet) {
+        String capitalizedName = StringCapitalizationUtils.capitalize(sourceSet.getName());
+
+        // Compile variant: marker configuration for runs requiring compilation
+        Configuration compileVariant = project.getConfigurations().create("runCompileClasspath" + capitalizedName);
+        compileVariant.setVisible(false);
+        compileVariant.setCanBeConsumed(true);
+        compileVariant.setCanBeResolved(false);
+        compileVariant.attributes(attrs -> attrs.attribute(RunPreparationAttributes.RUN_PREPARATION_MODE,
+            RunPreparationAttributes.MODE_COMPILE));
+
+        // Resources-only variant: marker configuration for runs not requiring compilation
+        Configuration resourcesOnlyVariant = project.getConfigurations().create("runResourcesOnlyClasspath" + capitalizedName);
+        resourcesOnlyVariant.setVisible(false);
+        resourcesOnlyVariant.setCanBeConsumed(true);
+        resourcesOnlyVariant.setCanBeResolved(false);
+        resourcesOnlyVariant.attributes(attrs -> attrs.attribute(RunPreparationAttributes.RUN_PREPARATION_MODE,
+            RunPreparationAttributes.MODE_RESOURCES_ONLY));
     }
 
     private void applyAfterEvaluate(final Project project) {
