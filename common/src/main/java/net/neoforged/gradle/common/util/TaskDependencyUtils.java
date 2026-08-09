@@ -8,7 +8,6 @@ import net.neoforged.gradle.common.util.exceptions.NoDefinitionsFoundException;
 import net.neoforged.gradle.dsl.common.extensions.dependency.replacement.DependencyReplacement;
 import net.neoforged.gradle.dsl.common.runtime.definition.Definition;
 import net.neoforged.gradle.dsl.common.util.Artifact;
-import org.gradle.api.Buildable;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -35,46 +34,7 @@ public final class TaskDependencyUtils {
         throw new IllegalStateException("Can not instantiate an instance of: TaskDependencyUtils. This is a utility class");
     }
 
-    public static Set<? extends Task> getDependencies(Task task) {
-        final LinkedHashSet<? extends Task> dependencies = new LinkedHashSet<>();
-        final LinkedList<Task> queue = new LinkedList<>();
-        queue.add(task);
-
-        getDependencies(queue, dependencies);
-
-        return dependencies;
-    }
-
-    public static Set<? extends Task> getDependencies(Buildable task) {
-        final LinkedHashSet<? extends Task> dependencies = new LinkedHashSet<>();
-        final LinkedList<Task> queue = new LinkedList<>(task.getBuildDependencies().getDependencies(null));
-
-        getDependencies(queue, dependencies);
-
-        return dependencies;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void getDependencies(final LinkedList<Task> queue, final Set<? extends Task> tasks) {
-        if (queue.isEmpty())
-            return;
-
-        final Task task = queue.removeFirst();
-        if (tasks.contains(task)) {
-            if (queue.isEmpty()) {
-                return;
-            }
-
-            getDependencies(queue, tasks);
-            return;
-        }
-
-        ((Set<Task>) tasks).add(task);
-        queue.addAll(task.getTaskDependencies().getDependencies(task));
-        getDependencies(queue, tasks);
-    }
-
-    public static CommonRuntimeDefinition<?> realiseTaskAndExtractRuntimeDefinition(@NotNull Project project, TaskProvider<?> t) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
+    public static CommonRuntimeDefinition<?> extractRuntimeDefinition(@NotNull Project project, @NotNull TaskProvider<?> t) throws MultipleDefinitionsFoundException, NoDefinitionsFoundException {
         return extractRuntimeDefinition(project, t.get());
     }
 

@@ -29,23 +29,18 @@ public abstract class IdeManagementExtension {
     public static final String IDE_POST_SYNC_TASK_NAME = "idePostSync";
 
     private final Project project;
-    private final Project rootProject;
 
     @Inject
     public IdeManagementExtension(Project project) {
         this.project = project;
-        this.rootProject = project.getRootProject();
         
-        project.getPlugins().apply(IdeaExtPlugin.class);
-        project.getPlugins().apply(EclipsePlugin.class);
-        
-        if (project != rootProject) {
-            if (!rootProject.getPlugins().hasPlugin(IdeaExtPlugin.class))
-                rootProject.getPlugins().apply(IdeaExtPlugin.class);
-            
-            if (!rootProject.getPlugins().hasPlugin(EclipsePlugin.class))
-                rootProject.getPlugins().apply(EclipsePlugin.class);
+        // Apply IdeaExtPlugin only on root project to avoid cross-project access violations under isolated projects mode.
+        // The plugin internally accesses Project.file() on other projects, which is not allowed for subprojects.
+        if (project == project.getRootProject()) {
+            project.getPlugins().apply(IdeaExtPlugin.class);
         }
+
+        project.getPlugins().apply(EclipsePlugin.class);
 
         // Always pre-create the idePostSync task if IntelliJ is importing the project, since
         // IntelliJ remembers to run the task post-sync even if the import fails. That will cause
@@ -54,6 +49,14 @@ public abstract class IdeManagementExtension {
         if (isIdeaAttached() && isIdeaSyncing()) {
             getOrCreateIdeImportTask();
         }
+    }
+
+    /**
+     * Returns the root project lazily to avoid holding cross-project references during configuration time.
+     * This is necessary for isolated projects mode compatibility.
+     */
+    private Project getRootProject() {
+        return project.getRootProject();
     }
 
     /**
@@ -221,6 +224,8 @@ public abstract class IdeManagementExtension {
             
             //Grab the idea runtime model so we can extend it. -> This is done from the root project, so that the model is available to all subprojects.
             //And so that post sync tasks are only ran once for all subprojects.
+            Project rootProject = getRootProject();
+            
             IdeaModel model = project.getExtensions().findByType(IdeaModel.class);
             if (model == null || model.getProject() == null) {
                 model = rootProject.getExtensions().findByType(IdeaModel.class);
