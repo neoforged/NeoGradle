@@ -27,6 +27,7 @@ import net.neoforged.gradle.common.tasks.CleanCache;
 import net.neoforged.gradle.common.tasks.DisplayMappingsLicenseTask;
 import net.neoforged.gradle.common.util.CommonRuntimeTaskUtils;
 import net.neoforged.gradle.common.util.ConfigurationUtils;
+import net.neoforged.gradle.common.util.run.ModSourceAttributes;
 import net.neoforged.gradle.common.util.run.RunPreparationAttributes;
 import net.neoforged.gradle.common.util.run.RunsUtil;
 import net.neoforged.gradle.dsl.common.extensions.*;
@@ -57,7 +58,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
-import org.jetbrains.gradle.ext.IdeaExtPlugin;
 
 import javax.inject.Inject;
 
@@ -84,8 +84,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         // Apply both the idea and eclipse IDE plugins
         project.getPluginManager().apply(IdeaPlugin.class);
-        project.getRootProject().getPluginManager().apply(IdeaExtPlugin.class);
-        project.getPluginManager().apply(IdeaExtPlugin.class);
+        // IdeaExtPlugin is applied only on root project in IdeManagementExtension to avoid cross-project access violations.
         project.getPluginManager().apply(EclipsePlugin.class);
 
         project.getExtensions().create(Subsystems.class,"subsystems", SubsystemsExtension.class, project);
@@ -205,21 +204,44 @@ public class CommonProjectPlugin implements Plugin<Project> {
     private void configureRunVariants(Project project, SourceSet sourceSet) {
         String capitalizedName = StringCapitalizationUtils.capitalize(sourceSet.getName());
 
-        // Compile variant: marker configuration for runs requiring compilation
+        // Compile variant: marker configuration for runs requiring compilation.
+        // Includes a source-set-specific attribute to avoid "identical capabilities" errors when multiple
+        // source sets exist in the same project (Gradle 9.x requirement).
         Configuration compileVariant = project.getConfigurations().create("runCompileClasspath" + capitalizedName);
         compileVariant.setVisible(false);
         compileVariant.setCanBeConsumed(true);
         compileVariant.setCanBeResolved(false);
-        compileVariant.attributes(attrs -> attrs.attribute(RunPreparationAttributes.RUN_PREPARATION_MODE,
-            RunPreparationAttributes.MODE_COMPILE));
+        compileVariant.attributes(attrs -> {
+            attrs.attribute(RunPreparationAttributes.RUN_PREPARATION_MODE, RunPreparationAttributes.MODE_COMPILE);
+            attrs.attribute(ModSourceAttributes.MOD_SOURCE_NAME, sourceSet.getName()); // Distinguishes variants per source set
+        });
 
-        // Resources-only variant: marker configuration for runs not requiring compilation
+        // Resources-only variant: marker configuration for runs not requiring compilation.
         Configuration resourcesOnlyVariant = project.getConfigurations().create("runResourcesOnlyClasspath" + capitalizedName);
         resourcesOnlyVariant.setVisible(false);
         resourcesOnlyVariant.setCanBeConsumed(true);
         resourcesOnlyVariant.setCanBeResolved(false);
-        resourcesOnlyVariant.attributes(attrs -> attrs.attribute(RunPreparationAttributes.RUN_PREPARATION_MODE,
-            RunPreparationAttributes.MODE_RESOURCES_ONLY));
+        resourcesOnlyVariant.attributes(attrs -> {
+            attrs.attribute(RunPreparationAttributes.RUN_PREPARATION_MODE, RunPreparationAttributes.MODE_RESOURCES_ONLY);
+            attrs.attribute(ModSourceAttributes.MOD_SOURCE_NAME, sourceSet.getName()); // Distinguishes variants per source set
+        });
+
+        // Mod source variant: consumable configuration exposing this source set as a mod source for other projects.
+        // This enables isolated-projects-safe cross-project mod source declarations via standard Gradle dependencies.
+        Configuration modSourceVariant = project.getConfigurations().create("modSource" + capitalizedName);
+        modSourceVariant.setVisible(false);
+        modSourceVariant.setCanBeConsumed(true);
+        modSourceVariant.setCanBeResolved(false);
+        modSourceVariant.attributes(attrs -> {
+            attrs.attribute(ModSourceAttributes.MOD_SOURCE_PROJECT_PATH, project.getPath());
+            attrs.attribute(ModSourceAttributes.MOD_SOURCE_NAME, sourceSet.getName());
+            // Marker attribute to distinguish from other NeoGradle variants and avoid "identical capabilities" errors.
+            attrs.attribute(ModSourceAttributes.MOD_SOURCE_TYPE, ModSourceAttributes.TYPE_MOD_SOURCE);
+        });
+        // Use a Provider<Directory> artifact pointing to the build output directory.
+        org.gradle.api.provider.Provider<org.gradle.api.file.Directory> outputDir = 
+            project.getLayout().getBuildDirectory().dir("classes/java/" + sourceSet.getName());
+        modSourceVariant.outgoing(outgoing -> outgoing.artifact(outputDir));
     }
 
     private void applyAfterEvaluate(final Project project) {

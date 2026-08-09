@@ -69,6 +69,10 @@ public class RunsUtil {
 
         run.configure();
 
+        // Resolve variant-based mod source dependencies and add them to the run's mod sources.
+        // This happens after run.configure() so user-declared dependencies are available.
+        resolveVariantBasedModSources(project, run);
+
         RunsUtil.setupModSources(project, run, isInternal);
         RunsUtil.configureModClasses(run);
         RunsUtil.ensureMacOsSupport(run);
@@ -80,6 +84,59 @@ public class RunsUtil {
         RunsUtil.registerPostSyncTasks(project, run);
     }
 
+    /**
+     * Registers variant-based mod source dependencies declared via {@code dependencies { modSource ... }}.
+     * <p>
+     * This enables isolated-projects-safe cross-project mod source declarations by using Gradle's
+     * dependency notation for validation while deferring all cross-project access until execution time.
+     */
+    private static void resolveVariantBasedModSources(Project project, Run run) {
+        net.neoforged.gradle.common.runs.run.DependencyHandlerImpl depHandler = 
+            (net.neoforged.gradle.common.runs.run.DependencyHandlerImpl) run.getDependencies();
+
+        List<net.neoforged.gradle.common.runs.run.DependencyHandlerImpl.ModSourceDependency> modSourceDeps =
+            depHandler.getModSourceDependencies();
+
+        if (modSourceDeps.isEmpty()) {
+            return; // No variant-based mod sources declared
+        }
+
+        // For each declared mod source dependency, extract metadata from the ProjectDependency itself.
+        // The configuration name encodes the source set name (e.g., "modSourceMain" -> "main").
+        for (net.neoforged.gradle.common.runs.run.DependencyHandlerImpl.ModSourceDependency dep : modSourceDeps) {
+            org.gradle.api.artifacts.ProjectDependency projDep = dep.getProjectDependency();
+            String projectPath = projDep.getPath();
+
+            // Get the configuration name that was extracted when declaring the dependency.
+            String configName = dep.getConfigurationName();
+            
+            // Extract source set name from configuration.
+            String sourceSetName;
+            if (configName.startsWith("modSource")) {
+                // Extract from modSource* config name (e.g., "modSourceMain" -> "main").
+                sourceSetName = configName.substring("modSource".length());
+                if (sourceSetName.isEmpty()) {
+                    throw new org.gradle.api.GradleException(
+                        "Invalid mod source configuration name: '" + configName + 
+                        "'. Expected format: 'modSource' + capitalized source set name (e.g., 'modSourceMain').");
+                }
+            } else {
+                // Use the configuration name directly as the source set name.
+                // This allows users to reference standard Java plugin configs like "main" or "test".
+                sourceSetName = configName;
+            }
+            // Convert from capitalized to lowercase (e.g., "Main" -> "main").
+            if (!sourceSetName.isEmpty()) {
+                sourceSetName = Character.toLowerCase(sourceSetName.charAt(0)) + sourceSetName.substring(1);
+            }
+
+            // Store the mod source reference as a string key that will be resolved at task execution time.
+            // This avoids any cross-project access during configuration phase under isolated projects mode.
+            String modSourceKey = projectPath + ":" + sourceSetName;
+            run.getModSources().addLazy(modSourceKey, dep.getGroupId());
+        }
+    }
+
     public static void registerPostSyncTasks(Project project, Run run) {
         final IdeManagementExtension ideManager = project.getExtensions().getByType(IdeManagementExtension.class);
         run.getPostSyncTasks().get().forEach(ideManager::registerTaskToRun);
@@ -88,7 +145,7 @@ public class RunsUtil {
     public static void createTasks(Project project, Run run) {
         if (!run.getIsJUnit().get()) {
             //Create run exec tasks for all non-unit test runs
-            project.getTasks().register(createNameFor(run.getName()), JavaExec.class, runExec -> {
+            project.getTasks().register(createNameFor(run.getName()), NeoGradleJavaExec.class, runExec -> {
                 runExec.setDescription("Runs the " + run.getName() + " run.");
                 runExec.setGroup("NeoGradle/Runs");
 
@@ -106,9 +163,18 @@ public class RunsUtil {
                 runExec.getJvmArguments().set(run.getJvmArguments().map(arguments -> deduplicateElementsFollowingEachOther(arguments.stream())).map(s -> s.collect(Collectors.toList())));
                 runExec.systemProperties(run.getSystemProperties().get());
                 runExec.environment(run.getEnvironmentVariables().get());
-                run.getModSources().all().get().values().stream()
+
+                // Configure lazy mod source resolution via service injection (no project capture).
+                if (run.getModSources() instanceof net.neoforged.gradle.common.runs.run.RunSourceSetsImpl && 
+                    ((net.neoforged.gradle.common.runs.run.RunSourceSetsImpl) run.getModSources()).hasLazyModSources()) {
+                    runExec.setRunSourceSets(run.getModSources());
+                }
+
+                // Use a provider to resolve mod sources at execution time after lazy resolution.
+                runExec.classpath(project.provider(() -> 
+                    run.getModSources().all().get().values().stream()
                         .map(SourceSet::getRuntimeClasspath)
-                        .forEach(runExec::classpath);
+                        .collect(Collectors.toList())));
                 runExec.classpath(run.getDependencies().getRuntimeConfiguration());
                 runExec.classpath(run.getRuntimeClasspath());
 
@@ -121,6 +187,34 @@ public class RunsUtil {
             });
         } else {
             createOrReuseTestTask(project, run.getName(), run);
+        }
+    }
+
+    /**
+     * Custom JavaExec that resolves lazy mod sources using Gradle service injection.
+     * This avoids isolated projects violations by not capturing project references in closures.
+     */
+    public static abstract class NeoGradleJavaExec extends JavaExec {
+        
+        private transient net.neoforged.gradle.dsl.common.runs.run.RunSourceSets runSourceSets;
+
+        public void setRunSourceSets(net.neoforged.gradle.dsl.common.runs.run.RunSourceSets runSourceSets) {
+            this.runSourceSets = runSourceSets;
+        }
+
+        @javax.inject.Inject
+        protected abstract org.gradle.api.invocation.Gradle getGradle();
+
+        @Override
+        @org.gradle.api.tasks.TaskAction
+        public void exec() {
+            // Resolve lazy mod sources using injected Gradle instance (no project capture).
+            if (runSourceSets != null && runSourceSets instanceof net.neoforged.gradle.common.runs.run.RunSourceSetsImpl) {
+                Project rootProject = getGradle().getRootProject();
+                net.neoforged.gradle.common.runs.run.RunSourceSetsImpl.resolveLazyModSources(runSourceSets, rootProject);
+            }
+
+            super.exec();
         }
     }
 
