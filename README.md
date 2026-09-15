@@ -83,6 +83,34 @@ dependencies {
 }
 ```
 
+#### <a id="userdev-enum-extensions" /> Enum Extensions
+The userdev plugin provides a way to configure enum extensions for your mod.
+This allows you to reference runtime enum extensions at compile time, so you can include them in switch statements or the like.
+Note that you still need to provide the extensions to FML at runtime in your `neoforge.mods.toml`.
+```groovy
+enumExtensions {
+    file 'src/main/resources/META-INF/enumextensions.json'
+}
+```
+You can find more information on the format of the file [here](https://docs.neoforged.net/docs/advanced/extensibleenums/).
+
+##### <a id="userdev-enum-extensions-from-dependencies" /> From Dependencies
+When you want to include enum extension entries from a dependency you can do so by using the `consume` and `consumeApi` dependency collector:
+```groovy
+enumExtensions {
+    consume 'net.something.group:module:1.0.0-version' //Use the enum extensions published by this dependency.
+    consumeApi 'net.something.group:module:1.0.0-version' //Use the enum extensions published by this dependency, and expose it for your consumers as a dependency as well.
+}
+```
+
+Alternatively you can use the configurations, `enumExtensions` or `enumExtensionsApi` respectively, to handle this:
+```groovy
+dependencies {
+    enumExtensions 'net.something.group:module:1.0.0-version' //Use the enum extensions published by this dependency.
+    enumExtensionsApi 'net.something.group:module:1.0.0-version' //Use the enum extensions published by this dependency, and expose it for your consumers as a dependency as well.
+}
+```
+
 #### Dependency management by the userdev plugin
 When this plugin detects a dependency on NeoForge, it will spring into action and create the necessary NeoForm runtime tasks to build a usable Minecraft JAR-file that contains the requested NeoForge version.
 It additionally (if configured to do so via conventions, which is the default) will create runs for your project, and add the necessary dependencies to the classpath of the run.

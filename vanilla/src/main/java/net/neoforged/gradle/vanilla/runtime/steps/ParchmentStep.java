@@ -32,6 +32,7 @@ public class ParchmentStep implements IStep {
         final TaskProvider<? extends Runtime> transformerTask = JavaSourceTransformAdapterUtils.createJavaSourceTransformerTask(
             definition.getSpecification().getProject().files(),
             definition.getSpecification().getProject().files(),
+            definition.getSpecification().getProject().files(),
             definition,
             inputProvidingTask,
             additionalTaskConfigurator,

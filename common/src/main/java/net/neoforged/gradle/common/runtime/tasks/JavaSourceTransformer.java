@@ -2,6 +2,7 @@ package net.neoforged.gradle.common.runtime.tasks;
 
 import com.google.common.collect.Lists;
 import net.neoforged.gradle.common.services.caching.jobs.ICacheableJob;
+import net.neoforged.gradle.common.util.EnumExtensionUtils;
 import net.neoforged.gradle.common.util.ToolUtilities;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
 import net.neoforged.gradle.util.CopyingFileTreeVisitor;
@@ -65,6 +66,28 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
 
                                 args.add("--interface-injection-stubs");
                                 args.add(stubsFile.getAbsolutePath());
+                            }
+                            
+                            if (!getEnumExtensions().isEmpty()) {
+                                final File stubsFile = ensureFileWorkspaceReady(getStubs());
+                                
+                                args.add("--enable-enum-extensions");
+                                getEnumExtensions().forEach(f -> {
+                                    args.add("--enum-extension-data");
+                                    args.add(f.getAbsolutePath());
+                                });
+                                
+                                args.add("--enum-extension-stubs");
+                                args.add(stubsFile.getAbsolutePath());
+
+                                args.add("--enum-extensions-required-interface");
+                                args.add(EnumExtensionUtils.REQUIRED_INTERFACE);
+                                args.add("--enum-extensions-indexed-enum-annotation");
+                                args.add(EnumExtensionUtils.INDEXED_ENUM);
+                                args.add("--enum-extensions-marker");
+                                args.add(EnumExtensionUtils.MARKER_ANNOTATION);
+                                args.add("--enum-extensions-reserved-constructor-annotation");
+                                args.add(EnumExtensionUtils.RESERVED_CONSTRUCTOR);
                             }
 
                             if (!getParchmentMappings().isEmpty()) {
@@ -133,6 +156,7 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
         //We need a separate check here that skips the execute call if there are no transformers.
         if (getTransformers().isEmpty() &&
             getInterfaceInjections().isEmpty() &&
+            getEnumExtensions().isEmpty() &&
             getParchmentMappings().isEmpty()) {
 
             //Unpack the input zip into the outputs:
@@ -196,6 +220,11 @@ public abstract class JavaSourceTransformer extends DefaultExecute {
     @Optional
     @PathSensitive(PathSensitivity.NONE)
     public abstract ConfigurableFileCollection getInterfaceInjections();
+    
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract ConfigurableFileCollection getEnumExtensions();
 
     @InputFiles
     @Optional

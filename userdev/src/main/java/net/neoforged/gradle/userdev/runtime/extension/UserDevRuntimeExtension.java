@@ -5,11 +5,13 @@ import com.google.common.collect.Maps;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
 import net.neoforged.gradle.common.runtime.extensions.CommonRuntimeExtension;
 import net.neoforged.gradle.common.runtime.tasks.BinaryAccessTransformer;
+import net.neoforged.gradle.common.tasks.ExtendEnumsTask;
 import net.neoforged.gradle.common.tasks.InjectInterfacesTask;
 import net.neoforged.gradle.common.tasks.StripFinalFromParametersTask;
 import net.neoforged.gradle.common.util.*;
 import net.neoforged.gradle.common.util.run.TypesUtil;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.dsl.common.extensions.EnumExtensions;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
@@ -188,9 +190,28 @@ public abstract class UserDevRuntimeExtension extends CommonRuntimeExtension<Use
                     final InterfaceInjections userIIs = minecraftExtension.getInterfaceInjections();
 
                     final TaskProvider<? extends InjectInterfacesTask> task = CommonRuntimeTaskUtils.createBinaryInterfaceInjector(
-                        definition,
-                        "",
-                        userIIs.getFiles().getAsFileTree()
+                            definition,
+                            "",
+                            userIIs.getFiles().getAsFileTree()
+                    );
+
+                    task.configure(t -> {
+                        t.getInput().set(previousTasksOutput.flatMap(WithOutput::getOutput));
+                        t.dependsOn(previousTasksOutput);
+                    });
+
+                    dependentTaskConfigurationHandler.accept(task);
+
+                    return task;
+                });
+
+                builder.withPostTaskAdapter("setup", (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
+                    final EnumExtensions userEEs = minecraftExtension.getEnumExtensions();
+
+                    final TaskProvider<? extends ExtendEnumsTask> task = CommonRuntimeTaskUtils.createBinaryEnumExtender(
+                            definition,
+                            "",
+                            userEEs.getFiles().getAsFileTree()
                     );
 
                     task.configure(t -> {

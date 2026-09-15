@@ -3,6 +3,7 @@ package net.neoforged.gradle.common;
 import net.neoforged.gradle.common.accesstransformers.AccessTransformerPublishing;
 import net.neoforged.gradle.common.conventions.ConventionConfigurator;
 import net.neoforged.gradle.common.dependency.ExtraJarDependencyManager;
+import net.neoforged.gradle.common.enumextensions.EnumExtensionsPublishing;
 import net.neoforged.gradle.common.extensions.*;
 import net.neoforged.gradle.common.extensions.dependency.replacement.ReplacementLogic;
 import net.neoforged.gradle.common.extensions.problems.IProblemReporter;
@@ -92,6 +93,7 @@ public class CommonProjectPlugin implements Plugin<Project> {
         project.getExtensions().create(DependencyReplacement.class, "dependencyReplacements", ReplacementLogic.class, project);
         project.getExtensions().create(AccessTransformers.class, "accessTransformers", AccessTransformersExtension.class, project);
         project.getExtensions().create(InterfaceInjections.class, "interfaceInjections", InterfaceInjectionsExtension.class, project);
+        project.getExtensions().create(EnumExtensions.class, "enumExtensions", EnumExtensionsExtension.class, project);
 
         project.getExtensions().create(Minecraft.class, "minecraft", MinecraftExtension.class, project);
         project.getExtensions().create(Mappings.class,"mappings", MappingsExtension.class, project);
@@ -158,6 +160,9 @@ public class CommonProjectPlugin implements Plugin<Project> {
 
         //Set up publishing for interface injection elements
         InterfaceInjectionPublishing.setup(project);
+        
+        // Set up publishing for enum extensions
+        EnumExtensionsPublishing.setup(project);
 
         //Set up the IDE run integration manager
         IdeRunIntegrationManager.getInstance().setup(project);

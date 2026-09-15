@@ -56,4 +56,13 @@ interface Minecraft extends BaseDSLElement<Minecraft> {
     @NotNull
     @DSLProperty
     InterfaceInjections getInterfaceInjections();
+    
+    /**
+     * Gives access to the enum extensions configuration extension.
+     *
+     * @return The enum extensions configuration extension.
+     */
+    @NotNull
+    @DSLProperty
+    EnumExtensions getEnumExtensions();
 }

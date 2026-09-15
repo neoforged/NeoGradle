@@ -4,6 +4,7 @@ import net.neoforged.gradle.common.extensions.subsystems.SubsystemsExtension;
 import net.neoforged.gradle.common.runtime.tasks.JavaSourceTransformer;
 import net.neoforged.gradle.common.runtime.tasks.ListLibraries;
 import net.neoforged.gradle.dsl.common.extensions.AccessTransformers;
+import net.neoforged.gradle.dsl.common.extensions.EnumExtensions;
 import net.neoforged.gradle.dsl.common.extensions.InterfaceInjections;
 import net.neoforged.gradle.dsl.common.extensions.Minecraft;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Subsystems;
@@ -33,6 +34,7 @@ public class JavaSourceTransformAdapterUtils
         final Minecraft minecraftExtension = project.getExtensions().getByType(Minecraft.class);
         final AccessTransformers accessTransformers = minecraftExtension.getAccessTransformers();
         final InterfaceInjections interfaceInjections = minecraftExtension.getInterfaceInjections();
+        final EnumExtensions enumExtensions = minecraftExtension.getEnumExtensions();
         final SubsystemsExtension.ParchmentExtensions parchment = (SubsystemsExtension.ParchmentExtensions) project.getExtensions().getByType(Subsystems.class).getParchment();
 
         return (definition, previousTasksOutput, runtimeWorkspace, gameArtifacts, mappingVersionData, dependentTaskConfigurationHandler) -> {
@@ -40,6 +42,7 @@ public class JavaSourceTransformAdapterUtils
 
             var transformer = createJavaSourceTransformerTask(accessTransformerFiles,
                 interfaceInjections.getFiles(),
+                enumExtensions.getFiles(),
                 definition,
                 previousTasksOutput,
                 dependentTaskConfigurationHandler,
@@ -72,6 +75,7 @@ public class JavaSourceTransformAdapterUtils
     public static @Nullable TaskProvider<JavaSourceTransformer> createJavaSourceTransformerTask(
         final FileCollection accessTransformerFiles,
         final FileCollection interfaceInjectionFiles,
+        final FileCollection enumExtensionsFiles,
         final Definition<?> definition,
         final Provider<? extends WithOutput> previousTasksOutput,
         final Consumer<TaskProvider<? extends Runtime>> dependentTaskConfigurationHandler,
@@ -94,6 +98,7 @@ public class JavaSourceTransformAdapterUtils
             .register(CommonRuntimeUtils.buildTaskName(definition.getSpecification(), "transformSource"), JavaSourceTransformer.class, task -> {
                 task.getTransformers().from(accessTransformerFiles);
                 task.getInterfaceInjections().from(interfaceInjectionFiles);
+                task.getEnumExtensions().from(enumExtensionsFiles);
 
                 if (parchmentArtifact.isPresent())
                 {
