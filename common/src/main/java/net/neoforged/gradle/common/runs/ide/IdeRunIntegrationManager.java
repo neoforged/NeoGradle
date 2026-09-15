@@ -76,10 +76,22 @@ public class IdeRunIntegrationManager {
      * @param project The project to configure.
      */
     public void setup(final Project project) {
+        // Only perform root-project-scoped IDEA configuration on the root project itself.
+        // Under isolated projects mode, subprojects cannot access extensions on other projects.
+        final boolean isRootProject = project == project.getRootProject();
+
         project.getExtensions().configure(RunManager.class, runs -> runs.configureAll(run -> {
             setupRun(project, run);
         }));
-        
+
+        if (!isRootProject) {
+            // For subprojects, only create the local IDEA extension under Minecraft.
+            final Minecraft minecraft = project.getExtensions().getByType(Minecraft.class);
+            minecraft.getExtensions().create("idea", IdeaRunsExtension.class, project);
+            return;
+        }
+
+        // Root-project-only configuration: register global IDEA runs extension on the IdeaProject model.
         final Project rootProject = project.getRootProject();
         final IdeaModel ideaModel = rootProject.getExtensions().getByType(IdeaModel.class);
         final IdeaProject ideaProject = ideaModel.getProject();
@@ -123,6 +135,11 @@ public class IdeRunIntegrationManager {
     }
 
     public void configureIdeaConventions(Project project, IDEA ideaConventions) {
+        // Under isolated projects mode, only the root project can access IdeaModel extensions.
+        if (project != project.getRootProject()) {
+            return;
+        }
+
         final Project rootProject = project.getRootProject();
         final IdeaModel ideaModel = rootProject.getExtensions().getByType(IdeaModel.class);
         final IdeaProject ideaProject = ideaModel.getProject();

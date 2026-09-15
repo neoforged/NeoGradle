@@ -627,6 +627,8 @@ Automatic-Module-Name: '<some string that is unique to this project>'
 
 ### Including the sibling project in your run
 To include the sibling project in your run, you need to add it as a modSource to your run:
+
+#### Standard syntax (recommended)
 ```groovy
 runs {
     someRun {
@@ -639,6 +641,27 @@ runs {
     }
 }
 ```
+
+#### Dependency handler syntax (isolated projects compatible)
+When using Gradle's isolated projects mode (`org.gradle.isolated-projects=true`), you cannot directly access another project's `sourceSets` extension during configuration time. Instead, use the dependency handler syntax:
+
+```groovy
+runs {
+    someRun {
+        dependencies {
+            // Specify a source set name — NeoGradle automatically applies the modSource prefix
+            modSource project(path: ':api', configuration: 'main')
+            
+            // With explicit group ID override for FML mod list organization:
+            modSource('customGroup') project(path: ':libs:core', configuration: 'main')
+        }
+    }
+}
+```
+
+> [!NOTE]
+> The `configuration` parameter should specify a source set name (e.g., `'main'`). NeoGradle automatically applies the `modSource` prefix to resolve the correct variant (`modSourceMain`) if it exists. Standard Java plugin configurations are also supported for backward compatibility.
+
 No other action is needed.
 
 ## Using conventions

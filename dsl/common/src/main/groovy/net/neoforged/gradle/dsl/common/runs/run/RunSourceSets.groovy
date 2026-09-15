@@ -28,6 +28,20 @@ interface RunSourceSets extends ConfigurableDSLElement<RunSourceSets> {
     void add(SourceSet sourceSet);
 
     /**
+     * Registers a lazy mod source reference by project path and source set name.
+     * This enables isolated-projects-safe cross-project mod source declarations by storing
+     * only string metadata during configuration time, with actual SourceSet resolution deferred
+     * to task execution time via Gradle's service injection mechanism.
+     * <p>
+     * The group id used is derived from the project path if not explicitly set.
+     * </p>
+     *
+     * @param modSourceKey A key in format "projectPath:sourceSetName" (e.g., ":api:main")
+     * @param groupId Optional explicit group ID; null means use default from project path
+     */
+    void addLazy(String modSourceKey, String groupId);
+
+    /**
      * Adds multiple source sets to this run
      * The group id used is derived from the project id of the source set if it is not set.
      *

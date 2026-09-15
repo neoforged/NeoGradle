@@ -12,6 +12,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
     private final Multimap<String, SourceSet> sourceSets;
     private final List<Action<SourceSet>> callbacks = new ArrayList<>();
     private final List<Provider<Multimap<String, SourceSet>>> sourceSetProviders = new ArrayList<>();
+    private final List<LazyModSourceRef> lazyModSources = new ArrayList<>();
 
     @Inject
     public RunSourceSetsImpl(Project project) {
@@ -40,6 +42,15 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
         for (Action<SourceSet> callback : callbacks) {
             callback.execute(sourceSet);
         }
+    }
+
+    /**
+     * Registers a lazy mod source reference by project path and source set name.
+     * Resolution happens at execution time via Gradle's service injection to avoid cross-project access during configuration.
+     */
+    @Override
+    public void addLazy(String modSourceKey, String groupId) {
+        this.lazyModSources.add(new LazyModSourceRef(modSourceKey, groupId));
     }
 
     @Override
@@ -119,7 +130,7 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
 
     @Override
     public Provider<Multimap<String, SourceSet>> all() {
-        //Realize all lazy source sets
+        //Realize all lazy source sets from providers
         if (!this.sourceSetProviders.isEmpty()) {
             final var providers = new ArrayList<>(this.sourceSetProviders);
             this.sourceSetProviders.clear();
@@ -129,7 +140,85 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
             }
         }
 
+        // Note: Lazy mod sources from string references are NOT resolved here.
+        // They must be resolved via resolveLazyModSources(Project rootProject) which is called
+        // at task execution time with an injected RootProject to avoid isolated projects violations.
+
         return this.project.provider(() -> this.sourceSets);
+    }
+
+    /**
+     * Resolves lazy mod source string references using the provided root project.
+     * This MUST be called at task execution time (not configuration time) to avoid isolated projects violations.
+     */
+    public static void resolveLazyModSources(RunSourceSets runSourceSets, Project rootProject) {
+        if (!(runSourceSets instanceof RunSourceSetsImpl impl)) {
+            return;
+        }
+
+        if (impl.lazyModSources.isEmpty()) {
+            return; // Nothing to resolve
+        }
+
+        for (LazyModSourceRef ref : impl.lazyModSources) {
+            SourceSet resolved = impl.resolveModSourceFromRoot(ref.modSourceKey, rootProject);
+            String groupId = ref.groupId != null ? ref.groupId : 
+                extractProjectPathFromKey(ref.modSourceKey);
+            impl.sourceSets.put(groupId, resolved);
+
+            for (Action<SourceSet> callback : impl.callbacks) {
+                callback.execute(resolved);
+            }
+        }
+        impl.lazyModSources.clear();
+    }
+
+    /**
+     * Resolves a mod source key to an actual SourceSet using the provided root project.
+     */
+    private SourceSet resolveModSourceFromRoot(String modSourceKey, Project rootProject) {
+        int colonIndex = modSourceKey.lastIndexOf(':');
+        if (colonIndex == -1) {
+            throw new org.gradle.api.GradleException(
+                "Invalid mod source key: '" + modSourceKey + "'. Expected format: 'projectPath:sourceSetName'");
+        }
+
+        String projectPath = modSourceKey.substring(0, colonIndex);
+        String sourceSetName = modSourceKey.substring(colonIndex + 1);
+
+        Project targetProject = rootProject.findProject(projectPath);
+        if (targetProject == null) {
+            throw new org.gradle.api.GradleException(
+                "Could not find project '" + projectPath + "' for mod source key: '" + modSourceKey + "'");
+        }
+
+        SourceSetContainer sourceSets = targetProject.getExtensions().getByType(SourceSetContainer.class);
+        SourceSet sourceSet = sourceSets.findByName(sourceSetName);
+        if (sourceSet == null) {
+            throw new org.gradle.api.GradleException(
+                "Could not find source set '" + sourceSetName + "' in project '" + 
+                projectPath + "' for mod source key: '" + modSourceKey + "'");
+        }
+
+        return sourceSet;
+    }
+
+    /**
+     * Extracts the project path from a mod source key for use as default group ID.
+     */
+    private static String extractProjectPathFromKey(String modSourceKey) {
+        int colonIndex = modSourceKey.lastIndexOf(':');
+        if (colonIndex == -1) {
+            return modSourceKey;
+        }
+        return modSourceKey.substring(0, colonIndex);
+    }
+
+    /**
+     * Returns whether this RunSourceSetsImpl has unresolved lazy mod sources.
+     */
+    public boolean hasLazyModSources() {
+        return !lazyModSources.isEmpty();
     }
 
     @Override
@@ -137,6 +226,19 @@ public abstract class RunSourceSetsImpl implements RunSourceSets {
         this.callbacks.add(action);
         for (SourceSet value : this.sourceSets.values()) {
             action.execute(value);
+        }
+    }
+
+    /**
+     * Holds a lazy mod source reference as string metadata that resolves to an actual SourceSet at execution time.
+     */
+    private static class LazyModSourceRef {
+        final String modSourceKey; // Format: "projectPath:sourceSetName" (e.g., ":api:main")
+        final String groupId; // null means use default from project path
+
+        LazyModSourceRef(String modSourceKey, String groupId) {
+            this.modSourceKey = modSourceKey;
+            this.groupId = groupId;
         }
     }
 }

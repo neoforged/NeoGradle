@@ -22,21 +22,12 @@ public class SourceSetUtils {
         if (projectHolder != null) {
             return projectHolder.getProject();
         }
-        
-        final Iterable<? extends Task> tasks = sourceSet.getOutput().getBuildDependencies().getDependencies(null);
-        final Set<Project> projects = new HashSet<>();
-        for (final Task task : tasks) {
-            final Project project = task.getProject();
-            projects.add(project);
-        }
-        
-        projects.removeIf(project -> !project.getExtensions().getByType(SourceSetContainer.class).contains(sourceSet));
-        
-        if (projects.size() == 1) {
-            return projects.iterator().next();
-        }
-        
-        throw new IllegalStateException("Could not find project for source set " + sourceSet.getName());
+
+        //NeoGradle always registers ProjectHolder on its source sets via CommonProjectPlugin.
+        //If we reach here, this is a non-NeoGradle source set — throw a clear error instead of
+        //falling back to getBuildDependencies().getDependencies() which violates isolated projects.
+        throw new IllegalStateException("Could not find project for source set " + sourceSet.getName()
+            + ". Source sets must be managed by NeoGradle's CommonProjectPlugin (which registers ProjectHolder).");
     }
     
     public static String getModIdentifier(final SourceSet sourceSet, final @Nullable Project project) {
