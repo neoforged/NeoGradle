@@ -5,6 +5,7 @@ import net.neoforged.gradle.common.extensions.base.WithEnabledProperty;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.Conventions;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Configurations;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.IDE;
+import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.JarJar;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.Runs;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.SourceSets;
 import net.neoforged.gradle.dsl.common.extensions.subsystems.conventions.ide.IDEA;
@@ -20,6 +21,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
     private final SourceSets sourceSets;
     private final IDE ide;
     private final Runs runs;
+    private final JarJar jarJar;
 
     @Inject
     public ConventionsExtension(Project project) {
@@ -29,6 +31,7 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
         this.sourceSets = project.getObjects().newInstance(SourceSetsExtension.class, this);
         this.ide = project.getObjects().newInstance(IDEExtension.class, this);
         this.runs = project.getObjects().newInstance(RunsExtension.class, this);
+        this.jarJar = project.getObjects().newInstance(JarJarExtension.class, this);
     }
 
     @Override
@@ -49,6 +52,11 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
     @Override
     public Runs getRuns() {
         return runs;
+    }
+
+    @Override
+    public JarJar getJarJar() {
+        return jarJar;
     }
 
     public static abstract class ConfigurationsExtension extends WithEnabledProperty implements BaseDSLElement<Configurations>, Configurations {
@@ -137,6 +145,16 @@ public abstract class ConventionsExtension extends WithEnabledProperty implement
             super(parent, "renderdoc");
 
             getConventionForRun().convention(getBooleanProperty("conventionForRun", false, false));
+        }
+    }
+
+    public static abstract class JarJarExtension extends WithEnabledProperty implements BaseDSLElement<JarJar>, JarJar {
+
+        @Inject
+        public JarJarExtension(WithEnabledProperty parent) {
+            super(parent, "jarjar");
+
+            getShouldDefaultMainFeatureBeCreated().convention(getBooleanProperty("create-main-jarjar", true, false));
         }
     }
 

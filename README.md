@@ -852,6 +852,19 @@ neogradle.subsystems.conventions.runs.renderdoc.conventionForRun=true
 ```
 This will enable the render doc tool for all client runs, unless explicitly disabled.
 
+### JarJar
+To disable the jarJar conventions, you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.jarjar.enabled=false
+```
+
+#### Default Main JarJar Feature
+By default, NeoGradle registers a `jarJar` task and configuration for the main source set.
+If you want to disable this (for example, to define your own jarJar features via `jarJar.forFeature(...)`), you can set the following property in your gradle.properties:
+```properties
+neogradle.subsystems.conventions.jarjar.create-main-jarjar=false
+```
+
 
 ## Tool overrides
 To configure tools used by different subsystems of NG, the subsystems dsl and properties can be used to configure the following tools:
